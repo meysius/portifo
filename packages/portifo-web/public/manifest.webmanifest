@@ -1,0 +1,24 @@
+{
+  "name": "Portifo",
+  "short_name": "Portifo",
+  "description": "Portifo — multi-currency investment and cash portfolio tracker",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#11161B",
+  "theme_color": "#11161B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,163 @@
+/*
+ * Repoints Ionic's default palette to the Portifo design system
+ * (docs/design-system.html — ink/paper ground, a single brass accent, and
+ * separate gain/loss semantics). Raw tokens use design-system.html's own
+ * names (--bg/--surface/--surface-2/--border/--fg-1..3/--brass/--gain/--loss)
+ * so component CSS in index.css can be checked against that file 1:1.
+ *
+ * Dark is the base palette (design-system.html's default :root); light is
+ * an override, matching that file's structure. Brass, gain/loss, and the
+ * categorical set are theme-invariant — only ground and text shift.
+ *
+ * Theming is class-based: src/lib/theme.ts puts `ion-palette-dark` on <html>
+ * for dark (manual or resolved from the system preference) and removes it
+ * for light — so light keys on the class being absent, not on a media query.
+ */
+
+:root {
+  --bg: #11161b;
+  --surface: #171d24;
+  --surface-rgb: 23, 29, 36;
+  --surface-2: #1d242c;
+  --border: rgba(233, 231, 222, 0.09);
+  --fg-1: #edebe3;
+  --fg-2: #a9aea9;
+  --fg-3: #757c7b;
+
+  --brass: #b08a3e;
+  --brass-ink: #171106;
+  --brass-tint: rgba(176, 138, 62, 0.16);
+
+  --gain: #4c9268;
+  --gain-tint: rgba(76, 146, 104, 0.14);
+  --loss: #bd5a46;
+  --loss-tint: rgba(189, 90, 70, 0.14);
+  --loss-ink: #2e0e08;
+
+  /* Categorical set for allocation slices, assigned by position, not
+     meaning. --c-cash is always brass; --c-closed marks closed positions. */
+  --c-cash: var(--brass);
+  --c-1: #3e7a82;
+  --c-2: #55688f;
+  --c-3: #83587e;
+  --c-4: #a15c42;
+  --c-closed: #7c7a72;
+  --closed-op: 0.56;
+
+  --font-serif: "Fraunces", serif;
+  --ion-font-family: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --ion-background-color: #11161b;
+  --ion-background-color-rgb: 17, 22, 27;
+  --ion-text-color: #edebe3;
+  --ion-text-color-rgb: 237, 235, 227;
+
+  --ion-border-color: rgba(233, 231, 222, 0.09);
+  --ion-item-background: #171d24;
+  /* No card-colored header bar — titles sit on the page background — so the
+     toolbar matches --bg, not --surface. */
+  --ion-toolbar-background: #11161b;
+  --ion-tab-bar-background: #171d24;
+  /* Resting tabs are tertiary ink; brass marks the active tab only. */
+  --ion-tab-bar-color: #757c7b;
+  --ion-tab-bar-color-selected: #b08a3e;
+  --ion-card-background: #171d24;
+
+  --ion-color-primary: #b08a3e;
+  --ion-color-primary-rgb: 176, 138, 62;
+  --ion-color-primary-contrast: #171106;
+  --ion-color-primary-contrast-rgb: 23, 17, 6;
+  --ion-color-primary-shade: #9b7937;
+  --ion-color-primary-tint: #b99552;
+
+  --ion-color-success: #4c9268;
+  --ion-color-success-rgb: 76, 146, 104;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #43805c;
+  --ion-color-success-tint: #5e9d77;
+
+  --ion-color-danger: #bd5a46;
+  --ion-color-danger-rgb: 189, 90, 70;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #a64f3e;
+  --ion-color-danger-tint: #c46b59;
+
+  /* "medium" is the placeholder/tertiary tier — maps to --fg-3. */
+  --ion-color-medium: #757c7b;
+  --ion-color-medium-rgb: 117, 124, 123;
+  --ion-color-medium-contrast: #171106;
+  --ion-color-medium-contrast-rgb: 23, 17, 6;
+  --ion-color-medium-shade: #676d6c;
+  --ion-color-medium-tint: #838988;
+
+  --ion-color-light: #1d242c;
+  --ion-color-light-rgb: 29, 36, 44;
+  --ion-color-light-contrast: #edebe3;
+  --ion-color-light-contrast-rgb: 237, 235, 227;
+  --ion-color-light-shade: #191f26;
+  --ion-color-light-tint: #333941;
+}
+
+/* @ionic/react/css/palettes/dark.class.css sets Ionic's generic dark ground
+   (background/text/item/card, near-black) on `.ion-palette-dark.ios`, which
+   outranks the plain `:root` base above — re-assert the Portifo dark ground
+   at matching specificity (this file is imported after the Ionic palette, so
+   the tie breaks our way). */
+:root.ion-palette-dark {
+  --ion-background-color: #11161b;
+  --ion-background-color-rgb: 17, 22, 27;
+  --ion-text-color: #edebe3;
+  --ion-text-color-rgb: 237, 235, 227;
+
+  --ion-border-color: rgba(233, 231, 222, 0.09);
+  --ion-item-background: #171d24;
+  --ion-toolbar-background: #11161b;
+  --ion-tab-bar-background: #171d24;
+  --ion-tab-bar-color: #757c7b;
+  --ion-tab-bar-color-selected: #b08a3e;
+  --ion-card-background: #171d24;
+}
+
+/* Light — applies whenever theme.ts leaves `ion-palette-dark` off <html>.
+   Dark is the default palette above, so light is the override. */
+:root:not(.ion-palette-dark) {
+  --ion-background-color: #f2f1ec;
+  --ion-background-color-rgb: 242, 241, 236;
+  --ion-text-color: #1a1d17;
+  --ion-text-color-rgb: 26, 29, 23;
+
+  --ion-border-color: rgba(20, 22, 18, 0.09);
+  --ion-item-background: #fbfaf6;
+  --ion-toolbar-background: #f2f1ec;
+  --ion-tab-bar-background: #fbfaf6;
+  --ion-tab-bar-color: #8b8d85;
+  --ion-tab-bar-color-selected: #b08a3e;
+  --ion-card-background: #fbfaf6;
+
+  --bg: #f2f1ec;
+  --surface: #fbfaf6;
+  --surface-rgb: 251, 250, 246;
+  --surface-2: #e9e7de;
+  --border: rgba(20, 22, 18, 0.09);
+  --fg-1: #1a1d17;
+  --fg-2: #63665f;
+  --fg-3: #8b8d85;
+  --closed-op: 0.6;
+
+  --ion-color-medium: #8b8d85;
+  --ion-color-medium-rgb: 139, 141, 133;
+  --ion-color-medium-contrast: #171106;
+  --ion-color-medium-contrast-rgb: 23, 17, 6;
+  --ion-color-medium-shade: #7a7c75;
+  --ion-color-medium-tint: #979891;
+
+  --ion-color-light: #e9e7de;
+  --ion-color-light-rgb: 233, 231, 222;
+  --ion-color-light-contrast: #1a1d17;
+  --ion-color-light-contrast-rgb: 26, 29, 23;
+  --ion-color-light-shade: #ccccc4;
+  --ion-color-light-tint: #ebe9e1;
+}
