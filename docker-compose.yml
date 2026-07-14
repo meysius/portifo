@@ -15,6 +15,7 @@ services:
       retries: 10
 
   app:
+    image: ${IMAGE:-ghcr.io/meysius/portifo:latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -32,20 +33,22 @@ services:
     ports:
       - "${PORT:-3000}:3000"
 
-  # One-off: `docker compose run --rm migrate` to apply Drizzle migrations.
-  # Built from the pre-prune `build` stage, which still has drizzle-kit.
+  # One-off: `docker compose --profile tools run --rm migrate` to apply
+  # Drizzle migrations. Reuses the same app image — drizzle-kit is a regular
+  # (not dev) dependency of portifo-api specifically so it survives into the
+  # production image and this doesn't need a separate build/target.
   migrate:
+    image: ${IMAGE:-ghcr.io/meysius/portifo:latest}
     build:
       context: .
       dockerfile: Dockerfile
-      target: build
     profiles: ["tools"]
     depends_on:
       db:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-portifo}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-portifo}
-    command: ["pnpm", "--filter", "portifo-api", "db:migrate"]
+    command: ["./node_modules/.bin/drizzle-kit", "migrate"]
 
 volumes:
   portifo_db_data:

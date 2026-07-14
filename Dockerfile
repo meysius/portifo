@@ -26,6 +26,10 @@ COPY --from=prod-deps /repo/node_modules ./node_modules
 COPY --from=prod-deps /repo/packages/portifo-api/package.json packages/portifo-api/package.json
 COPY --from=prod-deps /repo/packages/portifo-api/node_modules packages/portifo-api/node_modules
 COPY --from=prod-deps /repo/packages/portifo-api/dist packages/portifo-api/dist
+# drizzle-kit reads these directly (not compiled by tsc — outside src/), needed
+# at runtime so `drizzle-kit migrate` works against the production image.
+COPY --from=prod-deps /repo/packages/portifo-api/drizzle.config.ts packages/portifo-api/drizzle.config.ts
+COPY --from=prod-deps /repo/packages/portifo-api/drizzle packages/portifo-api/drizzle
 COPY --from=prod-deps /repo/packages/portifo-web/dist packages/portifo-web/dist
 
 WORKDIR /repo/packages/portifo-api

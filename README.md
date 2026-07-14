@@ -100,6 +100,21 @@ NODE_ENV=production pnpm --filter portifo-api start
 
 Set `DATABASE_URL`, `GOOGLE_CLIENT_ID`, `SESSION_SECRET`, and `PORT` in the deployment environment, and add your production domain as an authorized JavaScript origin on the Google OAuth client.
 
+### Continuous deployment
+
+On every push, `.github/workflows/ci.yml` runs typecheck/lint/build. On pushes to `main`, `.github/workflows/deploy.yml` additionally builds the Docker image, pushes it to GHCR as `ghcr.io/<owner>/portifo:latest` (and `:<sha>`), then SSHes into the target host to `docker compose pull`, run the `migrate` one-off, and restart `app`.
+
+The deploy job needs these repository secrets set (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `DEPLOY_HOST` | SSH host of the server |
+| `DEPLOY_USER` | SSH user |
+| `DEPLOY_SSH_KEY` | Private key for that user (public half in the server's `authorized_keys`) |
+| `DEPLOY_PATH` | Directory on the server containing `docker-compose.yml` and `.env` |
+
+The server needs `docker-compose.yml` and a filled-in `.env` at `DEPLOY_PATH` ahead of the first deploy (see Docker Compose section above). The built image is pushed to GHCR as a package under the repo — make it public (or `docker login ghcr.io` on the server) so `docker compose pull` can fetch it without extra credentials.
+
 ## License
 
 [MIT](LICENSE)
