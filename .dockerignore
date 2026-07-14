@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/dist-ssr
+.git
+.DS_Store
+**/*.env
+**/*.env.local
+!**/.env.example
+docs

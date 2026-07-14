@@ -83,9 +83,6 @@ importers:
       '@ionic/react-router':
         specifier: ^8.8.13
         version: 8.8.13(react-dom@19.2.7(react@19.2.7))(react-router-dom@5.3.4(react@19.2.7))(react-router@5.3.4(react@19.2.7))(react@19.2.7)
-      history:
-        specifier: ^4.10.1
-        version: 4.10.1
       ionicons:
         specifier: ^8.0.13
         version: 8.0.13
@@ -105,9 +102,6 @@ importers:
         specifier: ^5.3.4
         version: 5.3.4(react@19.2.7)
     devDependencies:
-      '@types/history':
-        specifier: ^4.7.11
-        version: 4.7.11
       '@types/node':
         specifier: ^24.13.2
         version: 24.13.2

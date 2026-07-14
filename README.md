@@ -75,6 +75,22 @@ pnpm --filter portifo-web preview          # vite preview
 
 ## Deployment
 
+### Docker Compose (recommended)
+
+Brings up the app plus a self-hosted Postgres:
+
+```bash
+cp .env.example .env   # fill in POSTGRES_PASSWORD, GOOGLE_CLIENT_ID, SESSION_SECRET
+
+docker compose up -d db
+docker compose --profile tools run --rm migrate   # apply Drizzle migrations
+docker compose up -d app
+```
+
+The app is then served on `http://localhost:${PORT:-3000}`. Re-run the `migrate` step after pulling changes that add new migrations.
+
+### Manual
+
 Build both packages, then run the API in production mode — it serves the built web app itself:
 
 ```bash
