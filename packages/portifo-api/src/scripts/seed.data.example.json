@@ -1,0 +1,22 @@
+{
+  "targetEmail": "you@example.com",
+  "targetName": "Your Name",
+  "accounts": [
+    {
+      "type": "investment",
+      "name": "Brokerage",
+      "cashTxCurrency": "USD",
+      "transactions": [
+        { "type": "deposit", "date": "2026-01-01", "quantity": "10000", "comment": "Initial deposit" },
+        { "type": "buy", "date": "2026-01-02", "symbol": "AAPL", "price": "150.00", "quantity": "10" },
+        { "type": "sell", "date": "2026-03-15", "symbol": "AAPL", "price": "170.00", "quantity": "5" }
+      ]
+    },
+    {
+      "type": "cash",
+      "name": "Savings",
+      "balance": "5000",
+      "currency": "USD"
+    }
+  ]
+}

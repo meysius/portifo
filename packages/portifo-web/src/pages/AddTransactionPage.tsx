@@ -186,7 +186,7 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
     onPointerLeave: () => setPressedField((f) => (f === field ? null : f)),
   });
 
-  const focusInputAtEnd = async (ref: RefObject<HTMLIonInputElement>) => {
+  const focusInputAtEnd = async (ref: RefObject<HTMLIonInputElement | null>) => {
     const native = await ref.current?.getInputElement();
     if (!native) return;
     native.focus();
