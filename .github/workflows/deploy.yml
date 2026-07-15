@@ -39,7 +39,8 @@ jobs:
             packages/portifo-api/dist \
             packages/portifo-api/drizzle.config.ts \
             packages/portifo-api/drizzle \
-            packages/portifo-web/dist
+            packages/portifo-web/dist \
+            deploy/migrate.sh
 
       - name: Upload release to server
         uses: appleboy/scp-action@v0.1.7
@@ -57,7 +58,9 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          shell: bash
           script: |
+            exec > >(tee /tmp/portifo-deploy-debug.log) 2>&1
             set -ex
             DEPLOY_PATH=${{ secrets.DEPLOY_PATH }}
             RELEASE="$DEPLOY_PATH/releases/${{ github.sha }}"
@@ -66,19 +69,9 @@ jobs:
             tar -xzf /tmp/release.tar.gz -C "$RELEASE"
             rm -f /tmp/release.tar.gz
             chown -R portifo:portifo "$RELEASE"
+            chmod +x "$RELEASE/deploy/migrate.sh"
 
-            cat > /tmp/portifo-migrate.sh <<'SCRIPT'
-            #!/bin/bash
-            set -e
-            cd "$1/packages/portifo-api"
-            set -a
-            source "$2/shared/.env"
-            set +a
-            ./node_modules/.bin/drizzle-kit migrate
-            SCRIPT
-            chmod +x /tmp/portifo-migrate.sh
-            su -s /bin/bash portifo /tmp/portifo-migrate.sh "$RELEASE" "$DEPLOY_PATH"
-            rm -f /tmp/portifo-migrate.sh
+            su -s /bin/bash portifo "$RELEASE/deploy/migrate.sh" "$RELEASE" "$DEPLOY_PATH"
 
             ln -sfn "$RELEASE" "$DEPLOY_PATH/current"
             systemctl restart portifo
