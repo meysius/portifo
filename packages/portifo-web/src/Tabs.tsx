@@ -4,6 +4,8 @@ import HoldingsPage from "./pages/HoldingsPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import AccountsPage from "./pages/AccountsPage";
 import SettingsPage from "./pages/SettingsPage";
+import ManagePortfolioPage from "./pages/ManagePortfolioPage";
+import AddMemberPage from "./pages/AddMemberPage";
 import AssetDetailPage from "./pages/AssetDetailPage";
 import AccountDetailPage from "./pages/AccountDetailPage";
 import CashAccountDetailPage from "./pages/CashAccountDetailPage";
@@ -114,6 +116,18 @@ function TransactionsStack() {
   );
 }
 
+function SettingsStack() {
+  return (
+    <TabBaseProvider tabBase="/tabs/settings" tabLabel="Settings">
+      <IonRouterOutlet>
+        <Route exact path="/tabs/settings" component={SettingsPage} />
+        <Route exact path="/tabs/settings/portfolio" component={ManagePortfolioPage} />
+        <Route exact path="/tabs/settings/add-member" component={AddMemberPage} />
+      </IonRouterOutlet>
+    </TabBaseProvider>
+  );
+}
+
 function Tabs() {
   // Pushed detail pages now live inside each tab's own outlet (for the
   // swipe-back fix above), which means they're rendered inside IonTabs and
@@ -134,7 +148,7 @@ function Tabs() {
         <Route path="/tabs/portfolio" render={() => <PortfolioStack />} />
         <Route path="/tabs/transactions" render={() => <TransactionsStack />} />
         <Route path="/tabs/accounts" render={() => <AccountsStack />} />
-        <Route exact path="/tabs/settings" component={SettingsPage} />
+        <Route path="/tabs/settings" render={() => <SettingsStack />} />
         <Route exact path="/tabs">
           <Redirect to="/tabs/portfolio" />
         </Route>

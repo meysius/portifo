@@ -1010,6 +1010,36 @@ ion-item.row-closed {
   opacity: var(--closed-op);
 }
 
+/* DS .glyph.member — an initials avatar standing in for the cash/stock glyph
+   wherever a row is about a person (Manage Portfolio's member list). Reused
+   at 56px/brass-tint for Settings' own profile row (.glyph-member-lg). */
+.glyph-member {
+  background: var(--surface-2);
+  color: var(--fg-2);
+}
+
+.glyph-member .member-initial {
+  font-family: var(--ion-font-family);
+  font-weight: 650;
+  font-size: 13px;
+}
+
+.glyph-member-lg {
+  width: 56px;
+  height: 56px;
+  background: var(--brass-tint);
+  color: var(--brass);
+}
+
+.glyph-member-lg .member-initial {
+  font-size: 21px;
+}
+
+/* Trailing role pill (DS .closed-tag) ahead of a member row's chevron. */
+.type-tag + .row-chevron {
+  margin-inline-start: 10px;
+}
+
 .glyph-dot {
   width: 9px;
   height: 9px;
@@ -1053,31 +1083,54 @@ ion-item.row-closed {
   color: var(--fg-1);
 }
 
-/* ---------- settings profile card ---------- */
+/* ---------- settings profile row (DS .detail-head, turned sideways) ---------- */
 
-.profile-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  margin: 0 18px 20px;
+.settings-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 18px 20px;
 }
 
-.profile-name {
-  font-size: 14.5px;
-  font-weight: 500;
+.settings-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.settings-profile-name {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   color: var(--fg-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.profile-email {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: var(--fg-3);
-  margin-top: 2px;
+.settings-profile-email {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .settings-body {
   padding: 0 18px;
+}
+
+/* DS .field-note — a single line of quiet form-help text under a field-card
+   (Add Member: "no invite is sent"), for the one screen that has to explain
+   itself in prose rather than through its shape alone. */
+.field-note {
+  margin: 0 20px 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.55;
+  color: var(--fg-3);
 }
 
 /* ---------- form cards (DS .field-card / .field) ---------- */

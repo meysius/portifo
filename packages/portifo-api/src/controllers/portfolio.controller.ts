@@ -41,6 +41,25 @@ const CURRENCY_RE = /^[A-Z]{3}$/;
 // Guards the X-Portfolio-Id header before it reaches a uuid column — Postgres
 // errors on invalid uuid input rather than returning no rows.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const MEMBER_ROLES = ["viewer", "editor", "owner"] as const;
+type MemberRole = (typeof MEMBER_ROLES)[number];
+
+function isMemberRole(value: unknown): value is MemberRole {
+  return MEMBER_ROLES.includes(value as MemberRole);
+}
+
+function toMemberDto(member: { id: string; email: string; name: string | null; userId: string | null; role: string }, callerUserId: string) {
+  return {
+    id: member.id,
+    email: member.email,
+    name: member.name,
+    role: member.role,
+    pending: member.userId === null,
+    isSelf: member.userId === callerUserId,
+  };
+}
 
 function toTransactionDto(transaction: TransactionsSelect, accountName: string) {
   return {
@@ -68,6 +87,14 @@ export class PortfolioController implements SWController {
   public register(router: Router): void {
     router.get("/portfolios", this.listPortfolios);
     router.post("/portfolios", this.createPortfolio);
+    router.get("/portfolio", this.getActivePortfolio);
+    router.patch("/portfolio", this.renamePortfolio);
+    router.delete("/portfolio", this.deleteActivePortfolio);
+    router.get("/portfolio/members", this.listMembers);
+    router.post("/portfolio/members", this.addMember);
+    router.patch("/portfolio/members/:id", this.updateMember);
+    router.delete("/portfolio/members/:id", this.removeMember);
+    router.post("/portfolio/leave", this.leavePortfolio);
     router.get("/accounts", this.listAccounts);
     router.post("/accounts", this.createAccount);
     router.patch("/accounts/:id/balances/:currency", this.setCashBalance);
@@ -132,8 +159,259 @@ export class PortfolioController implements SWController {
       return;
     }
 
-    const portfolio = await this.identityService.createPortfolioForUser(user.id, name);
+    const portfolio = await this.identityService.createPortfolioForUser(user.id, name, user.email);
     res.status(201).json({ id: portfolio.id, name: portfolio.name });
+  };
+
+  private getActivePortfolio = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.getActivePortfolio called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const portfolioId = await this.resolvePortfolioId(req, user.id);
+    if (!portfolioId) {
+      res.status(404).json({ error: "No portfolio found for user" });
+      return;
+    }
+
+    const [portfolio, member, members] = await Promise.all([
+      this.identityService.getPortfolioById(portfolioId),
+      this.identityService.findMember(user.id, portfolioId),
+      this.identityService.listMembersByPortfolio(portfolioId),
+    ]);
+    if (!portfolio || !member) {
+      res.status(404).json({ error: "Portfolio not found" });
+      return;
+    }
+
+    res.json({ id: portfolio.id, name: portfolio.name, role: member.role, memberCount: members.length });
+  };
+
+  // Confirms the caller is an Owner of the active portfolio before any
+  // rename/delete/member-management mutation touches it, per the design
+  // system's "Owner can change, Editor/Viewer can only see the roster" rule.
+  private requireActiveOwnerPortfolio = async (req: Request, userId: string): Promise<string | null> => {
+    const portfolioId = await this.resolvePortfolioId(req, userId);
+    if (!portfolioId) return null;
+    const member = await this.identityService.findMember(userId, portfolioId);
+    if (!member || member.role !== "owner") return null;
+    return portfolioId;
+  };
+
+  private renamePortfolio = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.renamePortfolio called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    if (!name) {
+      res.status(400).json({ error: "Invalid portfolio payload" });
+      return;
+    }
+
+    const portfolioId = await this.requireActiveOwnerPortfolio(req, user.id);
+    if (!portfolioId) {
+      res.status(403).json({ error: "Only the portfolio Owner can rename it" });
+      return;
+    }
+
+    const portfolio = await this.identityService.updatePortfolioName(portfolioId, name);
+    res.json({ id: portfolio.id, name: portfolio.name });
+  };
+
+  private deleteActivePortfolio = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.deleteActivePortfolio called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const portfolioId = await this.requireActiveOwnerPortfolio(req, user.id);
+    if (!portfolioId) {
+      res.status(403).json({ error: "Only the portfolio Owner can delete it" });
+      return;
+    }
+
+    const owned = await this.identityService.listPortfoliosForUser(user.id);
+    if (owned.length <= 1) {
+      res.status(400).json({ error: "Can't delete your only portfolio" });
+      return;
+    }
+
+    await this.identityService.deletePortfolio(portfolioId);
+    res.status(204).end();
+  };
+
+  private listMembers = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.listMembers called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const portfolioId = await this.resolvePortfolioId(req, user.id);
+    if (!portfolioId) {
+      res.json([]);
+      return;
+    }
+    const member = await this.identityService.findMember(user.id, portfolioId);
+    if (!member) {
+      res.status(404).json({ error: "Portfolio not found" });
+      return;
+    }
+
+    const members = await this.identityService.listMembersByPortfolio(portfolioId);
+    res.json(members.map((m) => toMemberDto(m, user.id)));
+  };
+
+  private addMember = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.addMember called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+    const role = req.body?.role;
+    if (!EMAIL_RE.test(email) || !isMemberRole(role)) {
+      res.status(400).json({ error: "Invalid member payload" });
+      return;
+    }
+
+    const portfolioId = await this.requireActiveOwnerPortfolio(req, user.id);
+    if (!portfolioId) {
+      res.status(403).json({ error: "Only the portfolio Owner can add members" });
+      return;
+    }
+
+    const existing = await this.identityService.findMemberByEmail(email, portfolioId);
+    if (existing) {
+      res.status(400).json({ error: `${email} is already a member of this portfolio` });
+      return;
+    }
+
+    // Already-registered addresses attach immediately (userId set right
+    // away) — only a never-seen-before email lands Pending. Either way, no
+    // invite is sent: the address itself is the access grant.
+    const existingUser = await this.identityService.findUserByEmail(email);
+    const member = await this.identityService.createMember({
+      email,
+      userId: existingUser?.id,
+      portfolioId,
+      role,
+    });
+    res.status(201).json(toMemberDto({ ...member, name: existingUser?.name ?? null }, user.id));
+  };
+
+  // Confirms the target member belongs to the caller's active portfolio, and
+  // isn't the caller's own row — mirrors Manage Portfolio's inert "(You)" row,
+  // which drops its chevron for the same reason.
+  private authorizeMemberTarget = async (
+    portfolioId: string,
+    callerUserId: string,
+    memberId: string,
+  ): Promise<{ id: string; email: string; userId: string | null; role: string } | null> => {
+    const target = await this.identityService.findMemberById(memberId);
+    if (!target || target.portfolioId !== portfolioId) return null;
+    if (target.userId === callerUserId) return null;
+    return target;
+  };
+
+  private updateMember = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.updateMember called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const role = req.body?.role;
+    if (!isMemberRole(role)) {
+      res.status(400).json({ error: "Invalid member payload" });
+      return;
+    }
+
+    const portfolioId = await this.requireActiveOwnerPortfolio(req, user.id);
+    if (!portfolioId) {
+      res.status(403).json({ error: "Only the portfolio Owner can change member roles" });
+      return;
+    }
+
+    const target = await this.authorizeMemberTarget(portfolioId, user.id, String(req.params.id));
+    if (!target) {
+      res.status(404).json({ error: "Member not found" });
+      return;
+    }
+
+    const updated = await this.identityService.updateMemberRole(target.id, role);
+    const existingUser = updated.userId ? await this.identityService.getUserById(updated.userId) : undefined;
+    res.json(toMemberDto({ ...updated, name: existingUser?.name ?? null }, user.id));
+  };
+
+  private removeMember = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.removeMember called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const portfolioId = await this.requireActiveOwnerPortfolio(req, user.id);
+    if (!portfolioId) {
+      res.status(403).json({ error: "Only the portfolio Owner can remove members" });
+      return;
+    }
+
+    const target = await this.authorizeMemberTarget(portfolioId, user.id, String(req.params.id));
+    if (!target) {
+      res.status(404).json({ error: "Member not found" });
+      return;
+    }
+
+    await this.identityService.removeMember(target.id);
+    res.status(204).end();
+  };
+
+  // Self-service counterpart to removeMember (Owner-only, can't target self):
+  // any non-Owner can remove their own membership. An Owner must delete the
+  // portfolio instead — there's no ownership-transfer flow, so an Owner
+  // leaving would either strand the portfolio without one or silently drop
+  // to a role that doesn't reflect what they signed up to manage.
+  private leavePortfolio = async (req: Request, res: Response): Promise<void> => {
+    this.logger.info("PortfolioController.leavePortfolio called");
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const portfolioId = await this.resolvePortfolioId(req, user.id);
+    if (!portfolioId) {
+      res.status(404).json({ error: "No portfolio found for user" });
+      return;
+    }
+
+    const member = await this.identityService.findMember(user.id, portfolioId);
+    if (!member) {
+      res.status(404).json({ error: "Portfolio not found" });
+      return;
+    }
+    if (member.role === "owner") {
+      res.status(400).json({ error: "Owners can't leave a portfolio — delete it instead" });
+      return;
+    }
+
+    await this.identityService.removeMember(member.id);
+    res.status(204).end();
   };
 
   private listAccounts = async (req: Request, res: Response): Promise<void> => {

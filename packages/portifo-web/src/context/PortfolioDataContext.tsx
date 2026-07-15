@@ -3,6 +3,14 @@ import type { ReactNode } from "react";
 import {
   listPortfolios,
   createPortfolio as apiCreatePortfolio,
+  getActivePortfolio,
+  renamePortfolio as apiRenamePortfolio,
+  deleteActivePortfolio as apiDeleteActivePortfolio,
+  leaveActivePortfolio as apiLeaveActivePortfolio,
+  listMembers as apiListMembers,
+  addMember as apiAddMember,
+  updateMemberRole as apiUpdateMemberRole,
+  removeMember as apiRemoveMember,
   listAccounts,
   createAccount as apiCreateAccount,
   updateCashBalance as apiUpdateCashBalance,
@@ -11,7 +19,16 @@ import {
   updateTransaction as apiUpdateTransaction,
   deleteTransaction as apiDeleteTransaction,
 } from "../api/portfolio";
-import type { AccountDto, NewAccount, NewTransaction, PortfolioDto, Transaction } from "../api/portfolio";
+import type {
+  AccountDto,
+  MemberDto,
+  MemberRole,
+  NewAccount,
+  NewTransaction,
+  PortfolioDetailDto,
+  PortfolioDto,
+  Transaction,
+} from "../api/portfolio";
 import { setActivePortfolioId as setApiActivePortfolioId } from "../api/http";
 import { getQuotes, getFxRates } from "../api/market";
 import type { Quote } from "../api/market";
@@ -30,12 +47,33 @@ interface PortfolioDataContextValue {
   // the router. See the AuthenticatedRoutes gate.
   switching: boolean;
   createPortfolio(name: string): Promise<PortfolioDto>;
+  // Owner/member-count for the active portfolio — Settings' Portfolio row and
+  // Manage Portfolio both read this rather than fetching it independently, so
+  // a rename or member-count change shows up in both places at once.
+  portfolioDetail: PortfolioDetailDto | null;
+  refreshPortfolioDetail(): Promise<void>;
+  renamePortfolio(name: string): Promise<void>;
+  // Deletes the active portfolio and switches to whichever of the caller's
+  // remaining portfolios comes first — mirrors switchPortfolio's own spinner
+  // signal (`switching`) so AuthGate covers the swap the same way.
+  deletePortfolio(): Promise<void>;
+  // Same switch-away behavior as deletePortfolio, for a non-Owner removing
+  // their own membership instead.
+  leavePortfolio(): Promise<void>;
+  // The active portfolio's roster — fetched alongside accounts/transactions
+  // (not lazily per-page) so Manage Portfolio and Add Member always agree,
+  // even navigating directly between them via the router's own page cache.
+  members: MemberDto[];
+  refreshMembers(opts?: { silent?: boolean }): Promise<void>;
+  addMember(email: string, role: MemberRole): Promise<MemberDto>;
+  updateMemberRole(memberId: string, role: MemberRole): Promise<MemberDto>;
+  removeMember(memberId: string): Promise<void>;
   accounts: AccountDto[];
   transactions: Transaction[];
   quotes: Record<string, Quote>;
   fxRates: FxRates;
   fxAsOf: string | null;
-  loading: { accounts: boolean; transactions: boolean; market: boolean };
+  loading: { accounts: boolean; transactions: boolean; market: boolean; members: boolean };
   refreshAccounts(opts?: { silent?: boolean }): Promise<void>;
   refreshTransactions(opts?: { silent?: boolean }): Promise<void>;
   refreshMarket(symbols: string[]): Promise<void>;
@@ -70,12 +108,14 @@ const ACTIVE_PORTFOLIO_KEY = "portifo.activePortfolioId";
 export function PortfolioDataProvider({ children }: { children: ReactNode }) {
   const [portfolios, setPortfolios] = useState<PortfolioDto[]>([]);
   const [activePortfolioId, setActivePortfolioId] = useState<string | null>(null);
+  const [portfolioDetail, setPortfolioDetail] = useState<PortfolioDetailDto | null>(null);
+  const [members, setMembers] = useState<MemberDto[]>([]);
   const [accounts, setAccounts] = useState<AccountDto[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [quotes, setQuotes] = useState<Record<string, Quote>>({});
   const [fxRates, setFxRates] = useState<FxRates>(FX_FALLBACK);
   const [fxAsOf, setFxAsOf] = useState<string | null>(null);
-  const [loading, setLoading] = useState({ accounts: true, transactions: true, market: true });
+  const [loading, setLoading] = useState({ accounts: true, transactions: true, market: true, members: true });
   const [switching, setSwitching] = useState(false);
 
   // `silent` refreshes update the data in place without toggling the loading
@@ -98,6 +138,24 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
       setTransactions(await listTransactions());
     } finally {
       if (!silent) setLoading((l) => ({ ...l, transactions: false }));
+    }
+  }, []);
+
+  const refreshPortfolioDetail = useCallback(async () => {
+    try {
+      setPortfolioDetail(await getActivePortfolio());
+    } catch {
+      // Non-fatal — Settings/Manage Portfolio just show their loading state
+      // a beat longer, same as the portfolios-list catch above.
+    }
+  }, []);
+
+  const refreshMembers = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    if (!silent) setLoading((l) => ({ ...l, members: true }));
+    try {
+      setMembers(await apiListMembers());
+    } finally {
+      if (!silent) setLoading((l) => ({ ...l, members: false }));
     }
   }, []);
 
@@ -158,6 +216,8 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
       }
       refreshAccounts();
       refreshTransactions();
+      refreshPortfolioDetail();
+      refreshMembers();
       refreshMarket([]);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -172,12 +232,12 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
       // portfolio's tabs (or flash Onboarding for an empty one).
       setSwitching(true);
       try {
-        await Promise.all([refreshAccounts(), refreshTransactions()]);
+        await Promise.all([refreshAccounts(), refreshTransactions(), refreshPortfolioDetail(), refreshMembers()]);
       } finally {
         setSwitching(false);
       }
     },
-    [activatePortfolio, refreshAccounts, refreshTransactions],
+    [activatePortfolio, refreshAccounts, refreshTransactions, refreshPortfolioDetail, refreshMembers],
   );
 
   const createPortfolioFn = useCallback(
@@ -188,6 +248,60 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
       return portfolio;
     },
     [switchPortfolio],
+  );
+
+  const renamePortfolioFn = useCallback(
+    async (name: string) => {
+      const portfolio = await apiRenamePortfolio(name);
+      setPortfolios((prev) => prev.map((p) => (p.id === portfolio.id ? portfolio : p)));
+      await refreshPortfolioDetail();
+    },
+    [refreshPortfolioDetail],
+  );
+
+  // Shared by deletePortfolio and leavePortfolio: both remove the active
+  // portfolio from the caller's own list and switch to whatever's left.
+  const dropActivePortfolioAndSwitch = useCallback(async () => {
+    const droppedId = activePortfolioId;
+    const remaining = portfolios.filter((p) => p.id !== droppedId);
+    setPortfolios(remaining);
+    if (remaining[0]) await switchPortfolio(remaining[0].id);
+  }, [activePortfolioId, portfolios, switchPortfolio]);
+
+  const deletePortfolioFn = useCallback(async () => {
+    await apiDeleteActivePortfolio();
+    await dropActivePortfolioAndSwitch();
+  }, [dropActivePortfolioAndSwitch]);
+
+  const leavePortfolioFn = useCallback(async () => {
+    await apiLeaveActivePortfolio();
+    await dropActivePortfolioAndSwitch();
+  }, [dropActivePortfolioAndSwitch]);
+
+  const addMemberFn = useCallback(
+    async (email: string, role: MemberRole) => {
+      const member = await apiAddMember(email, role);
+      await Promise.all([refreshMembers({ silent: true }), refreshPortfolioDetail()]);
+      return member;
+    },
+    [refreshMembers, refreshPortfolioDetail],
+  );
+
+  const updateMemberRoleFn = useCallback(
+    async (memberId: string, role: MemberRole) => {
+      const member = await apiUpdateMemberRole(memberId, role);
+      await refreshMembers({ silent: true });
+      return member;
+    },
+    [refreshMembers],
+  );
+
+  const removeMemberFn = useCallback(
+    async (memberId: string) => {
+      await apiRemoveMember(memberId);
+      await Promise.all([refreshMembers({ silent: true }), refreshPortfolioDetail()]);
+    },
+    [refreshMembers, refreshPortfolioDetail],
   );
 
   const createTransactionFn = useCallback(
@@ -259,6 +373,16 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
     switchPortfolio,
     switching,
     createPortfolio: createPortfolioFn,
+    portfolioDetail,
+    refreshPortfolioDetail,
+    renamePortfolio: renamePortfolioFn,
+    deletePortfolio: deletePortfolioFn,
+    leavePortfolio: leavePortfolioFn,
+    members,
+    refreshMembers,
+    addMember: addMemberFn,
+    updateMemberRole: updateMemberRoleFn,
+    removeMember: removeMemberFn,
     accounts,
     transactions,
     quotes,

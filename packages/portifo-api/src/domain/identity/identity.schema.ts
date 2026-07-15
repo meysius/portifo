@@ -22,16 +22,20 @@ export const members = pgTable(
   "members",
   {
     id: uuid().primaryKey().defaultRandom(),
-    userId: uuid()
-      .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+    // Nullable: a member added by email before that address has ever signed
+    // in has no user row to point at yet. AuthController attaches userId the
+    // first time that Gmail address logs in (see IdentityService.activatePendingMembers).
+    userId: uuid().references(() => users.id, { onDelete: "cascade" }),
+    // The invited email, always set — it's the actual access grant (matched
+    // against Google Sign-In), not just a display fallback for pending rows.
+    email: varchar({ length: 255 }).notNull(),
     portfolioId: uuid()
       .notNull()
       .references(() => portfolios.id, { onDelete: "cascade" }),
     role: memberRoleEnum().notNull(),
     createdAt: timestamp().notNull().defaultNow(),
   },
-  (table) => [unique().on(table.userId, table.portfolioId)],
+  (table) => [unique().on(table.email, table.portfolioId)],
 );
 
 const UsersSelectSchema = createSelectSchema(users);

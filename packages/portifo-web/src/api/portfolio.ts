@@ -81,6 +81,101 @@ export async function updateCashBalance(accountId: string, currency: string, bal
   return res.json();
 }
 
+export type MemberRole = "viewer" | "editor" | "owner";
+
+export interface PortfolioDetailDto {
+  id: string;
+  name: string;
+  role: MemberRole;
+  memberCount: number;
+}
+
+export interface MemberDto {
+  id: string;
+  email: string;
+  name: string | null;
+  role: MemberRole;
+  // No name until this email's Google account has signed in at least once —
+  // added by email, activated automatically on that account's next login.
+  pending: boolean;
+  isSelf: boolean;
+}
+
+export async function getActivePortfolio(): Promise<PortfolioDetailDto> {
+  const res = await apiFetch("/portfolio");
+  if (!res.ok) throw new Error("Failed to fetch portfolio");
+  return res.json();
+}
+
+export async function renamePortfolio(name: string): Promise<PortfolioDto> {
+  const res = await apiFetch("/portfolio", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to rename portfolio");
+  }
+  return res.json();
+}
+
+export async function deleteActivePortfolio(): Promise<void> {
+  const res = await apiFetch("/portfolio", { method: "DELETE" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to delete portfolio");
+  }
+}
+
+export async function leaveActivePortfolio(): Promise<void> {
+  const res = await apiFetch("/portfolio/leave", { method: "POST" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to leave portfolio");
+  }
+}
+
+export async function listMembers(): Promise<MemberDto[]> {
+  const res = await apiFetch("/portfolio/members");
+  if (!res.ok) throw new Error("Failed to fetch members");
+  return res.json();
+}
+
+export async function addMember(email: string, role: MemberRole): Promise<MemberDto> {
+  const res = await apiFetch("/portfolio/members", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, role }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to add member");
+  }
+  return res.json();
+}
+
+export async function updateMemberRole(memberId: string, role: MemberRole): Promise<MemberDto> {
+  const res = await apiFetch(`/portfolio/members/${memberId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to update member");
+  }
+  return res.json();
+}
+
+export async function removeMember(memberId: string): Promise<void> {
+  const res = await apiFetch(`/portfolio/members/${memberId}`, { method: "DELETE" });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to remove member");
+  }
+}
+
 export async function getPortfolioHistory(range: HistoryRange, currency: string): Promise<HistoryPoint[]> {
   const res = await apiFetch(
     `/portfolio/history?range=${encodeURIComponent(range)}&currency=${encodeURIComponent(currency)}`,

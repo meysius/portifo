@@ -47,6 +47,12 @@ export class AuthController implements SWController {
           });
     }
 
+    // Claims any member rows added by this email before this Google account
+    // ever signed in (see docs/design-system.html's Pending member state) —
+    // no invite email is ever sent, so this is the only moment access
+    // actually activates.
+    await this.identityService.activatePendingMembers(user.id, user.email);
+
     const session = this.authService.signSession(user.id);
     res.cookie(this.authService.cookieName, session, this.authService.cookieOptions);
     res.json({ id: user.id, email: user.email, name: user.name });

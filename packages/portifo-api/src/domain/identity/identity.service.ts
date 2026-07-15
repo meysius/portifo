@@ -1,5 +1,5 @@
 import { SWLogger } from "simple-wire";
-import { IdentityRepo } from "./identity.repo";
+import { IdentityRepo, MemberWithUser } from "./identity.repo";
 import {
   UsersSelect,
   UsersInsert,
@@ -55,9 +55,9 @@ export class IdentityService {
     return this.identityRepo.createPortfolio(portfolioData);
   }
 
-  async createPortfolioForUser(userId: string, name: string): Promise<PortfoliosSelect> {
+  async createPortfolioForUser(userId: string, name: string, email: string): Promise<PortfoliosSelect> {
     this.logger.info("IdentityService.createPortfolioForUser called");
-    return this.identityRepo.createPortfolioForUser(userId, name);
+    return this.identityRepo.createPortfolioForUser(userId, name, email);
   }
 
   async getPortfolioById(id: string): Promise<PortfoliosSelect | undefined> {
@@ -70,12 +70,22 @@ export class IdentityService {
     return this.identityRepo.listPortfoliosForUser(userId);
   }
 
+  async updatePortfolioName(id: string, name: string): Promise<PortfoliosSelect> {
+    this.logger.info("IdentityService.updatePortfolioName called");
+    return this.identityRepo.updatePortfolioName(id, name);
+  }
+
+  async deletePortfolio(id: string): Promise<void> {
+    this.logger.info("IdentityService.deletePortfolio called");
+    return this.identityRepo.deletePortfolio(id);
+  }
+
   async createMember(memberData: MembersInsert): Promise<MembersSelect> {
     this.logger.info("IdentityService.createMember called");
     return this.identityRepo.createMember(memberData);
   }
 
-  async listMembersByPortfolio(portfolioId: string): Promise<MembersSelect[]> {
+  async listMembersByPortfolio(portfolioId: string): Promise<MemberWithUser[]> {
     this.logger.info("IdentityService.listMembersByPortfolio called");
     return this.identityRepo.listMembersByPortfolio(portfolioId);
   }
@@ -85,8 +95,28 @@ export class IdentityService {
     return this.identityRepo.findMember(userId, portfolioId);
   }
 
+  async findMemberById(id: string): Promise<MembersSelect | undefined> {
+    this.logger.info("IdentityService.findMemberById called");
+    return this.identityRepo.findMemberById(id);
+  }
+
+  async findMemberByEmail(email: string, portfolioId: string): Promise<MembersSelect | undefined> {
+    this.logger.info("IdentityService.findMemberByEmail called");
+    return this.identityRepo.findMemberByEmail(email, portfolioId);
+  }
+
+  async updateMemberRole(id: string, role: MembersSelect["role"]): Promise<MembersSelect> {
+    this.logger.info("IdentityService.updateMemberRole called");
+    return this.identityRepo.updateMemberRole(id, role);
+  }
+
   async removeMember(id: string): Promise<void> {
     this.logger.info("IdentityService.removeMember called");
     return this.identityRepo.removeMember(id);
+  }
+
+  async activatePendingMembers(userId: string, email: string): Promise<void> {
+    this.logger.info("IdentityService.activatePendingMembers called");
+    return this.identityRepo.activatePendingMembers(userId, email);
   }
 }

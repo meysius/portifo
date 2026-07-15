@@ -221,6 +221,10 @@
   .glyph.stock svg{ width:15px; height:15px; color:var(--fg-2); }
   .glyph.closed-g{ background: var(--surface-2); }
   .glyph.closed-g svg{ width:14px; height:14px; color:var(--fg-3); }
+  .glyph.member{ background: var(--surface-2); }
+  .glyph.member .initial{ font-family:'Archivo',sans-serif; font-weight:650; font-size:13px; color:var(--fg-2); }
+  .glyph.member.lg{ width:56px; height:56px; background: var(--brass-tint); }
+  .glyph.member.lg .initial{ font-size:21px; color:var(--brass); }
   .row-main{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
   .row-main .sym{
     font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:15px;
@@ -342,6 +346,7 @@
   .field-input{ border:none; background:none; outline:none; font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--fg-2); text-align:right; flex:1; min-width:0; font-variant-numeric:tabular-nums; }
   .field-input::placeholder{ color:var(--fg-3); }
   .field-input:focus{ color:var(--brass); }
+  .field-note{ font-family:'Archivo',sans-serif; font-weight:500; font-size:12.5px; line-height:1.55; color:var(--fg-3); padding:0 2px; }
 
   .seg-group{ display:flex; gap:2px; background:var(--surface-2); border:1px solid var(--border); border-radius:11px; padding:3px; }
   .seg-item{ flex:1; min-width:0; display:flex; align-items:center; justify-content:center; height:32px; padding:0 4px; border-radius:8px; font-family:'Archivo',sans-serif; font-weight:500; font-size:13px; color:var(--fg-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -1214,7 +1219,7 @@
   <!-- SCREENS -->
   <div class="sec" id="screens">
     <div class="divider"><span class="dl">Screens</span><span class="dh"></span></div>
-    <p class="sec-note">Eight compositions built entirely from the pieces above — nothing new invented at the token level, save for the two-dot <code style="font-family:'IBM Plex Mono'">.onboard-steps</code> progress indicator the Onboarding screens introduce. All are spec'd screens with no mockup of their own yet.</p>
+    <p class="sec-note">Twelve compositions built entirely from the pieces above — nothing new invented at the token level, save for the two-dot <code style="font-family:'IBM Plex Mono'">.onboard-steps</code> progress indicator the Onboarding screens introduce, <code style="font-family:'IBM Plex Mono'">.glyph.member</code>, an initials-avatar variant the Settings screens add for a person, standing in for Holdings' cash/stock glyph wherever a row is about a member instead of a position, and <code style="font-family:'IBM Plex Mono'">.field-note</code>, a single line of quiet form-help text under a field-card, for the one screen (Add Member) that needs to explain itself in prose. All are spec'd screens with no mockup of their own yet.</p>
 
     <div class="comp-grid">
 
@@ -1493,6 +1498,176 @@
         <div class="comp-caption">Update Balance — promoted from a sheet to a full page, the same .detail-head + .field-card + .btn-stack shape as Transaction Detail. Account and currency live only in the header — the symrow states the currency (EUR / Euro), the second .detail-name line states the account (Household Checking) — never as .field rows: Transaction Detail's read-only-field-card trick only reads as "inert" when every row in the card shares that treatment, and this screen's Balance row is a real input, so putting fixed context beside it in the same card would make Account/Currency look editable too. The field-card here holds exactly one row, and it's the one thing you can change. Two actions close the page: .btn-primary "Save Balance" for the common path, and .btn-destructive "Delete Balance" below it — same weight and color as .btn-destructive elsewhere (e.g. Delete Portfolio), since removing a balance is exactly as destructive and is equivalent to saving it as zero, not a different operation. Opened from an existing Cash/Currency Balances row with Currency (in the header) and Balance prefilled; opened instead from the divider's .add-btn, there's no currency yet to put in the header, so Currency moves into the field-card as its own picker row (with the Fields chevron, above Balance) until one is chosen — and Delete Balance is omitted there, since there's no existing balance to delete.</div>
       </div>
 
+      <div class="comp-card wide">
+        <div class="comp-stage">
+          <div class="detail-head">
+            <div style="display:flex; align-items:center; gap:14px;">
+              <div class="glyph member lg"><span class="initial">A</span></div>
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <span class="detail-name" style="font-family:'Archivo',sans-serif; font-weight:650; font-size:17px; color:var(--fg-1);">Alex Rivera</span>
+                <span class="detail-name">alex@rivera.com</span>
+                <span class="closed-tag" style="width:fit-content;">Google Account</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"><span class="dl">Portfolio</span><span class="dh"></span></div>
+          <div class="list">
+            <div class="row">
+              <div class="glyph stock">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="12" width="18" height="7" rx="1.6" stroke="currentColor" stroke-width="1.7"/><rect x="5" y="7" width="14" height="5" rx="1.4" stroke="currentColor" stroke-width="1.7"/><rect x="7" y="3" width="10" height="4" rx="1.2" stroke="currentColor" stroke-width="1.7"/></svg>
+              </div>
+              <div class="radio-info"><div class="name">My Portfolio</div><div class="sub">3 members</div></div>
+              <div class="row-end"><span class="closed-tag">Owner</span></div>
+              <svg class="field-chevron" width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+
+          <div class="divider"><span class="dl">Appearance</span><span class="dh"></span></div>
+          <div class="seg-group">
+            <div class="seg-item">System</div>
+            <div class="seg-item">Light</div>
+            <div class="seg-item active">Dark</div>
+          </div>
+
+          <div class="btn-stack">
+            <button class="btn btn-secondary">Log Out</button>
+          </div>
+        </div>
+        <div class="comp-caption">Settings — replaces the old flat profile-card + segment + logout stack with the same .detail-head + .divider + .list vocabulary every other screen already uses, so Settings reads as one more screen instead of a bespoke one. The profile row is .detail-head's symrow shape turned sideways: a new .glyph.member.lg (56px, brass-tint, Archivo initial) stands in for .detail-sym, the name/email stack stands in for .detail-name, and "Google Account" is a plain .closed-tag doing the same job it does as a transaction's type tag — reporting the app's one sign-in method rather than inviting a change, since there's nothing to pick between. The Portfolio divider holds exactly one row: the active portfolio, its member count as a .radio-info .sub, and the caller's own role as a trailing .closed-tag. The Fields chevron opens Manage Portfolio below — switching which portfolio is active still lives on its own topbar switcher, so this row's job is "what's active and who's on it," not re-hosting that picker. Appearance and Log Out are unchanged from before.</div>
+      </div>
+
+      <div class="comp-card wide">
+        <div class="comp-stage">
+          <div class="detail-head">
+            <div class="detail-symrow">
+              <span class="detail-sym">My Portfolio</span>
+            </div>
+            <span class="detail-name">Your role: Owner</span>
+          </div>
+
+          <div class="field-card">
+            <div class="field">
+              <span class="field-label">Name</span>
+              <input class="field-input" type="text" value="My Portfolio">
+            </div>
+          </div>
+
+          <div class="divider">
+            <span class="dl">Members</span><span class="dh"></span>
+            <div class="add-btn"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></div>
+          </div>
+          <div class="list">
+            <div class="row">
+              <div class="glyph member"><span class="initial">A</span></div>
+              <div class="radio-info"><div class="name">Alex Rivera (You)</div><div class="sub">alex@rivera.com</div></div>
+              <div class="row-end"><span class="closed-tag">Owner</span></div>
+            </div>
+            <div class="row">
+              <div class="glyph member"><span class="initial">J</span></div>
+              <div class="radio-info"><div class="name">Jess Malik</div><div class="sub">jess@outlook.com</div></div>
+              <div class="row-end"><span class="closed-tag">Editor</span></div>
+              <svg class="field-chevron" width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="row">
+              <div class="glyph member"><span class="initial">S</span></div>
+              <div class="radio-info"><div class="name">Sam Ito</div><div class="sub">sam.ito@gmail.com</div></div>
+              <div class="row-end"><span class="closed-tag">Viewer</span></div>
+              <svg class="field-chevron" width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="row closed">
+              <div class="glyph member"><span class="initial">P</span></div>
+              <div class="radio-info"><div class="name">priya@domain.com</div><div class="sub">Pending · not signed in yet</div></div>
+              <div class="row-end"><span class="closed-tag">Editor</span></div>
+              <svg class="field-chevron" width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+
+          <div class="btn-stack">
+            <button class="btn btn-destructive">Delete Portfolio</button>
+          </div>
+        </div>
+        <div class="comp-caption">Manage Portfolio — reached from Settings' Portfolio row, at Investment Account Detail's scale (.detail-head with no eyebrow or hero, since a portfolio has no single value of its own — that's Holdings' job). Name sits in its own single-row .field-card, the same "a field is a row waiting to be saved" idiom as Update Balance's Balance field. The Members divider carries the screen's one .add-btn, opening Add Member, per the same rule as Cash Account Detail's Currency Balances divider. Member rows reuse .row/.radio-info with the new .glyph.member in place of the cash/stock glyph and a trailing .closed-tag reporting role instead of a value. The caller's own row (labeled "(You)") drops the Fields chevron since you can't act on your own membership from here — the same .row.inert logic an Investment Account's derived Cash rows use, "opens nothing," just for a different reason. Every other row keeps the chevron, opening the Member sheet below. A member who was added by email but hasn't signed in with that Google account yet — priya@domain.com here — reuses .row.closed's dimmed opacity exactly as a closed holding does: still a real row with a real assigned role, just not yet realized, and its .sub line reads "Pending" in place of a name because there isn't one to show until they sign in. Tapping it opens the same Member sheet as any other row, so revoking a pending row and removing an active member are one interaction, not two. Delete Portfolio closes the screen as a lone .btn-destructive, the owner-only counterpart to Update Balance's Delete Balance — shown only when the caller is Owner; anyone else sees "Leave Portfolio" as .btn-secondary in its place, and neither the add-btn nor other members' chevrons render for them, since an Editor or Viewer can see the roster but not change it.</div>
+      </div>
+
+      <div class="comp-card wide">
+        <div class="comp-stage">
+          <div class="detail-head">
+            <div class="detail-symrow">
+              <span class="detail-sym">Add Member</span>
+            </div>
+            <span class="detail-name">My Portfolio</span>
+          </div>
+
+          <div class="field-card">
+            <div class="field">
+              <span class="field-label">Email</span>
+              <input class="field-input" type="text" inputmode="email" placeholder="name@example.com">
+            </div>
+            <div class="field">
+              <span class="field-label">Role</span>
+              <span class="field-value">
+                Editor
+                <svg class="field-chevron" width="7" height="12" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <p class="field-note">No invite is sent. Ask them to sign in to Portifo with this Gmail address — they'll get access to My Portfolio the moment they do.</p>
+
+          <div class="btn-stack">
+            <button class="btn btn-primary">Add Member</button>
+          </div>
+        </div>
+        <div class="comp-caption">Add Member — opened by Manage Portfolio's Members .add-btn, the same field-card + btn-stack shape as Onboarding's Account Name step. There's no invitation to compose or send, only an entry to add: Google Sign-In is the app's one auth method, so the address itself is the access grant — the next Google sign-in matching it just works, with no email, link, or code in between. The new .field-note beneath the field-card says exactly that in one line, in place of a screen's worth of invite-flow copy. Role is a picker row, .field-value plus the Fields chevron, defaulting to Editor — it opens the same .sheet-panel/.radio-row selection sheet as Select Account, with Viewer/Editor/Owner as its three rows instead of accounts. Add Member stays .btn-primary, the screen's one recommended action, the same weight as Onboarding's Continue — and until that Gmail address actually signs in, Manage Portfolio lists the row as Pending, per the dimmed .row.closed treatment below.</div>
+      </div>
+
+      <div class="comp-card wide">
+        <div class="comp-stage">
+          <div class="sheet-stage">
+            <div class="sheet-backdrop-peek">
+              <div class="list">
+                <div class="row">
+                  <div class="glyph member"><span class="initial">J</span></div>
+                  <div class="radio-info"><div class="name">Jess Malik</div><div class="sub">jess@outlook.com</div></div>
+                  <div class="row-end"><span class="closed-tag">Editor</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="sheet-scrim"></div>
+            <div class="sheet-panel">
+              <div class="sheet-handle"></div>
+              <div class="sheet-panel-head" style="justify-content:center; flex-direction:column; gap:1px; padding-bottom:8px;">
+                <span class="sheet-panel-title">Jess Malik</span>
+                <span class="sheet-panel-sub">jess@outlook.com · Editor</span>
+              </div>
+              <div class="sheet-panel-body">
+                <div class="radio-row">
+                  <div class="radio-info"><div class="name">Owner</div><div class="sub">Full access, can delete the portfolio</div></div>
+                  <div class="radio-dot"></div>
+                </div>
+                <div class="radio-row">
+                  <div class="radio-info"><div class="name">Editor</div><div class="sub">Can add and edit transactions</div></div>
+                  <div class="radio-dot checked"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                </div>
+                <div class="radio-row">
+                  <div class="radio-info"><div class="name">Viewer</div><div class="sub">Can view only</div></div>
+                  <div class="radio-dot"></div>
+                </div>
+                <div class="action-list" style="margin-top:14px;">
+                  <div class="action-row destructive">
+                    <svg class="a-icon" viewBox="0 0 20 20" fill="none"><path d="M4 6h12M8 6V4.5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1V6M6 6l.6 10a1.4 1.4 0 0 0 1.4 1.3h4a1.4 1.4 0 0 0 1.4-1.3L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span class="a-label">Remove from Portfolio</span>
+                  </div>
+                </div>
+                <div class="action-cancel">Cancel</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="comp-caption">Member sheet — opened by tapping a member's row in Manage Portfolio, combining two Components patterns in one sheet rather than inventing a third: role is a .radio-row single-select exactly like Select Account (tapping a row changes it immediately, no separate save step), with a .sub line on each stating what the role can do since, unlike an account, "Owner" isn't self-explanatory. Remove sits below it as its own single-row .action-list, borrowing the NVDA holding sheet's .action-row.destructive for the one destructive choice here. .sheet-panel-title/.sub name the member being acted on and their current role, the same head shape the NVDA sheet uses to name what it's acting on. This same sheet opens for a Pending row too — the title falls back to the email since there's no name yet — and Remove from Portfolio does the same job in both cases, deleting the row outright rather than "canceling an invite" that was never sent, so Owner never has to think about the two states as different actions. Kept as one sheet instead of Add Member's full-page treatment since every choice here acts on a member who already exists, rather than creating one.</div>
+      </div>
+
     </div>
   </div>
 
@@ -1510,10 +1685,10 @@
           <li>Right-align numeric field values against their label, same as a holdings row's <code style="font-family:'IBM Plex Mono'">.val</code> — a field is a row waiting to be saved.</li>
           <li>Give a destructive action in a sheet the same <code style="font-family:'IBM Plex Mono'">--loss</code> used for negative P&amp;L — it's already established as "this is bad" in the same product.</li>
           <li>Keep third-party auth buttons (Google) in their required neutral style — it's both their brand rule and ours: brass stays reserved for our own primary action.</li>
-          <li>Add the Fields chevron to a list row only when tapping it opens a picker or a settings-style page (Accounts) — leave it off a row that opens the thing itself (Holdings, Transactions), so the affordance stays honest.</li>
+          <li>Add the Fields chevron to a list row only when tapping it opens a picker or a settings-style page (Accounts, a member row in Manage Portfolio) — leave it off a row that opens the thing itself (Holdings, Transactions), so the affordance stays honest.</li>
           <li>Give a Sell transaction its own <code style="font-family:'IBM Plex Mono'">.pnl.gain</code>/<code style="font-family:'IBM Plex Mono'">.pnl.loss</code> line for realized P&amp;L — the same component Holdings uses for a closed position, since a sale is the one transaction type that actually has a performance result.</li>
           <li>Keep Transaction Detail strictly read-only — plain <code style="font-family:'IBM Plex Mono'">.field-card</code>/<code style="font-family:'IBM Plex Mono'">.field</code> rows with no chevrons — and route editing through one explicit Edit action, so opening a transaction to look at it never risks changing it.</li>
-          <li>Make a <code style="font-family:'IBM Plex Mono'">.row</code> fully <code style="font-family:'IBM Plex Mono'">.inert</code> — no chevron, no tap handler — when the value it shows is derived rather than owned, like an Investment Account's Cash rows (a running total of Deposit/Withdraw transactions): a third state past chevron-for-settings and bare-for-opens-the-thing-itself, for "opens nothing, because there's nothing here to open."</li>
+          <li>Make a <code style="font-family:'IBM Plex Mono'">.row</code> fully <code style="font-family:'IBM Plex Mono'">.inert</code> — no chevron, no tap handler — when the value it shows is derived rather than owned, like an Investment Account's Cash rows (a running total of Deposit/Withdraw transactions), or when acting on it doesn't make sense for who's looking at it, like your own row in Manage Portfolio's member list: a third state past chevron-for-settings and bare-for-opens-the-thing-itself, for "opens nothing, because there's nothing here to open."</li>
         </ul>
       </div>
       <div class="usage-col">

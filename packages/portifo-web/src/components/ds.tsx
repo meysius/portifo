@@ -150,6 +150,18 @@ export function RadioDot({ checked }: { checked: boolean }) {
   );
 }
 
+/* DS .glyph.member — initials avatar for a person row (Manage Portfolio's
+   member list, Settings' own profile row via the `lg` size). Falls back to
+   "?" for a Pending row's bare email if it somehow starts with a non-letter. */
+export function MemberInitial({ label }: { label: string }) {
+  const initial = label.trim().charAt(0).toUpperCase() || "?";
+  return <span className="member-initial">{initial}</span>;
+}
+
+export function roleLabel(role: "viewer" | "editor" | "owner"): string {
+  return role.charAt(0).toUpperCase() + role.slice(1);
+}
+
 /* DS group divider — mono uppercase label with trailing hairline; optionally
    ends in the screen's one brass .add-btn (Account Detail's Cash divider). */
 export function ListDivider({ label, onAdd, addLabel }: { label: string; onAdd?: () => void; addLabel?: string }) {

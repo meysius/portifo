@@ -15,6 +15,13 @@
       "when": 1783973621011,
       "tag": "0001_mature_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784138367843,
+      "tag": "0002_spooky_tana_nile",
+      "breakpoints": true
     }
   ]
 }
