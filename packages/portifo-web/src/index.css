@@ -1384,7 +1384,8 @@ ion-list.list-inset.fieldcard-list ion-item {
   border: 1px solid var(--border);
 }
 
-.btn-google svg {
+.btn-google svg,
+.btn-secondary svg {
   width: 18px;
   height: 18px;
   flex-shrink: 0;
@@ -1560,6 +1561,75 @@ ion-list.list-inset.fieldcard-list ion-item {
   font-size: 11px;
   color: var(--fg-3);
   margin: 0;
+}
+
+/* ---------- install guide (InstallAppSheet) ---------- */
+
+.install-steps {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
+  border-radius: 14px;
+  overflow: hidden;
+  margin: 4px 0 10px;
+}
+
+.install-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.install-step:last-child {
+  border-bottom: none;
+}
+
+.install-step-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--brass-tint);
+  color: var(--brass);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 650;
+  display: grid;
+  place-items: center;
+}
+
+.install-step-text {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fg-1);
+  line-height: 1.4;
+}
+
+.install-step-text strong {
+  font-weight: 650;
+}
+
+.install-step-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--fg-2);
+}
+
+.install-step-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sheet-panel-body .list-divider {
+  margin: 18px 2px 4px;
+}
+
+.sheet-panel-body .list-divider:first-child {
+  margin-top: 2px;
 }
 
 /* ---------- sheets & modals (DS .sheet-panel) ---------- */

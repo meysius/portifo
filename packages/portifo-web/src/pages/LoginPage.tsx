@@ -1,7 +1,10 @@
 import { IonContent, IonPage, IonSpinner } from "@ionic/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import InstallAppSheet from "../components/InstallAppSheet";
+import { InstallGlyphIcon } from "../components/ds";
+import { detectInstallPlatform, isStandaloneDisplay } from "../lib/pwaInstall";
 
 // Same Google "G" mark portifo-web's LoginScreen renders inline.
 function GoogleIcon() {
@@ -28,6 +31,9 @@ function LoginPage() {
   const { loginWithGoogle } = useAuth();
   const { showToast } = useToast();
   const [pending, setPending] = useState(false);
+  const [showInstallGuide, setShowInstallGuide] = useState(false);
+  const platform = useMemo(detectInstallPlatform, []);
+  const alreadyInstalled = useMemo(isStandaloneDisplay, []);
 
   const handleLogin = async () => {
     setPending(true);
@@ -63,11 +69,20 @@ function LoginPage() {
               {pending ? <IonSpinner name="crescent" className="inline-spinner" /> : <GoogleIcon />}
               Continue with Google
             </button>
+
+            {!alreadyInstalled && (
+              <button type="button" className="btn btn-secondary" onClick={() => setShowInstallGuide(true)}>
+                <InstallGlyphIcon />
+                Install App
+              </button>
+            )}
           </div>
 
           <p className="login-fine">Tracks manually entered transactions &amp; balances · no bank login required</p>
         </div>
       </IonContent>
+
+      <InstallAppSheet isOpen={showInstallGuide} onClose={() => setShowInstallGuide(false)} platform={platform} />
     </IonPage>
   );
 }

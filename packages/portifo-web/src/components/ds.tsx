@@ -218,3 +218,46 @@ export function StackIcon() {
 export function FolderIcon() {
   return <FolderGlyphIcon />;
 }
+
+/* Install-guide inline glyphs — iOS Safari's share-square, Android Chrome's
+   kebab menu, and a generic "add to home screen" tile-plus. */
+export function ShareGlyphIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M10 2.5v10M6.5 6 10 2.5 13.5 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4.5 9.5v6a1.5 1.5 0 0 0 1.5 1.5h8a1.5 1.5 0 0 0 1.5-1.5v-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function MenuKebabGlyphIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <circle cx="10" cy="4.5" r="1.3" fill="currentColor" />
+      <circle cx="10" cy="10" r="1.3" fill="currentColor" />
+      <circle cx="10" cy="15.5" r="1.3" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function AddHomeGlyphIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="3" y="3" width="14" height="14" rx="4" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 6.8v6.4M6.8 10h6.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/* Login screen's "Install App" CTA — a phone outline with a download arrow
+   landing on the home-indicator, reading as "put this on your phone" rather
+   than a generic add-square. */
+export function InstallGlyphIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <rect x="5" y="1.5" width="10" height="17" rx="2.4" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 5.5v6.2M7.3 9.3 10 12l2.7-2.7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 15.7h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
