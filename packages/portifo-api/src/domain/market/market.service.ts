@@ -36,7 +36,6 @@ export class MarketService {
 
   async getQuotes(symbols: string[]): Promise<Quote[]> {
     if (symbols.length === 0) return [];
-    this.logger.info("MarketService.getQuotes called");
     const results = await this.client.quote(symbols, {}, { validateResult: false });
     const list: any[] = Array.isArray(results) ? results : [results];
     return list
@@ -61,7 +60,6 @@ export class MarketService {
   async getFxRates(base: string, targets: string[]): Promise<Record<string, number>> {
     const wanted = targets.filter((t) => t !== base);
     if (wanted.length === 0) return {};
-    this.logger.info("MarketService.getFxRates called");
     const symbols = wanted.map((t) => fxSymbol(base, t));
     const results = await this.client.quote(symbols, {}, { validateResult: false });
     const list: any[] = Array.isArray(results) ? results : [results];
@@ -75,7 +73,6 @@ export class MarketService {
   }
 
   async getHistory(symbol: string, range: HistoryRange): Promise<HistoryPoint[]> {
-    this.logger.info("MarketService.getHistory called");
     const period2 = new Date();
     const period1 = new Date(period2);
     let interval: "5m" | "15m" | "1d" | "1wk" = "1d";
@@ -125,13 +122,11 @@ export class MarketService {
   // run through the chart endpoint instead of a live quote.
   async getFxHistory(base: string, target: string, range: HistoryRange): Promise<HistoryPoint[]> {
     if (base === target) return [];
-    this.logger.info("MarketService.getFxHistory called");
     return this.getHistory(fxSymbol(base, target), range);
   }
 
   async searchSymbols(query: string): Promise<SymbolResult[]> {
     if (!query.trim()) return [];
-    this.logger.info("MarketService.searchSymbols called");
     const result: any = await this.client.search(query, { quotesCount: 8, newsCount: 0 }, { validateResult: false });
     const quotes: any[] = Array.isArray(result?.quotes) ? result.quotes : [];
     return quotes

@@ -14,13 +14,11 @@ export class UsersController implements SWController {
   }
 
   private listUsers = async (_req: Request, res: Response): Promise<void> => {
-    this.logger.info("UsersController.listUsers called");
     const users = await this.identityService.listAllUsers();
     res.json(users);
   };
 
   private createUser = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("UsersController.createUser called");
     await this.identityService.createUser(req.body);
     res.status(201).send();
   };

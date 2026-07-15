@@ -18,24 +18,20 @@ export class PortfolioService {
   ) {}
 
   async createAccount(accountData: AccountsInsert): Promise<AccountsSelect> {
-    this.logger.info("PortfolioService.createAccount called");
     return this.portfolioRepo.createAccount(accountData);
   }
 
   async getAccountById(id: string): Promise<AccountsSelect | undefined> {
-    this.logger.info("PortfolioService.getAccountById called");
     return this.portfolioRepo.getAccountById(id);
   }
 
   async listAccountsByPortfolio(portfolioId: string): Promise<AccountsSelect[]> {
-    this.logger.info("PortfolioService.listAccountsByPortfolio called");
     return this.portfolioRepo.listAccountsByPortfolio(portfolioId);
   }
 
   // Add Transaction lets the user type an existing or brand-new investment
   // account name in the same field, so the caller doesn't need to know which.
   async findOrCreateInvestmentAccount(portfolioId: string, name: string): Promise<AccountsSelect> {
-    this.logger.info("PortfolioService.findOrCreateInvestmentAccount called");
     const existing = await this.portfolioRepo.listAccountsByPortfolio(portfolioId);
     const found = existing.find((account) => account.type === "investment" && account.name === name);
     if (found) return found;
@@ -43,7 +39,6 @@ export class PortfolioService {
   }
 
   async listCurrencyBalancesByAccount(accountId: string): Promise<CurrencyBalancesSelect[]> {
-    this.logger.info("PortfolioService.listCurrencyBalancesByAccount called");
     return this.portfolioRepo.listCurrencyBalancesByAccount(accountId);
   }
 
@@ -52,7 +47,6 @@ export class PortfolioService {
   // can be reconstructed by replaying transactions across all accounts. These
   // transactions are filtered out of PortfolioController.listTransactions.
   async setCashAccountBalance(accountId: string, currency: string, balance: string): Promise<CurrencyBalancesSelect> {
-    this.logger.info("PortfolioService.setCashAccountBalance called");
     const account = await this.portfolioRepo.getAccountById(accountId);
     if (!account || account.type !== "cash") {
       throw new Error("setCashAccountBalance can only be used on a cash account");
@@ -74,19 +68,16 @@ export class PortfolioService {
   }
 
   async getTransactionById(id: string): Promise<TransactionsSelect | undefined> {
-    this.logger.info("PortfolioService.getTransactionById called");
     return this.portfolioRepo.getTransactionById(id);
   }
 
   async listTransactionsByAccount(accountId: string): Promise<TransactionsSelect[]> {
-    this.logger.info("PortfolioService.listTransactionsByAccount called");
     return this.portfolioRepo.listTransactionsByAccount(accountId);
   }
 
   // Investment accounts only. Buy/Sell/Deposit/Withdraw all move the account's
   // cash currency_balance for the transaction's currency.
   async createTransaction(transactionData: TransactionsInsert): Promise<TransactionsSelect> {
-    this.logger.info("PortfolioService.createTransaction called");
     const account = await this.portfolioRepo.getAccountById(transactionData.accountId);
     if (!account || account.type !== "investment") {
       throw new Error("Transactions can only be created on an investment account");
@@ -100,7 +91,6 @@ export class PortfolioService {
   // Reverses the old transaction's cash effect (which may be on a different
   // account/currency than the edit lands on) before applying the new one.
   async updateTransaction(id: string, transactionData: TransactionsInsert): Promise<TransactionsSelect> {
-    this.logger.info("PortfolioService.updateTransaction called");
     const existing = await this.portfolioRepo.getTransactionById(id);
     if (!existing) {
       throw new Error("Transaction not found");
@@ -118,7 +108,6 @@ export class PortfolioService {
   }
 
   async deleteTransaction(id: string): Promise<void> {
-    this.logger.info("PortfolioService.deleteTransaction called");
     const existing = await this.portfolioRepo.getTransactionById(id);
     if (!existing) return;
 
@@ -153,7 +142,6 @@ export class PortfolioService {
   // ledger UI, but they do have a ledger now (see setCashAccountBalance),
   // which is exactly what makes this reconstruction possible.
   async getPortfolioValueHistory(portfolioId: string, range: HistoryRange, displayCurrency: string): Promise<HistoryPoint[]> {
-    this.logger.info("PortfolioService.getPortfolioValueHistory called");
     const accounts = await this.portfolioRepo.listAccountsByPortfolio(portfolioId);
     const transactionsByAccount = await Promise.all(
       accounts.map((account) => this.portfolioRepo.listTransactionsByAccount(account.id)),

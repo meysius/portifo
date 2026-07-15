@@ -1,5 +1,6 @@
 import { IonRouterOutlet, IonSpinner } from "@ionic/react";
-import { Redirect, Route } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Redirect, Route, useHistory } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { PortfolioDataProvider, usePortfolioData } from "./context/PortfolioDataContext";
 import LoginPage from "./pages/LoginPage";
@@ -46,18 +47,45 @@ function AuthGate() {
 // keeps Onboarding mounted through its own step 1→2 transition — its own
 // refetch after creating the Investment account would otherwise already
 // satisfy a bare "has an account" gate and skip the Cash step entirely.
-// The full-screen spinner shows only when there's genuinely nothing to render
-// yet — the initial load (accounts still empty) or an explicit portfolio
-// switch (`switching`, which also guards against a stale-frame/Onboarding
-// flash while the swap's refetch is in flight). It must NOT key off
-// `loading.accounts` alone: that flag also flips during a background refresh
-// (post-mutation refreshAccounts, pull-to-refresh), and unmounting the
-// IonRouterOutlet mid-navigation tears down its view stack — the app is left
-// on a blank screen until it's relaunched (the "close and reopen" bug).
+//
+// Once <Tabs/> has mounted at least once (`tabsEverMounted`), it stays
+// mounted through every later portfolio switch instead of being swapped for
+// a spinner: unmounting the IonRouterOutlet mid-navigation tears down its —
+// and every nested per-tab outlet's — view stack, leaving the app on a
+// blank screen until it's relaunched (the "close and reopen" bug). That
+// used to happen on *every* switch between two already-onboarded
+// portfolios, and got worse the more tabs/pushed routes a user had visited
+// first, since there was more view-stack state to lose. The blocking
+// full-screen spinner is now reserved for the genuine first load, before
+// there's anything underneath worth preserving; a `switching` swap instead
+// renders as a full-screen overlay on top of the still-mounted tabs, with a
+// reset back to the portfolio tab's root (see the effect below) so a
+// pushed detail route referencing the outgoing portfolio's account/asset
+// ids doesn't linger once the incoming portfolio's data lands. Switching
+// *into* a portfolio that itself needs onboarding (e.g. a brand new one)
+// still fully swaps Tabs out for OnboardingPage — that's a legitimate mode
+// change, not a same-shape round trip, so there's no view-stack to lose.
 function AuthenticatedRoutes() {
   const { accounts, loading, switching } = usePortfolioData();
+  const history = useHistory();
+  const [tabsEverMounted, setTabsEverMounted] = useState(false);
+  const wasSwitchingRef = useRef(false);
 
-  if (switching || (loading.accounts && accounts.length === 0)) {
+  useEffect(() => {
+    if (switching && !wasSwitchingRef.current) {
+      history.replace("/tabs/portfolio");
+    }
+    wasSwitchingRef.current = switching;
+  }, [switching, history]);
+
+  const hasBothAccountTypes =
+    accounts.some((a) => a.type === "investment") && accounts.some((a) => a.type === "cash");
+
+  useEffect(() => {
+    if (!switching && hasBothAccountTypes) setTabsEverMounted(true);
+  }, [switching, hasBothAccountTypes]);
+
+  if (!tabsEverMounted && (switching || (loading.accounts && accounts.length === 0))) {
     return (
       <div className="auth-loading">
         <IonSpinner name="crescent" />
@@ -65,20 +93,24 @@ function AuthenticatedRoutes() {
     );
   }
 
-  const hasBothAccountTypes =
-    accounts.some((a) => a.type === "investment") && accounts.some((a) => a.type === "cash");
-
-  if (!hasBothAccountTypes) {
+  if (!switching && !hasBothAccountTypes) {
     return <OnboardingPage />;
   }
 
   return (
-    <IonRouterOutlet>
-      <Route path="/tabs" render={() => <Tabs />} />
-      <Route exact path="/">
-        <Redirect to="/tabs/portfolio" />
-      </Route>
-    </IonRouterOutlet>
+    <>
+      <IonRouterOutlet>
+        <Route path="/tabs" render={() => <Tabs />} />
+        <Route exact path="/">
+          <Redirect to="/tabs/portfolio" />
+        </Route>
+      </IonRouterOutlet>
+      {switching && (
+        <div className="auth-loading auth-loading-overlay">
+          <IonSpinner name="crescent" />
+        </div>
+      )}
+    </>
   );
 }
 

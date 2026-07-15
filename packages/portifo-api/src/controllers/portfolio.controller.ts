@@ -128,7 +128,6 @@ export class PortfolioController implements SWController {
   };
 
   private listPortfolios = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.listPortfolios called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -140,7 +139,6 @@ export class PortfolioController implements SWController {
   };
 
   private createPortfolio = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.createPortfolio called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -164,7 +162,6 @@ export class PortfolioController implements SWController {
   };
 
   private getActivePortfolio = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.getActivePortfolio called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -202,7 +199,6 @@ export class PortfolioController implements SWController {
   };
 
   private renamePortfolio = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.renamePortfolio called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -226,7 +222,6 @@ export class PortfolioController implements SWController {
   };
 
   private deleteActivePortfolio = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.deleteActivePortfolio called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -250,7 +245,6 @@ export class PortfolioController implements SWController {
   };
 
   private listMembers = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.listMembers called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -273,7 +267,6 @@ export class PortfolioController implements SWController {
   };
 
   private addMember = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.addMember called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -327,7 +320,6 @@ export class PortfolioController implements SWController {
   };
 
   private updateMember = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.updateMember called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -358,7 +350,6 @@ export class PortfolioController implements SWController {
   };
 
   private removeMember = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.removeMember called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -387,7 +378,6 @@ export class PortfolioController implements SWController {
   // leaving would either strand the portfolio without one or silently drop
   // to a role that doesn't reflect what they signed up to manage.
   private leavePortfolio = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.leavePortfolio called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -415,7 +405,6 @@ export class PortfolioController implements SWController {
   };
 
   private listAccounts = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.listAccounts called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -429,7 +418,6 @@ export class PortfolioController implements SWController {
   };
 
   private createAccount = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.createAccount called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -462,7 +450,6 @@ export class PortfolioController implements SWController {
   };
 
   private setCashBalance = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.setCashBalance called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -499,7 +486,6 @@ export class PortfolioController implements SWController {
   };
 
   private getPortfolioHistory = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.getPortfolioHistory called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -528,7 +514,6 @@ export class PortfolioController implements SWController {
   };
 
   private listTransactions = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.listTransactions called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -623,7 +608,6 @@ export class PortfolioController implements SWController {
   }
 
   private createTransaction = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.createTransaction called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -677,7 +661,6 @@ export class PortfolioController implements SWController {
   };
 
   private updateTransaction = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.updateTransaction called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -724,7 +707,6 @@ export class PortfolioController implements SWController {
   };
 
   private deleteTransaction = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("PortfolioController.deleteTransaction called");
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });

@@ -41,7 +41,6 @@ export class MarketController implements SWController {
   };
 
   private getQuotes = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("MarketController.getQuotes called");
     if (!(await this.authenticate(req))) {
       res.status(401).json({ error: "Not authenticated" });
       return;
@@ -57,7 +56,6 @@ export class MarketController implements SWController {
   };
 
   private getFx = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("MarketController.getFx called");
     if (!(await this.authenticate(req))) {
       res.status(401).json({ error: "Not authenticated" });
       return;
@@ -75,7 +73,6 @@ export class MarketController implements SWController {
   };
 
   private getHistory = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("MarketController.getHistory called");
     if (!(await this.authenticate(req))) {
       res.status(401).json({ error: "Not authenticated" });
       return;
@@ -97,7 +94,6 @@ export class MarketController implements SWController {
   };
 
   private searchSymbols = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("MarketController.searchSymbols called");
     if (!(await this.authenticate(req))) {
       res.status(401).json({ error: "Not authenticated" });
       return;

@@ -17,7 +17,6 @@ export class AuthController implements SWController {
   }
 
   private loginWithGoogle = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("AuthController.loginWithGoogle called");
     const accessToken = req.body?.access_token;
     if (typeof accessToken !== "string" || !accessToken) {
       res.status(400).json({ error: "access_token is required" });
@@ -59,7 +58,6 @@ export class AuthController implements SWController {
   };
 
   private me = async (req: Request, res: Response): Promise<void> => {
-    this.logger.info("AuthController.me called");
     const token = req.cookies?.[this.authService.cookieName];
     const session = token ? this.authService.verifySession(token) : null;
     if (!session) {
@@ -75,7 +73,6 @@ export class AuthController implements SWController {
   };
 
   private logout = async (_req: Request, res: Response): Promise<void> => {
-    this.logger.info("AuthController.logout called");
     res.clearCookie(this.authService.cookieName, { path: "/" });
     res.status(204).send();
   };

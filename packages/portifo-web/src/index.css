@@ -1559,6 +1559,13 @@ ion-list.list-inset.fieldcard-list ion-item {
   justify-content: center;
 }
 
+.auth-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+}
+
 .login-content {
   --background: var(--bg);
 }
