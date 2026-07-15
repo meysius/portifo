@@ -60,23 +60,5 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           shell: bash
           script: |
-            exec > >(tee /tmp/portifo-deploy-debug.log) 2>&1
-            set -ex
-            DEPLOY_PATH=${{ secrets.DEPLOY_PATH }}
-            RELEASE="$DEPLOY_PATH/releases/${{ github.sha }}"
-
-            mkdir -p "$RELEASE"
-            tar -xzf /tmp/release.tar.gz -C "$RELEASE"
-            rm -f /tmp/release.tar.gz
-            chown -R portifo:portifo "$RELEASE"
-            chmod +x "$RELEASE/deploy/migrate.sh"
-
-            su -s /bin/bash portifo "$RELEASE/deploy/migrate.sh" "$RELEASE" "$DEPLOY_PATH"
-
-            ln -sfn "$RELEASE" "$DEPLOY_PATH/current"
-            systemctl restart portifo
-            sleep 2
-            systemctl is-active portifo
-
-            cd "$DEPLOY_PATH/releases"
-            ls -1t | tail -n +6 | xargs -r rm -rf --
+            whoami > /tmp/portifo-ssh-action-test.txt
+            echo "host-ok" >> /tmp/portifo-ssh-action-test.txt
