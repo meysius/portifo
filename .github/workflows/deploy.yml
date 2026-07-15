@@ -9,43 +9,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
-
-      - uses: docker/login-action@v3
+      - uses: pnpm/action-setup@v4
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          version: 10.20.0
 
-      - id: meta
-        uses: docker/metadata-action@v5
+      - uses: actions/setup-node@v4
         with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=sha
-            type=raw,value=latest
+          node-version: 22
+          cache: pnpm
 
-      - uses: docker/build-push-action@v6
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: CI=true pnpm install --prod --frozen-lockfile
+
+      # Same set of files the Dockerfile's runtime stage copies — see there
+      # for why drizzle.config.ts/drizzle/ are needed alongside dist.
+      - name: Package release artifact
+        run: |
+          tar -czf release.tar.gz \
+            pnpm-workspace.yaml package.json node_modules \
+            packages/portifo-api/package.json \
+            packages/portifo-api/node_modules \
+            packages/portifo-api/dist \
+            packages/portifo-api/drizzle.config.ts \
+            packages/portifo-api/drizzle \
+            packages/portifo-web/dist
+
+      - name: Upload release to server
+        uses: appleboy/scp-action@v0.1.7
         with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: release.tar.gz
+          target: /tmp
+          overwrite: true
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy over SSH
+      - name: Extract, migrate, restart
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
@@ -53,8 +58,24 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             set -e
-            cd ${{ secrets.DEPLOY_PATH }}
-            docker compose pull app
-            docker compose --profile tools run --rm migrate
-            docker compose up -d --remove-orphans
-            docker image prune -f
+            DEPLOY_PATH=${{ secrets.DEPLOY_PATH }}
+            RELEASE="$DEPLOY_PATH/releases/${{ github.sha }}"
+
+            mkdir -p "$RELEASE"
+            tar -xzf /tmp/release.tar.gz -C "$RELEASE"
+            rm -f /tmp/release.tar.gz
+            chown -R portifo:portifo "$RELEASE"
+
+            su -s /bin/bash portifo -c "
+              cd $RELEASE/packages/portifo-api &&
+              set -a && source $DEPLOY_PATH/shared/.env && set +a &&
+              ./node_modules/.bin/drizzle-kit migrate
+            "
+
+            ln -sfn "$RELEASE" "$DEPLOY_PATH/current"
+            systemctl restart portifo
+            sleep 2
+            systemctl is-active portifo
+
+            cd "$DEPLOY_PATH/releases"
+            ls -1t | tail -n +6 | xargs -r rm -rf --

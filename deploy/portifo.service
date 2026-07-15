@@ -1,0 +1,20 @@
+[Unit]
+Description=Portifo API (serves the built web SPA in production)
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=portifo
+Group=portifo
+WorkingDirectory=/opt/portifo/current/packages/portifo-api
+EnvironmentFile=/opt/portifo/shared/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/portifo
+
+[Install]
+WantedBy=multi-user.target
