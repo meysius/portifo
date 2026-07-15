@@ -30,9 +30,14 @@ jobs:
 
       # Same set of files the Dockerfile's runtime stage copies — see there
       # for why drizzle.config.ts/drizzle/ are needed alongside dist.
+      #
+      # Named uniquely per commit (not a fixed "release.tar.gz") — a stale
+      # leftover from a previous failed run, owned by a different uid, once
+      # blocked a later run's overwrite of that same fixed path with a
+      # confusing "Permission denied" from the remote tar extraction.
       - name: Package release artifact
         run: |
-          tar -czf release.tar.gz \
+          tar -czf release-${{ github.sha }}.tar.gz \
             pnpm-workspace.yaml package.json node_modules \
             packages/portifo-api/package.json \
             packages/portifo-api/node_modules \
@@ -48,7 +53,7 @@ jobs:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
-          source: release.tar.gz
+          source: release-${{ github.sha }}.tar.gz
           target: /tmp
           overwrite: true
 
@@ -60,5 +65,24 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           shell: bash
           script: |
-            whoami > /tmp/portifo-ssh-action-test.txt
-            echo "host-ok" >> /tmp/portifo-ssh-action-test.txt
+            exec > >(tee /tmp/portifo-deploy-debug.log) 2>&1
+            set -ex
+            DEPLOY_PATH=${{ secrets.DEPLOY_PATH }}
+            RELEASE="$DEPLOY_PATH/releases/${{ github.sha }}"
+            ARCHIVE="/tmp/release-${{ github.sha }}.tar.gz"
+
+            mkdir -p "$RELEASE"
+            tar -xzf "$ARCHIVE" -C "$RELEASE"
+            rm -f "$ARCHIVE"
+            chown -R portifo:portifo "$RELEASE"
+            chmod +x "$RELEASE/deploy/migrate.sh"
+
+            su -s /bin/bash portifo "$RELEASE/deploy/migrate.sh" "$RELEASE" "$DEPLOY_PATH"
+
+            ln -sfn "$RELEASE" "$DEPLOY_PATH/current"
+            systemctl restart portifo
+            sleep 2
+            systemctl is-active portifo
+
+            cd "$DEPLOY_PATH/releases"
+            ls -1t | tail -n +6 | xargs -r rm -rf --
