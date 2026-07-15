@@ -25,11 +25,10 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      # VITE_GOOGLE_CLIENT_ID is baked into the web bundle at build time by
-      # Vite — it's not a secret (see AuthContext.tsx), just a repo variable.
+      # VITE_GOOGLE_CLIENT_ID is baked into the web bundle at build time by Vite.
       - run: pnpm build
         env:
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.GOOGLE_CLIENT_ID }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
       - run: CI=true pnpm install --prod --frozen-lockfile
 
       # Same set of files the Dockerfile's runtime stage copies — see there
