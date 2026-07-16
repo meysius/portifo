@@ -11,6 +11,9 @@ export const ConfigSchema = z.object({
   DATABASE_URL: z.string(),
   GOOGLE_CLIENT_ID: z.string(),
   SESSION_SECRET: z.string(),
+  VAPID_PUBLIC_KEY: z.string(),
+  VAPID_PRIVATE_KEY: z.string(),
+  VAPID_CONTACT_EMAIL: z.string(),
 }) satisfies z.ZodType<SWConfig>;
 
 export type Config = z.infer<typeof ConfigSchema>;

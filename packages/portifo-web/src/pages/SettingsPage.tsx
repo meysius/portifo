@@ -19,6 +19,8 @@ import { useTabBase } from "../context/TabBaseContext";
 import { useToast } from "../context/ToastContext";
 import { ChevronRightIcon, ListDivider, MemberInitial, StackIcon, roleLabel } from "../components/ds";
 import { setThemePreference, useThemePreference, type ThemePreference } from "../lib/theme";
+import { enablePushNotifications, isPushSupported } from "../lib/push";
+import { sendTestPush } from "../api/push";
 
 // Settings (design-system Screens section): the profile row is .detail-head's
 // symrow shape turned sideways — a 56px .glyph-member-lg initial avatar in
@@ -35,6 +37,11 @@ function SettingsPage() {
   const { showToast } = useToast();
   const [loggingOut, setLoggingOut] = useState(false);
   const theme = useThemePreference();
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    isPushSupported() ? Notification.permission : "unsupported",
+  );
+  const [enablingPush, setEnablingPush] = useState(false);
+  const [sendingTestPush, setSendingTestPush] = useState(false);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -43,6 +50,32 @@ function SettingsPage() {
     } catch {
       showToast("Failed to log out", { color: "danger" });
       setLoggingOut(false);
+    }
+  };
+
+  const handleEnablePush = async () => {
+    setEnablingPush(true);
+    try {
+      await enablePushNotifications();
+      setNotifPermission("granted");
+      showToast("Notifications enabled");
+    } catch {
+      setNotifPermission(Notification.permission);
+      showToast("Couldn't enable notifications", { color: "danger" });
+    } finally {
+      setEnablingPush(false);
+    }
+  };
+
+  const handleSendTestPush = async () => {
+    setSendingTestPush(true);
+    try {
+      await sendTestPush();
+      showToast("Test notification sent");
+    } catch {
+      showToast("Couldn't send test notification", { color: "danger" });
+    } finally {
+      setSendingTestPush(false);
     }
   };
 
@@ -113,6 +146,28 @@ function SettingsPage() {
             <IonLabel>Dark</IonLabel>
           </IonSegmentButton>
         </IonSegment>
+
+        <ListDivider label="Notifications" />
+        <div className="btn-stack">
+          {notifPermission === "granted" ? (
+            <button type="button" className="btn btn-secondary" onClick={handleSendTestPush} disabled={sendingTestPush}>
+              Send Test Notification
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={handleEnablePush}
+              disabled={enablingPush || notifPermission === "unsupported" || notifPermission === "denied"}
+            >
+              {notifPermission === "denied"
+                ? "Notifications Blocked"
+                : notifPermission === "unsupported"
+                  ? "Notifications Unsupported"
+                  : "Enable Notifications"}
+            </button>
+          )}
+        </div>
 
         <div className="btn-stack">
           <button type="button" className="btn btn-secondary" onClick={handleLogout} disabled={loggingOut}>
