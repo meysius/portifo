@@ -8,8 +8,11 @@ Portifo — a portfolio tracker mobile app (multi-currency investments + cash, u
 
 - `packages/portifo-web` — Vite + React + Ionic SPA (the mobile frontend, styled as an iOS-mode PWA)
 - `packages/portifo-api` — backend on `simple-wire`, a thin opinionated framework over Express (see `packages/portifo-api/CLAUDE.md` for the framework's architecture rules — domain slices, DI, controllers)
+- `docs/use-cases.md` holds the product specs and user flows and use cases.
+- `docs/design-system.html` is the source of truth for design language and tokens (colors, spacing, typography, screen layouts etc.) used in the frontend. Every time a user wants you to change the design or
+a screen, you should first make the change in design system and once it's approved, then implement it in the frontend code.
 
-**`docs/`** holds the product spec — flows, screens, and domain model. `docs/design-system.html` is the source of truth for design tokens (`--surface`, `--fg-1..3`, `--gain`, `--loss`, etc.) that `portifo-web` consumes.
+Never attempt to use claude-in-chrome or chromium or playwright mcp to verify the looks of something, ask user to verify.
 
 ## Commands
 

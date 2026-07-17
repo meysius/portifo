@@ -109,28 +109,30 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
             <span className="detail-sym">{symbol}</span>
             {quote?.shortName && <span className="detail-name">{quote.shortName}</span>}
           </div>
-          <IonNote className="eyebrow">{agg.closed ? "Price / Share" : "Total Holding Value"}</IonNote>
-          <MoneyHero value={agg.closed ? price : marketValue} currency={currency} small />
+          <IonNote className="eyebrow">Price / Share</IonNote>
+          <MoneyHero value={price} currency={currency} small />
           {!agg.closed && (
             <>
-              {/* Same shape as the Holdings list row: shares @ avg cost → live
-                  price, then Today/Total stacked beneath — DS .row-meta +
-                  .pnl-label, reused here instead of the old price-only hero. */}
+              {/* Same shape as the Holdings list row: cost basis (shares ×
+                  avg cost), then Today/Total stacked beneath — DS .row-meta +
+                  .pnl-label, reused here instead of the old market-value hero. */}
               <p className="row-meta detail-rowmeta">
-                {fmtShares(agg.totalShares)} @ {fmtCcy(agg.avgCost, currency)} → {fmtCcy(price, currency)}
+                {fmtCcy(agg.costBasis, currency)} ({fmtShares(agg.totalShares)} x {fmtCcy(agg.avgCost, currency)})
               </p>
               <div className="gain-stack">
                 {quote && (
                   <p className={todayGain ? "positive" : "negative"}>
                     <span className="pnl-label">Today:</span>
                     {todayGain ? "+" : "−"}
-                    {fmtCcy(Math.abs(todayPL), currency)} · {Math.abs(quote.changePercent).toFixed(1)}%
+                    {fmtCcy(Math.abs(todayPL), currency)} · {todayGain ? "+" : "−"}
+                    {Math.abs(quote.changePercent).toFixed(1)}%
                   </p>
                 )}
                 <p className={gain ? "positive" : "negative"}>
                   <span className="pnl-label">Total:</span>
                   {gain ? "+" : "−"}
-                  {fmtCcy(Math.abs(unrealizedPL), currency)} · {Math.abs(unrealizedPLPct).toFixed(1)}%
+                  {fmtCcy(Math.abs(unrealizedPL), currency)} · {gain ? "+" : "−"}
+                  {Math.abs(unrealizedPLPct).toFixed(1)}%
                 </p>
               </div>
             </>

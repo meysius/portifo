@@ -182,11 +182,35 @@ ion-tab-button ion-label {
   font-weight: 600 !important;
 }
 
+/* DS .tab-icon — a small brass-tint capsule behind the selected tab's icon
+   only (same idiom as .theme-btn.active's segmented-control highlight),
+   since brass ink alone on an unselected tab's already-muted fg-3 wasn't
+   enough contrast to read at a glance. A full-button pill read as a heavy
+   block against dark backgrounds, so the highlight is scoped to the icon
+   the way iOS/Material nav bars do it, leaving the label as plain text.
+   `tab-selected` is the class Ionic itself applies to the selected
+   ion-tab-button's host. */
+ion-tab-button .tab-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 15px;
+  border-radius: 100px;
+  margin-bottom: 2px;
+}
+
+ion-tab-button.tab-selected .tab-icon {
+  background: var(--brass-tint);
+}
+
+ion-tab-button.tab-selected ion-label {
+  font-weight: 700 !important;
+}
+
 /* DS .tab svg — 22×22 line icons. */
 ion-tab-button svg {
   width: 22px;
   height: 22px;
-  margin-bottom: 2px;
 }
 
 /* ---------- hero (DS .eyebrow + .hero-value + .hero-change) ---------- */

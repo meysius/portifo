@@ -289,7 +289,8 @@ function HoldingsPage() {
                     <p className={todayGainAgg ? "positive" : "negative"}>
                       <span className="pnl-label">Today:</span>
                       {todayGainAgg ? "+" : "−"}
-                      {fmtCcy(Math.abs(todaySumDisplay), displayCurrency)} · {Math.abs(todayPctAgg).toFixed(1)}%
+                      {fmtCcy(Math.abs(todaySumDisplay), displayCurrency)} · {todayGainAgg ? "+" : "−"}
+                      {Math.abs(todayPctAgg).toFixed(1)}%
                     </p>
                   )}
                   {costBasisSumDisplay > 1e-9 && (
@@ -297,6 +298,7 @@ function HoldingsPage() {
                       <span className="pnl-label">Total:</span>
                       {unrealizedGainAgg ? "+" : "−"}
                       {fmtCcy(Math.abs(unrealizedSumDisplay), displayCurrency)} ·{" "}
+                      {unrealizedGainAgg ? "+" : "−"}
                       {Math.abs(unrealizedPctAgg).toFixed(1)}%
                     </p>
                   )}
@@ -384,7 +386,6 @@ function HoldingsPage() {
               </IonItem>
 
               {sortedHoldings.map((h) => {
-                const value = convert(h.price * h.shares, h.currency, displayCurrency, fxRates);
                 const todayGain = h.todayPct != null && h.todayPct >= 0;
                 const gain = h.unrealizedPct != null && h.unrealizedPct >= 0;
                 return (
@@ -397,20 +398,20 @@ function HoldingsPage() {
                       <p>{h.name ?? `${fmtShares(h.shares)} sh`}</p>
                     </IonLabel>
                     <IonLabel slot="end">
-                      <h2>{fmtCcy(value, displayCurrency)}</h2>
-                      {/* DS .row .meta — position size, avg cost per share
-                          (from cost basis / transactions), and the current
-                          price, all in the holding's native currency, so the
-                          row shows more than its display-currency value and
-                          P&L. */}
+                      <h2>{fmtCcy(h.price, h.currency)}</h2>
+                      {/* DS .row .meta — cost basis (shares × avg cost), in
+                          the holding's native currency: what was paid, not
+                          what it's currently worth — the pnl lines below
+                          already report how far that's moved. */}
                       <p className="row-meta">
-                        {fmtShares(h.shares)} @ {fmtCcy(h.avgCost, h.currency)} → {fmtCcy(h.price, h.currency)}
+                        {fmtCcy(h.shares * h.avgCost, h.currency)} ({fmtShares(h.shares)} x {fmtCcy(h.avgCost, h.currency)})
                       </p>
                       {h.todayPct != null && h.todayDisplay != null && (
                         <p className={todayGain ? "positive" : "negative"}>
                           <span className="pnl-label">Today:</span>
                           {todayGain ? "+" : "−"}
                           {fmtCcy(Math.abs(h.todayDisplay), displayCurrency)} ·{" "}
+                          {todayGain ? "+" : "−"}
                           {Math.abs(h.todayPct).toFixed(1)}%
                         </p>
                       )}
@@ -419,6 +420,7 @@ function HoldingsPage() {
                           <span className="pnl-label">Total:</span>
                           {gain ? "+" : "−"}
                           {fmtCcy(Math.abs(h.unrealizedDisplay), displayCurrency)} ·{" "}
+                          {gain ? "+" : "−"}
                           {Math.abs(h.unrealizedPct).toFixed(1)}%
                         </p>
                       )}
@@ -456,7 +458,8 @@ function HoldingsPage() {
                           <p className={gain ? "positive" : "negative"}>
                             {gain ? <ArrowUpIcon /> : <ArrowDownIcon />}
                             {gain ? "+" : "−"}
-                            {fmtCcy(Math.abs(c.realizedPL), c.currency)} · {Math.abs(c.realizedPct).toFixed(1)}%
+                            {fmtCcy(Math.abs(c.realizedPL), c.currency)} · {gain ? "+" : "−"}
+                            {Math.abs(c.realizedPct).toFixed(1)}%
                           </p>
                         </IonLabel>
                       </IonItem>
