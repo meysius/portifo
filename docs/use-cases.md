@@ -73,23 +73,3 @@ When user taps on an account in the **Accounts** tab, they are taken to an **Acc
 On a **Cash Account**, tapping a currency balance opens the **Update Balance** screen for that currency, where the user can enter a new balance and save it (or delete the balance, equivalent to setting it to zero). A **+** button next to the Currency Balances list opens the same Update Balance screen with no currency preselected, letting the user pick a currency the account doesn't have a balance in yet and set its starting balance.
 
 An **Investment Account**'s Cash rows are not editable this way, since they're a running total the app keeps in sync from that account's own Deposit/Withdraw transactions, not a value the user sets directly — those rows have no **+** button and don't open anything when tapped.
-
-
-Domain Models:
-User: has a name, email, can login using google.
-Member: User can be a member of multiple portfolios, and can have different roles in each portfolio (Viewer, Editor, Owner). member has a user_id, portfolio_id, role.
-Portfolio: has a name, has many members, has many accounts, has many transactions.
-Account: has a name, belongs to a portfolio, is either investment or cash holding.
-CurrencyBalance: belongs to an account in a portfolio, has a currency, has a balance. An account may have at most one CurrencyBalance per currency.
-Transaction: belongs to an investment account in a portfolio, has a type (Buy, Sell, Deposit, Withdraw), has a date, currency, has an amount (for Deposit and Withdraw), has a ticker symbol, number of shares, price per share (for Buy and Sell).
-
-for getting the latest fx rates and symbol quotes we will use yahoo-finance2 npm package. so no need to store them.
-
-
-Domain slices:
-
-identity slice:
-  Tables: users, portfolios, members
-
-portfolio slice:
-  Tables: accounts, currency_balances, transactions

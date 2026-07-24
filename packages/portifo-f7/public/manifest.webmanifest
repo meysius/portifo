@@ -1,0 +1,24 @@
+{
+  "name": "Portifo F7",
+  "short_name": "Portifo F7",
+  "description": "Portifo — Framework7 frontend experiment",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#11161B",
+  "theme_color": "#11161B",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
