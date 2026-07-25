@@ -2,6 +2,7 @@ import { IonRouterOutlet, IonSpinner } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import { Redirect, Route, useHistory } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
+import { useOutletAnimated } from "./lib/swipeBack";
 import { PortfolioDataProvider, usePortfolioData } from "./context/PortfolioDataContext";
 import LoginPage from "./pages/LoginPage";
 import OnboardingPage from "./pages/OnboardingPage";
@@ -68,6 +69,7 @@ function AuthGate() {
 function AuthenticatedRoutes() {
   const { accounts, loading, switching } = usePortfolioData();
   const history = useHistory();
+  const animated = useOutletAnimated();
   const [tabsEverMounted, setTabsEverMounted] = useState(false);
   const wasSwitchingRef = useRef(false);
 
@@ -99,7 +101,7 @@ function AuthenticatedRoutes() {
 
   return (
     <>
-      <IonRouterOutlet>
+      <IonRouterOutlet animated={animated}>
         <Route path="/tabs" render={() => <Tabs />} />
         <Route exact path="/">
           <Redirect to="/tabs/portfolio" />

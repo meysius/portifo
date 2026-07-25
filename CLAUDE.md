@@ -6,11 +6,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Portifo — a portfolio tracker mobile app (multi-currency investments + cash, used as a mobile-web PWA). A pnpm workspace monorepo with two packages:
 
-- `packages/portifo-web` — Vite + React + Ionic SPA (the mobile frontend, styled as an iOS-mode PWA)
+- `packages/portifo-web` — Vite + React + Ionic SPA (the legacy mobile frontend, styled as an iOS-mode PWA)
+- `packages/portifo-f7` — Vite + React + Framework7 SPA (the new still WIP mobile frontend, styled as an iOS-mode PWA)
 - `packages/portifo-api` — backend on `simple-wire`, a thin opinionated framework over Express (see `packages/portifo-api/CLAUDE.md` for the framework's architecture rules — domain slices, DI, controllers)
 - `docs/use-cases.md` holds the product specs and user flows and use cases.
-- `docs/design-system.html` is the source of truth for design language and tokens (colors, spacing, typography, screen layouts etc.) used in the frontend. Every time a user wants you to change the design or
-a screen, you should first make the change in design system and once it's approved, then implement it in the frontend code.
+- `docs/design-language/` is the source of truth for design language and tokens (colors, spacing, typography, screen layouts etc.) used in the new frontend — start at `docs/design-language/README.md` for the index. Every time a user wants you to change the design or a screen, you should first make the change in the relevant design-language file(s) and once it's approved, then implement it in the frontend code. (`docs/design-system.html` is the earlier, now-superseded single-file version.)
 
 Never attempt to use claude-in-chrome or chromium or playwright mcp to verify the looks of something, ask user to verify.
 

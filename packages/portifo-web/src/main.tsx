@@ -31,21 +31,33 @@ import App from "./App.tsx";
 import { initTheme } from "./lib/theme";
 import { initPreventEdgeSwipeBack } from "./lib/preventEdgeSwipeBack";
 import { initDisableAncestorOutletSwipe } from "./lib/disableAncestorOutletSwipe";
+import { SWIPE_BACK_OWNER } from "./lib/swipeBack";
 
 // Portifo targets an iOS home-screen PWA, so force iOS mode regardless of
 // the host browser/platform rather than auto-detecting.
-setupIonicReact({ mode: "ios" });
+//
+// Ionic's own swipe-back gesture is off entirely under the "native" strategy
+// (see lib/swipeBack.ts): with `animated={false}` on a back transition, the
+// outlet's progress callback never receives an animation, so a gesture that
+// did start would visually swap the pages mid-drag and then never commit the
+// navigation — the gesture and the disabled animation only make sense together.
+setupIonicReact({ mode: "ios", swipeBackEnabled: SWIPE_BACK_OWNER === "ionic" });
 
 // Apply the stored appearance (system/light/dark) before first paint.
 initTheme();
 
-// Block WKWebView's native edge-swipe-back gesture (see the module for why).
-initPreventEdgeSwipeBack();
+if (SWIPE_BACK_OWNER === "ionic") {
+  // Block WKWebView's native edge-swipe-back gesture (see the module for
+  // why). Under the "native" strategy that gesture *is* the back navigation,
+  // so it must stay alive.
+  initPreventEdgeSwipeBack();
 
-// Stop ancestor IonRouterOutlets from also owning a swipe-back gesture that
-// only the innermost (per-tab) outlet should handle — must run before
-// render so its MutationObserver is watching from the very first outlet.
-initDisableAncestorOutletSwipe();
+  // Stop ancestor IonRouterOutlets from also owning a swipe-back gesture that
+  // only the innermost (per-tab) outlet should handle — must run before
+  // render so its MutationObserver is watching from the very first outlet.
+  // Moot when no outlet owns a swipe gesture at all.
+  initDisableAncestorOutletSwipe();
+}
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

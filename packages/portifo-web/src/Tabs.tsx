@@ -14,6 +14,7 @@ import AddTransactionPage from "./pages/AddTransactionPage";
 import TransactionDetailPage from "./pages/TransactionDetailPage";
 import UpdateBalancePage from "./pages/UpdateBalancePage";
 import { TabBaseProvider } from "./context/TabBaseContext";
+import { useOutletAnimated } from "./lib/swipeBack";
 
 // Tab icons copied 1:1 from docs/design-system.html's .tabbar specimen
 // (22×22 line icons, 1.7 stroke — except settings' gear, at the DS's own
@@ -70,11 +71,17 @@ const ICONS = {
 // looked like the page "reloading" mid-swipe. See TabBaseContext for why
 // some of these routes (asset, account, cash-account, update-balance,
 // add-transaction) are registered under more than one tab prefix.
+//
+// `animated` is what hands backwards navigation to WKWebView's own native
+// edge-swipe animation instead of running Ionic's on top of it — these leaf
+// outlets are where every push/pop actually happens, so they're the ones that
+// would otherwise double-animate. See lib/swipeBack.ts.
 
 function PortfolioStack() {
+  const animated = useOutletAnimated();
   return (
     <TabBaseProvider tabBase="/tabs/portfolio" tabLabel="Portfolio">
-      <IonRouterOutlet>
+      <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/portfolio" component={HoldingsPage} />
         <Route exact path="/tabs/portfolio/asset/:symbol" component={AssetDetailPage} />
         <Route exact path="/tabs/portfolio/cash" component={CashDetailPage} />
@@ -89,9 +96,10 @@ function PortfolioStack() {
 }
 
 function AccountsStack() {
+  const animated = useOutletAnimated();
   return (
     <TabBaseProvider tabBase="/tabs/accounts" tabLabel="Accounts">
-      <IonRouterOutlet>
+      <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/accounts" component={AccountsPage} />
         <Route exact path="/tabs/accounts/account/:accountId" component={AccountDetailPage} />
         <Route exact path="/tabs/accounts/cash-account/:accountId" component={CashAccountDetailPage} />
@@ -105,9 +113,10 @@ function AccountsStack() {
 }
 
 function TransactionsStack() {
+  const animated = useOutletAnimated();
   return (
     <TabBaseProvider tabBase="/tabs/transactions" tabLabel="Transactions">
-      <IonRouterOutlet>
+      <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/transactions" component={TransactionsPage} />
         <Route exact path="/tabs/transactions/transaction/:transactionId" component={TransactionDetailPage} />
         <Route exact path="/tabs/transactions/add-transaction" component={AddTransactionPage} />
@@ -118,9 +127,10 @@ function TransactionsStack() {
 }
 
 function SettingsStack() {
+  const animated = useOutletAnimated();
   return (
     <TabBaseProvider tabBase="/tabs/settings" tabLabel="Settings">
-      <IonRouterOutlet>
+      <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/settings" component={SettingsPage} />
         <Route exact path="/tabs/settings/portfolio" component={ManagePortfolioPage} />
         <Route exact path="/tabs/settings/add-member" component={AddMemberPage} />
@@ -130,6 +140,8 @@ function SettingsStack() {
 }
 
 function Tabs() {
+  const animated = useOutletAnimated();
+
   // Pushed detail pages now live inside each tab's own outlet (for the
   // swipe-back fix above), which means they're rendered inside IonTabs and
   // would otherwise inherit the bottom tab bar — these are meant to be
@@ -145,7 +157,7 @@ function Tabs() {
   // what's visually on screen instead of the URL.
   return (
     <IonTabs>
-      <IonRouterOutlet>
+      <IonRouterOutlet animated={animated}>
         <Route path="/tabs/portfolio" render={() => <PortfolioStack />} />
         <Route path="/tabs/transactions" render={() => <TransactionsStack />} />
         <Route path="/tabs/accounts" render={() => <AccountsStack />} />
