@@ -8,6 +8,7 @@ import {
   IonLabel,
   IonList,
   IonPage,
+  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useState } from "react";
@@ -63,14 +64,18 @@ function AddMemberPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref={tabBase} text={tabLabel} />
           </IonButtons>
+          <IonTitle>{"Add Member"}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{"Add Member"}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="detail-hero">
-          <div className="detail-symrow">
-            <span className="detail-sym">Add Member</span>
-          </div>
           <div className="detail-name">{portfolioName}</div>
         </div>
 

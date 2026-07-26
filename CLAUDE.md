@@ -6,13 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Portifo — a portfolio tracker mobile app (multi-currency investments + cash, used as a mobile-web PWA). A pnpm workspace monorepo with two packages:
 
-- `packages/portifo-web` — Vite + React + Ionic SPA (the legacy mobile frontend, styled as an iOS-mode PWA)
-- `packages/portifo-f7` — Vite + React + Framework7 SPA (the new still WIP mobile frontend, styled as an iOS-mode PWA)
+- `packages/portifo-web` — Vite + React + Ionic SPA (the mobile frontend, styled as an iOS-mode PWA)
 - `packages/portifo-api` — backend on `simple-wire`, a thin opinionated framework over Express (see `packages/portifo-api/CLAUDE.md` for the framework's architecture rules — domain slices, DI, controllers)
 - `docs/use-cases.md` holds the product specs and user flows and use cases.
-- `docs/design-language/` is the source of truth for design language and tokens (colors, spacing, typography, screen layouts etc.) used in the new frontend — start at `docs/design-language/README.md` for the index. Every time a user wants you to change the design or a screen, you should first make the change in the relevant design-language file(s) and once it's approved, then implement it in the frontend code. (`docs/design-system.html` is the earlier, now-superseded single-file version.)
-
-Never attempt to use claude-in-chrome or chromium or playwright mcp to verify the looks of something, ask user to verify.
+- `docs/new-design-system/` is the source of truth for the design language: **`guidelines.html` holds the rules** (colour, typography, layout constants, the page header's four states, the tab bar, and the numbered implementation rules) and **`screens.html` shows every screen composed from them** at true iPhone 16 scale. Every time a user wants you to change the design or a screen, first make the change in `guidelines.html` / `screens.html` / `foundations/`, get it approved, and only then implement it in the frontend. (`docs/design-language/` and `docs/design-system-old.html` are earlier, superseded versions.)
 
 ## Commands
 
@@ -53,4 +50,4 @@ In production, `src/index.ts` serves the built web SPA as static files and falls
 
 ### Frontend (`packages/portifo-web`)
 
-Vite + React + `@ionic/react`, routed with `IonReactRouter`/`react-router` and rendered in forced `mode: "ios"` for a native iOS feel regardless of host platform. Design system primitives live in `src/components/ds.tsx`, sourced from `docs/design-system.html`'s token names. Dev server proxies API routes to the backend — new API route prefixes must be added to the `server.proxy` map in `vite.config.ts` (`/users`, `/auth`, `/accounts`, `/transactions`, `/portfolio`, `/market` currently) or requests will 404 in dev.
+Vite + React + `@ionic/react`, routed with `IonReactRouter`/`react-router` and rendered in forced `mode: "ios"` for a native iOS feel regardless of host platform. Design-system primitives live in `src/components/ds.tsx` and the component CSS in `src/index.css`, both keyed to `docs/new-design-system/` token names; the three faces are self-hosted in `src/theme/fonts/`. Dev server proxies API routes to the backend — new API route prefixes must be added to the `server.proxy` map in `vite.config.ts` (`/users`, `/auth`, `/accounts`, `/transactions`, `/portfolio`, `/market` currently) or requests will 404 in dev.

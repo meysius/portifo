@@ -10,6 +10,7 @@ import {
   IonNote,
   IonPage,
   IonSpinner,
+  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useEffect, useState } from "react";
@@ -31,7 +32,7 @@ import { useTabBase } from "../context/TabBaseContext";
 import { CURRENCIES } from "../lib/currencies";
 import { convert, fmtCcy } from "../lib/fx";
 
-const CAT_COLORS = ["var(--c-1)", "var(--c-2)", "var(--c-3)", "var(--c-4)"];
+const CAT_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)"];
 
 function currencyName(code: string) {
   return CURRENCIES.find((c) => c.code === code)?.name ?? code;
@@ -119,14 +120,18 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
           <IonButtons slot="start">
             <IonBackButton defaultHref={tabBase} text={tabLabel} />
           </IonButtons>
+          <IonTitle>{account.name}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{account.name}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="detail-hero">
-          <div className="detail-symrow">
-            <span className="detail-sym">{account.name}</span>
-          </div>
           <IonNote className="eyebrow">Total Value</IonNote>
           <div className="hero-row">
             <MoneyHero value={totalDisplay} currency={displayCurrency} small />

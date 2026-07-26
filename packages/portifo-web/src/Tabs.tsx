@@ -16,7 +16,7 @@ import UpdateBalancePage from "./pages/UpdateBalancePage";
 import { TabBaseProvider } from "./context/TabBaseContext";
 import { useOutletAnimated } from "./lib/swipeBack";
 
-// Tab icons copied 1:1 from docs/design-system.html's .tabbar specimen
+// Tab icons copied 1:1 from docs/new-design-system/ guidelines.html's tab-bar specimen
 // (22×22 line icons, 1.7 stroke — except settings' gear, at the DS's own
 // 1.5 stroke, since its denser path reads cluttered at 1.7).
 const ICONS = {

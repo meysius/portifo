@@ -22,7 +22,7 @@ const STEPS = {
 // Runs instead of the tab bar whenever the active portfolio has zero
 // accounts (see AuthGate) — walks the user through creating their first
 // Investment and Cash account before the usual navigation appears.
-// docs/design-system.html Screens: Onboarding Step 1/2.
+// docs/new-design-system/screens.html -> Onboarding, step 1 of 2.
 function OnboardingPage() {
   const { accounts, createAccount } = usePortfolioData();
   const { showToast } = useToast();

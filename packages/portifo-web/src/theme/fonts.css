@@ -1,0 +1,36 @@
+/*
+ * The three faces of the design language, one job each (see
+ * docs/new-design-system/guidelines.html § Typography):
+ *   Inter          — every title, button, tab label, navbar  (--font-display)
+ *   Public Sans    — prose only; set on body, rarely declared
+ *   JetBrains Mono — every number the user compares, plus eyebrows/labels
+ *
+ * Self-hosted variable woff2, extracted from the design docs' own
+ * foundations/fonts.css so the app and the docs render the identical faces.
+ * No network font fetch: this is a home-screen PWA and the fonts must be
+ * there on a cold, offline launch.
+ */
+
+@font-face {
+  font-family: "Inter";
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  src: url("./fonts/inter-var.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Public Sans";
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("./fonts/public-sans-var.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+  src: url("./fonts/jetbrains-mono-var.woff2") format("woff2");
+}

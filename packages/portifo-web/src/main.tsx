@@ -22,8 +22,13 @@ import "@ionic/react/css/display.css";
    preference; src/lib/theme.ts toggles `ion-palette-dark` on <html>. */
 import "@ionic/react/css/palettes/dark.class.css";
 
-/* Repoints Ionic's palette to docs/design-system.html's tokens — import after
-   the Ionic dark palette above so these values win on the shared :root vars. */
+/* Self-hosted Inter / Public Sans / JetBrains Mono — no network font fetch, so
+   a cold offline launch of the installed PWA still has its type. */
+import "./theme/fonts.css";
+
+/* Repoints Ionic's palette to the design language in docs/new-design-system/ —
+   import after the Ionic dark palette above so these values win on the shared
+   :root vars. */
 import "./theme/variables.css";
 
 import "./index.css";

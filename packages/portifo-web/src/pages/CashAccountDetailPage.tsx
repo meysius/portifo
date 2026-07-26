@@ -10,6 +10,7 @@ import {
   IonNote,
   IonPage,
   IonSpinner,
+  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useState } from "react";
@@ -81,14 +82,18 @@ function CashAccountDetailPage({ match }: RouteComponentProps<{ accountId: strin
           <IonButtons slot="start">
             <IonBackButton defaultHref={tabBase} text={tabLabel} />
           </IonButtons>
+          <IonTitle>{account.name}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{account.name}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="detail-hero">
-          <div className="detail-symrow">
-            <span className="detail-sym">{account.name}</span>
-          </div>
           <IonNote className="eyebrow">Total Value</IonNote>
           <div className="hero-row">
             <MoneyHero value={totalDisplay} currency={displayCurrency} small />

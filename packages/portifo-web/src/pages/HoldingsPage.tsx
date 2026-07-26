@@ -33,6 +33,7 @@ import {
   EmptyState,
   ListDivider,
   MoneyHero,
+  PlusIcon,
   StackIcon,
 } from "../components/ds";
 import { getPortfolioHistory } from "../api/portfolio";
@@ -41,10 +42,12 @@ import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtShares } from "../lib/fx";
 
-// Categorical allocation palette (design-system.html --c-1…--c-4), assigned
-// by position, not meaning; cash is always brass.
-const CAT_COLORS = ["var(--c-1)", "var(--c-2)", "var(--c-3)", "var(--c-4)"];
-const CASH_COLOR = "var(--c-cash)";
+// Categorical allocation palette, assigned by POSITION in the sorted list and
+// never by asset type (guidelines § Category colors). --cat-cash is the one
+// fixed assignment, and every slice is paired with a text label in the legend —
+// never colour alone.
+const CAT_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)"];
+const CASH_COLOR = "var(--cat-cash)";
 
 function HoldingsPage() {
   const history = useHistory();
@@ -258,6 +261,18 @@ function HoldingsPage() {
                 <ChevronDownIcon />
               </button>
             </IonTitle>
+            {/* Trailing action per the header table: Portfolio adds a
+                transaction. Lives in the condense header, so it rides the
+                large-title row and scrolls away with it. */}
+            <button
+              type="button"
+              slot="end"
+              className="add-fab"
+              aria-label="Add transaction"
+              onClick={() => history.push(`${tabBase}/add-transaction`, { account: firstInvestmentAccount })}
+            >
+              <PlusIcon />
+            </button>
           </IonToolbar>
         </IonHeader>
 
@@ -341,9 +356,7 @@ function HoldingsPage() {
               )}
             </div>
 
-            <div className="rows-head">
-              <span>Allocation</span>
-            </div>
+            <ListDivider label="Allocation" />
             <div className="alloc-bar">
               {allocSlices.map((s) => (
                 <span key={s.key} style={{ flex: (s.value / allocTotal) * 100, background: s.color }} />
@@ -359,14 +372,14 @@ function HoldingsPage() {
               ))}
             </div>
 
-            <div className="rows-head">
-              <span>Holdings</span>
-              {sortedHoldings.length > 0 && (
-                <span className="head-meta">
-                  {sortedHoldings.length} position{sortedHoldings.length === 1 ? "" : "s"}
-                </span>
-              )}
-            </div>
+            <ListDivider
+              label="Holdings"
+              meta={
+                sortedHoldings.length > 0
+                  ? `${sortedHoldings.length} position${sortedHoldings.length === 1 ? "" : "s"}`
+                  : undefined
+              }
+            />
             <IonList inset>
               <IonItem button detail={false} onClick={() => history.push(`${tabBase}/cash`)}>
                 <IonAvatar slot="start" className="glyph glyph-cash">
@@ -404,7 +417,7 @@ function HoldingsPage() {
                           what it's currently worth — the pnl lines below
                           already report how far that's moved. */}
                       <p className="row-meta">
-                        {fmtCcy(h.shares * h.avgCost, h.currency)} ({fmtShares(h.shares)} x {fmtCcy(h.avgCost, h.currency)})
+                        {fmtCcy(h.shares * h.avgCost, h.currency)} ({fmtShares(h.shares)} × {fmtCcy(h.avgCost, h.currency)})
                       </p>
                       {h.todayPct != null && h.todayDisplay != null && (
                         <p className={todayGain ? "positive" : "negative"}>

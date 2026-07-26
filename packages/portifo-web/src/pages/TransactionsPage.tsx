@@ -16,7 +16,7 @@ import { useTabBase } from "../context/TabBaseContext";
 import PickerSheet from "../components/PickerSheet";
 import type { PickerOption } from "../components/PickerSheet";
 import TransactionRow from "../components/TransactionRow";
-import { ChevronRightIcon, EmptyState, LedgerIcon, PlusIcon } from "../components/ds";
+import { ChevronRightIcon, EmptyState, LedgerIcon, ListDivider, PlusIcon } from "../components/ds";
 import type { TransactionType } from "../api/portfolio";
 
 const TYPE_LABEL: Record<TransactionType, string> = {
@@ -78,6 +78,22 @@ function TransactionsPage() {
       .slice()
       .sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
   }, [transactions, symbolFilter, typeFilter, accountFilter]);
+
+  // Months are the only grouping — one .divider per calendar month, newest
+  // first, with the count as its trailing meta (screens.html → Transactions).
+  // `filtered` is already sorted newest-first, so a single pass keeps that order.
+  const months = useMemo(() => {
+    const out: { key: string; label: string; txs: typeof filtered }[] = [];
+    for (const tx of filtered) {
+      const d = new Date(`${tx.date}T00:00:00`);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      const label = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+      const last = out[out.length - 1];
+      if (last && last.key === key) last.txs.push(tx);
+      else out.push({ key, label, txs: [tx] });
+    }
+    return out;
+  }, [filtered]);
 
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     await refreshTransactions();
@@ -142,18 +158,24 @@ function TransactionsPage() {
           />
         )}
 
-        {filtered.length > 0 && (
-          <IonList inset>
-            {filtered.map((tx) => (
-              <TransactionRow
-                key={tx.id}
-                tx={tx}
-                realizedPL={realizedPLByTx.get(tx.id)}
-                onClick={() => history.push(`${tabBase}/transaction/${tx.id}`)}
-              />
-            ))}
-          </IonList>
-        )}
+        {months.map((m) => (
+          <div key={m.key}>
+            <ListDivider
+              label={m.label}
+              meta={`${m.txs.length} transaction${m.txs.length === 1 ? "" : "s"}`}
+            />
+            <IonList inset>
+              {m.txs.map((tx) => (
+                <TransactionRow
+                  key={tx.id}
+                  tx={tx}
+                  realizedPL={realizedPLByTx.get(tx.id)}
+                  onClick={() => history.push(`${tabBase}/transaction/${tx.id}`)}
+                />
+              ))}
+            </IonList>
+          </div>
+        ))}
 
         <PickerSheet
           mode="static"

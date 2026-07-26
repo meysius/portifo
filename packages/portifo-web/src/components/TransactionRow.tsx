@@ -1,7 +1,7 @@
-import { IonItem } from "@ionic/react";
+import { IonItem, IonLabel } from "@ionic/react";
 import type { Transaction } from "../api/portfolio";
-import { fmtCcy, fmtShares } from "../lib/fx";
-import { ArrowDownIcon, ArrowUpIcon, CashGlyphIcon } from "./ds";
+import { fmtCcy } from "../lib/fx";
+import { ArrowDownIcon, ArrowUpIcon, TxInGlyphIcon, TxOutGlyphIcon } from "./ds";
 
 function formatDate(iso: string) {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", {
@@ -11,99 +11,62 @@ function formatDate(iso: string) {
   });
 }
 
-const CAT_COLORS = ["var(--c-1)", "var(--c-2)", "var(--c-3)", "var(--c-4)"];
+const TYPE_LABEL: Record<Transaction["type"], string> = {
+  buy: "Buy",
+  sell: "Sell",
+  deposit: "Deposit",
+  withdraw: "Withdraw",
+};
 
-// Stable categorical dot per symbol — same palette the allocation bar uses,
-// assigned by hash rather than meaning.
-function symbolColor(symbol: string) {
-  let h = 0;
-  for (let i = 0; i < symbol.length; i++) h = (h * 31 + symbol.charCodeAt(i)) | 0;
-  return CAT_COLORS[Math.abs(h) % CAT_COLORS.length];
-}
-
-// design-system.html's Transactions row: DS .row.tx — a glyph, ticker + type
-// tag, account name, then a right column where the cash value always stays
-// neutral ink (a losing Sell still receives positive cash) and shares @
-// price, the same shape for both Buy and Sell. Date and a Sell's realized
-// P&L both move to a third line (.row-foot) below, indented under the
-// account name.
+/*
+ * A ledger row reads WHAT MOVED · WHAT HAPPENED · HOW MUCH (screens.html →
+ * Transactions):
+ *   .sym   the ticker for Buy/Sell, the currency for Deposit/Withdraw
+ *   .name  `type · account`
+ *   .val   the total, in the transaction's OWN currency — this is a ledger, so
+ *          it must match what the user entered, not the display currency
+ *   .meta  the date
+ * Unsigned and in neutral ink: the glyph and the type carry the direction, and a
+ * losing Sell still receives positive cash. Share maths lives on the detail
+ * screen — at real account-name lengths it collided with the account.
+ * A Sell adds one .pnl line for its realized P&L, the same stacked shape a
+ * Holdings row uses.
+ */
 function TransactionRow({ tx, realizedPL, onClick }: { tx: Transaction; realizedPL?: number; onClick?: () => void }) {
-  const dateStr = formatDate(tx.date);
+  const isTrade = tx.type === "buy" || tx.type === "sell";
+  const moneyIn = tx.type === "buy" || tx.type === "deposit";
+  const isSell = tx.type === "sell";
 
-  if (tx.type === "buy" || tx.type === "sell") {
-    const isSell = tx.type === "sell";
-    const shares = tx.shares ?? 0;
-    const price = tx.pricePerShare ?? 0;
-    const pl = realizedPL ?? 0;
-    const positive = pl >= 0;
-    const cost = shares * price - pl;
-    const plPct = isSell && cost > 1e-9 ? (pl / cost) * 100 : 0;
-    const total = shares * price;
+  const total = isTrade ? (tx.shares ?? 0) * (tx.pricePerShare ?? 0) : (tx.amount ?? 0);
+  const pl = realizedPL ?? 0;
+  const positive = pl >= 0;
+  const cost = total - pl;
+  const plPct = isSell && cost > 1e-9 ? (pl / cost) * 100 : 0;
 
-    return (
-      <IonItem className="tx-item" button={!!onClick} detail={false} onClick={onClick}>
-        <div className="tx-row">
-          <div className="tx-row-top">
-            <div className="glyph glyph-stock">
-              <span className="glyph-dot" style={{ background: symbolColor(tx.symbol ?? "") }} />
-            </div>
-            <div className="tx-row-main">
-              <div className="tx-sym">
-                {tx.symbol} <span className="type-tag">{isSell ? "Sell" : "Buy"}</span>
-              </div>
-              <div className="tx-name">{tx.account}</div>
-            </div>
-            <div className="tx-row-end">
-              <div className="tx-val">
-                {isSell ? "+" : "−"}
-                {fmtCcy(total, tx.currency)}
-              </div>
-              <div className="tx-meta">
-                {fmtShares(shares)} sh @ {fmtCcy(price, tx.currency)}
-              </div>
-            </div>
-          </div>
-          <div className="tx-row-foot">
-            <div className="tx-date">{dateStr}</div>
-            {isSell && (
-              <div className={positive ? "tx-pnl positive" : "tx-pnl negative"}>
-                {positive ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                {positive ? "+" : "−"}
-                {fmtCcy(Math.abs(pl), tx.currency)} · {Math.abs(plPct).toFixed(1)}%
-              </div>
-            )}
-          </div>
-        </div>
-      </IonItem>
-    );
-  }
-
-  const isDeposit = tx.type === "deposit";
   return (
-    <IonItem className="tx-item" button={!!onClick} detail={false} onClick={onClick}>
-      <div className="tx-row">
-        <div className="tx-row-top">
-          <div className="glyph glyph-cash">
-            <CashGlyphIcon />
-          </div>
-          <div className="tx-row-main">
-            <div className="tx-sym">
-              Cash <span className="type-tag">{isDeposit ? "Deposit" : "Withdraw"}</span>
-            </div>
-            <div className="tx-name">{tx.account}</div>
-          </div>
-          <div className="tx-row-end">
-            <div className="tx-val">
-              {isDeposit ? "+" : "−"}
-              {fmtCcy(tx.amount ?? 0, tx.currency)}
-            </div>
-            <div className="tx-meta">{tx.currency}</div>
-          </div>
-        </div>
-        <div className="tx-row-foot">
-          <div className="tx-date">{dateStr}</div>
-        </div>
+    <IonItem button={!!onClick} detail={!!onClick} onClick={onClick}>
+      {/* Cash movements take the tinted well, trades the neutral one — the same
+          pairing the Holdings list uses for its Cash row. */}
+      <div className={`glyph ${isTrade ? "glyph-stock" : "glyph-cash"}`} slot="start">
+        {moneyIn ? <TxInGlyphIcon /> : <TxOutGlyphIcon />}
       </div>
+      <IonLabel className="label-sym">
+        <h2>{isTrade ? tx.symbol : tx.currency}</h2>
+        <p>
+          {TYPE_LABEL[tx.type]} · {tx.account}
+        </p>
+      </IonLabel>
+      <IonLabel slot="end">
+        <h2>{fmtCcy(total, tx.currency)}</h2>
+        <p>{formatDate(tx.date)}</p>
+        {isSell && (
+          <p className={positive ? "positive" : "negative"}>
+            {positive ? <ArrowUpIcon /> : <ArrowDownIcon />}
+            {positive ? "+" : "−"}
+            {fmtCcy(Math.abs(pl), tx.currency)} · {Math.abs(plPct).toFixed(1)}%
+          </p>
+        )}
+      </IonLabel>
     </IonItem>
   );
 }

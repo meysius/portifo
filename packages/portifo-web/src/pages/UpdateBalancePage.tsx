@@ -9,6 +9,7 @@ import {
   IonList,
   IonPage,
   IonSpinner,
+  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useEffect, useState } from "react";
@@ -130,16 +131,21 @@ function UpdateBalancePage({ match }: RouteComponentProps<{ accountId: string; c
               text="Back"
             />
           </IonButtons>
+          <IonTitle>{selectedCurrency || "New Balance"}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{selectedCurrency || "New Balance"}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="detail-hero">
-          <div className="detail-symrow">
-            <span className="detail-sym">{selectedCurrency || "New Balance"}</span>
-            {selectedCurrency && <span className="detail-name">{currencyName(selectedCurrency)}</span>}
+          <div className="detail-name">
+            {selectedCurrency ? `${currencyName(selectedCurrency)} · ${account.name}` : account.name}
           </div>
-          <div className="detail-name">{account.name}</div>
         </div>
 
         <IonList inset className="fieldcard-list form-list">

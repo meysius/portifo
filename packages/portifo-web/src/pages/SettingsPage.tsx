@@ -94,6 +94,9 @@ function SettingsPage() {
           </IonToolbar>
         </IonHeader>
 
+        {/* Account -> Portfolio -> Appearance -> Log Out: identity, then what you
+            are looking at, then how it looks, then the way out. */}
+        <ListDivider label="Account" />
         <div className="settings-profile">
           <div className="glyph glyph-member glyph-member-lg">
             <MemberInitial label={user?.name ?? user?.email ?? ""} />

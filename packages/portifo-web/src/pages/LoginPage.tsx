@@ -50,6 +50,11 @@ function LoginPage() {
     <IonPage>
       <IonContent fullscreen className="login-content">
         <div className="login-screen">
+          {/* Brand line at the top, copy centred, CTA pinned to the bottom —
+              the pre-shell composition Login and Onboarding share. */}
+          <div className="login-brand">Portifo</div>
+
+          <div className="login-mid">
           <div className="login-mark" aria-hidden="true">
             <svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
               <path d="M4 21l6-7 5 4 7-10" />
@@ -63,7 +68,9 @@ function LoginPage() {
             <br />
             one shared ledger.
           </p>
+          </div>
 
+          <div className="login-bottom">
           <div className="login-cta">
             <button type="button" className="btn btn-google" onClick={handleLogin} disabled={pending}>
               {pending ? <IonSpinner name="crescent" className="inline-spinner" /> : <GoogleIcon />}
@@ -79,6 +86,7 @@ function LoginPage() {
           </div>
 
           <p className="login-fine">Tracks manually entered transactions &amp; balances · no bank login required</p>
+          </div>
         </div>
       </IonContent>
 

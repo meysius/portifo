@@ -8,6 +8,7 @@ import {
   IonList,
   IonPage,
   IonSpinner,
+  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useHistory } from "react-router-dom";
@@ -75,17 +76,21 @@ function TransactionDetailPage({ match }: RouteComponentProps<{ transactionId: s
           <IonButtons slot="start">
             <IonBackButton defaultHref={tabBase} text={tabLabel} />
           </IonButtons>
+          <IonTitle>{isCashType ? "Cash" : tx.symbol}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{isCashType ? "Cash" : tx.symbol}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="detail-hero">
-          <div className="detail-symrow">
-            <span className="detail-sym">{isCashType ? "Cash" : tx.symbol}</span>
-            <span className="type-tag">{TYPE_LABEL[tx.type]}</span>
-          </div>
+          {/* Symbol is the page title; the type badge rides the subtitle. */}
           <div className="detail-name">
-            {tx.account} · {dateStr}
+            <span className="type-tag">{TYPE_LABEL[tx.type]}</span> {tx.account} · {dateStr}
           </div>
         </div>
 

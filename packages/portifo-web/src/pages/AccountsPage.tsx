@@ -131,7 +131,10 @@ function AccountsPage() {
 
         {hasActivity && investmentAccounts.length > 0 && (
           <>
-            <ListDivider label="Investment" />
+            <ListDivider
+              label="Investment"
+              meta={`${investmentAccounts.length} account${investmentAccounts.length === 1 ? "" : "s"}`}
+            />
             <IonList inset>
               {investmentAccounts.map((account) => {
                 const holdingCount = openPositionsFor(account.name).length;
@@ -140,15 +143,19 @@ function AccountsPage() {
                     <IonAvatar slot="start" className="glyph glyph-stock">
                       <FolderGlyphIcon />
                     </IonAvatar>
-                    <IonLabel className="sub-mono">
+                    {/* The account NAME is a name, so it takes the display face;
+                        the type is its subtitle and what the total is made of is
+                        the value column's meta (screens.html -> Accounts). */}
+                    <IonLabel>
                       <h2>{account.name}</h2>
+                      <p>Investment Account</p>
+                    </IonLabel>
+                    <IonLabel slot="end">
+                      <h2>{fmtCcy(investmentTotal(account.name, account.balances), DISPLAY_CCY)}</h2>
                       <p>
-                        Investment · {holdingCount} holding{holdingCount === 1 ? "" : "s"}
+                        {holdingCount} holding{holdingCount === 1 ? "" : "s"}
                       </p>
                     </IonLabel>
-                    <span slot="end" className="acct-val">
-                      {fmtCcy(investmentTotal(account.name, account.balances), DISPLAY_CCY)}
-                    </span>
                     <span slot="end" className="row-chevron" aria-hidden="true">
                       <ChevronRightIcon />
                     </span>
@@ -161,7 +168,10 @@ function AccountsPage() {
 
         {hasActivity && cashAccounts.length > 0 && (
           <>
-            <ListDivider label="Cash" />
+            <ListDivider
+              label="Cash"
+              meta={`${cashAccounts.length} account${cashAccounts.length === 1 ? "" : "s"}`}
+            />
             <IonList inset>
               {cashAccounts.map((account) => {
                 const total = account.balances.reduce(
@@ -173,15 +183,16 @@ function AccountsPage() {
                     <IonAvatar slot="start" className="glyph glyph-cash">
                       <CashGlyphIcon />
                     </IonAvatar>
-                    <IonLabel className="sub-mono">
+                    <IonLabel>
                       <h2>{account.name}</h2>
+                      <p>Cash Account</p>
+                    </IonLabel>
+                    <IonLabel slot="end">
+                      <h2>{fmtCcy(total, DISPLAY_CCY)}</h2>
                       <p>
-                        Cash · {account.balances.length} currenc{account.balances.length === 1 ? "y" : "ies"}
+                        {account.balances.length} currenc{account.balances.length === 1 ? "y" : "ies"}
                       </p>
                     </IonLabel>
-                    <span slot="end" className="acct-val">
-                      {fmtCcy(total, DISPLAY_CCY)}
-                    </span>
                     <span slot="end" className="row-chevron" aria-hidden="true">
                       <ChevronRightIcon />
                     </span>

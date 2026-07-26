@@ -1,0 +1,59 @@
+<title>Portifo — Design Language · Fields & Buttons</title>
+<link rel="stylesheet" href="foundations/fonts.css">
+<link rel="stylesheet" href="foundations/tokens.css">
+<link rel="stylesheet" href="foundations/base.css">
+
+<div class="wrap">
+
+  <div class="doc-top">
+    <div>
+      <span class="eyebrow">Portifo F7 · Design Language</span>
+      <h1 class="doc-title">Fields & Buttons</h1>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Theme preview">
+      <button class="theme-btn" onclick="setTheme(null,this)">System</button>
+      <button class="theme-btn" onclick="setTheme('light',this)">Light</button>
+      <button class="theme-btn" onclick="setTheme('dark',this)">Dark</button>
+    </div>
+  </div>
+
+  <!-- FIELDS -->
+  <div id="fields">
+    <div class="divider"><span class="dl">Fields &amp; Buttons</span><span class="dh"></span></div>
+    <p class="sec-note">Add Transaction's type selector, entry rows, and account picker — same hairline-rule vocabulary as a holdings row, so a field already looks like the row it's about to become.</p>
+    <div class="grid">
+      <div class="card wide">
+        <div class="stage">
+          <div class="seg-group"><div class="seg-item active">Buy</div><div class="seg-item">Sell</div><div class="seg-item">Deposit</div><div class="seg-item">Withdraw</div></div>
+        </div>
+        <div class="card-caption"><code>.seg-group</code> — four equally-weighted modes, no primary tint.</div>
+      </div>
+      <div class="card wide">
+        <div class="stage">
+          <div class="field-card">
+            <div class="field"><span class="field-label">Account</span><span class="field-value">Fidelity Brokerage<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+            <div class="field"><span class="field-label">Symbol</span><input class="field-input" style="max-width:110px" value="AAPL"></div>
+            <div class="field"><span class="field-label">Shares</span><input class="field-input" value="12"></div>
+            <div class="field"><span class="field-label">Price / Share</span><input class="field-input" value="187.32"></div>
+            <div class="field"><span class="field-label">Currency</span><span class="field-value">USD<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+          </div>
+        </div>
+        <div class="card-caption"><code>.field-card</code> / <code>.field</code> — right-aligned JetBrains Mono for anything numeric, a chevron for anything that opens a picker.</div>
+      </div>
+      <div class="card wide">
+        <div class="stage">
+          <div class="btn-stack">
+            <button class="btn btn-primary">Add Transaction</button>
+            <button class="btn btn-secondary">Cancel</button>
+            <button class="btn btn-destructive">Delete Portfolio</button>
+            <button class="btn btn-disabled" disabled>Save</button>
+          </div>
+        </div>
+        <div class="card-caption"><code>.btn-primary</code> (signal) / <code>.btn-secondary</code> / <code>.btn-destructive</code> (loss) / <code>.btn-disabled</code> — 6px radius, not a pill.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="foundations/theme-toggle.js"></script>

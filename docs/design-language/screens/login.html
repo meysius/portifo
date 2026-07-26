@@ -1,0 +1,61 @@
+<title>Portifo — Design Language · Screens · Login</title>
+<link rel="stylesheet" href="../foundations/fonts.css">
+<link rel="stylesheet" href="../foundations/tokens.css">
+<link rel="stylesheet" href="../foundations/base.css">
+
+<div class="wrap">
+
+  <div class="doc-top">
+    <div>
+      <span class="eyebrow">Portifo F7 · Design Language · Screens</span>
+      <h1 class="doc-title">Login</h1>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Theme preview">
+      <button class="theme-btn" onclick="setTheme(null,this)">System</button>
+      <button class="theme-btn" onclick="setTheme('light',this)">Light</button>
+      <button class="theme-btn" onclick="setTheme('dark',this)">Dark</button>
+    </div>
+  </div>
+
+  <div class="grid-devices">
+      <div class="device-card">
+        <div class="device-title">Login</div>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="navbar-bar"></div>
+              <div class="login-stage">
+                <div class="login-brand">Portifo</div>
+                <div class="login-mid">
+                  <div class="login-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16l5-6 4 4 7-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="5" r="1.6" fill="currentColor"/></svg></div>
+                  <div class="login-title">Track every holding,<br>in one place.</div>
+                  <div class="login-sub">Multi-currency investments and cash, kept in sync automatically.</div>
+                </div>
+                <div class="login-bottom">
+                  <button class="btn btn-google">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                    Continue with Google
+                  </button>
+                  <div class="login-fine">By continuing you agree to Portifo's Terms and Privacy Policy.</div>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+        <div class="device-caption">Login — Google is the only auth method; the user stays signed in until they explicitly log out.</div>
+      </div>
+  </div>
+
+</div>
+
+<script src="../foundations/theme-toggle.js"></script>

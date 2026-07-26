@@ -2,29 +2,34 @@ import type { ReactNode } from "react";
 import { fmtCcy } from "../lib/fx";
 
 // Shared design-system primitives — the exact SVG line icons and idioms from
-// docs/design-system.html, so every screen draws from one vocabulary.
+// docs/new-design-system/, so every screen draws from one vocabulary.
 
-/* Splits a currency-formatted money string for the Fraunces hero: whole part
-   (with its currency symbol) at full size, cents smaller and secondary
-   (DS .hero-value / .cents). Zero-decimal currencies (JPY) return "" cents. */
-export function splitMoneyCcy(n: number, currency: string): [string, string] {
+/* Splits a currency-formatted money string into the three parts a DS .figure
+   sets at three different sizes: the currency symbol (small, tertiary), the
+   whole part (full size), and the cents (small, secondary). A leading minus
+   stays with the symbol so "−$1,200.00" keeps its sign at figure scale.
+   Zero-decimal currencies (JPY) return "" cents. */
+export function splitMoneyCcy(n: number, currency: string): [string, string, string] {
   const s = fmtCcy(n, currency);
-  const i = s.lastIndexOf(".");
-  if (i === -1) return [s, ""];
-  return [s.slice(0, i), s.slice(i + 1)];
+  // Everything up to the first digit is sign + symbol ("$", "−$", "CA$", "¥").
+  const firstDigit = s.search(/\d/);
+  const cur = firstDigit === -1 ? "" : s.slice(0, firstDigit);
+  const rest = firstDigit === -1 ? s : s.slice(firstDigit);
+  const dot = rest.lastIndexOf(".");
+  if (dot === -1) return [cur, rest, ""];
+  return [cur, rest.slice(0, dot), rest.slice(dot)];
 }
 
-/* DS .hero-value (+ ledger-grid backdrop via .hero-value-row) — the one
-   Fraunces figure a screen is most proud of. `small` is the 36px detail-screen
-   variant. */
+/* DS .figure — every number the user compares is mono and tabular, and this is
+   the one a screen is most proud of. `small` is the 25px .figure-mid used on
+   detail screens; the default is the 38px .figure-hero. */
 export function MoneyHero({ value, currency, small }: { value: number; currency: string; small?: boolean }) {
-  const [whole, cents] = splitMoneyCcy(value, currency);
+  const [cur, whole, cents] = splitMoneyCcy(value, currency);
   return (
-    <div className="hero-value-row">
-      <h1 className={small ? "hero-value hero-value--sm" : "hero-value"}>
-        {whole}
-        {cents && <span className="hero-cents">.{cents}</span>}
-      </h1>
+    <div className={small ? "figure figure-mid" : "figure figure-hero"}>
+      {cur && <span className="cur">{cur}</span>}
+      {whole}
+      {cents && <span className="cents">{cents}</span>}
     </div>
   );
 }
@@ -52,6 +57,40 @@ export function ChevronRightIcon() {
   return (
     <svg width="7" height="12" viewBox="0 0 7 12" fill="none" aria-hidden="true">
       <path d="M1 1L6 6L1 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* Transaction direction glyphs — arrow INTO the line for money in (Buy,
+   Deposit), out of it for money out (Sell, Withdraw). Direction only: never
+   gain/loss colour, because a Buy is not a loss. Cash movements pair these with
+   the tinted well, trades with the neutral one. */
+export function TxInGlyphIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M5 15.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function TxOutGlyphIcon() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M10 15.5v-8M10 7.5L6.8 10.7M10 7.5l3.2 3.2"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M5 4.5h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -164,11 +203,25 @@ export function roleLabel(role: "viewer" | "editor" | "owner"): string {
 
 /* DS group divider — mono uppercase label with trailing hairline; optionally
    ends in the screen's one brass .add-btn (Account Detail's Cash divider). */
-export function ListDivider({ label, onAdd, addLabel }: { label: string; onAdd?: () => void; addLabel?: string }) {
+/* DS .divider — THE section head, and the only one: mono uppercase label, a
+   hairline filling the remainder, optional right-aligned meta. There is no
+   second header style; a bold sans heading here splits the system in two. */
+export function ListDivider({
+  label,
+  meta,
+  onAdd,
+  addLabel,
+}: {
+  label: string;
+  meta?: string;
+  onAdd?: () => void;
+  addLabel?: string;
+}) {
   return (
     <div className="list-divider">
       <span className="dl">{label}</span>
       <span className="dh" />
+      {meta && <span className="dm">{meta}</span>}
       {onAdd && (
         <button type="button" className="add-fab" aria-label={addLabel ?? "Add"} onClick={onAdd}>
           <PlusIcon />

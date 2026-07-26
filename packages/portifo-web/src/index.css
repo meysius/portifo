@@ -1,9 +1,9 @@
 /*
- * Portifo design system (docs/design-system.html) applied to the Ionic
- * component shell. Sizes, weights, spacing, and color roles are copied 1:1
- * from that file's component CSS; tokens (--bg/--surface/--surface-2/
- * --border/--fg-1..3/--brass/--gain/--loss/--c-*) live in
- * theme/variables.css under the same names design-system.html uses.
+ * The Portifo design language (docs/new-design-system/ — read guidelines.html
+ * first, screens.html for how it composes) applied to the Ionic component
+ * shell. Sizes, weights, spacing and colour roles are the ones specified there;
+ * tokens live in theme/variables.css under the same names as
+ * docs/new-design-system/foundations/tokens.css.
  */
 
 html,
@@ -34,6 +34,30 @@ ion-note {
   color: var(--fg-2);
 }
 
+/* ---------- type roles ----------
+ * Three faces, three jobs, no overlap (guidelines § Typography). The job picks
+ * the face, never the weight you happen to want:
+ *   --font-display  every title, button, tab label, navbar, section-level UI
+ *   --font-body     prose only — Ionic's default face, inherited from body
+ *   --font-mono     every number the user compares, plus eyebrows/labels
+ * Ionic's default is the body face, so chrome opts into display explicitly.
+ * font-family inherits across shadow boundaries, so setting it on the host is
+ * enough for ion-button / ion-back-button / ion-tab-button.
+ */
+body {
+  font-family: var(--font-body);
+}
+
+ion-title,
+ion-back-button,
+ion-button,
+ion-tab-button ion-label,
+ion-segment-button,
+ion-alert .alert-title,
+ion-action-sheet .action-sheet-title {
+  font-family: var(--font-display);
+}
+
 /* DS .eyebrow — mono 500/11px, +0.14em, uppercase, tertiary ink. */
 .eyebrow {
   font-family: var(--font-mono);
@@ -44,10 +68,19 @@ ion-note {
   color: var(--fg-3);
 }
 
-/* ---------- header / toolbar ---------- */
+/* ---------- page header ----------
+ * ONE component, four states (guidelines § Page header):
+ *   at rest      .ph-large  — 24px title, no material, nothing behind it yet
+ *   collapsed    .ph-bar    — 44pt bar, 17px title, + the blur material
+ *   pushed       same pair, with a back button that never scrolls
+ * Ionic drives rest→collapsed from `collapse="condense"`; there is no scroll
+ * listener anywhere in this codebase. Every screen gets both headers, so the
+ * bar title is absent at rest and fades in on collapse — a bar title at
+ * scroll 0 is the collapsed state rendered at the wrong scroll position.
+ */
 
-/* No hairline under headers — titles sit on --bg. Ionic's ios theme draws
-   that hairline as a border (not the box-shadow killed below), via
+/* No hairline under headers — the material is the only separator. Ionic's ios
+   theme draws that hairline as a border (not the box-shadow killed below), via
    `.header-ios ion-toolbar:last-of-type { --border-width: 0 0 0.55px }` —
    higher specificity than a plain `ion-toolbar` reset, so it wins and the
    hairline leaks through on every screen except the large-title tab roots
@@ -61,26 +94,105 @@ ion-header.header-ios ion-toolbar:last-of-type {
   --border-width: 0;
 }
 
-/* Page-header text buttons (Cancel / back) read as ink; the one primary
-   action per screen is the brass .add-fab or a sheet's brass Done. */
-ion-toolbar ion-button,
+/* The toolbar itself is transparent: the material below paints the whole
+   103pt band (safe area + 44pt bar), not the bar alone, or status-bar text
+   would sit on raw scrolling content. */
+ion-header ion-toolbar {
+  --background: transparent;
+  --border-width: 0;
+}
+
+/* ── the fading material ────────────────────────────────────────────────────
+   Only the collapsed bar needs one, because only then is content behind it.
+   Blur overhangs to 150px and dissolves via a mask, so there is no hard edge
+   competing with the .divider rules that sit just below the bar. Do NOT add
+   --shadow-nav or a hairline with it: the material is the separator, and both
+   together double the edge.
+   The condense header (the large title, inside IonContent) never gets one. */
+ion-header:not(.header-collapse-condense) {
+  position: relative;
+}
+
+ion-header:not(.header-collapse-condense)::before,
+ion-header:not(.header-collapse-condense)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 150px;
+  z-index: -1;
+  pointer-events: none;
+  /* Fades in over the collapse rather than popping. */
+  opacity: 1;
+  transition: opacity 200ms ease;
+}
+
+/* AT REST there is no material, because nothing is behind the header yet — and
+   because the material overhangs to 150px, leaving it on would veil the large
+   title and the top of the hero sitting right below the bar.
+   `header-collapse-condense-inactive` is Ionic's own flag: it rides the MAIN
+   header while the large title is expanded, and moves to the condense header
+   once collapsed. Pages with no collapse pair never get it, so they keep their
+   material — correct, since their content always scrolls under a fullscreen
+   IonContent. */
+ion-header:not(.header-collapse-condense).header-collapse-condense-inactive::before,
+ion-header:not(.header-collapse-condense).header-collapse-condense-inactive::after {
+  opacity: 0;
+}
+
+ion-header:not(.header-collapse-condense)::before {
+  -webkit-backdrop-filter: saturate(160%) blur(18px);
+  backdrop-filter: saturate(160%) blur(18px);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 58%, rgba(0, 0, 0, 0.45) 78%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 58%, rgba(0, 0, 0, 0.45) 78%, transparent 100%);
+}
+
+ion-header:not(.header-collapse-condense)::after {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--bg) 88%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 70%, transparent) 55%,
+    transparent 100%
+  );
+}
+
+/* Back button — labelled by the parent screen, never a bare chevron, and the
+   one place besides a primary button where signal ink appears in the chrome. */
 ion-toolbar ion-back-button {
-  --color: var(--fg-1);
+  --color: var(--signal);
+  --icon-font-size: 20px;
+  font-weight: 500;
+  font-size: 15px;
 }
 
-/* DS .portfolio-switch — Archivo 650/17px, -0.01em: the top-bar title. */
+ion-toolbar ion-button {
+  --color: var(--signal);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+/* DS .ph-bar-title — collapsed bar, 17px/700 display. */
 ion-title {
-  font-weight: 650;
+  font-weight: 700;
   font-size: 17px;
   letter-spacing: -0.01em;
 }
 
+/* DS .ph-large — the title at rest, on every screen including pushed ones.
+   24px/700 display, on the standard gutter. */
 .ios ion-title.title-large {
-  font-size: 17px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  padding-inline: 20px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  padding-inline: var(--gutter);
   min-height: 0;
+}
+
+/* The condense header is content, not chrome: no material, no background of
+   its own, so the hero below it reads as one column with the title. */
+ion-header.header-collapse-condense ion-toolbar {
+  --background: transparent;
 }
 
 /* DS .portfolio-switch — active-portfolio name + chevron sitting in the
@@ -108,28 +220,29 @@ ion-title {
   margin-top: 2px;
 }
 
-/* DS .add-btn — the one brass element on a screen: 34px circle, brass fill. */
+/* DS .ph-act — the header's trailing action: a 30px signal-tint well with a
+   signal glyph, riding the large-title row. It scrolls away with the title;
+   the collapsed bar carries the title (and the switcher chevron) only. */
 .add-fab {
   appearance: none;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   border: none;
   padding: 0;
   margin: 0;
-  background: var(--brass);
-  color: var(--brass-ink);
+  background: var(--signal-tint);
+  color: var(--signal);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 10px rgba(176, 138, 62, 0.35);
   flex-shrink: 0;
   cursor: pointer;
 }
 
 .add-fab svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 /* Slotted directly into a toolbar (slot="end") it gets no inset from Ionic
@@ -139,11 +252,27 @@ ion-toolbar .add-fab {
   margin-inline-end: 16px;
 }
 
-/* ---------- tab bar (DS .tabbar / .tab) ---------- */
-
+/* ---------- tab bar ----------
+ * Four fixed tabs, always in the same order, tab roots only (guidelines § Tab
+ * bar). 55pt of content + the 34pt home-indicator gutter = 89pt, taller than
+ * Ionic's default because of the uppercase label row.
+ *
+ * The gutter is Ionic's to add, not ours: ion-tab-bar already applies
+ * --ion-safe-area-bottom as its own padding-bottom, so `height` must NOT
+ * include the inset — writing `calc(55px + inset)` measured 124pt instead of
+ * 89 because the inset landed twice (rule 08). ion-tab-bar is also content-box
+ * from a shadow `:host` rule, which out-specifies a plain type selector, so the
+ * height is the content row only and the arithmetic is explicit:
+ *   54px content + 1px hairline + 34pt gutter (Ionic's) = 89pt on device.
+ */
 ion-tab-bar {
-  --border: 0;
-  border-top: 1px solid var(--border);
+  height: 54px;
+  --background: var(--surface);
+  /* --ion-border-color already carries --border's value; referencing --border
+     inside --border would be a cyclic declaration and drop the rule. */
+  --border: 1px solid var(--ion-border-color);
+  /* Casts UP, separating the bar from content scrolling beneath it. */
+  box-shadow: var(--shadow-bar);
 }
 
 /* Pushed detail pages (asset, account, add-transaction, ...) now live
@@ -164,10 +293,28 @@ ion-tabs:has(.ion-page:not(.tab-root-page):not(.ion-page-hidden)) ion-tab-bar {
   display: none;
 }
 
+/* Idle and active differ by INK, not weight — --fg-3 to --fg-1, icon and label
+   together (both come from --ion-tab-bar-color / -selected). The accent is NOT
+   on the active tab's text: it lives in the marker below. */
 ion-tab-button {
-  font-size: 10.5px;
+  position: relative;
   font-weight: 600;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.03em;
+}
+
+/* DS .tab.active::before — the active marker: 20 × 2px of --signal, centred,
+   flush to the bar's top edge. The only 2px accent bar in the system, and what
+   makes the active tab read instantly without colouring its text. */
+ion-tab-button.tab-selected::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 2px;
+  background: var(--signal);
+  z-index: 1;
 }
 
 /* ion-tab-button is real Shadow DOM (not scoped) — its own internal CSS
@@ -176,47 +323,36 @@ ion-tab-button {
    fails and applies an even more specific `.tab-has-label-only` variant of
    that rule. No outside selector can out-specify a shadow-internal ::slotted
    rule without matching Stencil's own generated classes, so !important is
-   the pragmatic way to reclaim the DS's 10.5px/600 tab label. */
+   the pragmatic way to reclaim the 9.5px/600 uppercase tab label. */
 ion-tab-button ion-label {
-  font-size: 10.5px !important;
+  font-size: 9.5px !important;
   font-weight: 600 !important;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
-/* DS .tab-icon — a small brass-tint capsule behind the selected tab's icon
-   only (same idiom as .theme-btn.active's segmented-control highlight),
-   since brass ink alone on an unselected tab's already-muted fg-3 wasn't
-   enough contrast to read at a glance. A full-button pill read as a heavy
-   block against dark backgrounds, so the highlight is scoped to the icon
-   the way iOS/Material nav bars do it, leaving the label as plain text.
-   `tab-selected` is the class Ionic itself applies to the selected
-   ion-tab-button's host. */
+/* No highlight behind the icon: the marker carries the accent, and a second
+   accent shape on the same tab would compete with it. The wrapper survives
+   only to size the inline SVG. */
 ion-tab-button .tab-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3px 15px;
-  border-radius: 100px;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
-ion-tab-button.tab-selected .tab-icon {
-  background: var(--brass-tint);
-}
-
-ion-tab-button.tab-selected ion-label {
-  font-weight: 700 !important;
-}
-
-/* DS .tab svg — 22×22 line icons. */
+/* 20 × 20, 1.6 stroke, currentColor — icons inherit the tab's state colour. */
 ion-tab-button svg {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
 }
 
-/* ---------- hero (DS .eyebrow + .hero-value + .hero-change) ---------- */
+/* ---------- hero figure + summary block ---------- */
 
+/* The hero column: eyebrow 12px under the large title, figure, then the
+   stacked Today/Total. The chart card below brings its own --sec-gap. */
 .portfolio-summary {
-  padding: 4px 20px 10px;
+  padding: 12px var(--gutter) 0;
   text-align: left;
 }
 
@@ -239,58 +375,46 @@ ion-tab-button svg {
   gap: 10px;
 }
 
-/* Ledger-paper hairline grid behind the hero figure only — DS
-   .hero-value-row::before. */
-.hero-value-row {
-  position: relative;
-  padding: 8px 0 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.hero-value-row::before {
-  content: "";
-  position: absolute;
-  inset: 2px -20px -6px -20px;
-  background-image: repeating-linear-gradient(
-    var(--border),
-    var(--border) 1px,
-    transparent 1px,
-    transparent 27px
-  );
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.hero-value {
-  position: relative;
-  margin: 0;
-  font-family: var(--font-serif);
-  font-optical-sizing: auto;
-  font-size: 44px;
-  font-weight: 560;
-  line-height: 1.02;
-  letter-spacing: -0.015em;
-  color: var(--fg-1);
-  display: flex;
+/* DS .figure — plain tabular numerals, no cells, no backdrop. The old
+   ledger-paper hairline grid behind the hero (.hero-value-row::before) is gone:
+   the new language separates by elevation and hairlines that mean something,
+   and a decorative grid behind a figure competes with the .divider rules.
+   The three parts are set at three sizes: symbol small + tertiary, whole part
+   full size, cents small + secondary. */
+.figure {
+  display: inline-flex;
   align-items: baseline;
-  gap: 1px;
+  font-family: var(--font-mono);
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  color: var(--fg-1);
+  line-height: 1.05;
+  margin: 0;
 }
 
-.hero-value .hero-cents {
-  font-size: 24px;
+.figure .cur {
+  font-size: 0.48em;
+  font-weight: 500;
+  color: var(--fg-3);
+  margin-right: 2px;
+}
+
+.figure .cents {
+  font-size: 0.46em;
+  font-weight: 500;
   color: var(--fg-2);
-  font-weight: 460;
+  margin-left: 1px;
 }
 
-/* Detail screens reuse the hero at 36px (DS holding-detail spec). */
-.hero-value--sm {
-  font-size: 36px;
+/* Hero figure — the total portfolio value. */
+.figure-hero {
+  font-size: 38px;
 }
 
-.hero-value--sm .hero-cents {
-  font-size: 20px;
+/* Mid figure — price per share on detail screens. */
+.figure-mid {
+  font-size: 25px;
 }
 
 /* Secondary currency lines under a multi-currency hero. */
@@ -352,11 +476,12 @@ ion-tab-button svg {
 }
 
 /* Today's Gain + Total Gain, both unrealized — stacked rather than fighting for one line. */
+/* Today/Total, stacked, mono and tabular so the two lines' figures align. */
 .gain-stack {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 4px;
+  margin-top: 6px;
 }
 
 .gain-stack .hero-change {
@@ -411,8 +536,8 @@ ion-tab-button svg {
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 100px;
-  padding: 5px 10px 5px 12px;
-  margin-top: 10px;
+  padding: 6px 11px 6px 13px;
+  margin-top: 6px;
   font-family: var(--font-mono);
   font-size: 12.5px;
   font-weight: 500;
@@ -429,12 +554,18 @@ ion-tab-button svg {
 
 /* ---------- chart card (chart itself outside DS scope; card chrome on-token) ---------- */
 
+/* One of the three card types (.chart-card / .stat-grid / .field-card), which
+   must be indistinguishable at the edge: 8px radius, exactly ONE layer of
+   --border, and --shadow-card for the elevation that gives them an edge at all
+   on the white light plane. --sec-gutter margin: full-bleed block carrying its
+   own gutter. */
 .chart-card {
-  margin: 10px 18px 4px;
+  margin: var(--sec-gap) var(--gutter) 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px 10px 10px;
+  border-radius: 8px;
+  padding: 14px 10px 10px;
+  box-shadow: var(--shadow-card);
 }
 
 .chart-canvas {
@@ -524,39 +655,50 @@ ion-tab-button svg {
   justify-content: center;
 }
 
-/* Range picker: neutral raised state like DS .seg-item.active — brass is
+/* Range picker: neutral raised state like DS .seg-item.active — signal is
    reserved for the single primary action on the screen. */
+/* An internal rule is never inset by its card's padding (rule 02): the
+   negative side margins cancel .chart-card's 10px padding so this hairline runs
+   edge to edge, matching the full-bleed lines in .stat-grid. */
 .ranges {
   display: flex;
-  justify-content: space-between;
+  justify-content: space-around;
   gap: 2px;
-  margin-top: 12px;
-  padding: 0 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.ranges::-webkit-scrollbar {
-  display: none;
+  margin: 8px -10px 0;
+  border-top: 1px solid var(--border);
+  padding: 8px 10px 0;
+  /* No overflow-x here: it clips the selected range's 2px underline, which sits
+     just BELOW the row (bottom:-9px) on the card's bottom padding. Seven fixed
+     ranges fit the 393pt target width with space-around. */
 }
 
 .ranges button {
   font-family: var(--font-mono);
-  font-size: 11.5px;
-  padding: 4px 7px;
-  border-radius: 7px;
+  font-size: 11px;
+  padding: 3px 8px;
   color: var(--fg-3);
   font-weight: 500;
   background: none;
   border: none;
   cursor: pointer;
   flex-shrink: 0;
+  position: relative;
 }
 
+/* The selected range is marked by a 2px signal underline sitting on the card's
+   inner edge, not by a filled chip — the chip read as a second button style. */
 .ranges button.on {
   color: var(--fg-1);
-  background: var(--surface-2);
-  font-weight: 600;
+}
+
+.ranges button.on::after {
+  content: "";
+  position: absolute;
+  bottom: -9px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--signal);
 }
 
 /* ---------- fx note ---------- */
@@ -565,7 +707,7 @@ ion-tab-button svg {
   display: flex;
   align-items: center;
   gap: 5px;
-  margin: 10px 20px 14px;
+  margin: 8px var(--gutter) 0;
   color: var(--fg-3);
   font-family: var(--font-mono);
   font-size: 11px;
@@ -575,7 +717,7 @@ ion-tab-button svg {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--brass);
+  background: var(--signal);
   flex-shrink: 0;
 }
 
@@ -597,39 +739,23 @@ ion-tab-button svg {
   cursor: pointer;
 }
 
-/* ---------- section heads (DS .section-title / .section-meta) ---------- */
-
-.rows-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin: 18px 20px 4px;
-  font-size: 16px;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  color: var(--fg-1);
-}
-
-.rows-head .head-meta {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0;
-  color: var(--fg-3);
-}
-
-/* DS .divider — mono uppercase group label with trailing hairline. */
+/* ---------- section head ----------
+ * ONE style, everywhere (guidelines § Components): mono uppercase label, a
+ * hairline filling the remainder, optional right-aligned meta. --sec-gap above
+ * it, 9px to its content. The old bold-sans `.rows-head` was deleted on
+ * purpose — reintroducing it splits the system in two.
+ */
 .list-divider {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 18px 20px 2px;
+  gap: 12px;
+  margin: var(--sec-gap) var(--gutter) 9px;
 }
 
 .list-divider .dl {
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--fg-3);
@@ -642,14 +768,23 @@ ion-tab-button svg {
   background: var(--border);
 }
 
+.list-divider .dm {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--fg-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- allocation (DS .partition / .legend) ---------- */
 
 .alloc-bar {
   display: flex;
   gap: 2px;
-  height: 15px;
-  margin: 8px 20px 12px;
-  border-radius: 8px;
+  height: 10px;
+  margin: 0 var(--gutter);
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -661,8 +796,8 @@ ion-tab-button svg {
 .alloc-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  margin: 2px 20px 16px;
+  gap: 6px 14px;
+  margin: 6px var(--gutter) 0;
 }
 
 .alloc-chip {
@@ -682,7 +817,7 @@ ion-tab-button svg {
 .alloc-lbl {
   min-width: 0;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--fg-1);
   white-space: nowrap;
@@ -692,7 +827,7 @@ ion-tab-button svg {
 
 .alloc-pct {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 400;
   color: var(--fg-3);
   font-variant-numeric: tabular-nums;
@@ -703,8 +838,16 @@ ion-tab-button svg {
    Rows sit directly on --bg with hairline separators — no inset card.
    Forms opt back into the card look with .fieldcard-list below. */
 
+/* `.list-ios.list-inset` is Ionic's own selector for the inset list's 16px
+   margin — two classes (0,2,0), which out-specifies a plain `ion-list.list-inset`
+   (0,1,1), so that shape silently lost and the list kept a 16px top margin where
+   the section head's 9px is meant to be the only gap. Matching Ionic's shape and
+   adding the element wins outright. */
+ion-list.list-ios.list-inset,
 ion-list.list-inset {
-  margin: 0 18px;
+  margin: 0 var(--gutter);
+  padding-top: 0;
+  padding-bottom: 0;
   border-radius: 0;
   background: transparent;
 }
@@ -737,17 +880,20 @@ ion-list.list-inset ion-item {
    beats a plain `ion-item ion-label h2` (0,0,3) on the class/B component. The
    sibling `p` rule below already carries the `.ios` prefix to compensate —
    this one needs it too, or it silently falls back to Ionic's 17px/400. */
+/* A row's leading line: an account or portfolio NAME is a name, so it takes the
+   display face at 14px/600 (a ticker is a figure — see .label-sym below). */
 .ios ion-item ion-label h2 {
-  font-size: 14.5px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 600;
   color: var(--fg-1);
 }
 
 /* DS .row-main .name is single-line with ellipsis — a long "Account · Date"
    pairing truncates rather than wrapping the row taller. */
 .ios ion-item ion-label p {
-  font-size: 12.5px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 400;
   color: var(--fg-2);
   margin-top: 2px;
   white-space: nowrap;
@@ -758,18 +904,18 @@ ion-list.list-inset ion-item {
 /* Ticker-led rows (DS .row-main .sym) — mono 600/15 with room for a tag. */
 ion-item ion-label.label-sym h2 {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
 }
 
 /* Meta subtitles that are data (DS .radio-info .sub) — mono 11.5, tertiary. */
 .ios ion-item ion-label.sub-mono p {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 400;
   color: var(--fg-3);
 }
@@ -781,7 +927,7 @@ ion-item ion-label[slot="end"] {
 
 ion-item ion-label[slot="end"] h2 {
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--fg-1);
@@ -789,7 +935,7 @@ ion-item ion-label[slot="end"] h2 {
 
 .ios ion-item ion-label[slot="end"] p {
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   color: var(--fg-3);
@@ -816,182 +962,23 @@ ion-item ion-label[slot="end"] h2 {
 /* DS .pnl-label — leading "Today:"/"Total:" tag on a holdings row's stacked
    pnl lines, read before the sign rather than trailing the percentage. */
 .ios ion-item ion-label[slot="end"] p .pnl-label {
-  font-family: var(--ion-font-family);
+  font-family: var(--font-body);
   color: var(--fg-3);
   font-weight: 500;
-}
-
-/* Ionic's item-native draws its own border-bottom inside the shadow root, at
-   an offset from the padding-bottom edge that isn't consistent across WebKit
-   builds — measured on a real iOS device, equal --padding-top/--padding-bottom
-   (13px each) rendered as ~5pt below the row's last line but ~30pt before the
-   next row's content, a 6x asymmetry (the hairline sits close to *this* row's
-   text, not centered in the gap). Rather than chase that shadow-DOM offset,
-   zero out item-native's own vertical padding and border here and let
-   .tx-row — a plain, fully-owned node — draw both instead. */
-ion-list.list-inset ion-item.tx-item {
-  --padding-top: 0;
-  --padding-bottom: 0;
-  --min-height: 0;
-  --border-width: 0;
-}
-
-/* Transactions row (DS .row.tx) — item-inner's native flex row can only
-   place start/default/end slots side by side, so a third full-width line
-   can't be a sibling of those slots. Instead TransactionRow renders its
-   whole row as one plain, unslotted child and this lays it out to match
-   .row.tx/.row-top/.row-foot directly, sidestepping ion-label's shadow-DOM
-   specificity quirks (see the .label-sym h2 comment above) entirely.
-   item-inner itself is a flex row, so tx-row-top/tx-row-foot must share one
-   flex-column wrapper — as direct item children they'd sit side by side.
-   padding + border-bottom live here (not on the ion-item, see above) so both
-   sides of the divider are guaranteed symmetric, matching DS's own
-   .row{padding:13px 2px;border-bottom:1px solid var(--border)} exactly. */
-.tx-row {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-ion-list.list-inset ion-item.tx-item:last-child .tx-row {
-  border-bottom: none;
-}
-
-.tx-row-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.tx-row-main {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tx-sym {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--fg-1);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.tx-name {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--fg-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tx-row-end {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-  flex-shrink: 0;
-}
-
-.tx-val {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--fg-1);
-}
-
-.tx-meta {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  color: var(--fg-3);
-}
-
-/* Indented 46px = 34px glyph + 12px gap, so it lines up under tx-row-main. */
-.tx-row-foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding-left: 46px;
-  margin-top: 4px;
-}
-
-.tx-date {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-}
-
-.tx-pnl {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.tx-pnl svg {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-}
-
-ion-item ion-note[slot="end"] {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--fg-1);
-}
-
-ion-item ion-note[slot="end"].positive {
-  color: var(--gain);
-}
-
-ion-item ion-note[slot="end"].negative {
-  color: var(--loss);
-}
-
-/* Status/type tag riding a ticker (DS .closed-tag). */
-.type-tag {
-  font-family: var(--ion-font-family);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--fg-3);
-  background: var(--surface-2);
-  padding: 2px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  flex-shrink: 0;
 }
 
 /* ---------- row glyphs (DS .glyph — 34px circles) ---------- */
 
 ion-item ion-avatar[slot="start"] {
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   margin: 8px 12px 8px 0;
 }
 
 .glyph {
   --border-radius: 50%;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1000,13 +987,13 @@ ion-item ion-avatar[slot="start"] {
 }
 
 .glyph-cash {
-  background: var(--brass-tint);
-  color: var(--brass);
+  background: var(--signal-tint);
+  color: var(--signal);
 }
 
 .glyph-cash svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 
 .glyph-stock {
@@ -1036,7 +1023,7 @@ ion-item.row-closed {
 
 /* DS .glyph.member — an initials avatar standing in for the cash/stock glyph
    wherever a row is about a person (Manage Portfolio's member list). Reused
-   at 56px/brass-tint for Settings' own profile row (.glyph-member-lg). */
+   at 56px/signal-tint for Settings' own profile row (.glyph-member-lg). */
 .glyph-member {
   background: var(--surface-2);
   color: var(--fg-2);
@@ -1051,12 +1038,28 @@ ion-item.row-closed {
 .glyph-member-lg {
   width: 56px;
   height: 56px;
-  background: var(--brass-tint);
-  color: var(--brass);
+  background: var(--signal-tint);
+  color: var(--signal);
 }
 
 .glyph-member-lg .member-initial {
   font-size: 21px;
+}
+
+/* DS .closed-tag — a small status/type badge riding a ticker, a member row, or
+   the Settings profile block: mono, uppercase, hairline-bordered, tertiary ink.
+   (Restored: a cleanup pass removed this while four screens still used it.) */
+.type-tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 5px;
+  flex-shrink: 0;
 }
 
 /* Trailing role pill (DS .closed-tag) ahead of a member row's chevron. */
@@ -1064,11 +1067,6 @@ ion-item.row-closed {
   margin-inline-start: 10px;
 }
 
-.glyph-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
 
 .profile-avatar {
   --border-radius: 50%;
@@ -1090,22 +1088,7 @@ ion-item.row-closed {
   margin-inline-start: 2px;
 }
 
-/* A bare value span (.acct-val) has no slot margins of its own — restore the
-   DS row's 12px gap before the chevron. */
-.acct-val + .row-chevron {
-  margin-inline-start: 12px;
-}
 
-/* Stacked per-currency values on account rows. */
-.acct-val {
-  font-family: var(--font-mono);
-  font-size: 15px;
-  font-weight: 600;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-  color: var(--fg-1);
-}
 
 /* ---------- settings profile row (DS .detail-head, turned sideways) ---------- */
 
@@ -1159,36 +1142,50 @@ ion-item.row-closed {
 
 /* ---------- form cards (DS .field-card / .field) ---------- */
 
+/* .field-card — the third card type, so the same edge as .chart-card and
+   .stat-grid: 8px radius, one --border, --shadow-card. */
 ion-list.list-inset.fieldcard-list {
-  margin: 0 18px 16px;
+  margin: var(--sec-gap) var(--gutter) 0;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 8px;
   overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+/* Consecutive field cards are SEPARATE cards, --sec-gap apart. Ionic ships
+   `.list-ios.list-inset + ion-list.list-inset { margin-top: 0 }` to butt inset
+   lists together, and at (0,3,1) it out-specifies the rule above — two cards
+   then render as one with a seam down the middle (rule 04: watch specificity
+   when scoping). This selector is (0,4,2) and wins. */
+ion-list.list-inset.fieldcard-list + ion-list.list-inset.fieldcard-list {
+  margin-top: var(--sec-gap);
 }
 
 ion-list.list-inset.fieldcard-list ion-item {
-  --padding-start: 16px;
-  --inner-padding-end: 16px;
-  --min-height: 50px;
+  --padding-start: 14px;
+  --inner-padding-end: 14px;
+  --min-height: 46px;
   border-radius: 0;
 }
 
 /* DS .field-label — full-contrast Archivo 500/14; the *value* is the muted
    half of the pair, in mono, right-aligned (a field is a row waiting to be
    saved). */
+/* .field-label is the secondary half (13px body, --fg-2); the value is the
+   figure — mono, primary ink, right-aligned. */
 .form-list ion-item > ion-label:not([slot="end"]) {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--fg-1);
+  color: var(--fg-2);
   flex-shrink: 0;
 }
 
 .form-list ion-item ion-label[slot="end"] {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
-  color: var(--fg-2);
+  color: var(--fg-1);
   font-variant-numeric: tabular-nums;
   margin-inline-end: 0;
 }
@@ -1207,9 +1204,9 @@ ion-list.list-inset.fieldcard-list ion-item {
 
 .form-list ion-item ion-label[slot="end"] h2 {
   font-family: var(--font-mono);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
-  color: var(--fg-2);
+  color: var(--fg-1);
 }
 
 .form-list ion-item.tap-target.pressed {
@@ -1227,7 +1224,7 @@ ion-list.list-inset.fieldcard-list ion-item {
 }
 
 .form-list ion-input.has-focus {
-  --color: var(--brass);
+  --color: var(--signal);
 }
 
 .symbol-picked {
@@ -1238,14 +1235,16 @@ ion-list.list-inset.fieldcard-list ion-item {
 
 /* ---------- segments (DS .seg-group / .seg-item) ---------- */
 
+/* .seg-group — a recessed --surface-2 well holding --surface tabs, 8px radius
+   outside / 6px inside, on the standard gutter and section gap. */
 .type-segment,
 .seg-card {
   width: auto;
-  margin: 8px 18px 16px;
+  margin: var(--sec-gap) var(--gutter) 0;
   --background: var(--surface-2);
   border: 1px solid var(--border);
-  border-radius: 11px;
-  padding: 3px;
+  border-radius: 8px;
+  padding: 2px;
 }
 
 .type-segment ion-segment-button,
@@ -1258,21 +1257,23 @@ ion-list.list-inset.fieldcard-list ion-item {
   --indicator-box-shadow:
     0 1px 3px rgba(0, 0, 0, 0.16),
     0 1px 1px rgba(0, 0, 0, 0.08);
-  --border-radius: 8px;
-  /* Kill the iOS between-button divider hairlines (DS .seg-group has none)
-     and tighten padding so "Withdraw" fits without truncating. */
+  --border-radius: 6px;
+  /* Kill the iOS between-button divider hairlines (.seg-group has none) and
+     tighten padding so "Withdraw" fits without truncating. */
   --border-width: 0;
   --padding-start: 2px;
   --padding-end: 2px;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
+  /* .seg-item — display face, uppercase, 11.5px/600 with 0.02em tracking. */
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
+/* Selected differs by ink and the raised --surface indicator, not by weight. */
 .type-segment ion-segment-button.segment-button-checked,
 .seg-card ion-segment-button.segment-button-checked {
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .type-segment ion-segment-button ion-label,
@@ -1344,56 +1345,50 @@ ion-list.list-inset.fieldcard-list ion-item {
 /* ---------- detail head (DS .detail-head / .stat-grid) ---------- */
 
 .detail-hero {
-  padding: 8px 20px 10px;
+  padding: 2px var(--gutter) 10px;
   text-align: left;
 }
 
-.detail-symrow {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  margin-bottom: 10px;
-}
-
-.detail-sym {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 20px;
-  color: var(--fg-1);
-}
-
+/* .detail-symrow / .detail-sym are gone: a pushed screen's heading is the page
+   title (.ph-large), not a content element — see guidelines state 3a. What
+   remains is the subtitle under that title. */
 .detail-name {
-  font-weight: 500;
-  font-size: 13.5px;
-  color: var(--fg-2);
+  font-size: 13px;
+  color: var(--fg-3);
+  margin: 2px 0 6px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* The 1px padding IS the outer edge — the translucent --border background shows
+   through it and through the gaps, so every line is exactly ONE layer of
+   --border. It previously carried a border AS WELL, which composited over the
+   background and rendered the outer edge at ~2x weight (rule 01). */
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1px;
+  padding: 1px;
   background: var(--border);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 8px;
   overflow: hidden;
-  margin: 8px 18px 4px;
+  margin: var(--sec-gap) var(--gutter) 0;
+  box-shadow: var(--shadow-card);
 }
 
 .stat-cell {
   background: var(--surface);
-  padding: 14px 16px;
+  padding: 11px 13px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
 }
 
 .stat-label {
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--fg-3);
 }
@@ -1401,7 +1396,7 @@ ion-list.list-inset.fieldcard-list ion-item {
 .stat-value {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--fg-1);
   font-variant-numeric: tabular-nums;
 }
@@ -1414,21 +1409,20 @@ ion-list.list-inset.fieldcard-list ion-item {
   color: var(--loss);
 }
 
-/* ---------- buttons (DS .btn family — 52px, radius 14) ---------- */
+/* ---------- buttons (48px, radius 6, display face) ---------- */
 
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  height: 52px;
-  border-radius: 14px;
+  height: 48px;
+  border-radius: 6px;
   border: none;
-  font-family: inherit;
-  font-weight: 650;
-  font-size: 15.5px;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14.5px;
   cursor: pointer;
   transition: transform 0.08s ease;
 }
@@ -1437,10 +1431,11 @@ ion-list.list-inset.fieldcard-list ion-item {
   transform: scale(0.98);
 }
 
+/* Flat: the accent is the fill, and a brass-tinted glow was left over from the
+   old palette anyway. */
 .btn-primary {
-  background: var(--brass);
-  color: var(--brass-ink);
-  box-shadow: 0 6px 18px rgba(176, 138, 62, 0.32);
+  background: var(--signal);
+  color: var(--signal-ink);
 }
 
 .btn-secondary {
@@ -1477,22 +1472,40 @@ ion-list.list-inset.fieldcard-list ion-item {
   transform: none;
 }
 
+/* The computed Total sits on the gutter, 9px under its divider like any other
+   section's content. */
+.total-figure {
+  margin: 0 var(--gutter);
+}
+
 .btn-stack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin: 16px 18px 4px;
+  gap: 9px;
+  margin: var(--sec-gap) var(--gutter) 0;
 }
 
+/* Buy/Sell at the end of a holding's scroll — STACKED, not side by side: a row
+   of two half-width buttons reads as a pair of equal choices, and these are not
+   equal. Sell is btn-secondary, never destructive red — selling is not a
+   destructive action (guidelines § Color).
+   Pushed screen with no tab bar, so the home-indicator gutter is the page's to
+   add (rule 08). env() rather than a flat 34px: 0 in a browser, the real inset
+   on device. */
 .detail-cta {
   display: flex;
-  gap: 10px;
-  padding: 16px 18px;
+  flex-direction: column;
+  gap: 9px;
+  margin: var(--sec-gap) var(--gutter) 0;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom));
 }
 
+/* Full width, natural height. The old `flex: 1` split the pair into two equal
+   halves for the side-by-side row; in a column it makes each button flex-shrink
+   to its text height (measured 15px instead of 48). */
 .detail-cta .btn {
-  width: auto;
-  flex: 1;
+  width: 100%;
+  flex: 0 0 auto;
 }
 
 /* ---------- empty state (DS .empty-state) ---------- */
@@ -1510,8 +1523,8 @@ ion-list.list-inset.fieldcard-list ion-item {
   width: 76px;
   height: 76px;
   border-radius: 50%;
-  background: var(--brass-tint);
-  color: var(--brass);
+  background: var(--signal-tint);
+  color: var(--signal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1571,7 +1584,7 @@ ion-list.list-inset.fieldcard-list ion-item {
 }
 
 .onboard-step.on {
-  background: var(--brass);
+  background: var(--signal);
 }
 
 /* ---------- login ---------- */
@@ -1594,32 +1607,63 @@ ion-list.list-inset.fieldcard-list ion-item {
   --background: var(--bg);
 }
 
+/* Login and Onboarding are the two pre-shell screens and share the 26pt gutter
+   (the one exception to --gutter). No tab bar here, so the 34pt home-indicator
+   gutter is the page's own (rule 08). */
 .login-screen {
   min-height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
-  padding: 0 26px;
+  padding: 6px 26px calc(22px + env(safe-area-inset-bottom));
 }
 
-/* The system's one illustration idiom: line icon in a brass-tint circle. */
+.login-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.login-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 64px;
+}
+
+/* Pinned to the bottom rather than trailing the copy, so the one control on the
+   screen sits under the thumb. */
+.login-bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto;
+}
+
+/* The system's one illustration idiom: line icon in a signal-tint well. */
 .login-mark {
-  width: 76px;
-  height: 76px;
-  border-radius: 50%;
-  background: var(--brass-tint);
-  color: var(--brass);
+  width: 60px;
+  height: 60px;
+  border-radius: 16px;
+  background: var(--signal-tint);
+  color: var(--signal);
   display: grid;
   place-items: center;
   margin: 0 auto 18px;
 }
 
 .login-word {
-  font-size: 28px;
+  font-family: var(--font-display);
+  font-size: 23px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
   color: var(--fg-1);
 }
 
@@ -1634,15 +1678,16 @@ ion-list.list-inset.fieldcard-list ion-item {
 .login-cta {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 9px;
   width: 100%;
   max-width: 320px;
-  margin: 0 0 12px;
+  margin: 0;
 }
 
 .login-fine {
   max-width: 320px;
-  font-size: 11px;
+  font-size: 10.5px;
+  line-height: 1.5;
   color: var(--fg-3);
   margin: 0;
 }
@@ -1675,8 +1720,8 @@ ion-list.list-inset.fieldcard-list ion-item {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: var(--brass-tint);
-  color: var(--brass);
+  background: var(--signal-tint);
+  color: var(--signal);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 650;
@@ -1749,9 +1794,9 @@ ion-modal ion-title {
   color: var(--fg-1);
 }
 
-/* DS .sheet-done — the sheet's single confirm is the one brass element. */
+/* DS .sheet-done — the sheet's single confirm is the one signal element. */
 ion-modal ion-toolbar ion-buttons[slot="end"] ion-button {
-  --color: var(--brass);
+  --color: var(--signal);
   font-size: 14.5px;
   font-weight: 650;
 }
@@ -1790,7 +1835,7 @@ ion-modal ion-list ion-item {
   margin-top: 2px;
 }
 
-/* DS .radio-dot — 20px ring, brass fill + check when selected. */
+/* DS .radio-dot — 20px ring, signal fill + check when selected. */
 .radio-dot {
   width: 20px;
   height: 20px;
@@ -1800,12 +1845,12 @@ ion-modal ion-list ion-item {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--brass-ink);
+  color: var(--signal-ink);
 }
 
 .radio-dot.checked {
-  background: var(--brass);
-  border-color: var(--brass);
+  background: var(--signal);
+  border-color: var(--signal);
 }
 
 .radio-dot svg {

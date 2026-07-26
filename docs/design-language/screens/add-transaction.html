@@ -1,0 +1,39 @@
+<title>Portifo — Design Language · Screens · Add Transaction — Buy</title>
+<link rel="stylesheet" href="../foundations/fonts.css">
+<link rel="stylesheet" href="../foundations/tokens.css">
+<link rel="stylesheet" href="../foundations/base.css">
+
+<div class="wrap">
+
+  <div class="doc-top">
+    <div>
+      <span class="eyebrow">Portifo F7 · Design Language · Screens</span>
+      <h1 class="doc-title">Add Transaction — Buy</h1>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Theme preview">
+      <button class="theme-btn" onclick="setTheme(null,this)">System</button>
+      <button class="theme-btn" onclick="setTheme('light',this)">Light</button>
+      <button class="theme-btn" onclick="setTheme('dark',this)">Dark</button>
+    </div>
+  </div>
+
+  <div class="grid">
+      <div class="card screen-frame">
+        <div class="stage">
+          <div class="seg-group"><div class="seg-item active">Buy</div><div class="seg-item">Sell</div><div class="seg-item">Deposit</div><div class="seg-item">Withdraw</div></div>
+          <div class="field-card">
+            <div class="field"><span class="field-label">Account</span><span class="field-value">Fidelity<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+            <div class="field"><span class="field-label">Date</span><span class="field-value">Jul 12, 2026<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+            <div class="field"><span class="field-label">Symbol</span><input class="field-input" style="max-width:100px" value="AAPL"></div>
+            <div class="field"><span class="field-label">Shares</span><input class="field-input" value="12"></div>
+            <div class="field"><span class="field-label">Price / Share</span><input class="field-input" value="187.32"></div>
+          </div>
+          <div class="btn-stack"><button class="btn btn-primary">Save Transaction</button></div>
+        </div>
+        <div class="card-caption">Add Transaction — Buy</div>
+      </div>
+  </div>
+
+</div>
+
+<script src="../foundations/theme-toggle.js"></script>

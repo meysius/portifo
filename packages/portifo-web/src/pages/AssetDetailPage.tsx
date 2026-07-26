@@ -9,6 +9,7 @@ import {
   IonNote,
   IonPage,
   IonSpinner,
+  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useEffect, useState } from "react";
@@ -100,15 +101,21 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
           <IonButtons slot="start">
             <IonBackButton defaultHref={tabBase} text={tabLabel} />
           </IonButtons>
+          <IonTitle>{symbol}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{symbol}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="detail-hero">
-          <div className="detail-symrow">
-            <span className="detail-sym">{symbol}</span>
-            {quote?.shortName && <span className="detail-name">{quote.shortName}</span>}
-          </div>
+          {/* The ticker is the page title now; the company name is its
+              subtitle (guidelines state 3a — never repeat the title here). */}
+          {quote?.shortName && <div className="detail-name">{quote.shortName}</div>}
           <IonNote className="eyebrow">Price / Share</IonNote>
           <MoneyHero value={price} currency={currency} small />
           {!agg.closed && (
@@ -117,7 +124,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
                   avg cost), then Today/Total stacked beneath — DS .row-meta +
                   .pnl-label, reused here instead of the old market-value hero. */}
               <p className="row-meta detail-rowmeta">
-                {fmtCcy(agg.costBasis, currency)} ({fmtShares(agg.totalShares)} x {fmtCcy(agg.avgCost, currency)})
+                {fmtCcy(agg.costBasis, currency)} ({fmtShares(agg.totalShares)} × {fmtCcy(agg.avgCost, currency)})
               </p>
               <div className="gain-stack">
                 {quote && (

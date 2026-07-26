@@ -1,163 +1,239 @@
 /*
- * Repoints Ionic's default palette to the Portifo design system
- * (docs/design-system.html — ink/paper ground, a single brass accent, and
- * separate gain/loss semantics). Raw tokens use design-system.html's own
- * names (--bg/--surface/--surface-2/--border/--fg-1..3/--brass/--gain/--loss)
- * so component CSS in index.css can be checked against that file 1:1.
+ * Repoints Ionic's palette to the Portifo design language
+ * (docs/new-design-system/ — start at guidelines.html § Color). Token names
+ * match docs/new-design-system/foundations/tokens.css 1:1, so any component
+ * rule in index.css can be checked against the design docs directly.
  *
- * Dark is the base palette (design-system.html's default :root); light is
- * an override, matching that file's structure. Brass, gain/loss, and the
- * categorical set are theme-invariant — only ground and text shift.
+ * Structure mirrors that file: a raw palette (--paper, --graphite, --cobalt …)
+ * that exists ONLY to feed the semantic tokens below it. Components must
+ * reference the semantic names (--bg/--surface/--fg-1..3/--signal/--gain/--loss/
+ * --cat-*), never the raw ones.
  *
  * Theming is class-based: src/lib/theme.ts puts `ion-palette-dark` on <html>
- * for dark (manual or resolved from the system preference) and removes it
- * for light — so light keys on the class being absent, not on a media query.
+ * for dark (manual or resolved from the system preference) and removes it for
+ * light. Light is the base here and dark is the override — the reverse of the
+ * old warm palette, because light is now the plain white plane.
  */
 
 :root {
-  --bg: #11161b;
-  --surface: #171d24;
-  --surface-rgb: 23, 29, 36;
-  --surface-2: #1d242c;
-  --border: rgba(233, 231, 222, 0.09);
-  --fg-1: #edebe3;
-  --fg-2: #a9aea9;
-  --fg-3: #757c7b;
+  /* ── raw palette — feeds the semantic tokens, never used directly ──────── */
+  --paper: #ffffff;
+  --paper-2: #ffffff;
+  --paper-3: #f1f2f4;
+  --ink-1: #16181d;
+  --ink-2: #5b6169;
+  --ink-3: #8e949c;
 
-  --brass: #b08a3e;
-  --brass-ink: #171106;
-  --brass-tint: rgba(176, 138, 62, 0.16);
+  --graphite: #15181b;
+  --graphite-2: #1d2124;
+  --graphite-3: #262b2f;
+  --snow-1: #ecefef;
+  --snow-2: #9ba1a6;
+  --snow-3: #656b70;
 
-  --gain: #4c9268;
-  --gain-tint: rgba(76, 146, 104, 0.14);
-  --loss: #bd5a46;
-  --loss-tint: rgba(189, 90, 70, 0.14);
-  --loss-ink: #2e0e08;
+  --cobalt: #2e56e8;
+  --cobalt-ink: #ffffff;
+  --cobalt-tint: rgba(46, 86, 232, 0.1);
+  --cobalt-dk: #7e97ff;
+  --cobalt-dk-ink: #0a1020;
+  --cobalt-dk-tint: rgba(126, 151, 255, 0.16);
 
-  /* Categorical set for allocation slices, assigned by position, not
-     meaning. --c-cash is always brass; --c-closed marks closed positions. */
-  --c-cash: var(--brass);
-  --c-1: #3e7a82;
-  --c-2: #55688f;
-  --c-3: #83587e;
-  --c-4: #a15c42;
-  --c-closed: #7c7a72;
-  --closed-op: 0.56;
+  --gain-lt: #1e9e6b;
+  --gain-lt-tint: rgba(30, 158, 107, 0.1);
+  --loss-lt: #d6483b;
+  --loss-lt-tint: rgba(214, 72, 59, 0.1);
+  --loss-lt-ink: #ffffff;
+  --gain-dk: #38c088;
+  --gain-dk-tint: rgba(56, 192, 136, 0.14);
+  --loss-dk: #e67567;
+  --loss-dk-tint: rgba(230, 117, 103, 0.14);
+  --loss-dk-ink: #22090a;
 
-  --font-serif: "Fraunces", serif;
-  --ion-font-family: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
+  /* ── type: three faces, three jobs ────────────────────────────────────── */
+  --font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Public Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  /* Ionic's own default face is the body face; titles/buttons opt into display. */
+  --ion-font-family: var(--font-body);
 
-  --ion-background-color: #11161b;
-  --ion-background-color-rgb: 17, 22, 27;
-  --ion-text-color: #edebe3;
-  --ion-text-color-rgb: 237, 235, 227;
+  /* ── layout constants — the only gap between sections, the only inset ──── */
+  --gutter: 20px;
+  --sec-gap: 24px;
 
-  --ion-border-color: rgba(233, 231, 222, 0.09);
-  --ion-item-background: #171d24;
-  /* No card-colored header bar — titles sit on the page background — so the
-     toolbar matches --bg, not --surface. */
-  --ion-toolbar-background: #11161b;
-  --ion-tab-bar-background: #171d24;
-  /* Resting tabs are tertiary ink; brass marks the active tab only. */
-  --ion-tab-bar-color: #757c7b;
-  --ion-tab-bar-color-selected: #b08a3e;
-  --ion-card-background: #171d24;
+  /* ── categorical set for allocation slices, assigned by position in the
+        sorted list, never by asset type. --cat-cash is the one fixed one. ── */
+  --cat-1: var(--signal);
+  --cat-2: #b8862e;
+  --cat-3: #7a5fb3;
+  --cat-4: #a65a9e;
+  --cat-cash: #9aa0a6;
 
-  --ion-color-primary: #b08a3e;
-  --ion-color-primary-rgb: 176, 138, 62;
-  --ion-color-primary-contrast: #171106;
-  --ion-color-primary-contrast-rgb: 23, 17, 6;
-  --ion-color-primary-shade: #9b7937;
-  --ion-color-primary-tint: #b99552;
+  --ccy-usd: var(--signal);
+  --ccy-cad: #c9793b;
+  --ccy-eur: #6b6fa8;
+  --ccy-gbp: #8b5fa0;
+  --ccy-jpy: #4a8f92;
 
-  --ion-color-success: #4c9268;
-  --ion-color-success-rgb: 76, 146, 104;
+  /* ── semantic ground: light. Page and cards are both #FFFFFF, so cards are
+        separated by elevation, not fill — --shadow-card is their only edge. ── */
+  --bg: var(--paper);
+  --surface: var(--paper-2);
+  --surface-rgb: 255, 255, 255;
+  --surface-2: var(--paper-3);
+  --border: rgba(16, 20, 30, 0.1);
+  --fg-1: var(--ink-1);
+  --fg-2: var(--ink-2);
+  --fg-3: var(--ink-3);
+
+  --signal: var(--cobalt);
+  --signal-ink: var(--cobalt-ink);
+  --signal-tint: var(--cobalt-tint);
+
+  --gain: var(--gain-lt);
+  --gain-tint: var(--gain-lt-tint);
+  --loss: var(--loss-lt);
+  --loss-tint: var(--loss-lt-tint);
+  --loss-ink: var(--loss-lt-ink);
+
+  /* Elevation is light-mode only — dark separates surfaces by value instead,
+     so all three resolve to none there. Never hard-code a shadow. */
+  --shadow-card: 0 1px 2px rgba(16, 20, 30, 0.05), 0 6px 16px -4px rgba(16, 20, 30, 0.1);
+  --shadow-bar: 0 -2px 10px rgba(16, 20, 30, 0.06);
+  /* Unused by design: the collapsed header is separated by its blur material.
+     Kept as the escape hatch if a masked backdrop has to be abandoned. */
+  --shadow-nav: 0 2px 10px rgba(16, 20, 30, 0.06);
+
+  /* Closed positions are dimmed, not recoloured. */
+  --closed-op: 0.55;
+
+  /* ── Ionic bridge ─────────────────────────────────────────────────────── */
+  --ion-background-color: #ffffff;
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color: #16181d;
+  --ion-text-color-rgb: 22, 24, 29;
+
+  --ion-border-color: rgba(16, 20, 30, 0.1);
+  --ion-item-background: #ffffff;
+  /* Header sits on the page ground, not on a card-coloured bar. */
+  --ion-toolbar-background: #ffffff;
+  --ion-tab-bar-background: #ffffff;
+  /* Idle tabs are tertiary ink; the active tab is PRIMARY ink, not the accent —
+     the 20×2 marker carries the accent (guidelines § Tab bar). */
+  --ion-tab-bar-color: #8e949c;
+  --ion-tab-bar-color-selected: #16181d;
+  --ion-card-background: #ffffff;
+
+  --ion-color-primary: #2e56e8;
+  --ion-color-primary-rgb: 46, 86, 232;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #284bcc;
+  --ion-color-primary-tint: #4367ea;
+
+  --ion-color-success: #1e9e6b;
+  --ion-color-success-rgb: 30, 158, 107;
   --ion-color-success-contrast: #ffffff;
   --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #43805c;
-  --ion-color-success-tint: #5e9d77;
+  --ion-color-success-shade: #1a8b5e;
+  --ion-color-success-tint: #35a87a;
 
-  --ion-color-danger: #bd5a46;
-  --ion-color-danger-rgb: 189, 90, 70;
+  --ion-color-danger: #d6483b;
+  --ion-color-danger-rgb: 214, 72, 59;
   --ion-color-danger-contrast: #ffffff;
   --ion-color-danger-contrast-rgb: 255, 255, 255;
-  --ion-color-danger-shade: #a64f3e;
-  --ion-color-danger-tint: #c46b59;
+  --ion-color-danger-shade: #bc3f34;
+  --ion-color-danger-tint: #da5a4f;
 
   /* "medium" is the placeholder/tertiary tier — maps to --fg-3. */
-  --ion-color-medium: #757c7b;
-  --ion-color-medium-rgb: 117, 124, 123;
-  --ion-color-medium-contrast: #171106;
-  --ion-color-medium-contrast-rgb: 23, 17, 6;
-  --ion-color-medium-shade: #676d6c;
-  --ion-color-medium-tint: #838988;
+  --ion-color-medium: #8e949c;
+  --ion-color-medium-rgb: 142, 148, 156;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #7d8289;
+  --ion-color-medium-tint: #99a0a6;
 
-  --ion-color-light: #1d242c;
-  --ion-color-light-rgb: 29, 36, 44;
-  --ion-color-light-contrast: #edebe3;
-  --ion-color-light-contrast-rgb: 237, 235, 227;
-  --ion-color-light-shade: #191f26;
-  --ion-color-light-tint: #333941;
+  --ion-color-light: #f1f2f4;
+  --ion-color-light-rgb: 241, 242, 244;
+  --ion-color-light-contrast: #16181d;
+  --ion-color-light-contrast-rgb: 22, 24, 29;
+  --ion-color-light-shade: #d4d5d7;
+  --ion-color-light-tint: #f3f4f5;
 }
 
-/* @ionic/react/css/palettes/dark.class.css sets Ionic's generic dark ground
-   (background/text/item/card, near-black) on `.ion-palette-dark.ios`, which
-   outranks the plain `:root` base above — re-assert the Portifo dark ground
-   at matching specificity (this file is imported after the Ionic palette, so
-   the tie breaks our way). */
+/* ── dark ─────────────────────────────────────────────────────────────────
+   --surface already differs from --bg by value here, so every shadow token
+   goes to none (guidelines rule 05). */
 :root.ion-palette-dark {
-  --ion-background-color: #11161b;
-  --ion-background-color-rgb: 17, 22, 27;
-  --ion-text-color: #edebe3;
-  --ion-text-color-rgb: 237, 235, 227;
+  --bg: var(--graphite);
+  --surface: var(--graphite-2);
+  --surface-rgb: 29, 33, 36;
+  --surface-2: var(--graphite-3);
+  --border: rgba(230, 233, 230, 0.09);
+  --fg-1: var(--snow-1);
+  --fg-2: var(--snow-2);
+  --fg-3: var(--snow-3);
 
-  --ion-border-color: rgba(233, 231, 222, 0.09);
-  --ion-item-background: #171d24;
-  --ion-toolbar-background: #11161b;
-  --ion-tab-bar-background: #171d24;
-  --ion-tab-bar-color: #757c7b;
-  --ion-tab-bar-color-selected: #b08a3e;
-  --ion-card-background: #171d24;
-}
+  --signal: var(--cobalt-dk);
+  --signal-ink: var(--cobalt-dk-ink);
+  --signal-tint: var(--cobalt-dk-tint);
 
-/* Light — applies whenever theme.ts leaves `ion-palette-dark` off <html>.
-   Dark is the default palette above, so light is the override. */
-:root:not(.ion-palette-dark) {
-  --ion-background-color: #f2f1ec;
-  --ion-background-color-rgb: 242, 241, 236;
-  --ion-text-color: #1a1d17;
-  --ion-text-color-rgb: 26, 29, 23;
+  --gain: var(--gain-dk);
+  --gain-tint: var(--gain-dk-tint);
+  --loss: var(--loss-dk);
+  --loss-tint: var(--loss-dk-tint);
+  --loss-ink: var(--loss-dk-ink);
 
-  --ion-border-color: rgba(20, 22, 18, 0.09);
-  --ion-item-background: #fbfaf6;
-  --ion-toolbar-background: #f2f1ec;
-  --ion-tab-bar-background: #fbfaf6;
-  --ion-tab-bar-color: #8b8d85;
-  --ion-tab-bar-color-selected: #b08a3e;
-  --ion-card-background: #fbfaf6;
+  --shadow-card: none;
+  --shadow-bar: none;
+  --shadow-nav: none;
 
-  --bg: #f2f1ec;
-  --surface: #fbfaf6;
-  --surface-rgb: 251, 250, 246;
-  --surface-2: #e9e7de;
-  --border: rgba(20, 22, 18, 0.09);
-  --fg-1: #1a1d17;
-  --fg-2: #63665f;
-  --fg-3: #8b8d85;
-  --closed-op: 0.6;
+  --closed-op: 0.55;
 
-  --ion-color-medium: #8b8d85;
-  --ion-color-medium-rgb: 139, 141, 133;
-  --ion-color-medium-contrast: #171106;
-  --ion-color-medium-contrast-rgb: 23, 17, 6;
-  --ion-color-medium-shade: #7a7c75;
-  --ion-color-medium-tint: #979891;
+  --ion-background-color: #15181b;
+  --ion-background-color-rgb: 21, 24, 27;
+  --ion-text-color: #ecefef;
+  --ion-text-color-rgb: 236, 239, 239;
 
-  --ion-color-light: #e9e7de;
-  --ion-color-light-rgb: 233, 231, 222;
-  --ion-color-light-contrast: #1a1d17;
-  --ion-color-light-contrast-rgb: 26, 29, 23;
-  --ion-color-light-shade: #ccccc4;
-  --ion-color-light-tint: #ebe9e1;
+  --ion-border-color: rgba(230, 233, 230, 0.09);
+  --ion-item-background: #1d2124;
+  --ion-toolbar-background: #15181b;
+  --ion-tab-bar-background: #1d2124;
+  --ion-tab-bar-color: #656b70;
+  --ion-tab-bar-color-selected: #ecefef;
+  --ion-card-background: #1d2124;
+
+  --ion-color-primary: #7e97ff;
+  --ion-color-primary-rgb: 126, 151, 255;
+  --ion-color-primary-contrast: #0a1020;
+  --ion-color-primary-contrast-rgb: 10, 16, 32;
+  --ion-color-primary-shade: #6f85e0;
+  --ion-color-primary-tint: #8ba1ff;
+
+  --ion-color-success: #38c088;
+  --ion-color-success-rgb: 56, 192, 136;
+  --ion-color-success-contrast: #0a1020;
+  --ion-color-success-contrast-rgb: 10, 16, 32;
+  --ion-color-success-shade: #31a978;
+  --ion-color-success-tint: #4cc694;
+
+  --ion-color-danger: #e67567;
+  --ion-color-danger-rgb: 230, 117, 103;
+  --ion-color-danger-contrast: #22090a;
+  --ion-color-danger-contrast-rgb: 34, 9, 10;
+  --ion-color-danger-shade: #ca675b;
+  --ion-color-danger-tint: #e98376;
+
+  --ion-color-medium: #656b70;
+  --ion-color-medium-rgb: 101, 107, 112;
+  --ion-color-medium-contrast: #ecefef;
+  --ion-color-medium-contrast-rgb: 236, 239, 239;
+  --ion-color-medium-shade: #595e63;
+  --ion-color-medium-tint: #74797e;
+
+  --ion-color-light: #262b2f;
+  --ion-color-light-rgb: 38, 43, 47;
+  --ion-color-light-contrast: #ecefef;
+  --ion-color-light-contrast-rgb: 236, 239, 239;
+  --ion-color-light-shade: #212529;
+  --ion-color-light-tint: #3c4044;
 }

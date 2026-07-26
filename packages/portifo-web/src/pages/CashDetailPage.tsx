@@ -59,6 +59,12 @@ function CashDetailPage() {
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">Cash</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="portfolio-summary">
           <IonNote className="eyebrow">Total Cash</IonNote>
           <div className="hero-row">

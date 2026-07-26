@@ -6,7 +6,7 @@ const FAR_STYLE = { opacity: "", color: "" };
 
 // Ionic's ion-datetime wheel only exposes two shadow parts — wheel-item and
 // wheel-item active — so the DS 3-tier fade (far / near / selected, see
-// .wheel-row.near in docs/design-system.html) has no CSS-only way to reach
+// .wheel-row.near in the design docs) has no CSS-only way to reach
 // the rows immediately next to the selection. This walks each picker column
 // and inline-styles the "near" siblings whenever the active option changes
 // (including live during a scroll drag, since Ionic toggles the same

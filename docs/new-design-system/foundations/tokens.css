@@ -1,0 +1,136 @@
+  :root{
+    /* Type roles. --font-display drives every title, button, tab label and
+       navbar; body prose is Public Sans and all figures are JetBrains Mono. */
+    --font-display: 'Inter', sans-serif;
+
+    /* Layout constants. Global on purpose — .sec / .sec-gutter are used outside
+       device frames too (docs, specimens), and scoping these to .screen made
+       them silently resolve to nothing there, collapsing every section gap. */
+    --gutter:  20px;
+    --sec-gap: 24px;
+
+    /* Light is a single white plane — page and cards are both #FFFFFF, so
+       cards are separated by elevation, not by fill. --shadow-card is the
+       only thing giving them an edge; dark mode sets it to none because
+       there --surface already differs from --bg by value. */
+    --paper:    #FFFFFF;
+    --paper-2:  #FFFFFF;
+    --paper-3:  #F1F2F4;
+    --ink-1:    #16181D;
+    --ink-2:    #5B6169;
+    --ink-3:    #8E949C;
+
+    --graphite:    #15181B;
+    --graphite-2:  #1D2124;
+    --graphite-3:  #262B2F;
+    --snow-1:      #ECEFEF;
+    --snow-2:      #9BA1A6;
+    --snow-3:      #656B70;
+
+    --cobalt:      #2E56E8;
+    --cobalt-ink:  #FFFFFF;
+    --cobalt-tint: rgba(46,86,232,0.10);
+    --cobalt-dk:      #7E97FF;
+    --cobalt-dk-ink:  #0A1020;
+    --cobalt-dk-tint: rgba(126,151,255,0.16);
+
+    --gain:      #1E9E6B;
+    --gain-tint: rgba(30,158,107,0.10);
+    --loss:      #D6483B;
+    --loss-tint: rgba(214,72,59,0.10);
+    --loss-ink:  #FFFFFF;
+    --gain-dk:      #38C088;
+    --gain-dk-tint: rgba(56,192,136,0.14);
+    --loss-dk:      #E67567;
+    --loss-dk-tint: rgba(230,117,103,0.14);
+    --loss-dk-ink:  #22090A;
+
+    --cat-1: var(--signal);
+    --cat-2: #B8862E;
+    --cat-3: #7A5FB3;
+    --cat-4: #A65A9E;
+    --cat-cash: #9AA0A6;
+
+    --ccy-usd: var(--signal);
+    --ccy-cad: #C9793B;
+    --ccy-eur: #6B6FA8;
+    --ccy-gbp: #8B5FA0;
+    --ccy-jpy: #4A8F92;
+
+    --bg:        var(--paper);
+    --surface:   var(--paper-2);
+    --surface-2: var(--paper-3);
+    --border:    rgba(16,20,30,0.10);
+    --shadow-card: 0 1px 2px rgba(16,20,30,0.05), 0 6px 16px -4px rgba(16,20,30,0.10);
+    --shadow-bar:  0 -2px 10px rgba(16,20,30,0.06);
+    --shadow-nav:  0 2px 10px rgba(16,20,30,0.06);
+    --fg-1: var(--ink-1);
+    --fg-2: var(--ink-2);
+    --fg-3: var(--ink-3);
+    --signal:      var(--cobalt);
+    --signal-ink:  var(--cobalt-ink);
+    --signal-tint: var(--cobalt-tint);
+  }
+
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:        var(--graphite);
+      --surface:   var(--graphite-2);
+      --surface-2: var(--graphite-3);
+      --border:    rgba(230,233,230,0.09);
+      --shadow-card: none;
+      --shadow-bar:  none;
+      --shadow-nav:  none;
+      --fg-1: var(--snow-1);
+      --fg-2: var(--snow-2);
+      --fg-3: var(--snow-3);
+      --signal:      var(--cobalt-dk);
+      --signal-ink:  var(--cobalt-dk-ink);
+      --signal-tint: var(--cobalt-dk-tint);
+      --gain:      var(--gain-dk);
+      --gain-tint: var(--gain-dk-tint);
+      --loss:      var(--loss-dk);
+      --loss-tint: var(--loss-dk-tint);
+      --loss-ink:  var(--loss-dk-ink);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:        var(--graphite);
+    --surface:   var(--graphite-2);
+    --surface-2: var(--graphite-3);
+    --border:    rgba(230,233,230,0.09);
+    --shadow-card: none;
+    --shadow-bar:  none;
+    --shadow-nav:  none;
+    --fg-1: var(--snow-1);
+    --fg-2: var(--snow-2);
+    --fg-3: var(--snow-3);
+    --signal:      var(--cobalt-dk);
+    --signal-ink:  var(--cobalt-dk-ink);
+    --signal-tint: var(--cobalt-dk-tint);
+    --gain:      var(--gain-dk);
+    --gain-tint: var(--gain-dk-tint);
+    --loss:      var(--loss-dk);
+    --loss-tint: var(--loss-dk-tint);
+    --loss-ink:  var(--loss-dk-ink);
+  }
+  :root[data-theme="light"]{
+    --bg:        var(--paper);
+    --surface:   var(--paper-2);
+    --surface-2: var(--paper-3);
+    --border:    rgba(16,20,30,0.10);
+    --shadow-card: 0 1px 2px rgba(16,20,30,0.05), 0 6px 16px -4px rgba(16,20,30,0.10);
+    --shadow-bar:  0 -2px 10px rgba(16,20,30,0.06);
+    --shadow-nav:  0 2px 10px rgba(16,20,30,0.06);
+    --fg-1: var(--ink-1);
+    --fg-2: var(--ink-2);
+    --fg-3: var(--ink-3);
+    --signal:      var(--cobalt);
+    --signal-ink:  var(--cobalt-ink);
+    --signal-tint: var(--cobalt-tint);
+    --gain:      #1E9E6B;
+    --gain-tint: rgba(30,158,107,0.10);
+    --loss:      #D6483B;
+    --loss-tint: rgba(214,72,59,0.10);
+    --loss-ink:  #FFFFFF;
+  }

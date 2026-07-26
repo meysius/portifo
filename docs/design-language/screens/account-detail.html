@@ -1,0 +1,40 @@
+<title>Portifo — Design Language · Screens · Account Detail</title>
+<link rel="stylesheet" href="../foundations/fonts.css">
+<link rel="stylesheet" href="../foundations/tokens.css">
+<link rel="stylesheet" href="../foundations/base.css">
+
+<div class="wrap">
+
+  <div class="doc-top">
+    <div>
+      <span class="eyebrow">Portifo F7 · Design Language · Screens</span>
+      <h1 class="doc-title">Account Detail</h1>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Theme preview">
+      <button class="theme-btn" onclick="setTheme(null,this)">System</button>
+      <button class="theme-btn" onclick="setTheme('light',this)">Light</button>
+      <button class="theme-btn" onclick="setTheme('dark',this)">Dark</button>
+    </div>
+  </div>
+
+  <div class="grid">
+      <div class="card screen-frame">
+        <div class="stage">
+          <div class="detail-head"><span class="eyebrow">Fidelity Brokerage · Investment</span><div class="figure figure-mid" style="margin-top:2px;"><span class="cur">$</span>421,063</div></div>
+          <div class="divider" style="margin-top:4px;"><span class="dl">Holdings</span><span class="dh"></span></div>
+          <div class="list">
+            <div class="row"><div class="glyph"><span class="sq" style="background:var(--cat-1)"></span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">263 sh</div></div><div class="row-end"><div class="val">$8,873</div></div></div>
+            <div class="row"><div class="glyph"><span class="sq" style="background:var(--cat-2)"></span></div><div class="row-main"><div class="sym">AAPL</div><div class="name">40 sh</div></div><div class="row-end"><div class="val">$7,492</div></div></div>
+          </div>
+          <div class="divider" style="margin-top:2px;"><span class="dl">Cash</span><span class="dh"></span></div>
+          <div class="list">
+            <div class="row"><div class="row-main"><div class="sym"><span class="ccy-tag"><span class="ccy-dot" style="background:var(--ccy-usd)"></span>USD</span></div></div><div class="row-end"><div class="val">$3,140.00</div></div></div>
+          </div>
+        </div>
+        <div class="card-caption">Account Detail — Investment Account (cash rows unclickable — a running total, not user-set)</div>
+      </div>
+  </div>
+
+</div>
+
+<script src="../foundations/theme-toggle.js"></script>

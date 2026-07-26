@@ -10,6 +10,7 @@ import {
   IonList,
   IonPage,
   IonSpinner,
+  IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useEffect, useState } from "react";
@@ -147,14 +148,18 @@ function ManagePortfolioPage() {
           <IonButtons slot="start">
             <IonBackButton defaultHref={tabBase} text={tabLabel} />
           </IonButtons>
+          <IonTitle>{portfolioDetail.name}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{portfolioDetail.name}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <div className="detail-hero">
-          <div className="detail-symrow">
-            <span className="detail-sym">{portfolioDetail.name}</span>
-          </div>
           <div className="detail-name">Your role: {roleLabel(portfolioDetail.role)}</div>
         </div>
 

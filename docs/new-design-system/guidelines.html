@@ -1,0 +1,463 @@
+<title>Portifo — Design Guidelines</title>
+<link rel="stylesheet" href="foundations/fonts.css">
+<link rel="stylesheet" href="foundations/tokens.css">
+<link rel="stylesheet" href="foundations/base.css">
+<style>
+  .g-nav{ position:sticky; top:0; z-index:60; background:var(--bg); border-bottom:1px solid var(--border);
+          padding:12px 24px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin:-48px -24px 40px; }
+  .g-nav a{ font-family:var(--font-display); font-weight:600; font-size:12.5px; color:var(--fg-3);
+            text-decoration:none; padding:6px 10px; border-radius:6px; }
+  .g-nav a:hover{ background:var(--surface-2); color:var(--fg-1); }
+  .g-nav .g-brand{ font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--fg-1); margin-right:8px; }
+
+  h2.g-h{ font-family:var(--font-display); font-weight:700; font-size:26px; letter-spacing:-0.015em;
+          margin:0 0 10px; }
+  /* the anchor targets are the section wrappers, so the offset belongs on them */
+  #color, #type, #components, #header, #tabbar, #rules{ scroll-margin-top:78px; }
+  h3.g-sub{ font-family:var(--font-display); font-weight:700; font-size:16px; margin:32px 0 12px; }
+  .g-lead{ font-size:14px; line-height:1.65; color:var(--fg-2); max-width:78ch; margin:0 0 24px; }
+
+  .sw-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+  .sw-item{ border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--surface);
+            box-shadow:var(--shadow-card); }
+  .sw-chip{ height:56px; border-bottom:1px solid var(--border); }
+  .sw-meta{ padding:9px 11px 4px; display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .sw-meta b{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; color:var(--fg-1); }
+  .sw-meta span{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--fg-3); }
+  .sw-use{ padding:0 11px 10px; font-size:11.5px; line-height:1.5; color:var(--fg-3); }
+
+  .rule{ display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); }
+  .rule:last-child{ border-bottom:none; }
+  .rule-n{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:var(--signal);
+           flex:0 0 26px; padding-top:2px; }
+  .rule-b{ flex:1; min-width:0; font-size:13.5px; line-height:1.6; color:var(--fg-2); }
+  .rule-b b{ color:var(--fg-1); font-weight:600; }
+  .rule-b code{ font-family:'JetBrains Mono',monospace; font-size:0.93em; background:var(--surface-2);
+                padding:1px 5px; border-radius:3px; color:var(--fg-2); }
+
+  .g-do{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:14px; }
+  .g-do > div{ border:1px solid var(--border); border-radius:8px; padding:13px 15px; background:var(--surface); }
+  .g-do .lbl{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em;
+              text-transform:uppercase; margin-bottom:7px; }
+  .g-yes .lbl{ color:var(--gain); } .g-no .lbl{ color:var(--loss); }
+  .g-do p{ margin:0; font-size:12.5px; line-height:1.55; color:var(--fg-2); }
+  .g-do code{ font-family:'JetBrains Mono',monospace; font-size:0.93em; color:var(--fg-1); }
+
+  .states{ display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  .state{ display:flex; flex-direction:column; gap:10px; width:393px; }
+  .state-n{ font-family:var(--font-display); font-weight:700; font-size:13.5px; color:var(--fg-1); }
+  .state-d{ font-size:12px; line-height:1.5; color:var(--fg-3); }
+  /* Radius MUST be uniform. A mixed border-radius on a box that clips (overflow:hidden) makes
+     Chromium drop the backdrop-filter's sampling of its own content: .ph-material.fade then
+     renders as a flat white block instead of a dissolving blur. Was 34px 34px 10px 10px. */
+  .mini{ width:393px; border-radius:34px; overflow:hidden; border:1px solid var(--border);
+         box-shadow:var(--shadow-card); }
+  .mini-screen{ position:relative; background:var(--bg); height:340px; overflow:hidden;
+                display:flex; flex-direction:column; }
+  .spec-tbl td.dim{ white-space:nowrap; }
+  .type-row{ border:1px solid var(--border); border-radius:8px; background:var(--surface);
+             box-shadow:var(--shadow-card); padding:18px 20px; margin-bottom:12px; }
+  .type-role{ font-family:'JetBrains Mono',monospace; font-size:10.5px; letter-spacing:0.12em;
+              text-transform:uppercase; color:var(--fg-3); margin-bottom:10px; }
+  .type-demo{ margin-bottom:10px; }
+  .tb-showcase{ width:393px; border:1px solid var(--border); border-radius:10px 10px 30px 30px;
+                overflow:hidden; background:var(--bg); box-shadow:var(--shadow-card); }
+  .tb-inner{ position:relative; padding-top:26px; }
+  .tb-inner .tabbar{ padding-bottom:34px; }
+  .tb-home{ position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:139px; height:5px;
+            border-radius:100px; background:var(--fg-1); opacity:0.85; }
+</style>
+
+<div class="wrap">
+
+  <div class="g-nav">
+    <span class="g-brand">Portifo Guidelines</span>
+    <a href="#color">Color</a>
+    <a href="#type">Typography</a>
+    <a href="#components">Components</a>
+    <a href="#header">Page header</a>
+    <a href="#tabbar">Tab bar</a>
+    <a href="#rules">Implementation rules</a>
+    <div class="theme-toggle" style="margin-left:auto;" role="group" aria-label="Theme">
+      <button class="theme-btn" onclick="setTheme(null,this)">System</button>
+      <button class="theme-btn" onclick="setTheme('light',this)">Light</button>
+      <button class="theme-btn" onclick="setTheme('dark',this)">Dark</button>
+    </div>
+  </div>
+
+  <div class="doc-top">
+    <div>
+      <span class="eyebrow">Portifo · Design System</span>
+      <h1 class="doc-title">Guidelines</h1>
+      <p class="doc-sub">The rules behind the screens. <b>Read this before writing or changing any UI.</b> Every value here is a live token — the swatches and specimens below are painted by the same CSS the app uses, so this page cannot drift from <code>foundations/</code>. Screens that apply these rules live in <code>screens.html</code>.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ COLOR ═══════════════════════════ -->
+  <div id="color">
+    <div class="divider"><span class="dl">01 — Color</span><span class="dh"></span></div>
+    <h2 class="g-h">Color schema</h2>
+    <p class="g-lead">Never write a literal color in a component. Every color is one of the semantic tokens below, defined once in <code>foundations/tokens.css</code> and remapped per theme. The raw palette (<code>--paper-*</code>, <code>--graphite-*</code>, <code>--cobalt*</code>) exists only to feed these — components must not reference it.</p>
+
+    <h3 class="g-sub">Surfaces &amp; structure</h3>
+    <div class="sw-grid">
+      <div class="sw-item"><div class="sw-chip" style="background:var(--bg)"></div>
+        <div class="sw-meta"><b>--bg</b><span data-val="--bg"></span></div>
+        <div class="sw-use">Page canvas. In light this is pure white and identical to <code>--surface</code>.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--surface)"></div>
+        <div class="sw-meta"><b>--surface</b><span data-val="--surface"></span></div>
+        <div class="sw-use">Cards, toolbars, tab bar. In light it equals <code>--bg</code>, so cards are separated by <b>elevation, not fill</b>.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--surface-2)"></div>
+        <div class="sw-meta"><b>--surface-2</b><span data-val="--surface-2"></span></div>
+        <div class="sw-use">Subtle fills only: chips, segmented controls, glyph wells, ghost buttons, inline <code>code</code>.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--border)"></div>
+        <div class="sw-meta"><b>--border</b><span data-val="--border"></span></div>
+        <div class="sw-use">Every hairline: card edges, row separators, dividers, grid lines. <b>Translucent</b> — see rule 01.</div></div>
+    </div>
+
+    <h3 class="g-sub">Text</h3>
+    <div class="sw-grid">
+      <div class="sw-item"><div class="sw-chip" style="background:var(--fg-1)"></div>
+        <div class="sw-meta"><b>--fg-1</b><span data-val="--fg-1"></span></div>
+        <div class="sw-use">Primary: titles, figures, row values, symbols.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--fg-2)"></div>
+        <div class="sw-meta"><b>--fg-2</b><span data-val="--fg-2"></span></div>
+        <div class="sw-use">Secondary: body prose, row subtitles, field labels.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--fg-3)"></div>
+        <div class="sw-meta"><b>--fg-3</b><span data-val="--fg-3"></span></div>
+        <div class="sw-use">Tertiary: eyebrows, section labels, meta lines, units, chevrons.</div></div>
+    </div>
+
+    <h3 class="g-sub">Signal &amp; semantics</h3>
+    <div class="sw-grid">
+      <div class="sw-item"><div class="sw-chip" style="background:var(--signal)"></div>
+        <div class="sw-meta"><b>--signal</b><span data-val="--signal"></span></div>
+        <div class="sw-use">The one accent. Primary buttons, back links, active tab marker, focus rings.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--signal-tint)"></div>
+        <div class="sw-meta"><b>--signal-tint</b><span data-val="--signal-tint"></span></div>
+        <div class="sw-use">Accent wells: header action buttons, badges, the Cash glyph.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--gain)"></div>
+        <div class="sw-meta"><b>--gain</b><span data-val="--gain"></span></div>
+        <div class="sw-use">Positive money only. Never for success/confirmation UI.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--loss)"></div>
+        <div class="sw-meta"><b>--loss</b><span data-val="--loss"></span></div>
+        <div class="sw-use">Negative money, and destructive actions only. <b>Selling is not destructive.</b></div></div>
+    </div>
+
+    <h3 class="g-sub">Category colors</h3>
+    <p class="g-lead">Used only to key a holding to its slice of the allocation bar. Assign by position in the sorted list, never by asset type — and always pair the color with a text label, never color alone.</p>
+    <div class="sw-grid">
+      <div class="sw-item"><div class="sw-chip" style="background:var(--cat-cash)"></div>
+        <div class="sw-meta"><b>--cat-cash</b><span data-val="--cat-cash"></span></div>
+        <div class="sw-use">Always cash — the one fixed assignment.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--cat-1)"></div>
+        <div class="sw-meta"><b>--cat-1</b><span data-val="--cat-1"></span></div>
+        <div class="sw-use">Largest holding.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--cat-2)"></div>
+        <div class="sw-meta"><b>--cat-2</b><span data-val="--cat-2"></span></div>
+        <div class="sw-use">Second.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--cat-3)"></div>
+        <div class="sw-meta"><b>--cat-3</b><span data-val="--cat-3"></span></div>
+        <div class="sw-use">Third.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--cat-4)"></div>
+        <div class="sw-meta"><b>--cat-4</b><span data-val="--cat-4"></span></div>
+        <div class="sw-use">Fourth, then the rest aggregate into “Other”.</div></div>
+    </div>
+
+    <h3 class="g-sub">Elevation</h3>
+    <p class="g-lead">Light mode is a single white plane, so cards need elevation to have an edge at all. Dark mode already separates <code>--surface</code> from <code>--bg</code> by value, so <b>all three shadow tokens resolve to <code>none</code> in dark</b>. Never hard-code a shadow.</p>
+    <div class="table-wrap">
+      <table class="scale">
+        <thead><tr><th>Token</th><th>Applied to</th><th>Direction</th></tr></thead>
+        <tbody>
+          <tr><td class="dim">--shadow-card</td><td>.chart-card, .stat-grid, .field-card, .card, .spec</td><td>Ambient — lifts cards off the page</td></tr>
+          <tr><td class="dim">--shadow-bar</td><td>.tabbar</td><td>Casts <b>up</b>, separating the bar from content scrolling beneath</td></tr>
+          <tr><td class="dim">--shadow-nav</td><td><b>Nothing — unused.</b> The collapsed bar is separated by <code>.ph-material.fade</code></td><td>Kept only as the escape hatch if a masked backdrop ever has to be dropped. Never together with a material: both would double the edge</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ TYPOGRAPHY ═══════════════════════════ -->
+  <div id="type">
+    <div class="divider"><span class="dl">02 — Typography</span><span class="dh"></span></div>
+    <h2 class="g-h">Typography</h2>
+    <p class="g-lead">Three faces, three jobs, no overlap. The job decides the face — never the visual weight you happen to want. All three are self-hosted variable woff2 in <code>foundations/fonts.css</code>; there is no network font fetch.</p>
+
+    <div class="type-row">
+      <div class="type-role">Display · <code>var(--font-display)</code> · Inter</div>
+      <div class="type-demo"><span style="font-family:var(--font-display); font-weight:700; font-size:30px; letter-spacing:-0.015em;">My Portfolio</span></div>
+      <div class="g-lead" style="margin:0;">Every title, button, tab label, navbar and section-level UI string. <b>Always reference the token, never <code>'Inter'</code> literally</b> — the face has already changed once and the token is what made that a two-line diff.</div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-role">Body · <code>'Public Sans'</code></div>
+      <div class="type-demo"><span style="font-family:'Public Sans',sans-serif; font-size:15px; line-height:1.6; color:var(--fg-2);">This is where you buy and sell investments. Its balance and holdings stay in sync automatically from every transaction you record on it.</span></div>
+      <div class="g-lead" style="margin:0;">Prose only: explanatory copy, row subtitles, empty-state bodies, hints. Set on <code>body</code>, so you rarely declare it.</div>
+    </div>
+
+    <div class="type-row">
+      <div class="type-role">Figures · <code>'JetBrains Mono'</code></div>
+      <div class="type-demo"><span class="figure figure-mid"><span class="cur">$</span>148,296<span class="cents">.05</span></span></div>
+      <div class="g-lead" style="margin:0;"><b>Every number the user compares</b> — money, percentages, share counts, dates, tickers — plus eyebrows and section labels. Always with <code>font-variant-numeric: tabular-nums</code> so digits align down a column. A money figure that is not mono is a bug.</div>
+    </div>
+
+    <h3 class="g-sub">Scale</h3>
+    <div class="table-wrap">
+      <table class="scale">
+        <thead><tr><th>Role</th><th>Size / weight</th><th>Face</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td class="dim">Hero figure</td><td class="dim">38px / 700</td><td>Mono</td><td>Total portfolio value</td></tr>
+          <tr><td class="dim">Mid figure</td><td class="dim">25px / 700</td><td>Mono</td><td>Price per share on detail screens</td></tr>
+          <tr><td class="dim">Page title (rest)</td><td class="dim">24px / 700</td><td>Display</td><td><code>.ph-large</code> — every screen before collapse, including a detail screen's ticker</td></tr>
+          <tr><td class="dim">Page title (bar)</td><td class="dim">17px / 700</td><td>Display</td><td><code>.ph-bar-title</code> — collapsed only, tab root or pushed. Absent at rest</td></tr>
+          <tr><td class="dim">Row value</td><td class="dim">14.5px / 600</td><td>Mono</td><td>Live price, account balance</td></tr>
+          <tr><td class="dim">Row symbol</td><td class="dim">14px / 600</td><td>Mono</td><td>Ticker</td></tr>
+          <tr><td class="dim">Row subtitle</td><td class="dim">12px / 400</td><td>Body</td><td>Company name, account type</td></tr>
+          <tr><td class="dim">Section label</td><td class="dim">11px / 600</td><td>Mono</td><td><code>.dl</code> — uppercase, <code>0.14em</code> tracking</td></tr>
+          <tr><td class="dim">Meta / cost basis</td><td class="dim">11px / 400</td><td>Mono</td><td><code>.meta</code>, <code>.pnl</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ COMPONENTS ═══════════════════════════ -->
+  <div id="components">
+    <div class="divider"><span class="dl">03 — Components</span><span class="dh"></span></div>
+    <h2 class="g-h">Components</h2>
+    <p class="g-lead">Layout inside a screen obeys two constants and one header style. Everything else composes from those.</p>
+
+    <div class="table-wrap">
+      <table class="scale">
+        <thead><tr><th>Constant</th><th>Value</th><th>Rule</th></tr></thead>
+        <tbody>
+          <tr><td class="dim">--gutter</td><td class="dim">20px</td><td>Horizontal inset for all screen content. Onboarding is the sole exception at 26px.</td></tr>
+          <tr><td class="dim">--sec-gap</td><td class="dim">24px</td><td>The <b>only</b> gap between sections. Apply via <code>.sec</code>, or <code>.sec-gutter</code> for full-bleed blocks that carry their own gutter. Never an ad-hoc margin.</td></tr>
+          <tr><td class="dim">section head</td><td class="dim">rule divider</td><td><code>.divider</code> + <code>.dl</code> label + <code>.dh</code> rule + optional <code>.dm</code> meta, 9px to its content. <b>There is no second header style.</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="g-sub">Section head</h3>
+    <div class="card" style="max-width:420px;">
+      <div class="divider" style="margin-bottom:9px;"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">3 positions</span></div>
+      <div class="list">
+        <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corp</div></div><div class="row-end"><div class="val">$189.09</div></div></div>
+      </div>
+    </div>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Mono uppercase label, hairline rule filling the remainder, optional right-aligned <code>.dm</code> count.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>A bold sans heading. That style was removed from <code>base.css</code> on purpose — reintroducing it splits the system in two.</p></div>
+    </div>
+
+    <h3 class="g-sub">Cards</h3>
+    <p class="g-lead">Three card types — <code>.chart-card</code>, <code>.stat-grid</code>, <code>.field-card</code> — must be visually indistinguishable at the edge: 8px radius, exactly one layer of <code>--border</code>, and <code>--shadow-card</code>.</p>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Draw internal rules <b>full-bleed</b> to the card's inner edge. If the card has side padding, cancel it with negative margins (see <code>.ranges</code>).</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Give an element both <code>background:var(--border)</code> and <code>border:1px solid var(--border)</code>. The border composites over the background and the edge renders at ~2× weight.</p></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ PAGE HEADER ═══════════════════════════ -->
+  <div id="header">
+    <div class="divider"><span class="dl">03.1 — Page header</span><span class="dh"></span></div>
+    <h2 class="g-h">Page header</h2>
+    <p class="g-lead">One component, one behaviour, <b>every</b> screen: a 24px <code>.ph-large</code> title at rest that collapses into the 17px <code>.ph-bar-title</code> as it scrolls under the bar. Ionic drives the swap from <code>collapse="condense"</code> — <b>never hand-write a scroll listener.</b> Tab roots and pushed screens use the same title; a pushed screen only adds a back button, which lives in the bar and never scrolls. <b>A bar title on a screen that has not scrolled is a bug</b> — it is the collapsed state rendered at the wrong scroll position. Across the collapse the material fades in rather than popping, and the title <b>cross-fades — it does not slide</b>.</p>
+
+    <div class="states">
+
+      <div class="state">
+        <div class="state-n">1 · Tab root, at rest</div>
+        <div class="state-d">24px title, optional switcher chevron, optional trailing action. <b>No material</b> — nothing is behind the header yet.</div>
+        <div class="mini"><div class="mini-screen">
+          <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg><svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg><svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg></div></div>
+          <div class="ph-bar"></div>
+          <div class="ph-large">My Portfolio<svg class="ph-chev" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+          <div style="padding:0 20px;">
+            <span class="eyebrow" style="display:block; margin-top:12px;">Total Portfolio Value</span>
+            <div class="hero-row"><div class="figure figure-hero" style="margin-top:2px; font-size:38px;"><span class="cur">$</span>148,296<span class="cents">.05</span></div><button type="button" class="currency-chip">USD<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+            <div class="gain-stack"><p class="positive"><span class="pnl-label">Today:</span>+$655.70 · +0.5%</p><p class="positive"><span class="pnl-label">Total:</span>+$48,260.55 · +61.9%</p></div>
+            <div class="chart-card sec" style="margin-left:0; margin-right:0;"><svg viewBox="0 0 300 70" preserveAspectRatio="none" style="width:100%; display:block;"><defs><linearGradient id="g-rest" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.24"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs><path d="M0,56 L25,52 L50,57 L75,42 L100,47 L125,33 L150,37 L175,21 L200,25 L225,11 L250,14 L275,4 L300,7 L300,70 L0,70 Z" fill="url(#g-rest)"/><path d="M0,56 L25,52 L50,57 L75,42 L100,47 L125,33 L150,37 L175,21 L200,25 L225,11 L250,14 L275,4 L300,7" fill="none" stroke="#1E9E6B" stroke-width="2"/></svg><div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div></div>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="state">
+        <div class="state-n">2 · Tab root, collapsed</div>
+        <div class="state-d">The title has scrolled away and reappeared in the bar, and <code>.ph-material.fade</code> now separates it: blur overhangs to 150pt and dissolves via a <code>mask-image</code> gradient, so there is <b>no hard edge</b> and content sharpens as it emerges. Same composition as <code>Portfolio · scrolled</code> in <code>screens.html</code>.</div>
+        <div class="mini"><div class="mini-screen">
+          <!-- the negative margin IS the scroll position; matches screens.html exactly -->
+          <div style="margin-top:-64px;">
+            <div class="chart-card sec-gutter">
+              <div style="position:relative;">
+                <span class="chart-range-badge positive">+$6,120.40 · 4.3%</span>
+                <svg viewBox="0 0 300 88" preserveAspectRatio="none" style="width:100%; display:block;"><defs><linearGradient id="g-collapsed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.24"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs><path d="M0,69 L25,65 L50,71 L75,53 L100,60 L125,41 L150,46 L175,26 L200,32 L225,14 L250,18 L275,6 L300,9 L300,88 L0,88 Z" fill="url(#g-collapsed)"/><path d="M0,69 L25,65 L50,71 L75,53 L100,60 L125,41 L150,46 L175,26 L200,32 L225,14 L250,18 L275,6 L300,9" fill="none" stroke="#1E9E6B" stroke-width="2"/></svg>
+              </div>
+              <div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
+            </div>
+            <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
+            <div style="padding:0 20px;">
+              <div class="divider sec"><span class="dl">Allocation</span><span class="dh"></span></div>
+              <div class="alloc-bar"><span style="flex:14.9; background:var(--cat-cash);"></span><span style="flex:33.5; background:var(--cat-1);"></span><span style="flex:27.7; background:var(--cat-2);"></span><span style="flex:23.9; background:var(--cat-3);"></span></div><div class="alloc-legend"><div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-cash)"></span><span class="alloc-lbl">Cash</span><span class="alloc-pct">14.9%</span></div><div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">NVDA</span><span class="alloc-pct">33.5%</span></div><div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">AAPL</span><span class="alloc-pct">27.7%</span></div><div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-3)"></span><span class="alloc-lbl">MSFT</span><span class="alloc-pct">23.9%</span></div></div>
+              <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">3 positions</span></div>
+              <div class="list"><div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="row-main"><div class="sym">Cash</div><div class="name">3 currencies · USD, EUR, GBP</div></div><div class="row-end"><div class="val">$22,108.38</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-1)"></span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corp</div></div><div class="row-end"><div class="val">$189.09</div><div class="meta">$8,873.62 (263 × $33.74)</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+            </div>
+          </div>
+          <div class="ph-material fade"><div class="ph-inner"><div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg><svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg><svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg></div></div><div class="ph-bar"><span class="ph-bar-title">My Portfolio<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div></div>
+        </div></div>
+      </div>
+
+      <div class="state">
+        <div class="state-n">3a · Pushed screen, at rest</div>
+        <div class="state-d">The <b>same <code>.ph-large</code> title as state 1</b> — the ticker, 24px, no material — plus an <code>IonBackButton</code> labelled by the parent screen. No bar title yet: the large title is the heading at this scroll position.</div>
+        <div class="mini"><div class="mini-screen">
+          <div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg><svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg><svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg></div></div>
+          <div class="ph-bar"><span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio</span></div>
+          <div class="ph-large">NVDA</div>
+          <div style="padding:0 20px;">
+            <div class="detail-name" style="margin:2px 0 6px;">NVIDIA Corp</div>
+            <span class="eyebrow" style="display:block;">Price / Share</span>
+            <div class="figure figure-mid" style="margin-top:2px;"><span class="cur">$</span>189<span class="cents">.09</span></div>
+            <div class="meta" style="margin-top:6px; font-size:13px;">$8,873.62 (263 × $33.74)</div>
+            <div class="gain-stack"><p class="positive"><span class="pnl-label">Today:</span>+$342.10 · +0.7%</p><p class="positive"><span class="pnl-label">Total:</span>+$40,856.55 · +460.5%</p></div>
+            <div class="stat-grid sec">
+              <div class="stat-cell"><span class="stat-label">Shares</span><span class="stat-value">263</span></div>
+              <div class="stat-cell"><span class="stat-label">Avg Cost / Share</span><span class="stat-value">$33.74</span></div>
+              <div class="stat-cell"><span class="stat-label">Avg Age</span><span class="stat-value">8 months</span></div>
+              <div class="stat-cell"><span class="stat-label">Cost Basis</span><span class="stat-value">$8,873.62</span></div>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <div class="state">
+        <div class="state-n">3b · Pushed screen, collapsed</div>
+        <div class="state-d">The ticker has scrolled under the material and reappeared as the bar title — <b>this is the only state where a pushed screen has one</b>. Identical to state 2 but for the back button, which never moves.</div>
+        <div class="mini"><div class="mini-screen">
+          <!-- same scroll offset and composition as state 2 / Portfolio · scrolled -->
+          <div style="margin-top:-64px;">
+            <div class="chart-card sec-gutter">
+              <div style="position:relative;">
+                <span class="chart-range-badge positive">+$12,480.20 · 18.6%</span>
+                <svg viewBox="0 0 300 88" preserveAspectRatio="none" style="width:100%; display:block;"><defs><linearGradient id="g-pushed" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.24"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs><path d="M0,74 L25,70 L50,73 L75,58 L100,62 L125,48 L150,54 L175,34 L200,40 L225,22 L250,28 L275,11 L300,14 L300,88 L0,88 Z" fill="url(#g-pushed)"/><path d="M0,74 L25,70 L50,73 L75,58 L100,62 L125,48 L150,54 L175,34 L200,40 L225,22 L250,28 L275,11 L300,14" fill="none" stroke="#1E9E6B" stroke-width="2"/></svg>
+              </div>
+              <div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
+            </div>
+            <div style="padding:0 20px;">
+              <div class="stat-grid sec">
+                <div class="stat-cell"><span class="stat-label">Shares</span><span class="stat-value">263</span></div>
+                <div class="stat-cell"><span class="stat-label">Avg Cost / Share</span><span class="stat-value">$33.74</span></div>
+                <div class="stat-cell"><span class="stat-label">Avg Age</span><span class="stat-value">8 months</span></div>
+                <div class="stat-cell"><span class="stat-label">Cost Basis</span><span class="stat-value">$8,873.62</span></div>
+              </div>
+              <div class="divider sec"><span class="dl">By Account</span><span class="dh"></span><span class="dm">2 accounts</span></div>
+              <div class="list">
+                <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Fidelity Brokerage</div><div class="name">Investment Account</div></div><div class="row-end"><div class="val">$5,398.40</div><div class="meta">160 sh · avg $33.74</div></div></div>
+                <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Wealthsimple TFSA</div><div class="name">Investment Account</div></div><div class="row-end"><div class="val">$3,475.22</div><div class="meta">103 sh · avg $33.74</div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="ph-material fade"><div class="ph-inner"><div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg><svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg><svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg></div></div><div class="ph-bar"><span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio</span><span class="ph-bar-title">NVDA</span></div></div></div>
+        </div></div>
+      </div>
+
+    </div>
+
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Let the collapse mechanism own the title on <em>every</em> screen: <code>&lt;IonTitle size="large"&gt;</code> in the condense header, the ticker on a detail screen. Same component as a tab root, so there is nothing to restyle and nothing to fade by hand.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Render <code>.ph-bar-title</code> at scroll 0, or put the heading in the content as a second title style. A title in the bar means "the heading is off-screen above" — showing a heading in both places says the screen is in two states at once.</p></div>
+    </div>
+
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Give the collapsed bar <b>one</b> separator: the fading material, spanning status bar + toolbar (103pt). Its hairline-free edge is the point — it leaves the <code>.divider</code> rules just below it as the only horizontal lines on the screen.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Add a hairline or <code>--shadow-nav</code> under it, and don't reach for a uniform translucent bar. There is <b>one</b> collapsed appearance in this language; a second one means two screens that scrolled the same way don't look the same.</p></div>
+    </div>
+
+    <h3 class="g-sub">Per-tab variants</h3>
+    <div class="table-wrap">
+      <table class="scale">
+        <thead><tr><th>Screen</th><th>Title</th><th>Chevron</th><th>Trailing action</th></tr></thead>
+        <tbody>
+          <tr><td class="dim">Portfolio</td><td>My Portfolio</td><td>Yes — opens the portfolio switcher</td><td><code>+</code> add transaction</td></tr>
+          <tr><td class="dim">Transactions</td><td>Transactions</td><td>No</td><td><code>+</code> add transaction</td></tr>
+          <tr><td class="dim">Accounts</td><td>Accounts</td><td>No</td><td><code>+</code> add account</td></tr>
+          <tr><td class="dim">Settings</td><td>Settings</td><td>No</td><td>None — title only</td></tr>
+          <tr><td class="dim">Holding detail</td><td>The ticker — <code>NVDA</code></td><td>No</td><td>None — Buy/Sell live at the end of the scroll</td></tr>
+          <tr><td class="dim">Add / Edit Transaction</td><td><code>Add Transaction</code>, or <code>Edit Transaction</code> from a detail</td><td>No</td><td>None — Save is a button at the end of the form</td></tr>
+          <tr><td class="dim">Login · Onboarding</td><td><b>None.</b> Empty <code>.ph-bar</code> for the status-bar offset only</td><td>No</td><td>None — pre-shell, so no tab bar either</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Carry the chevron into the collapsed bar. It is still the switcher and must stay reachable at every scroll position.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Apply <code>--shadow-nav</code> <em>and</em> <code>.ph-material</code>. The blur already separates the bar; both together double the edge.</p></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ TAB BAR ═══════════════════════════ -->
+  <div id="tabbar">
+    <div class="divider"><span class="dl">03.2 — Tab bar</span><span class="dh"></span></div>
+    <h2 class="g-h">Tab bar</h2>
+    <p class="g-lead">Four tabs, fixed, always in the same order. <code>IonTabBar slot="bottom"</code> applies the 34pt bottom safe area itself — never add it again. The bar is present on tab roots only; pushed screens do not render it.</p>
+
+    <div class="tb-showcase"><div class="tb-inner"><div class="tabbar"><div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div><div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div><div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div><div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div></div><div class="tb-home"></div></div></div>
+
+    <div class="table-wrap" style="margin-top:20px;">
+      <table class="scale">
+        <thead><tr><th>Property</th><th>Value</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td class="dim">Height</td><td class="dim">55pt + 34pt</td><td>89pt total. Taller than Ionic's default because of the uppercase label row</td></tr>
+          <tr><td class="dim">Icon</td><td class="dim">20 × 20px</td><td>1.6 stroke, <code>currentColor</code> — icons inherit the tab's state colour</td></tr>
+          <tr><td class="dim">Label</td><td class="dim">9.5px / 600</td><td><code>var(--font-display)</code>, uppercase, <code>0.03em</code> tracking</td></tr>
+          <tr><td class="dim">Idle</td><td class="dim">--fg-3</td><td>Icon and label together</td></tr>
+          <tr><td class="dim">Active</td><td class="dim">--fg-1</td><td>Icon and label together — <b>not</b> <code>--signal</code>; the marker carries the accent</td></tr>
+          <tr><td class="dim">Active marker</td><td class="dim">20 × 2px</td><td><code>--signal</code>, centred on the tab, flush to the top edge via <code>::before</code></td></tr>
+          <tr><td class="dim">Surface</td><td class="dim">--surface</td><td>1px <code>--border</code> top edge, plus <code>--shadow-bar</code> casting <b>up</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Keep the accent in the marker and the label in <code>--fg-1</code>. The marker is the only 2px accent bar in the system — that is what makes the active tab read instantly without colouring the text.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Add a fifth tab, reorder them, or render the bar on a pushed screen. Four fixed tabs is the navigation model; anything else is a pushed screen or a sheet.</p></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════ RULES ═══════════════════════════ -->
+  <div id="rules">
+    <div class="divider"><span class="dl">04 — Implementation rules</span><span class="dh"></span></div>
+    <h2 class="g-h">Instructions to myself</h2>
+    <p class="g-lead">Every rule below exists because it was violated once and the render disagreed with the intent. Work through these before claiming a UI change is done.</p>
+
+    <div class="card">
+      <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>Never paint <code>--border</code> twice.</b> It is translucent, so an element with <code>background:var(--border)</code> <em>and</em> <code>border:1px solid var(--border)</code> renders its outer edge at ~2× weight. Use <code>padding:1px</code> and let the background show through instead.</div></div>
+      <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>An internal rule is never inset by its card's padding.</b> Cancel side padding with negative margins so hairlines run edge to edge, matching <code>.stat-grid</code>.</div></div>
+      <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>One gap, one header style.</b> Section spacing is <code>--sec-gap</code> via <code>.sec</code>/<code>.sec-gutter</code>; section heads are <code>.divider</code>. If you reach for a custom margin or a bold sans title, stop.</div></div>
+      <div class="rule"><span class="rule-n">04</span><div class="rule-b"><b>Watch specificity when scoping.</b> <code>.screen .divider</code> (0,2,1) out-specifies <code>.sec</code> (0,1,0) and will silently kill its <code>margin-top</code>. Set only the properties you mean, never the shorthand.</div></div>
+      <div class="rule"><span class="rule-n">05</span><div class="rule-b"><b>Shadows are light-mode only.</b> All <code>--shadow-*</code> tokens are <code>none</code> in dark, where surfaces already differ by value. Set them in <em>both</em> dark blocks — <code>@media (prefers-color-scheme:dark)</code> and <code>:root[data-theme="dark"]</code>.</div></div>
+      <div class="rule"><span class="rule-n">06</span><div class="rule-b"><b>Reference tokens, never literals.</b> <code>var(--font-display)</code> not <code>'Inter'</code>; <code>var(--gutter)</code> not <code>20px</code>. The display face has already changed once — the token made it a two-line diff instead of an 18-site edit.</div></div>
+      <div class="rule"><span class="rule-n">07</span><div class="rule-b"><b>This is Ionic, not Framework7.</b> Name real components: <code>IonHeader</code>, <code>IonToolbar</code>, <code>IonTitle</code>, <code>IonBackButton</code>, <code>IonTabBar</code>. The collapsing title needs <code>&lt;IonContent fullscreen&gt;</code> <em>plus</em> a second <code>&lt;IonHeader collapse="condense"&gt;</code> inside it — miss either and it silently no-ops. <b>Pushed screens use the same pair</b>, with the ticker as the large title; that is what makes the bar title absent at rest and faded in on scroll, without a line of scroll code.</div></div>
+      <div class="rule"><span class="rule-n">08</span><div class="rule-b"><b>Do not double-apply safe areas.</b> <code>IonHeader</code> and <code>IonTabBar</code> already inset themselves. Only pushed screens with no tab bar add the 34pt bottom gutter manually.</div></div>
+      <div class="rule"><span class="rule-n">09</span><div class="rule-b"><b>Chevron honesty.</b> A row shows a chevron if and only if tapping it pushes a screen. Read-only rows (By Account) carry none.</div></div>
+      <div class="rule"><span class="rule-n">10</span><div class="rule-b"><b>Every comparable number is mono and tabular.</b> Money, percentages, share counts, dates, tickers. A figure in the body face is a bug. <b>One exception:</b> a ticker used as a <em>page title</em> is a title, so it takes <code>.ph-large</code> / <code>.ph-bar-title</code> in the display face like every other page title. In rows, figures and stats it stays mono — that is where it lines up in a column.</div></div>
+      <div class="rule"><span class="rule-n">11</span><div class="rule-b"><b>Measure; do not eyeball.</b> Before claiming a spacing, border or alignment fix, render it headless and read back the actual geometry or pixel values. Several "consistent" edges in this system were measurably not.</div></div>
+      <div class="rule"><span class="rule-n">12</span><div class="rule-b"><b>Check both themes and the fold.</b> Every change gets looked at in light <em>and</em> dark, and at 393 × 852 — content that runs past the fold must clip cleanly, never bisect a button.</div></div>
+      <div class="rule"><span class="rule-n">13</span><div class="rule-b"><b>A box that clips must round its corners uniformly.</b> <code>overflow:hidden</code> plus a <em>mixed</em> <code>border-radius</code> (<code>34px 34px 10px 10px</code>) makes Chromium stop sampling that box's own content for a descendant's <code>backdrop-filter</code> — <code>.ph-material.fade</code> then paints as a flat white block with a hard edge at 150pt instead of a dissolving blur, and nothing about the geometry looks wrong while you measure it. This page's minis lost their blur to exactly that. A uniform radius (the device's own <code>55px</code>, or the minis' <code>34px</code>) renders correctly. <b>Verified in Chromium only</b> — WKWebView is untested, so any rounded container wrapping the real header gets checked on device.</div></div>
+      <div class="rule"><span class="rule-n">14</span><div class="rule-b"><b>Change the design doc first.</b> Edit <code>foundations/</code> and these screens, get it approved, <em>then</em> implement in <code>packages/portifo-web</code>. The docs are the source of truth, not a record of what shipped.</div></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="foundations/theme-toggle.js"></script>
+<script>
+  // print the resolved value of every swatch so the doc cannot drift from tokens.css
+  const paint = () => {
+    const cs = getComputedStyle(document.documentElement);
+    for (const el of document.querySelectorAll('[data-val]'))
+      el.textContent = cs.getPropertyValue(el.dataset.val).trim();
+  };
+  paint();
+  new MutationObserver(paint).observe(document.documentElement, { attributes:true, attributeFilter:['data-theme'] });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', paint);
+</script>

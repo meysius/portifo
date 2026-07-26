@@ -1,5 +1,5 @@
 import {
-  IonButton,
+  IonBackButton,
   IonButtons,
   IonContent,
   IonHeader,
@@ -21,14 +21,16 @@ import type { RouteComponentProps } from "react-router-dom";
 import ActionSheetModal from "../components/ActionSheetModal";
 import DateSheet from "../components/DateSheet";
 import PickerSheet from "../components/PickerSheet";
-import { TrashIcon } from "../components/ds";
+import { ListDivider, MoneyHero, TrashIcon } from "../components/ds";
 import type { PickerOption } from "../components/PickerSheet";
 import { usePortfolioData } from "../context/PortfolioDataContext";
+import { useTabBase } from "../context/TabBaseContext";
 import { useToast } from "../context/ToastContext";
 import { searchSymbols } from "../api/market";
 import type { SymbolResult } from "../api/market";
 import type { NewTransaction, TransactionType } from "../api/portfolio";
 import { CURRENCIES } from "../lib/currencies";
+import { fmtCcy, fmtShares } from "../lib/fx";
 
 type LocationState = { type?: TransactionType; symbol?: string; account?: string } | undefined;
 
@@ -40,6 +42,7 @@ const SYMBOL_DEBOUNCE_MS = 250;
 function AddTransactionPage({ match, location }: RouteComponentProps<{ transactionId?: string }>) {
   const history = useHistory();
   const { accounts, transactions, createTransaction, updateTransaction, deleteTransaction } = usePortfolioData();
+  const { tabBase, tabLabel } = useTabBase();
   const { showToast } = useToast();
 
   const editingId = match.params.transactionId;
@@ -197,6 +200,16 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
   const isCashType = type === "deposit" || type === "withdraw";
   // pricePerShare may legitimately be 0 (e.g. RSU grants), so it's checked for
   // presence separately rather than folded into a truthy/">0" test.
+  // Buy/Sell: shares × price. Deposit/Withdraw: the amount itself, which needs
+  // no restating, so those types show no Total block.
+  const sharesNum = Number(shares);
+  const priceNum = Number(pricePerShare);
+  const total =
+    !isCashType && sharesNum > 0 && pricePerShare.trim().length > 0 && Number.isFinite(priceNum)
+      ? sharesNum * priceNum
+      : null;
+  const totalMeta = total != null ? `${fmtShares(sharesNum)} × ${fmtCcy(priceNum, currency)}` : undefined;
+
   const isValid =
     account.trim().length > 0 &&
     (isCashType
@@ -262,16 +275,24 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
 
   return (
     <IonPage>
-      <IonHeader>
+      <IonHeader translucent>
         <IonToolbar>
           <IonButtons slot="start">
-            <IonButton onClick={() => history.goBack()}>Cancel</IonButton>
+            {/* Back, labelled by the parent screen — it doubles as cancel
+                (guidelines state 3a: pushed, not a sheet). */}
+            <IonBackButton defaultHref={tabBase} text={tabLabel} />
           </IonButtons>
           <IonTitle>{editingId ? "Edit Transaction" : "Add Transaction"}</IonTitle>
         </IonToolbar>
       </IonHeader>
 
-      <IonContent>
+      <IonContent fullscreen>
+        <IonHeader collapse="condense">
+          <IonToolbar>
+            <IonTitle size="large">{editingId ? "Edit Transaction" : "Add Transaction"}</IonTitle>
+          </IonToolbar>
+        </IonHeader>
+
         <IonSegment
           value={type}
           onIonChange={(e) => setType(e.detail.value as TransactionType)}
@@ -313,9 +334,11 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
               {formattedDate}
             </IonLabel>
           </IonItem>
-        </IonList>
 
-        <IonList inset className="fieldcard-list form-list">
+          {/* One field card for the whole transaction (screens.html -> Add
+              Transaction): Account and Date always, then the rows the type
+              decides, then Currency. Split lists rendered as two cards butted
+              together with a seam down the middle. */}
           {isCashType ? (
             <IonItem
               className={pressedField === "amount" ? "tap-target pressed" : "tap-target"}
@@ -412,10 +435,22 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
           </IonItem>
         </IonList>
 
+        {/* Total is COMPUTED, never entered: a rule divider heading the figure
+            rather than another field row, so it cannot read as editable. It
+            restates the maths from the two inputs above it. */}
+        {total != null && (
+          <>
+            <ListDivider label="Total" meta={totalMeta} />
+            <div className="total-figure">
+              <MoneyHero value={total} currency={currency} small />
+            </div>
+          </>
+        )}
+
         <div className="btn-stack">
           <button
             type="button"
-            className="btn btn-primary"
+            className={`btn btn-primary${!isValid || !isDirty || saving ? " btn-disabled" : ""}`}
             disabled={!isValid || !isDirty || saving}
             onClick={handleSave}
           >

@@ -1,0 +1,688 @@
+<title>Portifo — Design System · Screens</title>
+<link rel="stylesheet" href="foundations/fonts.css">
+<link rel="stylesheet" href="foundations/tokens.css">
+<link rel="stylesheet" href="foundations/base.css">
+
+<div class="wrap">
+
+  <div class="doc-top">
+    <div>
+      <span class="eyebrow">Portifo · Design System</span>
+      <h1 class="doc-title">Screens</h1>
+      <p class="doc-sub">Every screen in the app, rendered at true iPhone 16 scale — 393 × 852pt, 1pt = 1px. Every measurement on this page is the measurement to build to: nothing is indicative, nothing is cropped to fit. Each screen carries a spec block covering only what is specific to it: the order of its sections, its data, and the states that aren't visible in a single still. <b>The rules live in <code>guidelines.html</code></b> — colour, type, layout constants, the page header's states, the tab bar — and are deliberately not repeated here.</p>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Theme preview">
+      <button class="theme-btn" onclick="setTheme(null,this)">System</button>
+      <button class="theme-btn" onclick="setTheme('light',this)">Light</button>
+      <button class="theme-btn" onclick="setTheme('dark',this)">Dark</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="divider"><span class="dl">The Frame</span><span class="dh"></span></div>
+    <p class="sec-note">iPhone 16 is the reference device. The app owns the full 393 × 852pt viewport; the status bar and home indicator sit <em>inside</em> it, so both safe-area insets come out of the app's own layout. Side hardware on these mockups is decorative — it never overlaps the viewport. <b>Only device geometry is listed here.</b> The layout constants it holds — <code>--gutter</code>, <code>--sec-gap</code>, the section-head divider, the page header's states and the tab-bar spec — are defined once in <code>guidelines.html</code>; this page shows how they compose.</p>
+    <div class="table-wrap">
+      <table class="scale">
+        <thead>
+          <tr><th>Metric</th><th>Value</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="dim">Viewport</td><td class="dim">393 × 852pt</td><td>2556 × 1179px @3x</td></tr>
+          <tr><td class="dim">Corner radius</td><td class="dim">55pt</td><td>Content must not corner-clip — keep interactive targets 20pt clear of the corners</td></tr>
+          <tr><td class="dim">Safe area top</td><td class="dim">59pt</td><td><code>--ion-safe-area-top</code> — the status-bar row</td></tr>
+          <tr><td class="dim">Safe area bottom</td><td class="dim">34pt</td><td><code>--ion-safe-area-bottom</code> — the home-indicator gutter</td></tr>
+          <tr><td class="dim">Dynamic Island</td><td class="dim">125 × 36pt</td><td>Centred, 11pt from the top edge — nothing tappable behind it</td></tr>
+          <tr><td class="dim">Home indicator</td><td class="dim">139 × 5pt</td><td>8pt from the bottom edge</td></tr>
+          <tr><td class="dim">Mode</td><td class="dim">ios</td><td>Ionic is forced to <code>mode: "ios"</code> app-wide, so iOS metrics apply on every host platform</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid-devices">
+
+    <!-- ───────────────────────── Login ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Login</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="ph-bar"></div>
+              <div class="login-stage" style="padding:0 26px 34px;">
+                <div class="login-brand">Portifo</div>
+                <div class="login-mid">
+                  <div class="login-mark"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16l5-6 4 4 7-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="5" r="1.6" fill="currentColor"/></svg></div>
+                  <div class="login-title">Track every holding,<br>in one place.</div>
+                  <div class="login-sub">Multi-currency investments and cash, kept in sync automatically.</div>
+                </div>
+                <div class="login-bottom" style="margin-top:auto;">
+                  <button class="btn btn-google">
+                    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/></svg>
+                    Continue with Google
+                  </button>
+                  <div class="login-fine">By continuing you agree to Portifo's Terms and Privacy Policy.</div>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Login · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">An empty <code>.ph-bar</code> for the status-bar offset — the brand line is content, not a title. No tab bar: this is outside the shell.</span></div>
+        <div class="spec-row"><span class="spec-k">Layout</span><span class="spec-v">26pt gutter, matching onboarding — the two pre-shell screens share it. Copy block is centred; the CTA sits at the bottom via <code>margin-top:auto</code>.</span></div>
+        <div class="spec-row"><span class="spec-k">Auth</span><span class="spec-v">Google is the only method, so the button is the only control on the screen — <code>btn-google</code> keeps Google's mark at full colour, the one place brand colour outranks the palette.</span></div>
+        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Signed in until the user explicitly logs out, so this screen is only ever seen once per device. On first sign-in the app creates <b>My Portfolio</b> and goes straight to onboarding step 1.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Onboarding ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Onboarding · Step 1 of 2</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="ph-bar"></div>
+              <div class="onboard-stage" style="padding:0 26px 34px;">
+                <div class="onboard-steps"><span class="onboard-step on"></span><span class="onboard-step"></span></div>
+                <div class="empty" style="padding:0; gap:14px; margin-top:60px; align-items:flex-start; text-align:left;">
+                  <div class="empty-badge"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/></svg></div>
+                  <div class="empty-title">Set up your Investment Account</div>
+                  <div class="empty-body" style="max-width:30ch;">This is where you buy and sell investments. Its balance and holdings stay in sync automatically from every transaction you record on it.</div>
+                  <div class="field-card" style="width:100%; text-align:left; margin-top:6px; border-color:var(--signal); box-shadow:0 0 0 3px var(--signal-tint);">
+                    <div class="field"><span class="field-label">Name</span><input class="field-input" value="Wealthsimple TFSA"></div>
+                  </div>
+                  <div style="font-size:11.5px; line-height:1.5; color:var(--fg-3); padding-left:2px;">You can rename this or add more accounts later.</div>
+                </div>
+                <div class="onboard-bottom" style="margin-top:auto;">
+                  <span class="eyebrow" style="display:block; text-align:left; margin-bottom:10px;">Step 1 of 2 — Investment Account</span>
+                  <button class="btn btn-primary">Continue</button>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Onboarding · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">An empty <code>.ph-bar</code> — status-bar offset only, no title and no back button. Outside the <code>&lt;IonTabs&gt;</code> shell entirely: no tab bar until the active portfolio has both an Investment and a Cash account.</span></div>
+        <div class="spec-row"><span class="spec-k">Layout</span><span class="spec-v">The one screen at a 26pt gutter. Stage is <code>flex:1</code> with the CTA block pushed to the bottom via <code>margin-top:auto</code> — it does not float over content.</span></div>
+        <div class="spec-row"><span class="spec-k">Field</span><span class="spec-v">Shown focused: <code>--signal</code> border + 3pt <code>--signal-tint</code> ring. Autofocus on mount; keyboard pushes the CTA block up rather than covering it.</span></div>
+        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Continue is <code>btn-disabled</code> while the name is empty or whitespace-only. Step dots are non-interactive.</span></div>
+        <div class="spec-row"><span class="spec-k">Next</span><span class="spec-v">Step 2 is the Cash Account, same layout with the second dot filled; only after it completes does the app enter the tab shell.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Portfolio ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Portfolio</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                <div class="ph-bar"></div>
+                <div class="ph-large">My Portfolio<svg class="ph-chev" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+                <div style="padding:0 20px;">
+                  <span class="eyebrow" style="display:block; margin-top:12px;">Total Portfolio Value</span>
+                  <div class="hero-row">
+                    <div class="figure figure-hero" style="margin-top:2px;"><span class="cur">$</span>148,296<span class="cents">.05</span></div>
+                    <button type="button" class="currency-chip">USD<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                  </div>
+                  <div class="gain-stack">
+                    <p class="positive"><span class="pnl-label">Today:</span>+$655.70 · +0.5%</p>
+                    <p class="positive"><span class="pnl-label">Total:</span>+$48,260.55 · +61.9%</p>
+                  </div>
+                </div>
+
+                <div class="chart-card sec-gutter">
+                  <div style="position:relative;">
+                    <span class="chart-range-badge positive">+$6,120.40 · 4.3%</span>
+                    <svg viewBox="0 0 300 88" preserveAspectRatio="none" style="width:100%; display:block;">
+                      <defs><linearGradient id="fg-portfolio" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.24"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0,69 L25,65 L50,71 L75,53 L100,60 L125,41 L150,46 L175,26 L200,32 L225,14 L250,18 L275,6 L300,9 L300,88 L0,88 Z" fill="url(#fg-portfolio)"/>
+                      <path d="M0,69 L25,65 L50,71 L75,53 L100,60 L125,41 L150,46 L175,26 L200,32 L225,14 L250,18 L275,6 L300,9" fill="none" stroke="#1E9E6B" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
+                </div>
+
+                <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
+
+                <div style="padding:0 20px;">
+                  <div class="divider sec"><span class="dl">Allocation</span><span class="dh"></span></div>
+                  <div class="alloc-bar">
+                    <span style="flex:14.9; background:var(--cat-cash);"></span>
+                    <span style="flex:33.5; background:var(--cat-1);"></span>
+                    <span style="flex:27.7; background:var(--cat-2);"></span>
+                    <span style="flex:23.9; background:var(--cat-3);"></span>
+                  </div>
+                  <div class="alloc-legend">
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-cash)"></span><span class="alloc-lbl">Cash</span><span class="alloc-pct">14.9%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">NVDA</span><span class="alloc-pct">33.5%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">AAPL</span><span class="alloc-pct">27.7%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-3)"></span><span class="alloc-lbl">MSFT</span><span class="alloc-pct">23.9%</span></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">3 positions</span></div>
+                  <div class="list">
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="row-main"><div class="sym">Cash</div><div class="name">3 currencies · USD, EUR, GBP</div></div><div class="row-end"><div class="val">$22,108.38</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-1)"></span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corp</div></div><div class="row-end"><div class="val">$189.09</div><div class="meta">$8,873.62 (263 × $33.74)</div><div class="pnl gain"><span class="pnl-label">Today:</span>+$342.10 · +0.7%</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$40,856.55 · +460.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-2)"></span></div><div class="row-main"><div class="sym">AAPL</div><div class="name">Apple Inc</div></div><div class="row-end"><div class="val">$227.92</div><div class="meta">$32,112.00 (180 × $178.40)</div><div class="pnl gain"><span class="pnl-label">Today:</span>+$412.20 · +1.0%</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$8,913.60 · +27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-3)"></span></div><div class="row-main"><div class="sym">MSFT</div><div class="name">Microsoft Corp</div></div><div class="row-end"><div class="val">$416.84</div><div class="meta">$36,941.00 (85 × $434.60)</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$98.60 · −0.3%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$1,509.60 · −4.1%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  </div>
+                </div>
+              </div>
+              <div class="tabbar">
+                <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Portfolio · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 1 — tab root at rest. Title, chevron and trailing action per the Portfolio row of the header table in <code>guidelines.html</code>.</span></div>
+        <div class="spec-row"><span class="spec-k">Order</span><span class="spec-v">Hero → chart → fx-note → Allocation → Holdings → Closed. Chart card and fx-note are the full-bleed blocks (<code>.sec-gutter</code>), so their edges line up with the text column above and below them.</span></div>
+        <div class="spec-row"><span class="spec-k">Hero</span><span class="spec-v">The currency chip is a tap target that opens the display-currency sheet, not a label.</span></div>
+        <div class="spec-row"><span class="spec-k">Rows</span><span class="spec-v">Each row leads with live price, then cost basis, then stacked Today/Total. Every row pushes a detail screen, hence the chevrons.</span></div>
+        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Content clips at the tab bar on purpose; the list continues past it — see the scrolled card for what that reveals.</span></div>
+        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Empty portfolio swaps the hero and list for the shared empty state. Stale prices dim the <code>val</code> to <code>--fg-2</code> and the fx-note carries the last-updated time.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Portfolio · scrolled ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Portfolio · scrolled</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="screen-content">
+              <!-- The negative margin IS the scroll position: content is 64pt further up than
+                   at rest, so the chart's range row passes under the header material. The
+                   status bar lives inside .ph-material below, not as a sibling above. -->
+              <div class="stage" style="flex:0 1 auto; padding:0; gap:0; min-height:0; overflow:hidden; margin-top:-64px;">
+                <div class="chart-card sec-gutter">
+                  <div style="position:relative;">
+                    <span class="chart-range-badge positive">+$6,120.40 · 4.3%</span>
+                    <svg viewBox="0 0 300 88" preserveAspectRatio="none" style="width:100%; display:block;">
+                      <defs><linearGradient id="fg-portfolio-scrolled" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.24"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0,69 L25,65 L50,71 L75,53 L100,60 L125,41 L150,46 L175,26 L200,32 L225,14 L250,18 L275,6 L300,9 L300,88 L0,88 Z" fill="url(#fg-portfolio-scrolled)"/>
+                      <path d="M0,69 L25,65 L50,71 L75,53 L100,60 L125,41 L150,46 L175,26 L200,32 L225,14 L250,18 L275,6 L300,9" fill="none" stroke="#1E9E6B" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
+                </div>
+
+                <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
+
+                <div style="padding:0 20px;">
+                  <div class="divider sec"><span class="dl">Allocation</span><span class="dh"></span></div>
+                  <div class="alloc-bar">
+                    <span style="flex:14.9; background:var(--cat-cash);"></span>
+                    <span style="flex:33.5; background:var(--cat-1);"></span>
+                    <span style="flex:27.7; background:var(--cat-2);"></span>
+                    <span style="flex:23.9; background:var(--cat-3);"></span>
+                  </div>
+                  <div class="alloc-legend">
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-cash)"></span><span class="alloc-lbl">Cash</span><span class="alloc-pct">14.9%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">NVDA</span><span class="alloc-pct">33.5%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">AAPL</span><span class="alloc-pct">27.7%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-3)"></span><span class="alloc-lbl">MSFT</span><span class="alloc-pct">23.9%</span></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">3 positions</span></div>
+                  <div class="list">
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="row-main"><div class="sym">Cash</div><div class="name">3 currencies · USD, EUR, GBP</div></div><div class="row-end"><div class="val">$22,108.38</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-1)"></span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corp</div></div><div class="row-end"><div class="val">$189.09</div><div class="meta">$8,873.62 (263 × $33.74)</div><div class="pnl gain"><span class="pnl-label">Today:</span>+$342.10 · +0.7%</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$40,856.55 · +460.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-2)"></span></div><div class="row-main"><div class="sym">AAPL</div><div class="name">Apple Inc</div></div><div class="row-end"><div class="val">$227.92</div><div class="meta">$32,112.00 (180 × $178.40)</div><div class="pnl gain"><span class="pnl-label">Today:</span>+$412.20 · +1.0%</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$8,913.60 · +27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-3)"></span></div><div class="row-main"><div class="sym">MSFT</div><div class="name">Microsoft Corp</div></div><div class="row-end"><div class="val">$416.84</div><div class="meta">$36,941.00 (85 × $434.60)</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$98.60 · −0.3%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$1,509.60 · −4.1%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="divider sec"><span class="dl">Closed</span><span class="dh"></span></div>
+                    <div class="row closed" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.5"/><path d="M7 10h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">COIN <span class="closed-tag">Closed</span></div><div class="name">Nov 2024</div></div><div class="row-end"><div class="val">Realized</div><div class="pnl gain"><svg viewBox="0 0 10 10" fill="none"><path d="M5 9V1M1 5L5 1L9 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>+$2,180.40 · 34.2%</div></div></div>
+                  </div>
+                </div>
+              </div>
+              <div class="tabbar">
+                <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+              </div>
+            </div>
+            <!-- Collapsed header — state 2 in guidelines.html -->
+            <div class="ph-material fade">
+              <div class="ph-inner">
+                <div class="status-bar">
+                  <span>9:41</span>
+                  <div class="status-icons">
+                    <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                    <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+                  </div>
+                </div>
+                <div class="ph-bar"><span class="ph-bar-title">My Portfolio<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Portfolio · scrolled — build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 2 — the same screen collapsed. Scroll position here is 64pt past rest, which puts the chart's range row mid-dissolve under the material; it sharpens as it emerges.</span></div>
+        <div class="spec-row"><span class="spec-k">Reveals</span><span class="spec-v">Scrolling past the hero and chart is what surfaces the Closed section — COIN sits below the <code>Closed</code> divider and is unreachable at rest.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Holding Detail ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Holding Detail · NVDA</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="flex:1; padding:0; gap:0; min-height:0; overflow:hidden;">
+                <!-- Pushed screen at rest — state 3a in guidelines.html; collapses to 3b -->
+                <div class="ph-bar">
+                  <span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio</span>
+                </div>
+                <div class="ph-large">NVDA</div>
+                <div style="padding:0 20px;">
+                  <div class="detail-head">
+                    <div class="detail-name" style="margin:2px 0 6px;">NVIDIA Corp</div>
+                    <span class="eyebrow">Price / Share</span>
+                    <div class="figure figure-mid" style="margin-top:2px;"><span class="cur">$</span>189<span class="cents">.09</span></div>
+                    <div class="meta" style="margin-top:6px; font-size:13px;">$8,873.62 (263 × $33.74)</div>
+                    <div class="gain-stack">
+                      <p class="positive"><span class="pnl-label">Today:</span>+$342.10 · +0.7%</p>
+                      <p class="positive"><span class="pnl-label">Total:</span>+$40,856.55 · +460.5%</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="chart-card sec-gutter">
+                  <div style="position:relative;">
+                    <span class="chart-range-badge positive">+$12,480.20 · 18.6%</span>
+                    <svg viewBox="0 0 300 88" preserveAspectRatio="none" style="width:100%; display:block;">
+                      <defs><linearGradient id="fg-nvda" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.24"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0,74 L25,70 L50,73 L75,58 L100,62 L125,48 L150,54 L175,34 L200,40 L225,22 L250,28 L275,11 L300,14 L300,88 L0,88 Z" fill="url(#fg-nvda)"/>
+                      <path d="M0,74 L25,70 L50,73 L75,58 L100,62 L125,48 L150,54 L175,34 L200,40 L225,22 L250,28 L275,11 L300,14" fill="none" stroke="#1E9E6B" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
+                </div>
+
+                <div style="padding:0 20px;">
+                  <div class="stat-grid sec">
+                    <div class="stat-cell"><span class="stat-label">Shares</span><span class="stat-value">263</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg Cost / Share</span><span class="stat-value">$33.74</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg Age</span><span class="stat-value">8 months</span></div>
+                    <div class="stat-cell"><span class="stat-label">Cost Basis</span><span class="stat-value">$8,873.62</span></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">By Account</span><span class="dh"></span><span class="dm">2 accounts</span></div>
+                  <div class="list">
+                    <div class="row">
+                      <div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Fidelity Brokerage</div><div class="name">Investment Account</div></div>
+                      <div class="row-end"><div class="val">$5,398.40</div><div class="meta">160 sh · avg $33.74</div></div>
+                    </div>
+                    <div class="row">
+                      <div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Wealthsimple TFSA</div><div class="name">Investment Account</div></div>
+                      <div class="row-end"><div class="val">$3,475.22</div><div class="meta">103 sh · avg $33.74</div></div>
+                    </div>
+                  </div>
+
+                  <div class="btn-stack sec" style="padding-bottom:34px;">
+                    <button class="btn btn-primary">Buy NVDA</button>
+                    <button class="btn btn-secondary">Sell NVDA</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Holding Detail · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 3a — pushed screen at rest, title carrying the ticker and the back button labelled <code>Portfolio</code>. Pushed, so no tab bar: the 34pt bottom inset belongs to the page.</span></div>
+        <div class="spec-row"><span class="spec-k">Continuity</span><span class="spec-v">Hero repeats the exact shape of the row that opened it — price / share, cost basis, stacked Today/Total — so the transition reads as a zoom, not a new screen. Company name is the subtitle under the title.</span></div>
+        <div class="spec-row"><span class="spec-k">By Account</span><span class="spec-v">Breaks the position down per account and always sums to the Shares stat. Read-only, so no chevrons.</span></div>
+        <div class="spec-row"><span class="spec-k">Actions</span><span class="spec-v">Buy/Sell sit at the end of the scroll, not pinned, so the screen scrolls to reach them.</span></div>
+        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured: the page is 950pt against an 852pt frame — 98pt of overflow, so at rest the fold falls across the Buy button. That cut is real geometry, not a crop: nothing here is pinned, and scrolling brings the stack fully into view with its 34pt bottom gutter intact (state 3b in <code>guidelines.html</code>).</span></div>
+        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">A fully-closed position drops the action stack for a single "Realized P&amp;L" stat and demotes the chart to the holding period.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Transactions ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Transactions</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                <div class="ph-bar"></div>
+                <div class="ph-large">Transactions<span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+                <div style="padding:0 20px;">
+                  <div class="divider sec"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+                  <div class="list">
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">AAPL</div><div class="name">Buy · Fidelity Brokerage</div></div><div class="row-end"><div class="val">$2,247.84</div><div class="meta">Jul 12</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">USD</div><div class="name">Deposit · Fidelity Brokerage</div></div><div class="row-end"><div class="val">$5,000.00</div><div class="meta">Jul 8</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 15.5v-8M10 7.5L6.8 10.7M10 7.5l3.2 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">NVDA</div><div class="name">Sell · Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$3,781.80</div><div class="meta">Jul 5</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">MSFT</div><div class="name">Buy · Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$4,168.40</div><div class="meta">Jul 2</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  </div>
+                  <div class="divider sec"><span class="dl">June 2026</span><span class="dh"></span><span class="dm">2 transactions</span></div>
+                  <div class="list">
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 15.5v-8M10 7.5L6.8 10.7M10 7.5l3.2 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">EUR</div><div class="name">Withdraw · Fidelity Brokerage</div></div><div class="row-end"><div class="val">€1,200.00</div><div class="meta">Jun 24</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">AAPL</div><div class="name">Buy · Fidelity Brokerage</div></div><div class="row-end"><div class="val">$1,873.20</div><div class="meta">Jun 18</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  </div>
+                </div>
+              </div>
+              <div class="tabbar">
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Transactions · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 1, Transactions row of the header table — no chevron, <code>+</code> adds a transaction.</span></div>
+        <div class="spec-row"><span class="spec-k">Grouping</span><span class="spec-v">One <code>.divider</code> per calendar month, newest first, with the count as <code>.dm</code>. Months are the only grouping — no search, no type filter.</span></div>
+        <div class="spec-row"><span class="spec-k">Rows</span><span class="spec-v">A row reads <b>what moved · what happened · how much</b>: <code>.sym</code> is the ticker for Buy/Sell and the currency for Deposit/Withdraw, <code>.name</code> is <code>type · account</code>, <code>.val</code> is the total and <code>.meta</code> the date. Share maths stays on the detail screen — at these name lengths it collided with the account.</span></div>
+        <div class="spec-row"><span class="spec-k">Glyphs</span><span class="spec-v">Direction only — arrow into the line for money in (Buy, Deposit), out of it for money out (Sell, Withdraw). Cash movements take the tinted well, trades the neutral one, matching the Cash row on Portfolio. <b>Never gain/loss colour</b>: a Buy is not a loss.</span></div>
+        <div class="spec-row"><span class="spec-k">Amounts</span><span class="spec-v">Shown in the transaction's own currency (€1,200.00 stays euros), not the display currency — this is a ledger, so it must match what the user entered.</span></div>
+        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Empty portfolio shows the shared empty state with the same <code>+</code> CTA. Rows push a read-only Transaction Detail; editing is an explicit action there, never a swipe on this list.</span></div>
+        <div class="spec-row"><span class="spec-k">Not drawn</span><span class="spec-v"><b>The app carries a Symbol / Type / Account filter row above the list</b> that this mock does not show, and a "no matches" empty state for it. The row above is otherwise built as drawn. Either the filters get designed into this card or they get dropped — <b>open decision</b>, and until it is made the shipped screen has one element with no spec.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Accounts ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Accounts</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                <div class="ph-bar"></div>
+                <div class="ph-large">Accounts<span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+                <div style="padding:0 20px;">
+                  <div class="divider sec"><span class="dl">Investment</span><span class="dh"></span><span class="dm">2 accounts</span></div>
+                  <div class="list">
+                    <div class="row"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5.5" width="15" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 5.5v-1a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 13 4.5v1" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Fidelity Brokerage</div><div class="name">Investment Account</div></div><div class="row-end"><div class="val">$71,280.00</div><div class="meta">2 holdings</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><rect x="2.5" y="5.5" width="15" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 5.5v-1a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 13 4.5v1" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Wealthsimple TFSA</div><div class="name">Investment Account</div></div><div class="row-end"><div class="val">$54,907.67</div><div class="meta">2 holdings</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  </div>
+                  <div class="divider sec"><span class="dl">Cash</span><span class="dh"></span><span class="dm">1 account</span></div>
+                  <div class="list">
+                    <div class="row"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Everyday Cash</div><div class="name">Cash Account</div></div><div class="row-end"><div class="val">$22,108.38</div><div class="meta">3 currencies</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  </div>
+                  <div class="fx-note" style="margin-left:0; margin-right:0;"><span class="fx-dot"></span>Totals in USD · they sum to $148,296.05</div>
+                </div>
+              </div>
+              <div class="tabbar">
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Accounts · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 1, Accounts row of the header table — no chevron, <code>+</code> adds an account.</span></div>
+        <div class="spec-row"><span class="spec-k">Grouping</span><span class="spec-v">Investment first, then Cash — the order the two types were created in onboarding, and the order they matter in. Never mixed into one list: the types behave differently.</span></div>
+        <div class="spec-row"><span class="spec-k">Rows</span><span class="spec-v">Account name in the display face (it is a name, not a figure), type as the subtitle, total value as <code>.val</code>, and what the total is made of as <code>.meta</code> — holdings for Investment, currency count for Cash.</span></div>
+        <div class="spec-row"><span class="spec-k">Numbers</span><span class="spec-v">The three totals sum to the $148,296.05 hero on Portfolio — the same money, sliced by account instead of by holding. An Investment Account's total also carries any cash its Deposits left in it; both accounts here are fully deployed.</span></div>
+        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Empty until the portfolio has a transaction or a cash balance — the two onboarding accounts exist but the tab still shows the shared empty state. Rows push Account Detail, which differs by type: an Investment Account has Holdings + Cash lists, a Cash Account only per-currency balances.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Add Transaction ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Add Transaction · Buy</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="flex:1; padding:0; gap:0; min-height:0; overflow:hidden;">
+                <!-- Pushed screen at rest — state 3a in guidelines.html -->
+                <div class="ph-bar">
+                  <span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio</span>
+                </div>
+                <div class="ph-large">Add Transaction</div>
+                <div style="padding:0 20px;">
+                  <div class="seg-group sec">
+                    <div class="seg-item active">Buy</div>
+                    <div class="seg-item">Sell</div>
+                    <div class="seg-item">Deposit</div>
+                    <div class="seg-item">Withdraw</div>
+                  </div>
+
+                  <div class="field-card sec">
+                    <div class="field"><span class="field-label">Account</span><span class="field-value">Fidelity Brokerage<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+                    <div class="field"><span class="field-label">Date</span><span class="field-value">Jul 12, 2026<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+                    <div class="field"><span class="field-label">Symbol</span><input class="field-input" value="AAPL"></div>
+                    <div class="field"><span class="field-label">Shares</span><input class="field-input" value="12"></div>
+                    <div class="field"><span class="field-label">Price / Share</span><input class="field-input" value="187.32"></div>
+                    <div class="field"><span class="field-label">Currency</span><span class="field-value">USD<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Total</span><span class="dh"></span><span class="dm">12 × $187.32</span></div>
+                  <div class="figure figure-mid"><span class="cur">$</span>2,247<span class="cents">.84</span></div>
+
+                  <div class="btn-stack sec" style="padding-bottom:34px;">
+                    <button class="btn btn-primary">Save Transaction</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Add Transaction · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 3a — pushed, not a sheet, so the back button carries the parent's name and doubles as cancel. Reached from any <code>+</code>; the label changes to <code>Edit Transaction</code> when opened from a Transaction Detail.</span></div>
+        <div class="spec-row"><span class="spec-k">Type</span><span class="spec-v">The segmented control is the <em>first</em> field because it decides the rest: Buy/Sell ask Symbol + Shares + Price / Share, Deposit/Withdraw replace those three with Amount. Account, Date and Currency are always asked.</span></div>
+        <div class="spec-row"><span class="spec-k">Account</span><span class="spec-v">Picker over existing Investment Accounts, and typing a new name creates one — a transaction can never belong to a Cash Account. Pre-filled from context: the tab's account, or the first Investment Account created.</span></div>
+        <div class="spec-row"><span class="spec-k">Total</span><span class="spec-v">Computed, never entered — a rule divider heading the figure, not a field, so it cannot read as editable. It restates the maths from the two inputs above it and is the only figure on the screen.</span></div>
+        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Save is <code>btn-disabled</code> until the type's required fields are filled. Currency defaults to the account's currency; date defaults to today. No delete here — that lives on Transaction Detail.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Settings ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Settings</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                <div class="ph-bar"></div>
+                <div class="ph-large">Settings</div>
+                <div style="padding:0 20px;">
+                  <div class="divider sec"><span class="dl">Account</span><span class="dh"></span></div>
+                  <div class="list">
+                    <div class="pick-row"><div><div class="pick-name">me.feghhi@gmail.com</div><div class="pick-sub">Signed in with Google</div></div></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Portfolio</span><span class="dh"></span><span class="dm">2 portfolios</span></div>
+                  <div class="list">
+                    <div class="pick-row"><div><div class="pick-name">My Portfolio</div><div class="pick-sub">Active · 2 members · 3 accounts</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="pick-row"><div><div class="pick-name">Family</div><div class="pick-sub">4 members · 5 accounts</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="pick-row"><div><div class="pick-name" style="color:var(--signal);">New Portfolio</div><div class="pick-sub">Its own accounts, members and onboarding</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Appearance</span><span class="dh"></span></div>
+                  <div class="seg-group">
+                    <div class="seg-item active">System</div>
+                    <div class="seg-item">Light</div>
+                    <div class="seg-item">Dark</div>
+                  </div>
+
+                  <div class="btn-stack sec">
+                    <button class="btn btn-secondary">Log Out</button>
+                  </div>
+                </div>
+              </div>
+              <div class="tabbar">
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Settings · build notes</div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 1, Settings row of the header table — the one tab with <b>no</b> trailing action. New portfolios are created from a row, not from the bar.</span></div>
+        <div class="spec-row"><span class="spec-k">Order</span><span class="spec-v">Account → Portfolio → Appearance → Log Out: identity, then what you are looking at, then how it looks, then the way out. Four <code>.divider</code> sections, no nesting.</span></div>
+        <div class="spec-row"><span class="spec-k">Rows</span><span class="spec-v">The email row is the only one with no chevron — nothing to open, since Google owns the identity. Every Portfolio row pushes: the active one to its members and accounts, <b>New Portfolio</b> into onboarding for the portfolio it creates.</span></div>
+        <div class="spec-row"><span class="spec-k">Appearance</span><span class="spec-v">A segmented control, not a pushed screen — three options, instant effect, so the choice and its result are on the same screen. System is the default and follows the OS.</span></div>
+        <div class="spec-row"><span class="spec-k">Log Out</span><span class="spec-v"><code>btn-secondary</code>, not destructive red: signing out destroys nothing, the data is server-side. Confirms first, then returns to Login.</span></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="foundations/theme-toggle.js"></script>
