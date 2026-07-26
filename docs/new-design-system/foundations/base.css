@@ -116,7 +116,7 @@
   .closed-tag{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--fg-3); border:1px solid var(--border); padding:1px 5px; border-radius:3px; }
 
   /* tabbar */
-  .tabbar{ display:flex; border-top:1px solid var(--border); background:var(--surface); box-shadow:var(--shadow-bar); }
+  .tabbar{ display:flex; border-top:1px solid var(--border); background:var(--surface); }
   .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0 9px; color:var(--fg-3); position:relative; }
   .tab.active{ color:var(--fg-1); }
   .tab.active::before{ content:''; position:absolute; top:-1px; left:50%; transform:translateX(-50%); width:20px; height:2px; background:var(--signal); }
@@ -127,7 +127,7 @@
   .seg-group{ display:flex; gap:2px; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:2px; }
   .seg-item{ flex:1; text-align:center; padding:9px 4px; border-radius:6px; font-family:var(--font-display); font-weight:600; font-size:11.5px; letter-spacing:0.02em; text-transform:uppercase; color:var(--fg-3); }
   .seg-item.active{ background:var(--surface); color:var(--fg-1); box-shadow:inset 0 0 0 1px var(--border); }
-  .field-card{ background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; box-shadow:var(--shadow-card); }
+  .field-card{ background:var(--surface); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
   .field{ display:flex; align-items:center; justify-content:space-between; padding:13px 14px; border-bottom:1px solid var(--border); gap:10px; }
   .field:last-child{ border-bottom:none; }
   .field-label{ font-size:13px; font-weight:500; color:var(--fg-2); flex-shrink:0; }
@@ -168,12 +168,12 @@
      shows through it and through the gaps, so every line here is exactly one
      layer of --border, matching .chart-card / .field-card. Adding a border as
      well would paint --border twice and double the outer edge. */
-  .stat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; padding:1px; background:var(--border); border-radius:8px; overflow:hidden; box-shadow:var(--shadow-card); }
+  .stat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; padding:1px; background:var(--border); border-radius:8px; overflow:hidden; }
   .stat-cell{ background:var(--surface); padding:11px 13px; display:flex; flex-direction:column; gap:4px; }
   .stat-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--fg-3); }
   .stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:15px; color:var(--fg-1); font-variant-numeric:tabular-nums; }
   .stat-value.gain{ color:var(--gain); } .stat-value.loss{ color:var(--loss); }
-  .chart-card{ background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 10px 10px; box-shadow:var(--shadow-card); }
+  .chart-card{ background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 10px 10px; }
   /* Negative margins cancel .chart-card's 10px side padding so this rule runs
      edge to edge, matching the full-bleed hairlines in .stat-grid. An internal
      rule is never inset by its card's padding. */
@@ -333,15 +333,17 @@
 
   /* Any ancestor that clips this material must use a UNIFORM border-radius. overflow:hidden plus a
      mixed radius (34px 34px 10px 10px) makes Chromium stop sampling that box's content into the
-     backdrop-filter below, and .fade degrades to a flat white block with a hard 150pt edge. */
+     backdrop-filter below, and the material degrades to a flat block. */
   .ph-material{ position:absolute; top:0; left:0; right:0; z-index:3; pointer-events:none; }
   .ph-material .ph-inner{ position:relative; z-index:2; }
-  /* ESCAPE HATCH, not a design option: the language has one collapsed appearance, .fade below.
-     Kept only in case a masked backdrop-filter ever has to be abandoned on device. */
+  /* THE collapsed appearance: one uniform translucent material over status bar + toolbar (103pt),
+     closed by a hairline. Stock <IonHeader translucent> — nothing to hand-build. */
   .ph-material.solid .ph-inner{
     background:color-mix(in srgb, var(--surface) 72%, transparent);
     -webkit-backdrop-filter:saturate(180%) blur(20px); backdrop-filter:saturate(180%) blur(20px);
     border-bottom:1px solid var(--border); }
+  /* ESCAPE HATCH, not a design option: the language has one collapsed appearance, .solid above.
+     Kept only in case the hairline-edged bar ever has to be abandoned on device. */
   .ph-material.fade::before{ content:''; position:absolute; top:0; left:0; right:0; height:150px; z-index:1;
     -webkit-backdrop-filter:saturate(160%) blur(18px); backdrop-filter:saturate(160%) blur(18px);
     -webkit-mask-image:linear-gradient(to bottom,#000 0%,#000 58%,rgba(0,0,0,0.45) 78%,transparent 100%);

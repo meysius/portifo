@@ -102,12 +102,13 @@ ion-header ion-toolbar {
   --border-width: 0;
 }
 
-/* ── the fading material ────────────────────────────────────────────────────
-   Only the collapsed bar needs one, because only then is content behind it.
-   Blur overhangs to 150px and dissolves via a mask, so there is no hard edge
-   competing with the .divider rules that sit just below the bar. Do NOT add
-   --shadow-nav or a hairline with it: the material is the separator, and both
-   together double the edge.
+/* ── the solid material ─────────────────────────────────────────────────────
+   DS .ph-material.solid. Only the collapsed bar needs one, because only then is
+   content behind it. ONE uniform translucent plate over the full header box —
+   status bar inset + toolbar, never the toolbar alone, or status-bar text sits
+   on raw scrolling content — closed by a single --border hairline. Do NOT add
+   --shadow-nav on top of it: the hairline is the separator, and both together
+   double the edge.
    The condense header (the large title, inside IonContent) never gets one. */
 ion-header:not(.header-collapse-condense) {
   position: relative;
@@ -120,7 +121,7 @@ ion-header:not(.header-collapse-condense)::after {
   top: 0;
   left: 0;
   right: 0;
-  height: 150px;
+  bottom: 0;
   z-index: -1;
   pointer-events: none;
   /* Fades in over the collapse rather than popping. */
@@ -128,9 +129,17 @@ ion-header:not(.header-collapse-condense)::after {
   transition: opacity 200ms ease;
 }
 
-/* AT REST there is no material, because nothing is behind the header yet — and
-   because the material overhangs to 150px, leaving it on would veil the large
-   title and the top of the hero sitting right below the bar.
+/* Ionic's own .header-background (rendered by `translucent` in iOS mode) carries
+   the same saturate(180%) blur(20px). Neutralise it so the plate above is the
+   single material — otherwise the band is blurred twice, and it would keep
+   blurring at rest, where the language says there is no material at all. */
+ion-header .header-background {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* AT REST there is no material, because nothing is behind the header yet, and
+   leaving it on would put a hairline under a bar with no content beneath it.
    `header-collapse-condense-inactive` is Ionic's own flag: it rides the MAIN
    header while the large title is expanded, and moves to the condense header
    once collapsed. Pages with no collapse pair never get it, so they keep their
@@ -142,19 +151,18 @@ ion-header:not(.header-collapse-condense).header-collapse-condense-inactive::aft
 }
 
 ion-header:not(.header-collapse-condense)::before {
-  -webkit-backdrop-filter: saturate(160%) blur(18px);
-  backdrop-filter: saturate(160%) blur(18px);
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 58%, rgba(0, 0, 0, 0.45) 78%, transparent 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 58%, rgba(0, 0, 0, 0.45) 78%, transparent 100%);
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
 }
 
+/* The hairline that closes the plate. Its own element rather than a
+   border-bottom on ::before, so it renders at exactly 1px and does not
+   composite over the material's translucent fill. */
 ion-header:not(.header-collapse-condense)::after {
-  background: linear-gradient(
-    to bottom,
-    color-mix(in srgb, var(--bg) 88%, transparent) 0%,
-    color-mix(in srgb, var(--bg) 70%, transparent) 55%,
-    transparent 100%
-  );
+  top: auto;
+  height: 1px;
+  background: var(--border);
 }
 
 /* Back button — labelled by the parent screen, never a bare chevron, and the
@@ -271,8 +279,7 @@ ion-tab-bar {
   /* --ion-border-color already carries --border's value; referencing --border
      inside --border would be a cyclic declaration and drop the rule. */
   --border: 1px solid var(--ion-border-color);
-  /* Casts UP, separating the bar from content scrolling beneath it. */
-  box-shadow: var(--shadow-bar);
+  /* No shadow: that hairline is the whole edge, same as every card. */
 }
 
 /* Pushed detail pages (asset, account, add-transaction, ...) now live
@@ -556,16 +563,14 @@ ion-tab-button svg {
 
 /* One of the three card types (.chart-card / .stat-grid / .field-card), which
    must be indistinguishable at the edge: 8px radius, exactly ONE layer of
-   --border, and --shadow-card for the elevation that gives them an edge at all
-   on the white light plane. --sec-gutter margin: full-bleed block carrying its
-   own gutter. */
+   --border, and NO shadow — the hairline is the whole edge, in both themes.
+   --sec-gutter margin: full-bleed block carrying its own gutter. */
 .chart-card {
   margin: var(--sec-gap) var(--gutter) 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px 10px 10px;
-  box-shadow: var(--shadow-card);
 }
 
 .chart-canvas {
@@ -1143,14 +1148,13 @@ ion-item.row-closed {
 /* ---------- form cards (DS .field-card / .field) ---------- */
 
 /* .field-card — the third card type, so the same edge as .chart-card and
-   .stat-grid: 8px radius, one --border, --shadow-card. */
+   .stat-grid: 8px radius, one --border, no shadow. */
 ion-list.list-inset.fieldcard-list {
   margin: var(--sec-gap) var(--gutter) 0;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: var(--shadow-card);
 }
 
 /* Consecutive field cards are SEPARATE cards, --sec-gap apart. Ionic ships
@@ -1374,7 +1378,6 @@ ion-list.list-inset.fieldcard-list ion-item {
   border-radius: 8px;
   overflow: hidden;
   margin: var(--sec-gap) var(--gutter) 0;
-  box-shadow: var(--shadow-card);
 }
 
 .stat-cell {

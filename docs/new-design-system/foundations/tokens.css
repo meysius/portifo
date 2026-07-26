@@ -9,10 +9,13 @@
     --gutter:  20px;
     --sec-gap: 24px;
 
-    /* Light is a single white plane — page and cards are both #FFFFFF, so
-       cards are separated by elevation, not by fill. --shadow-card is the
-       only thing giving them an edge; dark mode sets it to none because
-       there --surface already differs from --bg by value. */
+    /* Light is a single white plane — page and cards are both #FFFFFF, so a
+       card is separated by its 1px --border hairline and nothing else. The
+       three card types carry no shadow in either theme, which is why light and
+       dark now read identically at the edge. No app component casts a shadow —
+       not the cards, not the tab bar — so --shadow-card survives only for
+       documentation chrome (.card, .spec and this page's specimens), and
+       --shadow-bar / --shadow-nav are unused entirely. */
     --paper:    #FFFFFF;
     --paper-2:  #FFFFFF;
     --paper-3:  #F1F2F4;
