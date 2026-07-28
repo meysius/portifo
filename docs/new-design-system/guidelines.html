@@ -256,6 +256,13 @@
       <div class="g-yes"><div class="lbl">Do</div><p>Draw internal rules <b>full-bleed</b> to the card's inner edge. If the card has side padding, cancel it with negative margins (see <code>.ranges</code>).</p></div>
       <div class="g-no"><div class="lbl">Don't</div><p>Give an element both <code>background:var(--border)</code> and <code>border:1px solid var(--border)</code>. The border composites over the background and the edge renders at ~2× weight.</p></div>
     </div>
+
+    <h3 class="g-sub">Nested scopes</h3>
+    <p class="g-lead">A screen that shows the same measures at more than one magnification <b>splits into pages, never an accordion</b>. Holding Detail is the portfolio scope; tapping an account pushes Account Holding, which is that account’s scope plus its lots. Every page repeats the same block in the same order — a <code>.divider</code> head, a <code>.stat-grid</code> for the cost side, then return lines — so the reader learns it once and the push reads as a zoom rather than a new screen. The app already has one way to go deeper; a second one on the same screen is a second thing to learn.</p>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Give each scope its own hero. The figure at the top of a page is <b>that scope’s</b> market value, so Today and Total always belong to the page you are standing on.</p></div>
+      <div class="g-no"><div class="lbl">Don’t</div><p>Repeat a measure at a scope where it carries no information. Today’s <b>percentage is a property of the security</b> — identical at every scope — so a row that already shows total return does not also show it.</p></div>
+    </div>
   </div>
 
   <!-- ═══════════════════════════ PAGE HEADER ═══════════════════════════ -->

@@ -43,3 +43,28 @@ export function fmtShares(n: number) {
   if (Number.isInteger(n)) return n.toFixed(0);
   return Math.abs(n) < 1 ? n.toFixed(3) : n.toFixed(2);
 }
+
+// Compact age for a position or a lot: "3y 4m", "8m", "12d". The design uses
+// this everywhere an age appears (stat grid, lot rows), so a lot's age and the
+// position's weighted-average age read in the same units.
+export function fmtAge(years: number): string {
+  if (!Number.isFinite(years) || years <= 0) return "—";
+  const totalMonths = Math.round(years * 12);
+  if (totalMonths < 1) {
+    const days = Math.max(1, Math.round(years * 365.25));
+    return `${days}d`;
+  }
+  const y = Math.floor(totalMonths / 12);
+  const m = totalMonths % 12;
+  if (y === 0) return `${m}m`;
+  return m === 0 ? `${y}y` : `${y}y ${m}m`;
+}
+
+// The chart lives at the provider that already supplies our prices. The API
+// prices through `yahoo-finance2` (portifo-api market.service.ts), so every
+// symbol stored here IS a Yahoo symbol — exchange suffixes (.TO, .L) included —
+// and this link cannot resolve to a different instrument. TradingView would
+// need an exchange prefix (NASDAQ-NVDA) the app does not store.
+export function yahooQuoteUrl(symbol: string): string {
+  return `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
+}

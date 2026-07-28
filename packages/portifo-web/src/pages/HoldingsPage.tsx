@@ -29,6 +29,7 @@ import {
   CashGlyphIcon,
   CheckIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   ClosedGlyphIcon,
   EmptyState,
   ListDivider,
@@ -164,7 +165,10 @@ function HoldingsPage() {
         costBasisDisplay,
         todayPct,
         todayDisplay,
-        accountCount: t.perAccount.length,
+        // perAccount also carries accounts that have sold out of this ticker
+        // (they still hold realized P&L) — an open row counts only the accounts
+        // actually holding shares.
+        accountCount: t.perAccount.filter((pa) => pa.shares > 0).length,
       };
     })
     .sort(
@@ -396,6 +400,9 @@ function HoldingsPage() {
                 <IonLabel slot="end">
                   <h2>{fmtCcy(cashTotalDisplay, displayCurrency)}</h2>
                 </IonLabel>
+                <span slot="end" className="row-chevron" aria-hidden="true">
+                  <ChevronRightIcon />
+                </span>
               </IonItem>
 
               {sortedHoldings.map((h) => {
@@ -411,33 +418,23 @@ function HoldingsPage() {
                       <p>{h.name ?? `${fmtShares(h.shares)} sh`}</p>
                     </IonLabel>
                     <IonLabel slot="end">
-                      <h2>{fmtCcy(h.price, h.currency)}</h2>
-                      {/* DS .row .meta — cost basis (shares × avg cost), in
-                          the holding's native currency: what was paid, not
-                          what it's currently worth — the pnl lines below
-                          already report how far that's moved. */}
-                      <p className="row-meta">
-                        {fmtCcy(h.shares * h.avgCost, h.currency)} ({fmtShares(h.shares)} × {fmtCcy(h.avgCost, h.currency)})
-                      </p>
-                      {h.todayPct != null && h.todayDisplay != null && (
+                      <h2>{fmtCcy(h.price * h.shares, h.currency)}</h2>
+                      {h.todayPct != null && (
                         <p className={todayGain ? "positive" : "negative"}>
-                          <span className="pnl-label">Today:</span>
                           {todayGain ? "+" : "−"}
-                          {fmtCcy(Math.abs(h.todayDisplay), displayCurrency)} ·{" "}
-                          {todayGain ? "+" : "−"}
-                          {Math.abs(h.todayPct).toFixed(1)}%
+                          {Math.abs(h.todayPct).toFixed(2)}% Today
                         </p>
                       )}
-                      {h.unrealizedPct != null && h.unrealizedDisplay != null && (
+                      {h.unrealizedPct != null && (
                         <p className={gain ? "positive" : "negative"}>
-                          <span className="pnl-label">Total:</span>
                           {gain ? "+" : "−"}
-                          {fmtCcy(Math.abs(h.unrealizedDisplay), displayCurrency)} ·{" "}
-                          {gain ? "+" : "−"}
-                          {Math.abs(h.unrealizedPct).toFixed(1)}%
+                          {Math.abs(h.unrealizedPct).toFixed(2)}% Total
                         </p>
                       )}
                     </IonLabel>
+                    <span slot="end" className="row-chevron" aria-hidden="true">
+                      <ChevronRightIcon />
+                    </span>
                   </IonItem>
                 );
               })}

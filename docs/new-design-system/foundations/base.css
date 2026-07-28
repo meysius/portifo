@@ -352,3 +352,52 @@
     background:linear-gradient(to bottom,
       color-mix(in srgb, var(--bg) 88%, transparent) 0%,
       color-mix(in srgb, var(--bg) 70%, transparent) 55%, transparent 100%); }
+
+  /* ══ Holding detail — scopes, rows, lots ═════════════════════════════════
+     The same measures at more than one magnification become SEPARATE PAGES,
+     not an accordion: Holding Detail is the portfolio scope, Account Holding is
+     the account + lot scope. Each page repeats the same block — .divider head,
+     .stat-grid for the cost side, .gain-stack for returns — so the reader learns
+     it once. Nothing here is a new card type; the three from guidelines.html
+     still hold. */
+
+  /* A name in a row is a name, not a figure — display face. Rule 10 keeps mono
+     for the things that line up in a column, which a proper noun never does.
+     Replaces the per-call-site font-family overrides on .sym. */
+  .row-name{ font-family:var(--font-display); font-weight:600; font-size:14px; color:var(--fg-1); }
+  .row-sub{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+            margin-top:2px; font-variant-numeric:tabular-nums; }
+
+  /* Realized P&L is closed money, categorically different from the open
+     position, so it sits OUTSIDE the stat grid on its own line rather than
+     becoming a fifth cell that reads like part of the current holding. */
+  .realized{ display:flex; align-items:baseline; gap:8px; padding:11px 2px 0; }
+  .realized-k{ font-size:12.5px; font-weight:500; color:var(--fg-2); flex-shrink:0; }
+  .realized-v{ font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500;
+               font-variant-numeric:tabular-nums; }
+  .realized-v.gain{ color:var(--gain); } .realized-v.loss{ color:var(--loss); }
+  .realized-n{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+               margin-left:auto; font-variant-numeric:tabular-nums; }
+
+  /* Lot row. Line 2 reuses the holdings-row money idiom — total (count × unit) —
+     so cost basis, share count and avg cost are three numbers in one line the
+     user has already learned to read. Read-only, so no chevron (rule 09). */
+  .lot{ display:flex; align-items:flex-start; gap:12px; padding:10px 0;
+        border-bottom:1px solid var(--border); }
+  .lot:last-child{ border-bottom:none; }
+  .lot-main{ flex:1; min-width:0; }
+  .lot-date{ display:flex; align-items:baseline; gap:7px; font-family:'JetBrains Mono',monospace;
+             font-size:12.5px; font-weight:600; color:var(--fg-1); font-variant-numeric:tabular-nums; }
+  .lot-age{ font-weight:400; font-size:10.5px; color:var(--fg-3); }
+  .lot-cost{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+             margin-top:3px; font-variant-numeric:tabular-nums; }
+  /* A lot bought above the current price is underwater — the one thing that
+     separates one lot from another at a glance, so it is the one thing tinted. */
+  .lot-cost.under{ color:var(--loss); }
+  .lot-end{ text-align:right; flex-shrink:0; }
+
+  /* A row whose value leaves the app. Not a chevron — rule 09 reserves that for
+     a push onto the navigation stack, and this is not one. */
+  .field-link{ display:flex; align-items:center; gap:6px; font-family:var(--font-display);
+               font-weight:600; font-size:13.5px; color:var(--signal); }
+  .field-link svg{ width:11px; height:11px; }

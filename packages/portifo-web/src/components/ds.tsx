@@ -326,3 +326,19 @@ export function InstallGlyphIcon() {
     </svg>
   );
 }
+
+/* Marks a row whose value leaves the app. Deliberately NOT a chevron —
+   chevron honesty reserves that for a push onto the navigation stack. */
+export function ExternalLinkIcon() {
+  return (
+    <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path
+        d="M3 9L9 3M9 3H4.2M9 3v4.8"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

@@ -357,48 +357,63 @@
                   <span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio</span>
                 </div>
                 <div class="ph-large">NVDA</div>
+
+                <!-- SCOPE 1 · PORTFOLIO. Hero = what this scope is worth now. -->
                 <div style="padding:0 20px;">
                   <div class="detail-head">
-                    <div class="detail-name" style="margin:2px 0 6px;">NVIDIA Corp</div>
-                    <span class="eyebrow">Price / Share</span>
-                    <div class="figure figure-mid" style="margin-top:2px;"><span class="cur">$</span>189<span class="cents">.09</span></div>
-                    <div class="meta" style="margin-top:6px; font-size:13px;">$8,873.62 (263 × $33.74)</div>
+                    <div class="detail-name" style="margin:2px 0 8px;">NVIDIA Corp</div>
+                    <span class="eyebrow">Market value</span>
+                    <div class="figure figure-mid" style="margin-top:2px;"><span class="cur">$</span>49,730<span class="cents">.67</span></div>
                     <div class="gain-stack">
-                      <p class="positive"><span class="pnl-label">Today:</span>+$342.10 · +0.7%</p>
-                      <p class="positive"><span class="pnl-label">Total:</span>+$40,856.55 · +460.5%</p>
+                      <p class="positive"><span class="pnl-label">Today:</span>+$341.90 · +0.69%</p>
+                      <p class="positive"><span class="pnl-label">Total:</span>+$40,845.07 · +459.7%</p>
                     </div>
                   </div>
-                </div>
-
-                <div class="chart-card sec-gutter">
-                  <div style="position:relative;">
-                    <span class="chart-range-badge positive">+$12,480.20 · 18.6%</span>
-                    <svg viewBox="0 0 300 88" preserveAspectRatio="none" style="width:100%; display:block;">
-                      <defs><linearGradient id="fg-nvda" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.24"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs>
-                      <path d="M0,74 L25,70 L50,73 L75,58 L100,62 L125,48 L150,54 L175,34 L200,40 L225,22 L250,28 L275,11 L300,14 L300,88 L0,88 Z" fill="url(#fg-nvda)"/>
-                      <path d="M0,74 L25,70 L50,73 L75,58 L100,62 L125,48 L150,54 L175,34 L200,40 L225,22 L250,28 L275,11 L300,14" fill="none" stroke="#1E9E6B" stroke-width="2"/>
-                    </svg>
-                  </div>
-                  <div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
                 </div>
 
                 <div style="padding:0 20px;">
-                  <div class="stat-grid sec">
+                  <!-- The security, not the position. Live price and the one place
+                       to go for a chart — everything below this is your shares. -->
+                  <div class="divider sec"><span class="dl">Market</span><span class="dh"></span><span class="dm">USD</span></div>
+                  <div class="field-card">
+                    <div class="field">
+                      <span class="field-label">Price / share</span>
+                      <span class="field-value">$189.09</span>
+                    </div>
+                    <div class="field">
+                      <span class="field-label">Chart</span>
+                      <span class="field-link">Yahoo Finance<svg viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.2M9 3v4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="padding:0 20px;">
+                  <!-- The cost side. Hero says what it is worth; this says what it cost. -->
+                  <div class="divider sec"><span class="dl">Position</span><span class="dh"></span><span class="dm">all accounts</span></div>
+                  <div class="stat-grid">
                     <div class="stat-cell"><span class="stat-label">Shares</span><span class="stat-value">263</span></div>
-                    <div class="stat-cell"><span class="stat-label">Avg Cost / Share</span><span class="stat-value">$33.74</span></div>
-                    <div class="stat-cell"><span class="stat-label">Avg Age</span><span class="stat-value">8 months</span></div>
-                    <div class="stat-cell"><span class="stat-label">Cost Basis</span><span class="stat-value">$8,873.62</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg cost / share</span><span class="stat-value">$33.79</span></div>
+                    <div class="stat-cell"><span class="stat-label">Cost basis</span><span class="stat-value">$8,885.60</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg age</span><span class="stat-value">3y 4m</span></div>
+                  </div>
+                  <div class="realized">
+                    <span class="realized-k">Realized</span>
+                    <span class="realized-v gain">+$4,180.00 · +373.2%</span>
+                    <span class="realized-n">40 sh sold</span>
                   </div>
 
-                  <div class="divider sec"><span class="dl">By Account</span><span class="dh"></span><span class="dm">2 accounts</span></div>
+                  <!-- SCOPE 2 · ACCOUNTS — each row pushes Account Holding, so each carries a chevron. -->
+                  <div class="divider sec"><span class="dl">Accounts</span><span class="dh"></span><span class="dm">2</span></div>
                   <div class="list">
                     <div class="row">
-                      <div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Fidelity Brokerage</div><div class="name">Investment Account</div></div>
-                      <div class="row-end"><div class="val">$5,398.40</div><div class="meta">160 sh · avg $33.74</div></div>
+                      <div class="row-main"><div class="row-name">Fidelity Brokerage</div><div class="row-sub">160 sh · avg $27.79</div></div>
+                      <div class="row-end"><div class="val">$30,254.40</div><div class="pnl gain">+$25,807.90 · +580.4%</div></div>
+                      <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                     <div class="row">
-                      <div class="row-main"><div class="sym" style="font-family:var(--font-display); font-weight:600; font-size:14px;">Wealthsimple TFSA</div><div class="name">Investment Account</div></div>
-                      <div class="row-end"><div class="val">$3,475.22</div><div class="meta">103 sh · avg $33.74</div></div>
+                      <div class="row-main"><div class="row-name">Wealthsimple TFSA</div><div class="row-sub">103 sh · avg $43.10</div></div>
+                      <div class="row-end"><div class="val">$19,476.27</div><div class="pnl gain">+$15,037.17 · +338.7%</div></div>
+                      <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                     </div>
                   </div>
 
@@ -415,12 +430,208 @@
       </div>
       <div class="spec">
         <div class="spec-h">Holding Detail · build notes</div>
-        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 3a — pushed screen at rest, title carrying the ticker and the back button labelled <code>Portfolio</code>. Pushed, so no tab bar: the 34pt bottom inset belongs to the page.</span></div>
-        <div class="spec-row"><span class="spec-k">Continuity</span><span class="spec-v">Hero repeats the exact shape of the row that opened it — price / share, cost basis, stacked Today/Total — so the transition reads as a zoom, not a new screen. Company name is the subtitle under the title.</span></div>
-        <div class="spec-row"><span class="spec-k">By Account</span><span class="spec-v">Breaks the position down per account and always sums to the Shares stat. Read-only, so no chevrons.</span></div>
-        <div class="spec-row"><span class="spec-k">Actions</span><span class="spec-v">Buy/Sell sit at the end of the scroll, not pinned, so the screen scrolls to reach them.</span></div>
-        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured: the page is 950pt against an 852pt frame — 98pt of overflow, so at rest the fold falls across the Buy button. That cut is real geometry, not a crop: nothing here is pinned, and scrolling brings the stack fully into view with its 34pt bottom gutter intact (state 3b in <code>guidelines.html</code>).</span></div>
-        <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">A fully-closed position drops the action stack for a single "Realized P&amp;L" stat and demotes the chart to the holding period.</span></div>
+        <div class="spec-row"><span class="spec-k">Two pages</span><span class="spec-v">This screen is the <b>portfolio</b> scope only. The account and lot scopes live on Account Holding, one push deeper. Both pages repeat the same block — <code>.divider</code> head, <code>.stat-grid</code>, return lines — so the push reads as a zoom.</span></div>
+        <div class="spec-row"><span class="spec-k">Hero</span><span class="spec-v">Market value, not price — this is a portfolio tracker and it is the same figure the Holdings row shows, so the push still reads as a zoom. Price/share moves down to the Market block.</span></div>
+        <div class="spec-row"><span class="spec-k">Today</span><span class="spec-v">Today's <b>percentage is identical at every scope</b> — it is a property of the security, not the holding. It belongs to the hero of whichever page you are on, and never appears on a row that already shows total return.</span></div>
+        <div class="spec-row"><span class="spec-k">Account rows</span><span class="spec-v">They push, so they carry a chevron (rule 09) — that is the whole affordance. <b>Measured:</b> the chevron leaves 179pt for the left column, so the meta line stays <code>160 sh · avg $27.79</code>; adding a lot count wrapped it to two lines and pluralised badly at one lot. Value over total return on the right; the lots are one tap away, not crammed in.</span></div>
+        <div class="spec-row"><span class="spec-k">No chart</span><span class="spec-v">Portifo does not compete with a charting product. The Market block carries the live price and hands the chart to <b>Yahoo Finance</b> — <code>finance.yahoo.com/quote/{symbol}</code>. The provider is not a preference: <code>market.service.ts</code> already prices through <code>yahoo-finance2</code>, so every stored symbol <em>is</em> a Yahoo symbol, exchange suffixes (<code>.TO</code>, <code>.L</code>) included, and the link cannot resolve to the wrong instrument. TradingView needs an exchange prefix (<code>NASDAQ-NVDA</code>) the app does not store.</span></div>
+        <div class="spec-row"><span class="spec-k">Leaving the app</span><span class="spec-v">An outward arrow, never a chevron — rule 09 reserves the chevron for a push onto the navigation stack, and this is not one. Opens in the system browser (or the Yahoo Finance app via its universal link); it must never replace the PWA's own window, or the back gesture strands the user outside the app.</span></div>
+        <div class="spec-row"><span class="spec-k">Hero meta</span><span class="spec-v">The old <code>263 sh · $189.09 / share</code> line is gone. Share count belongs to the position and lives in the grid; live price belongs to the security and lives in the Market block. The hero is market value and its two returns, nothing else.</span></div>
+        <div class="spec-row"><span class="spec-k">Realized</span><span class="spec-v">Closed money, so it sits outside the grid on its own line rather than becoming a fifth cell that reads like part of the open position. Hidden entirely when nothing has been sold.</span></div>
+        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured: 932pt against an 852pt frame — dropping the chart and the meta line took <b>95pt</b> off, and the resting view now ends on a complete Buy button (793–841pt) instead of cutting off inside the account list. Sell begins at 850pt, 2pt before the fold, so nothing legible is bisected (rule 12) — but the stack shifts with the account count, so re-measure before changing anything above it. Nothing is pinned.</span></div>
+        <div class="spec-row"><span class="spec-k">Single account</span><span class="spec-v">When only one account holds the position the Accounts section still renders — one row, one chevron. Never inline the deeper scope as a special case; that would be two layouts for one screen.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Account Holding ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Account Holding · NVDA in Fidelity</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="flex:1; padding:0; gap:0; min-height:0; overflow:hidden;">
+                <!-- Back button carries the ticker; the title carries the new information. -->
+                <div class="ph-bar">
+                  <span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>NVDA</span>
+                </div>
+                <div class="ph-large">Fidelity Brokerage</div>
+
+                <!-- SCOPE 2 · ACCOUNT — the same block as the parent page, one magnification in. -->
+                <div style="padding:0 20px;">
+                  <div class="detail-head">
+                    <div class="detail-name" style="margin:2px 0 8px;">NVDA · NVIDIA Corp</div>
+                    <span class="eyebrow">Market value</span>
+                    <div class="figure figure-mid" style="margin-top:2px;"><span class="cur">$</span>30,254<span class="cents">.40</span></div>
+                    <div class="gain-stack">
+                      <p class="positive"><span class="pnl-label">Today:</span>+$208.00 · +0.69%</p>
+                      <p class="positive"><span class="pnl-label">Total:</span>+$25,807.90 · +580.4%</p>
+                    </div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Position</span><span class="dh"></span><span class="dm">this account</span></div>
+                  <div class="stat-grid">
+                    <div class="stat-cell"><span class="stat-label">Shares</span><span class="stat-value">160</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg cost / share</span><span class="stat-value">$27.79</span></div>
+                    <div class="stat-cell"><span class="stat-label">Cost basis</span><span class="stat-value">$4,446.50</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg age</span><span class="stat-value">3y 10m</span></div>
+                  </div>
+                  <div class="realized">
+                    <span class="realized-k">Realized</span>
+                    <span class="realized-v gain">+$4,180.00 · +373.2%</span>
+                    <span class="realized-n">40 sh sold</span>
+                  </div>
+
+                  <!-- SCOPE 3 · LOTS — oldest first, so the long-held shares read top-down. -->
+                  <div class="divider sec"><span class="dl">Open lots</span><span class="dh"></span><span class="dm">3</span></div>
+                  <div class="list">
+                    <div class="lot">
+                      <div class="lot-main">
+                        <div class="lot-date">Feb 12, 2021<span class="lot-age">5y 5m</span></div>
+                        <div class="lot-cost">$792.00 (60 × $13.20)</div>
+                      </div>
+                      <div class="lot-end">
+                        <div class="val" style="font-size:13.5px;">$11,345.40</div>
+                        <div class="pnl gain">+$10,553.40 · +1332%</div>
+                      </div>
+                    </div>
+                    <div class="lot">
+                      <div class="lot-main">
+                        <div class="lot-date">Nov 03, 2022<span class="lot-age">3y 8m</span></div>
+                        <div class="lot-cost">$1,562.00 (55 × $28.40)</div>
+                      </div>
+                      <div class="lot-end">
+                        <div class="val" style="font-size:13.5px;">$10,399.95</div>
+                        <div class="pnl gain">+$8,837.95 · +565.8%</div>
+                      </div>
+                    </div>
+                    <div class="lot">
+                      <div class="lot-main">
+                        <div class="lot-date">Aug 21, 2024<span class="lot-age">1y 11m</span></div>
+                        <div class="lot-cost">$2,092.50 (45 × $46.50)</div>
+                      </div>
+                      <div class="lot-end">
+                        <div class="val" style="font-size:13.5px;">$8,509.05</div>
+                        <div class="pnl gain">+$6,416.55 · +306.6%</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="btn-stack sec" style="padding-bottom:34px;">
+                    <button class="btn btn-primary">Buy in this account</button>
+                    <button class="btn btn-secondary">Sell from this account</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Account Holding · build notes</div>
+        <div class="spec-row"><span class="spec-k">Title</span><span class="spec-v">The <b>account</b> name, because the back button already says <code>NVDA</code> — together they read as the breadcrumb "NVDA → Fidelity Brokerage". The subtitle carries <code>NVDA · NVIDIA Corp</code> so the ticker is never more than a glance away.</span></div>
+        <div class="spec-row"><span class="spec-k">No Market block</span><span class="spec-v">Live price and the chart link are properties of the security, so they live once on the parent page. This page carries no security-level content at all — it is about <em>your</em> shares, which is also why its hero meta line went.</span></div>
+        <div class="spec-row"><span class="spec-k">Same block</span><span class="spec-v">Hero, then the same four <code>.stat-grid</code> cells in the same order, then the realized line. Only the scope of the numbers changed, which is the whole point of the push.</span></div>
+        <div class="spec-row"><span class="spec-k">Lot row</span><span class="spec-v">Date + age, then <code>$792.00 (60 × $13.20)</code> — the Holdings money idiom, so cost basis, share count and avg cost are one already-learned line. Right column is market value over total return.</span></div>
+        <div class="spec-row"><span class="spec-k">Lot order</span><span class="spec-v">Oldest first. Age is the reason lots exist on this screen, so it drives the sort.</span></div>
+        <div class="spec-row"><span class="spec-k">Underwater</span><span class="spec-v">A lot whose avg cost is above the current price renders <code>.lot-cost.under</code> in <code>--loss</code>. It is the only thing that separates one lot from another at a glance, so it is the only thing tinted.</span></div>
+        <div class="spec-row"><span class="spec-k">No lot P&amp;L for today</span><span class="spec-v">Today's return per lot is the position's return scaled by share count — the same percentage on every row. It distinguishes nothing between lots and is omitted.</span></div>
+        <div class="spec-row"><span class="spec-k">Big returns</span><span class="spec-v">Percentages ≥ 1000% drop the decimal (<code>+1332%</code>) — the tenth of a percent is noise at that magnitude and the extra glyph breaks the column.</span></div>
+        <div class="spec-row"><span class="spec-k">Actions</span><span class="spec-v">Scoped: they open Add Transaction with both the account <em>and</em> the symbol prefilled, which is the reason to be on this page rather than the parent.</span></div>
+        <div class="spec-row"><span class="spec-k">Lots are read-only</span><span class="spec-v">No chevron (rule 09). A lot is not a transaction once it has been partly sold, so pushing to the originating buy would be a half-truth.</span></div>
+        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured: <b>852pt against an 852pt frame</b> — with the meta line gone, a three-lot position fits exactly, both actions included, with no scroll at all. Budget ~44pt per additional lot beyond that.</span></div>
+        <div class="spec-row"><span class="spec-k">Cost basis</span><span class="spec-v">The app is <b>average cost (ACB)</b> throughout — no screen mixes methods. Under ACB a sale comes out of an undifferentiated pool, so a lot is <em>not</em> drawn down FIFO. The ACB-native model is a <b>pro-rata drawdown</b>: selling 40 of 160 shares shrinks every open lot by 25%. That is exact, not an approximation — removing the same fraction from every lot removes exactly that fraction of total basis, so the surviving lot costs still sum to the Cost basis stat above them. Each lot keeps its own purchase price and date; only its share count shrinks, which is why fractional share counts (<code>41.25</code>) are normal here and not a rounding artifact.</span></div>
+        <div class="spec-row"><span class="spec-k">Lot dates</span><span class="spec-v">Formatted <code>en-US</code> like every other date in the app, but with a <b>2-digit day</b> where the rest of the app uses numeric — these dates form a column, and rule 10 wants a column of figures to line up.</span></div>
+      </div>
+    </div>
+
+    <!-- ───────────────────────── Holding Detail · closed ───────────────────────── -->
+    <div class="device-card">
+      <div class="device-title">Holding Detail · closed position</div>
+      <div class="device">
+        <span class="hw hw-l hw-action"></span>
+        <span class="hw hw-l hw-vol-up"></span>
+        <span class="hw hw-l hw-vol-dn"></span>
+        <span class="hw hw-r hw-side"></span>
+        <span class="hw hw-r hw-camera"></span>
+        <div class="bezel">
+          <div class="screen">
+            <div class="dyn-island"></div>
+            <div class="status-bar">
+              <span>9:41</span>
+              <div class="status-icons">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+              </div>
+            </div>
+            <div class="screen-content">
+              <div class="stage" style="flex:1; padding:0; gap:0; min-height:0; overflow:hidden;">
+                <div class="ph-bar">
+                  <span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Portfolio</span>
+                </div>
+                <div class="ph-large">PLTR<span class="closed-tag" style="margin-left:auto;">Closed</span></div>
+                <div style="padding:0 20px;">
+                  <div class="detail-head">
+                    <div class="detail-name" style="margin:2px 0 8px;">Palantir Technologies</div>
+                    <span class="eyebrow">Realized gain</span>
+                    <div class="figure figure-mid" style="margin-top:2px; color:var(--gain);"><span class="cur" style="color:var(--gain);">+$</span>2,340<span class="cents" style="color:var(--gain);">.80</span></div>
+                    <div class="gain-stack">
+                      <p class="positive"><span class="pnl-label">Return:</span>+58.4% on $4,008.00</p>
+                    </div>
+                    <div class="meta" style="margin-top:6px; font-size:12.5px;">120 sh · closed 04 Mar 2026 · held 1y 9m</div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Position</span><span class="dh"></span><span class="dm">all accounts</span></div>
+                  <div class="stat-grid">
+                    <div class="stat-cell"><span class="stat-label">Shares sold</span><span class="stat-value">120</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg cost / share</span><span class="stat-value">$33.40</span></div>
+                    <div class="stat-cell"><span class="stat-label">Cost basis</span><span class="stat-value">$4,008.00</span></div>
+                    <div class="stat-cell"><span class="stat-label">Avg hold</span><span class="stat-value">1y 9m</span></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Accounts</span><span class="dh"></span><span class="dm">2</span></div>
+                  <div class="list">
+                    <div class="row">
+                      <div class="row-main"><div class="row-name">Fidelity Brokerage</div><div class="row-sub">80 sh · avg $31.10</div></div>
+                      <div class="row-end"><div class="pnl gain" style="font-size:13px; font-weight:600;">+$1,912.00 · +76.9%</div></div>
+                    </div>
+                    <div class="row">
+                      <div class="row-main"><div class="row-name">Wealthsimple TFSA</div><div class="row-sub">40 sh · avg $38.00</div></div>
+                      <div class="row-end"><div class="pnl gain" style="font-size:13px; font-weight:600;">+$428.80 · +28.2%</div></div>
+                    </div>
+                  </div>
+
+                  <div class="btn-stack sec" style="padding-bottom:34px;">
+                    <button class="btn btn-secondary">Buy PLTR again</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div class="spec">
+        <div class="spec-h">Closed position · build notes</div>
+        <div class="spec-row"><span class="spec-k">Inversion</span><span class="spec-v">Nothing is open, so realized P&amp;L takes the hero and the page loses the chart, the lots and the today line. Same parts, different subset — no alternate layout.</span></div>
+        <div class="spec-row"><span class="spec-k">Accounts</span><span class="spec-v">A closed position has no open lots, so there is nothing to push to — the rows carry no chevron and are not tappable (rule 09). Per-account realized return replaces the value column.</span></div>
+        <div class="spec-row"><span class="spec-k">Action</span><span class="spec-v">One secondary button. There is nothing to sell, and re-buying a closed name is not the primary action of the screen.</span></div>
       </div>
     </div>
 

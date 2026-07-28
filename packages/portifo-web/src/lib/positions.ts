@@ -73,7 +73,41 @@ export type TickerAgg = {
   costBasis: number;
   realizedPL: number;
   realizedCostBasis: number;
-  perAccount: { account: string; shares: number; avgCost: number }[];
+  realizedShares: number;
+  // Share-weighted average holding period of the shares already sold, in years.
+  // Only meaningful once something has been sold; it is what a fully-closed
+  // position shows in place of the open position's avg age.
+  realizedAgeYears: number;
+  perAccount: AccountPosition[];
+};
+
+// One purchase, with the shares that survive to today. This app is average-cost
+// (ACB), so a sale is a sale out of an undifferentiated pool — it is NOT drawn
+// from the oldest lot as FIFO would. The ACB-native model is a PRO-RATA
+// drawdown: selling 40 of 160 shares shrinks EVERY open lot by 25%. That keeps
+// the display exact rather than approximate — the remaining lot costs still sum
+// to the position's ACB cost basis, because removing the same fraction from
+// every lot removes exactly that fraction of total basis. `pricePerShare` is
+// the original purchase price and never moves; only `shares` shrinks.
+export type Lot = {
+  date: string;
+  shares: number;
+  pricePerShare: number;
+  costBasis: number;
+  ageYears: number;
+};
+
+export type AccountPosition = {
+  account: string;
+  shares: number;
+  avgCost: number;
+  costBasis: number;
+  avgAgeYears: number;
+  realizedPL: number;
+  realizedCostBasis: number;
+  realizedShares: number;
+  realizedAgeYears: number;
+  lots: Lot[];
 };
 
 function daysSinceEpoch(iso: string) {
@@ -98,7 +132,15 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
     dateBasis: number;
     realizedPL: number;
     realizedCostBasis: number;
+    realizedShares: number;
+    // Sum of (holding period in days x shares) for every sale — the realized
+    // mirror of dateBasis, so avg hold survives partial sells the same way.
+    realizedHoldDays: number;
     currency: string;
+    // Open purchases, oldest first. Carried alongside the aggregate figures
+    // rather than replacing them: the aggregates stay the single source of
+    // truth and the lots are a pro-rata decomposition of them.
+    lots: { date: string; shares: number; pricePerShare: number }[];
   };
   const ledgers = new Map<string, Ledger>();
 
@@ -106,7 +148,8 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
     const symbol = tx.symbol ?? "";
     const key = `${tx.account}|${symbol}`;
     const ledger =
-      ledgers.get(key) ?? { shares: 0, costBasis: 0, dateBasis: 0, realizedPL: 0, realizedCostBasis: 0, currency: tx.currency };
+      ledgers.get(key) ??
+      { shares: 0, costBasis: 0, dateBasis: 0, realizedPL: 0, realizedCostBasis: 0, realizedShares: 0, realizedHoldDays: 0, currency: tx.currency, lots: [] };
     const shares = tx.shares ?? 0;
     const price = tx.pricePerShare ?? 0;
     const day = daysSinceEpoch(tx.date);
@@ -114,6 +157,7 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
       ledger.costBasis += shares * price;
       ledger.dateBasis += shares * day;
       ledger.shares += shares;
+      ledger.lots.push({ date: tx.date, shares, pricePerShare: price });
     } else {
       const avgCost = ledger.shares > 0 ? ledger.costBasis / ledger.shares : 0;
       const avgDay = ledger.shares > 0 ? ledger.dateBasis / ledger.shares : day;
@@ -123,6 +167,14 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
       ledger.dateBasis -= avgDay * sellShares;
       ledger.realizedPL += (price - avgCost) * sellShares;
       ledger.realizedCostBasis += costOfSold;
+      ledger.realizedShares += sellShares;
+      ledger.realizedHoldDays += (day - avgDay) * sellShares;
+      // Pro-rata drawdown: the sale takes the same fraction out of every open
+      // lot, which is what keeps the surviving lot costs summing to costBasis
+      // above. Lots opened by a LATER buy are untouched by this sell because
+      // transactions are walked in date order.
+      const remaining = ledger.shares > 0 ? (ledger.shares - sellShares) / ledger.shares : 0;
+      for (const lot of ledger.lots) lot.shares *= remaining;
       ledger.shares -= sellShares;
     }
     ledgers.set(key, ledger);
@@ -134,8 +186,12 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
     dateBasis: number;
     realizedPL: number;
     realizedCostBasis: number;
+    realizedShares: number;
+    realizedHoldDays: number;
     currency: string;
-    perAccount: Map<string, { shares: number; costBasis: number }>;
+    // Ledgers are keyed (account, symbol), so exactly one ledger per account —
+    // nothing to accumulate, the ledger IS the account's position.
+    perAccount: Map<string, Ledger>;
   };
   const bySymbol = new Map<string, SymbolEntry>();
 
@@ -143,17 +199,20 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
     const [account, symbol] = key.split("|");
     const entry: SymbolEntry =
       bySymbol.get(symbol) ??
-      { shares: 0, costBasis: 0, dateBasis: 0, realizedPL: 0, realizedCostBasis: 0, currency: ledger.currency, perAccount: new Map() };
+      { shares: 0, costBasis: 0, dateBasis: 0, realizedPL: 0, realizedCostBasis: 0, realizedShares: 0, realizedHoldDays: 0, currency: ledger.currency, perAccount: new Map() };
     entry.shares += ledger.shares;
     entry.costBasis += ledger.costBasis;
     entry.dateBasis += ledger.dateBasis;
     entry.realizedPL += ledger.realizedPL;
     entry.realizedCostBasis += ledger.realizedCostBasis;
-    if (ledger.shares > 1e-9) {
-      const pa = entry.perAccount.get(account) ?? { shares: 0, costBasis: 0 };
-      pa.shares += ledger.shares;
-      pa.costBasis += ledger.costBasis;
-      entry.perAccount.set(account, pa);
+    entry.realizedShares += ledger.realizedShares;
+    entry.realizedHoldDays += ledger.realizedHoldDays;
+    // An account that has sold out entirely still belongs here — it holds no
+    // shares but it does hold realized P&L, which the closed-position screen
+    // breaks down per account. Callers that only want open holdings filter on
+    // `shares`.
+    if (ledger.shares > 1e-9 || ledger.realizedCostBasis > 1e-9) {
+      entry.perAccount.set(account, ledger);
     }
     bySymbol.set(symbol, entry);
   }
@@ -175,13 +234,30 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
         costBasis: e.costBasis,
         realizedPL: e.realizedPL,
         realizedCostBasis: e.realizedCostBasis,
+        realizedShares: e.realizedShares,
+        realizedAgeYears: e.realizedShares > 1e-9 ? e.realizedHoldDays / e.realizedShares / 365.25 : 0,
         perAccount: [...e.perAccount.entries()]
           .map(([account, pa]) => ({
             account,
-            shares: pa.shares,
+            shares: pa.shares > 1e-9 ? pa.shares : 0,
             avgCost: pa.shares > 1e-9 ? pa.costBasis / pa.shares : 0,
+            costBasis: pa.costBasis,
+            avgAgeYears: pa.shares > 1e-9 ? (today - pa.dateBasis / pa.shares) / 365.25 : 0,
+            realizedPL: pa.realizedPL,
+            realizedCostBasis: pa.realizedCostBasis,
+            realizedShares: pa.realizedShares,
+            realizedAgeYears: pa.realizedShares > 1e-9 ? pa.realizedHoldDays / pa.realizedShares / 365.25 : 0,
+            lots: pa.lots
+              .filter((l) => l.shares > 1e-9)
+              .map((l) => ({
+                date: l.date,
+                shares: l.shares,
+                pricePerShare: l.pricePerShare,
+                costBasis: l.shares * l.pricePerShare,
+                ageYears: (today - daysSinceEpoch(l.date)) / 365.25,
+              })),
           }))
-          .sort((a, b) => b.shares - a.shares),
+          .sort((a, b) => b.shares - a.shares || b.realizedPL - a.realizedPL),
       };
     })
     .sort((a, b) => b.costBasis - a.costBasis);
