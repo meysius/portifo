@@ -419,16 +419,27 @@ function HoldingsPage() {
                     </IonLabel>
                     <IonLabel slot="end">
                       <h2>{fmtCcy(h.price * h.shares, h.currency)}</h2>
-                      {h.todayPct != null && (
+                      {/* The same two lines, in the same order and the same
+                          money-then-percentage shape, as the hero of the
+                          Holding Detail this row pushes (screens.html ->
+                          Portfolio rows): the label is the neutral tag read
+                          first, and only the figures carry gain/loss. Both
+                          amounts are in displayCurrency so the column adds up
+                          across a mixed-currency list. */}
+                      {h.todayPct != null && h.todayDisplay != null && (
                         <p className={todayGain ? "positive" : "negative"}>
+                          <span className="pnl-label">Today:</span>
                           {todayGain ? "+" : "−"}
-                          {Math.abs(h.todayPct).toFixed(2)}% Today
+                          {fmtCcy(Math.abs(h.todayDisplay), displayCurrency)} · {todayGain ? "+" : "−"}
+                          {Math.abs(h.todayPct).toFixed(2)}%
                         </p>
                       )}
-                      {h.unrealizedPct != null && (
+                      {h.unrealizedPct != null && h.unrealizedDisplay != null && (
                         <p className={gain ? "positive" : "negative"}>
+                          <span className="pnl-label">Total:</span>
                           {gain ? "+" : "−"}
-                          {Math.abs(h.unrealizedPct).toFixed(2)}% Total
+                          {fmtCcy(Math.abs(h.unrealizedDisplay), displayCurrency)} · {gain ? "+" : "−"}
+                          {Math.abs(h.unrealizedPct).toFixed(1)}%
                         </p>
                       )}
                     </IonLabel>

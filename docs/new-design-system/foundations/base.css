@@ -134,6 +134,13 @@
   .field-value{ font-family:'JetBrains Mono',monospace; font-weight:500; font-size:13.5px; color:var(--fg-1); display:flex; align-items:center; gap:6px; }
   .field-value svg{ width:6px; height:10px; color:var(--fg-3); }
   .field-input{ font-family:'JetBrains Mono',monospace; font-weight:500; font-size:13.5px; color:var(--fg-1); background:none; border:none; text-align:right; outline:none; width:100%; }
+  /* A field that has not been answered yet holds a PROMPT, not a value: same
+     face, same size, dropped to --fg-3. A typed field and an untouched one must
+     be tellable apart at a glance down the card — at --fg-1 they read alike and
+     the form looks filled in when it isn't. .empty is the picker rows' version
+     of the placeholder the text inputs get for free. */
+  .field-value.empty{ color:var(--fg-3); }
+  .field-input::placeholder{ color:var(--fg-3); }
 
   .check-box{ width:19px; height:19px; border-radius:4px; border:1.5px solid var(--border); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--signal-ink); }
   .check-box.on{ background:var(--signal); border-color:var(--signal); }
@@ -171,8 +178,23 @@
   .stat-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:1px; padding:1px; background:var(--border); border-radius:8px; overflow:hidden; }
   .stat-cell{ background:var(--surface); padding:11px 13px; display:flex; flex-direction:column; gap:4px; }
   .stat-label{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.06em; text-transform:uppercase; color:var(--fg-3); }
-  .stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:15px; color:var(--fg-1); font-variant-numeric:tabular-nums; }
+  /* The 20px line box is explicit, not incidental: .stat-link sets the same one so
+     a figure in one cell and an action in the next share a baseline despite being
+     set in different faces. Left to `normal` they differ by 3px — mono's line box
+     is 20px, the display face's is 17px — and the row visibly steps down. */
+  .stat-value{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:15px; line-height:20px; color:var(--fg-1); font-variant-numeric:tabular-nums; }
   .stat-value.gain{ color:var(--gain); } .stat-value.loss{ color:var(--loss); }
+  /* A cell whose value LEAVES THE APP. The whole cell is the anchor — a 59pt
+     target rather than a 44pt row — and the second line swaps mono for the
+     display face and --signal, so it reads as an action and not as a figure
+     (rule 10: mono is for the things that line up in a column). Same 15px/600
+     as .stat-value, so the two cells in a row share a baseline. Outward arrow,
+     never a chevron: rule 09 reserves the chevron for a push onto the stack,
+     and this is not one. */
+  a.stat-cell{ text-decoration:none; -webkit-tap-highlight-color:transparent; }
+  .stat-link{ font-family:var(--font-display); font-weight:600; font-size:15px; line-height:20px;
+              color:var(--signal); display:flex; align-items:center; gap:6px; }
+  .stat-link svg{ width:11px; height:11px; }
   .chart-card{ background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 10px 10px; }
   /* Negative margins cancel .chart-card's 10px side padding so this rule runs
      edge to edge, matching the full-bleed hairlines in .stat-grid. An internal
@@ -379,25 +401,20 @@
   .realized-n{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
                margin-left:auto; font-variant-numeric:tabular-nums; }
 
-  /* Lot row. Line 2 reuses the holdings-row money idiom — total (count × unit) —
-     so cost basis, share count and avg cost are three numbers in one line the
-     user has already learned to read. Read-only, so no chevron (rule 09). */
-  .lot{ display:flex; align-items:flex-start; gap:12px; padding:10px 0;
-        border-bottom:1px solid var(--border); }
-  .lot:last-child{ border-bottom:none; }
-  .lot-main{ flex:1; min-width:0; }
+  /* Lot row. It is NOT a shape of its own — a lot is one more row in the same
+     .row anatomy the Accounts section above it uses, at the same measures:
+     .row-name over .row-sub on the left, .val over .pnl on the right. The two
+     sections stack on one page, so a second row vocabulary 1.5px apart in every
+     size read as a mistake rather than a distinction. What identifies a lot is
+     its DATE, so the date takes the name slot; line 2 is the account row's own
+     meta line — `60 sh · avg $13.20` — so shares-and-avg-cost is one learned
+     line everywhere in the app. Read-only, so no chevron (rule 09). */
   .lot-date{ display:flex; align-items:baseline; gap:7px; font-family:'JetBrains Mono',monospace;
-             font-size:12.5px; font-weight:600; color:var(--fg-1); font-variant-numeric:tabular-nums; }
+             font-variant-numeric:tabular-nums; }
   .lot-age{ font-weight:400; font-size:10.5px; color:var(--fg-3); }
-  .lot-cost{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
-             margin-top:3px; font-variant-numeric:tabular-nums; }
   /* A lot bought above the current price is underwater — the one thing that
      separates one lot from another at a glance, so it is the one thing tinted. */
-  .lot-cost.under{ color:var(--loss); }
-  .lot-end{ text-align:right; flex-shrink:0; }
+  .row-sub.under{ color:var(--loss); }
 
-  /* A row whose value leaves the app. Not a chevron — rule 09 reserves that for
-     a push onto the navigation stack, and this is not one. */
-  .field-link{ display:flex; align-items:center; gap:6px; font-family:var(--font-display);
-               font-weight:600; font-size:13.5px; color:var(--signal); }
-  .field-link svg{ width:11px; height:11px; }
+  /* .field-link is GONE — a link inside a .field-card put an action into the
+     form vocabulary. Leaving the app is now .stat-link, up with the stat grid. */

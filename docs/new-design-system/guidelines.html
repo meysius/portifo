@@ -252,9 +252,26 @@
 
     <h3 class="g-sub">Cards</h3>
     <p class="g-lead">Three card types — <code>.chart-card</code>, <code>.stat-grid</code>, <code>.field-card</code> — must be visually indistinguishable at the edge: 8px radius, exactly one layer of <code>--border</code>, and <b>no shadow</b>. The hairline is the whole edge; a card sits <em>on</em> the plane, it does not float above it.</p>
+    <p class="g-lead">The edge is where they match; <b>the inside is where they divide, and the division is by affordance, not by content</b>. A <code>.field-card</code> is <b>editable</b> — every row of it is something the user answers. A <code>.stat-grid</code> is <b>settled</b> — measures the app computed, which the user reads. Picking between them by asking “is this a list of pairs?” is what put a read-only price into the form vocabulary on Holding Detail; ask “can the user change this?” instead.</p>
     <div class="g-do">
       <div class="g-yes"><div class="lbl">Do</div><p>Draw internal rules <b>full-bleed</b> to the card's inner edge. If the card has side padding, cancel it with negative margins (see <code>.ranges</code>).</p></div>
       <div class="g-no"><div class="lbl">Don't</div><p>Give an element both <code>background:var(--border)</code> and <code>border:1px solid var(--border)</code>. The border composites over the background and the edge renders at ~2× weight.</p></div>
+    </div>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Put read-only figures in a <code>.stat-grid</code>, even when there are only two of them and a pair of rows would have fit.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Stack a <code>.field-card</code> and a <code>.stat-grid</code> on one screen as two read-only blocks. Two label faces and two value weights, 20px apart, and neither one is wrong on its own — that is what makes it unfixable by tuning.</p></div>
+    </div>
+
+    <h3 class="g-sub">Fields</h3>
+    <p class="g-lead">A <code>.field</code> is a label and its answer, so <b>a field card only ever appears on a screen that asks the user something</b> — a form, a picker, an editable detail. Nothing read-only lives here; it belongs in a <code>.stat-grid</code>. The answer is a figure — mono, <code>--fg-1</code> — <b>only once it exists</b>. Until then the row holds a <em>prompt</em>, and a prompt is <code>--fg-3</code>: <code>.field-value.empty</code> on picker rows, the native placeholder on typed ones. Both states keep the same face and size, so answering a field changes its ink and nothing else — no reflow, no jump.</p>
+    <div class="field-card" style="max-width:420px;">
+      <div class="field"><span class="field-label">Account</span><span class="field-value empty">Select account<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+      <div class="field"><span class="field-label">Date</span><span class="field-value">Jul 12, 2026<svg viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+      <div class="field"><span class="field-label">Shares</span><input class="field-input" placeholder="0"></div>
+    </div>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Let the card be readable as a checklist. Scanning the ink alone must answer “what is still missing?”, which is also what the disabled Save button is waiting on.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Render a prompt at <code>--fg-1</code>. “Select account” then weighs exactly as much as <code>USD</code> and the form reads as complete while Save sits disabled with no visible reason.</p></div>
     </div>
 
     <h3 class="g-sub">Nested scopes</h3>

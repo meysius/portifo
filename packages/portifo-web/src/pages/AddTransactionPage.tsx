@@ -321,8 +321,7 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
             <IonLabel
               slot="end"
               key={account || "placeholder"}
-              color={account ? undefined : "medium"}
-              className="ion-text-end"
+              className={account ? "ion-text-end" : "ion-text-end field-empty"}
             >
               {account || "Select account"}
             </IonLabel>
@@ -364,8 +363,7 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
                 <IonLabel
                   slot="end"
                   key={symbol || "placeholder"}
-                  color={symbol ? undefined : "medium"}
-                  className="ion-text-end"
+                  className={symbol ? "ion-text-end" : "ion-text-end field-empty"}
                 >
                   {symbol ? (
                     <>

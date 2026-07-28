@@ -375,15 +375,9 @@
                   <!-- The security, not the position. Live price and the one place
                        to go for a chart — everything below this is your shares. -->
                   <div class="divider sec"><span class="dl">Market</span><span class="dh"></span><span class="dm">USD</span></div>
-                  <div class="field-card">
-                    <div class="field">
-                      <span class="field-label">Price / share</span>
-                      <span class="field-value">$189.09</span>
-                    </div>
-                    <div class="field">
-                      <span class="field-label">Chart</span>
-                      <span class="field-link">Yahoo Finance<svg viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.2M9 3v4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-                    </div>
+                  <div class="stat-grid">
+                    <div class="stat-cell"><span class="stat-label">Price / share</span><span class="stat-value">$189.09</span></div>
+                    <a class="stat-cell" href="#"><span class="stat-label">Chart</span><span class="stat-link">Yahoo Finance<svg viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.2M9 3v4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
                   </div>
                 </div>
 
@@ -417,7 +411,10 @@
                     </div>
                   </div>
 
-                  <div class="btn-stack sec" style="padding-bottom:34px;">
+                  <!-- Double --sec-gap, and it is load-bearing: at a single gap the
+                       28pt the Market grid saved pulls Sell up to 822–870 and the fold
+                       cuts straight through its label (rule 12). See the Fold note. -->
+                  <div class="btn-stack sec" style="margin-top:calc(var(--sec-gap) * 2); padding-bottom:34px;">
                     <button class="btn btn-primary">Buy NVDA</button>
                     <button class="btn btn-secondary">Sell NVDA</button>
                   </div>
@@ -435,10 +432,11 @@
         <div class="spec-row"><span class="spec-k">Today</span><span class="spec-v">Today's <b>percentage is identical at every scope</b> — it is a property of the security, not the holding. It belongs to the hero of whichever page you are on, and never appears on a row that already shows total return.</span></div>
         <div class="spec-row"><span class="spec-k">Account rows</span><span class="spec-v">They push, so they carry a chevron (rule 09) — that is the whole affordance. <b>Measured:</b> the chevron leaves 179pt for the left column, so the meta line stays <code>160 sh · avg $27.79</code>; adding a lot count wrapped it to two lines and pluralised badly at one lot. Value over total return on the right; the lots are one tap away, not crammed in.</span></div>
         <div class="spec-row"><span class="spec-k">No chart</span><span class="spec-v">Portifo does not compete with a charting product. The Market block carries the live price and hands the chart to <b>Yahoo Finance</b> — <code>finance.yahoo.com/quote/{symbol}</code>. The provider is not a preference: <code>market.service.ts</code> already prices through <code>yahoo-finance2</code>, so every stored symbol <em>is</em> a Yahoo symbol, exchange suffixes (<code>.TO</code>, <code>.L</code>) included, and the link cannot resolve to the wrong instrument. TradingView needs an exchange prefix (<code>NASDAQ-NVDA</code>) the app does not store.</span></div>
-        <div class="spec-row"><span class="spec-k">Leaving the app</span><span class="spec-v">An outward arrow, never a chevron — rule 09 reserves the chevron for a push onto the navigation stack, and this is not one. Opens in the system browser (or the Yahoo Finance app via its universal link); it must never replace the PWA's own window, or the back gesture strands the user outside the app.</span></div>
+        <div class="spec-row"><span class="spec-k">Market is a grid</span><span class="spec-v">It was a <code>.field-card</code>, and that was wrong twice over. Visually, two read-only blocks sat 20px apart in two vocabularies — label-left/value-right vs stacked, Inter 13px <code>--fg-2</code> labels vs mono 10px uppercase <code>--fg-3</code>, values at 13.5/500 vs 15/600. Semantically, <code>.field-card</code> is the <b>form</b> idiom (a label and its <em>answer</em>, with <code>.field-input</code> and <code>.field-value.empty</code> prompts) — and Add Transaction has a <code>Price / Share</code> row in that exact treatment that you <em>type into</em>. Same label, same look, opposite affordance. Market is now a one-row <code>.stat-grid</code>, so the screen reads <b>divider → grid, divider → grid</b> and <code>.field-card</code> means editable everywhere in the app.</span></div>
+        <div class="spec-row"><span class="spec-k">Leaving the app</span><span class="spec-v">An outward arrow, never a chevron — rule 09 reserves the chevron for a push onto the navigation stack, and this is not one. The whole cell is the anchor (<code>a.stat-cell</code>), a 59pt target against the old row's 44pt, and <code>.stat-link</code> gives the second line the display face and <code>--signal</code> so an action never reads as a figure. Opens in the system browser (or the Yahoo Finance app via its universal link); it must never replace the PWA's own window, or the back gesture strands the user outside the app.</span></div>
         <div class="spec-row"><span class="spec-k">Hero meta</span><span class="spec-v">The old <code>263 sh · $189.09 / share</code> line is gone. Share count belongs to the position and lives in the grid; live price belongs to the security and lives in the Market block. The hero is market value and its two returns, nothing else.</span></div>
         <div class="spec-row"><span class="spec-k">Realized</span><span class="spec-v">Closed money, so it sits outside the grid on its own line rather than becoming a fifth cell that reads like part of the open position. Hidden entirely when nothing has been sold.</span></div>
-        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured: 932pt against an 852pt frame — dropping the chart and the meta line took <b>95pt</b> off, and the resting view now ends on a complete Buy button (793–841pt) instead of cutting off inside the account list. Sell begins at 850pt, 2pt before the fold, so nothing legible is bisected (rule 12) — but the stack shifts with the account count, so re-measure before changing anything above it. Nothing is pinned.</span></div>
+        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured: <b>928pt</b> against an 852pt frame. The resting view ends on a complete Buy button (789–837pt); Sell starts at 846pt and shows a 6pt sliver, its label safely at 861.5–878.5pt, so nothing legible is bisected (rule 12 — verified by walking every text node, not by eyeballing the button box). <b>The action stack's double <code>--sec-gap</code> is what buys that.</b> Converting Market from a <code>.field-card</code> to a one-row <code>.stat-grid</code> took 28pt off (89pt → 61pt), which at a single gap pulled Sell up to 822–870 and put the fold through the middle of its label. The gap is local to this screen on purpose: the other four button screens measure 852pt exactly, so a system-wide change would push all three of them over. The stack also shifts with the account count — re-measure before changing anything above it. Nothing is pinned.</span></div>
         <div class="spec-row"><span class="spec-k">Single account</span><span class="spec-v">When only one account holds the position the Accounts section still renders — one row, one chevron. Never inline the deeper scope as a special case; that would be two layouts for one screen.</span></div>
       </div>
     </div>
@@ -498,34 +496,36 @@
 
                   <!-- SCOPE 3 · LOTS — oldest first, so the long-held shares read top-down. -->
                   <div class="divider sec"><span class="dl">Open lots</span><span class="dh"></span><span class="dm">3</span></div>
+                  <!-- Same .row anatomy as the Accounts section on the parent
+                       page — the date takes the name slot, `sh · avg` the meta. -->
                   <div class="list">
-                    <div class="lot">
-                      <div class="lot-main">
-                        <div class="lot-date">Feb 12, 2021<span class="lot-age">5y 5m</span></div>
-                        <div class="lot-cost">$792.00 (60 × $13.20)</div>
+                    <div class="row">
+                      <div class="row-main">
+                        <div class="row-name lot-date">Feb 12, 2021<span class="lot-age">5y 5m</span></div>
+                        <div class="row-sub">60 sh · avg $13.20</div>
                       </div>
-                      <div class="lot-end">
-                        <div class="val" style="font-size:13.5px;">$11,345.40</div>
+                      <div class="row-end">
+                        <div class="val">$11,345.40</div>
                         <div class="pnl gain">+$10,553.40 · +1332%</div>
                       </div>
                     </div>
-                    <div class="lot">
-                      <div class="lot-main">
-                        <div class="lot-date">Nov 03, 2022<span class="lot-age">3y 8m</span></div>
-                        <div class="lot-cost">$1,562.00 (55 × $28.40)</div>
+                    <div class="row">
+                      <div class="row-main">
+                        <div class="row-name lot-date">Nov 03, 2022<span class="lot-age">3y 8m</span></div>
+                        <div class="row-sub">55 sh · avg $28.40</div>
                       </div>
-                      <div class="lot-end">
-                        <div class="val" style="font-size:13.5px;">$10,399.95</div>
+                      <div class="row-end">
+                        <div class="val">$10,399.95</div>
                         <div class="pnl gain">+$8,837.95 · +565.8%</div>
                       </div>
                     </div>
-                    <div class="lot">
-                      <div class="lot-main">
-                        <div class="lot-date">Aug 21, 2024<span class="lot-age">1y 11m</span></div>
-                        <div class="lot-cost">$2,092.50 (45 × $46.50)</div>
+                    <div class="row">
+                      <div class="row-main">
+                        <div class="row-name lot-date">Aug 21, 2024<span class="lot-age">1y 11m</span></div>
+                        <div class="row-sub">45 sh · avg $46.50</div>
                       </div>
-                      <div class="lot-end">
-                        <div class="val" style="font-size:13.5px;">$8,509.05</div>
+                      <div class="row-end">
+                        <div class="val">$8,509.05</div>
                         <div class="pnl gain">+$6,416.55 · +306.6%</div>
                       </div>
                     </div>
@@ -547,16 +547,16 @@
         <div class="spec-row"><span class="spec-k">Title</span><span class="spec-v">The <b>account</b> name, because the back button already says <code>NVDA</code> — together they read as the breadcrumb "NVDA → Fidelity Brokerage". The subtitle carries <code>NVDA · NVIDIA Corp</code> so the ticker is never more than a glance away.</span></div>
         <div class="spec-row"><span class="spec-k">No Market block</span><span class="spec-v">Live price and the chart link are properties of the security, so they live once on the parent page. This page carries no security-level content at all — it is about <em>your</em> shares, which is also why its hero meta line went.</span></div>
         <div class="spec-row"><span class="spec-k">Same block</span><span class="spec-v">Hero, then the same four <code>.stat-grid</code> cells in the same order, then the realized line. Only the scope of the numbers changed, which is the whole point of the push.</span></div>
-        <div class="spec-row"><span class="spec-k">Lot row</span><span class="spec-v">Date + age, then <code>$792.00 (60 × $13.20)</code> — the Holdings money idiom, so cost basis, share count and avg cost are one already-learned line. Right column is market value over total return.</span></div>
+        <div class="spec-row"><span class="spec-k">Lot row</span><span class="spec-v">It is <b>the Accounts row</b>, not a shape of its own — same <code>.row</code> anatomy, same measures, one section further down the same page. Date + age takes the <code>.row-name</code> slot (a lot is identified by <em>when</em> it was bought), and line 2 is the account row's own meta line: <code>60 sh · avg $13.20</code>. It replaced <code>$792.00 (60 × $13.20)</code> — the total-(count × unit) idiom belongs to a row whose right column is <em>not</em> already the total, and here it was: cost basis on the left and market value on the right made two totals per row and the reader had to work out which was which. Shares-and-avg-cost is now the one meta line for a slice of a position everywhere in the app. Right column is unchanged — market value over total return.</span></div>
         <div class="spec-row"><span class="spec-k">Lot order</span><span class="spec-v">Oldest first. Age is the reason lots exist on this screen, so it drives the sort.</span></div>
-        <div class="spec-row"><span class="spec-k">Underwater</span><span class="spec-v">A lot whose avg cost is above the current price renders <code>.lot-cost.under</code> in <code>--loss</code>. It is the only thing that separates one lot from another at a glance, so it is the only thing tinted.</span></div>
+        <div class="spec-row"><span class="spec-k">Underwater</span><span class="spec-v">A lot whose avg cost is above the current price renders <code>.row-sub.under</code> in <code>--loss</code>. It is the only thing that separates one lot from another at a glance, so it is the only thing tinted.</span></div>
         <div class="spec-row"><span class="spec-k">No lot P&amp;L for today</span><span class="spec-v">Today's return per lot is the position's return scaled by share count — the same percentage on every row. It distinguishes nothing between lots and is omitted.</span></div>
         <div class="spec-row"><span class="spec-k">Big returns</span><span class="spec-v">Percentages ≥ 1000% drop the decimal (<code>+1332%</code>) — the tenth of a percent is noise at that magnitude and the extra glyph breaks the column.</span></div>
         <div class="spec-row"><span class="spec-k">Actions</span><span class="spec-v">Scoped: they open Add Transaction with both the account <em>and</em> the symbol prefilled, which is the reason to be on this page rather than the parent.</span></div>
         <div class="spec-row"><span class="spec-k">Lots are read-only</span><span class="spec-v">No chevron (rule 09). A lot is not a transaction once it has been partly sold, so pushing to the originating buy would be a half-truth.</span></div>
-        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured: <b>852pt against an 852pt frame</b> — with the meta line gone, a three-lot position fits exactly, both actions included, with no scroll at all. Budget ~44pt per additional lot beyond that.</span></div>
+        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Re-measured after the lot row became a <code>.row</code>: a lot grew <b>56pt → 63pt</b> (the row's 13pt padding and 14px name line against the old 10pt and 12.5px), so the content runs to <b>859pt</b> including the 34pt home-indicator pad. A three-lot position still needs no scroll — Sell ends at <b>825pt</b> inside the 852pt frame, nothing legible bisected (rule 12). Budget <b>~63pt per additional lot</b>: the fourth pushes Sell to ~888 and the screen starts scrolling, which is correct — it is a list.</span></div>
         <div class="spec-row"><span class="spec-k">Cost basis</span><span class="spec-v">The app is <b>average cost (ACB)</b> throughout — no screen mixes methods. Under ACB a sale comes out of an undifferentiated pool, so a lot is <em>not</em> drawn down FIFO. The ACB-native model is a <b>pro-rata drawdown</b>: selling 40 of 160 shares shrinks every open lot by 25%. That is exact, not an approximation — removing the same fraction from every lot removes exactly that fraction of total basis, so the surviving lot costs still sum to the Cost basis stat above them. Each lot keeps its own purchase price and date; only its share count shrinks, which is why fractional share counts (<code>41.25</code>) are normal here and not a rounding artifact.</span></div>
-        <div class="spec-row"><span class="spec-k">Lot dates</span><span class="spec-v">Formatted <code>en-US</code> like every other date in the app, but with a <b>2-digit day</b> where the rest of the app uses numeric — these dates form a column, and rule 10 wants a column of figures to line up.</span></div>
+        <div class="spec-row"><span class="spec-k">Lot dates</span><span class="spec-v">Formatted <code>en-US</code> like every other date in the app, but with a <b>2-digit day</b> where the rest of the app uses numeric — these dates form a column, and rule 10 wants a column of figures to line up. It is also why <code>.lot-date</code> keeps the <b>mono</b> face while taking <code>.row-name</code>'s 14px/600: an account name is a proper noun and takes the display face, a date is a figure. Same size, same weight, same baseline as the rows above — only the face differs, and it differs for the reason rule 10 gives.</span></div>
       </div>
     </div>
 
@@ -817,6 +817,7 @@
         <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 3a — pushed, not a sheet, so the back button carries the parent's name and doubles as cancel. Reached from any <code>+</code>; the label changes to <code>Edit Transaction</code> when opened from a Transaction Detail.</span></div>
         <div class="spec-row"><span class="spec-k">Type</span><span class="spec-v">The segmented control is the <em>first</em> field because it decides the rest: Buy/Sell ask Symbol + Shares + Price / Share, Deposit/Withdraw replace those three with Amount. Account, Date and Currency are always asked.</span></div>
         <div class="spec-row"><span class="spec-k">Account</span><span class="spec-v">Picker over existing Investment Accounts, and typing a new name creates one — a transaction can never belong to a Cash Account. Pre-filled from context: the tab's account, or the first Investment Account created.</span></div>
+        <div class="spec-row"><span class="spec-k">Unanswered</span><span class="spec-v">Drawn here fully filled. A field with no value yet shows its <em>prompt</em> — <code>Select account</code>, <code>Select symbol</code> — at <code>--fg-3</code> via <code>.field-value.empty</code>, never the <code>--fg-1</code> a real value gets (see <b>Fields</b> in guidelines). Date and Currency always carry a default, so they are never in this state.</span></div>
         <div class="spec-row"><span class="spec-k">Total</span><span class="spec-v">Computed, never entered — a rule divider heading the figure, not a field, so it cannot read as editable. It restates the maths from the two inputs above it and is the only figure on the screen.</span></div>
         <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Save is <code>btn-disabled</code> until the type's required fields are filled. Currency defaults to the account's currency; date defaults to today. No delete here — that lives on Transaction Detail.</span></div>
       </div>

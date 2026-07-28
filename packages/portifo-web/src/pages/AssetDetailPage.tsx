@@ -136,28 +136,31 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
         {!agg.closed && (
           <>
             <ListDivider label="Market" meta={currency} />
-            <IonList inset className="fieldcard-list">
-              <IonItem>
-                <IonLabel>Price / Share</IonLabel>
-                <IonLabel slot="end">{fmtCcy(price, currency)}</IonLabel>
-              </IonItem>
-              <IonItem
-                button
-                detail={false}
+            {/* A stat grid, not a field card: these are settled figures the app
+                computed, and .field-card is the vocabulary for things the user
+                answers — Add Transaction has a "Price / Share" row in that exact
+                treatment that you type into. Matching the Position grid below
+                also makes the screen read as divider → grid, divider → grid. */}
+            <div className="stat-grid">
+              <div className="stat-cell">
+                <span className="stat-label">Price / Share</span>
+                <span className="stat-value">{fmtCcy(price, currency)}</span>
+              </div>
+              {/* Leaves the app, so an outward arrow — never a chevron. The whole
+                  cell is the anchor. */}
+              <a
+                className="stat-cell"
                 href={yahooQuoteUrl(symbol)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <IonLabel>Chart</IonLabel>
-                <IonLabel slot="end">
-                  {/* Leaves the app, so an outward arrow — never a chevron. */}
-                  <span className="field-link">
-                    Yahoo Finance
-                    <ExternalLinkIcon />
-                  </span>
-                </IonLabel>
-              </IonItem>
-            </IonList>
+                <span className="stat-label">Chart</span>
+                <span className="stat-link">
+                  Yahoo Finance
+                  <ExternalLinkIcon />
+                </span>
+              </a>
+            </div>
           </>
         )}
 

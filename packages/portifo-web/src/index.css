@@ -1183,10 +1183,11 @@ ion-list.list-inset.fieldcard-list ion-item {
 
 /* .field-label is the secondary half (13px body, --fg-2); the value is the
    figure — mono, primary ink, right-aligned.
-   Scoped to .fieldcard-list, NOT .form-list: a field card is not always a form.
-   The Market block on Holding Detail is a read-only one, and while these rules
-   were form-scoped it fell through to Ionic's 16px/400 default — a money figure
-   in the body face, which rule 10 calls a bug. */
+   Scoped to .fieldcard-list rather than .form-list, but that distinction is now
+   historical: a field card IS the form vocabulary — every row is something the
+   user answers — and Holding Detail's Market block, the one read-only card that
+   ever used it, is a .stat-grid now. Read-only figures go in a stat grid; if a
+   new .fieldcard-list ever appears without .form-list, that is the bug. */
 .fieldcard-list ion-item > ion-label:not([slot="end"]) {
   font-size: 13px;
   font-weight: 500;
@@ -1220,6 +1221,16 @@ ion-list.list-inset.fieldcard-list ion-item {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--fg-1);
+}
+
+/* DS .field-value.empty — an unanswered picker row holds a prompt, not a value,
+   so it drops to --fg-3 like the text inputs' placeholder below. Ionic's
+   `color="medium"` can't do this job: it lands at (0,1,0) as `.ion-color-medium`
+   and the rules above are (0,2,3), so the value colour wins and the prompt
+   renders at full strength (rule 04 again — specificity when scoping). */
+.fieldcard-list ion-item ion-label[slot="end"].field-empty,
+.fieldcard-list ion-item ion-label[slot="end"].field-empty h2 {
+  color: var(--fg-3);
 }
 
 .form-list ion-item.tap-target.pressed {
@@ -1405,10 +1416,16 @@ ion-list.list-inset.fieldcard-list ion-item {
   color: var(--fg-3);
 }
 
+/* The 20px line box is explicit, not incidental: .stat-link sets the same one
+   so a figure in one cell and an action in the next sit on a shared baseline
+   despite being set in different faces. Left to `normal` they differ by 3px —
+   the mono line box is 20px, the display face's is 17px — and the row visibly
+   steps down. */
 .stat-value {
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: 15px;
+  line-height: 20px;
   color: var(--fg-1);
   font-variant-numeric: tabular-nums;
 }
@@ -1419,6 +1436,34 @@ ion-list.list-inset.fieldcard-list ion-item {
 
 .stat-value.negative {
   color: var(--loss);
+}
+
+/* A cell whose value LEAVES THE APP. The whole cell is the anchor — a 59pt
+   target rather than the 44pt row this used to be as a .field — and the second
+   line swaps mono for the display face and --signal so it reads as an action,
+   not a figure (rule 10: mono is for what lines up in a column). Same 15px/600
+   as .stat-value, so both cells in the row share a baseline. Outward arrow,
+   never a chevron: rule 09 reserves the chevron for a push onto the stack. */
+a.stat-cell {
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stat-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--ion-font-family);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 20px; /* shared with .stat-value — see the note there */
+  color: var(--signal);
+}
+
+.stat-link svg {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
 }
 
 /* ---------- buttons (48px, radius 6, display face) ---------- */
@@ -2115,6 +2160,26 @@ ion-toast {
   line-height: 1.6;
 }
 
+/* PickerSheet's keyboard proxy — see the comment on it. Kept rendered and
+   focusable (display:none / visibility:hidden / [hidden] would all make
+   focus() a no-op, which is the one thing it exists to do) and shrunk to a
+   transparent pixel under the header instead. font-size must stay >= 16px:
+   iOS zooms the viewport when focus lands on smaller type, and the zoom is
+   visible even though the input is not. */
+.kb-hoist {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  font-size: 16px;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
 /* A closed position's hero figure is its realized P&L, so unlike a market
    value it carries a sign and a colour. Tints the whole .figure, cents and
    currency symbol included, so the number reads as one object. */
@@ -2196,56 +2261,25 @@ ion-toast {
   font-variant-numeric: tabular-nums;
 }
 
-/* A row whose value leaves the app. Not a chevron — chevron honesty (rule 09)
-   reserves that for a push onto the navigation stack, and this is not one. */
-.field-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--ion-font-family);
-  font-weight: 600;
-  font-size: 13.5px;
-  color: var(--signal);
-}
+/* .field-link is GONE — a link inside a .field-card put an action into the form
+   vocabulary. Leaving the app is .stat-link now, up with the stat grid. */
 
-.field-link svg {
-  width: 11px;
-  height: 11px;
-  flex-shrink: 0;
-}
+/* Lot row. It is NOT a shape of its own — a lot is one more ion-item in the
+   same inset list the Accounts section uses, at the same measures: the date in
+   the h2 slot, `60 sh · avg $13.20` in the p. Read-only, so no chevron.
+   Everything below is a modifier on that row; the row itself is the
+   `ion-list.list-inset ion-item` block far above. */
 
-/* Lot row. Line 2 reuses the holdings-row money idiom — total (count x unit) —
-   so cost basis, share count and unit cost are three numbers in one line the
-   user has already learned to read. Read-only, so no chevron. */
-.lot-list {
-  margin: 0 var(--gutter);
-}
-
-.lot {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.lot:last-child {
-  border-bottom: none;
-}
-
-.lot-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.lot-date {
+/* The date is a figure, not a name, so it keeps mono where an account name
+   takes the display face — but at .row-name's own 14px/600, so the two
+   sections read as one list. `h2.lot-date` (0,2,3) is deliberate: the scoped
+   `.ios ion-item ion-label h2` rule is (0,1,3) and a bare `.lot-date` would
+   silently lose its font-family to it. */
+.ios ion-item ion-label h2.lot-date {
   display: flex;
   align-items: baseline;
   gap: 7px;
   font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--fg-1);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2255,46 +2289,9 @@ ion-toast {
   color: var(--fg-3);
 }
 
-.lot-cost {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-3);
-  margin-top: 3px;
-  font-variant-numeric: tabular-nums;
-}
-
 /* A lot bought above the current price is underwater — the one thing that
    separates one lot from another at a glance, so it is the one thing tinted. */
-.lot-cost.under {
-  color: var(--loss);
-}
-
-.lot-end {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.lot-value {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 13.5px;
-  color: var(--fg-1);
-  font-variant-numeric: tabular-nums;
-}
-
-.lot-pnl {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  margin-top: 3px;
-  font-variant-numeric: tabular-nums;
-}
-
-.lot-pnl.positive {
-  color: var(--gain);
-}
-
-.lot-pnl.negative {
+.ios ion-item ion-label p.row-sub.under {
   color: var(--loss);
 }
 

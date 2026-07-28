@@ -157,7 +157,7 @@ function UpdateBalancePage({ match }: RouteComponentProps<{ accountId: string; c
               <IonLabel
                 slot="end"
                 key={selectedCurrency || "placeholder"}
-                color={selectedCurrency ? undefined : "medium"}
+                className={selectedCurrency ? undefined : "field-empty"}
               >
                 {selectedCurrency || "Select"}
               </IonLabel>

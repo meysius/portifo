@@ -3,6 +3,9 @@ import {
   IonButtons,
   IonContent,
   IonHeader,
+  IonItem,
+  IonLabel,
+  IonList,
   IonPage,
   IonTitle,
   IonToolbar,
@@ -154,7 +157,7 @@ function AccountHoldingPage({ match }: RouteComponentProps<{ symbol: string; acc
         {pos.lots.length > 0 && (
           <>
             <ListDivider label="Open Lots" meta={String(pos.lots.length)} />
-            <div className="lot-list">
+            <IonList inset>
               {pos.lots.map((lot, i) => {
                 const lotValue = price * lot.shares;
                 const lotPL = lotValue - lot.costBasis;
@@ -171,33 +174,32 @@ function AccountHoldingPage({ match }: RouteComponentProps<{ symbol: string; acc
                   timeZone: "UTC",
                 });
                 return (
-                  <div className="lot" key={`${lot.date}-${i}`}>
-                    <div className="lot-main">
-                      <div className="lot-date">
+                  <IonItem key={`${lot.date}-${i}`} detail={false}>
+                    <IonLabel>
+                      <h2 className="row-name lot-date">
                         {dateStr}
                         <span className="lot-age">{fmtAge(lot.ageYears)}</span>
-                      </div>
-                      {/* The Holdings money idiom — total (count x unit) — so cost
-                          basis, share count and unit cost are one learned line. A
-                          lot bought above the current price is underwater, the one
+                      </h2>
+                      {/* The account row's own meta line — shares and avg cost is
+                          the one learned line for a slice of a position. A lot
+                          bought above the current price is underwater, the one
                           thing that separates one lot from another at a glance. */}
-                      <div className={lot.pricePerShare > price ? "lot-cost under" : "lot-cost"}>
-                        {fmtCcy(lot.costBasis, currency)} ({fmtShares(lot.shares)} ×{" "}
-                        {fmtCcy(lot.pricePerShare, currency)})
-                      </div>
-                    </div>
-                    <div className="lot-end">
-                      <div className="lot-value">{fmtCcy(lotValue, currency)}</div>
-                      <div className={lotGain ? "lot-pnl positive" : "lot-pnl negative"}>
+                      <p className={lot.pricePerShare > price ? "row-sub under" : "row-sub"}>
+                        {fmtShares(lot.shares)} sh · avg {fmtCcy(lot.pricePerShare, currency)}
+                      </p>
+                    </IonLabel>
+                    <IonLabel slot="end">
+                      <h2>{fmtCcy(lotValue, currency)}</h2>
+                      <p className={lotGain ? "positive" : "negative"}>
                         {lotGain ? "+" : "−"}
                         {fmtCcy(Math.abs(lotPL), currency)} · {lotGain ? "+" : "−"}
                         {pct(lotPct)}%
-                      </div>
-                    </div>
-                  </div>
+                      </p>
+                    </IonLabel>
+                  </IonItem>
                 );
               })}
-            </div>
+            </IonList>
           </>
         )}
 
