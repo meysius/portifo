@@ -15,7 +15,7 @@ import {
   IonToolbar,
 } from "@ionic/react";
 import { refreshOutline } from "ionicons/icons";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefresherEventDetail } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 import PriceChart, { RangePicker } from "../PriceChart";
@@ -65,6 +65,8 @@ function HoldingsPage() {
     fxRates,
     fxAsOf,
     loading,
+    refreshAccounts,
+    refreshTransactions,
     refreshMarket,
     hasActivity,
   } = usePortfolioData();
@@ -89,31 +91,51 @@ function HoldingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbolsKey]);
 
+  // `silent` skips the chart's spinner: on pull-to-refresh the refresher's own
+  // spinner is already showing, and blanking the curve mid-pull reads as a
+  // glitch. The request-id guard makes the last request win either way.
+  const loadHistory = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      const id = ++chartRequestId.current;
+      if (!silent) setHistoryLoading(true);
+      try {
+        const points = await getPortfolioHistory(range, displayCurrency);
+        if (chartRequestId.current === id) setChartHistory(points);
+      } catch {
+        if (chartRequestId.current === id) setChartHistory([]);
+      } finally {
+        if (chartRequestId.current === id && !silent) setHistoryLoading(false);
+      }
+    },
+    [range, displayCurrency],
+  );
+
   useEffect(() => {
     if (!hasActivity && !loading.accounts) {
       setChartHistory([]);
       setHistoryLoading(false);
       return;
     }
-    const id = ++chartRequestId.current;
-    setHistoryLoading(true);
-    getPortfolioHistory(range, displayCurrency)
-      .then((points) => {
-        if (chartRequestId.current === id) setChartHistory(points);
-      })
-      .catch(() => {
-        if (chartRequestId.current === id) setChartHistory([]);
-      })
-      .finally(() => {
-        if (chartRequestId.current === id) setHistoryLoading(false);
-      });
+    loadHistory();
     // activePortfolio?.id: switching portfolios must refetch even when the
     // other deps (range, hasActivity) happen to be identical.
-  }, [range, displayCurrency, hasActivity, loading.accounts, activePortfolio?.id]);
+  }, [loadHistory, hasActivity, loading.accounts, activePortfolio?.id]);
 
+  // Pull-to-refresh refetches everything this screen shows, not just quotes:
+  // the ledger (another member may have added a transaction), the balances the
+  // Cash row and total are built from, live prices/fx, and the chart series.
+  // Silent so the rows and curve stay put under the refresher's spinner.
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
-    await refreshMarket(openSymbols);
-    e.detail.complete();
+    try {
+      await Promise.all([
+        refreshTransactions({ silent: true }),
+        refreshAccounts({ silent: true }),
+        refreshMarket(openSymbols),
+        loadHistory({ silent: true }),
+      ]);
+    } finally {
+      e.detail.complete();
+    }
   };
 
   const cashTotalDisplay = Object.entries(cashByCurrency).reduce(
