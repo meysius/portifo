@@ -207,9 +207,12 @@ export class PortfolioService {
         if (t.ticker) {
           const shares = Number(t.shares) * (t.type === "sell" ? -1 : 1);
           sharesHeld.set(t.ticker, (sharesHeld.get(t.ticker) ?? 0) + shares);
-        } else {
-          cashByCurrency.set(t.currency, (cashByCurrency.get(t.currency) ?? 0) + this.computeCashDelta(t));
         }
+        // Every transaction moves cash, buys and sells included — the same
+        // delta applyCashDelta writes to currency_balances live. Skipping it
+        // for ticker rows would leave a buy's deposit sitting in cash while
+        // the shares it bought are also valued, double-counting it.
+        cashByCurrency.set(t.currency, (cashByCurrency.get(t.currency) ?? 0) + this.computeCashDelta(t));
         txIndex++;
       }
 
