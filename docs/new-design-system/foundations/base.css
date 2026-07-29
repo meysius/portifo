@@ -405,16 +405,16 @@
      .row anatomy the Accounts section above it uses, at the same measures:
      .row-name over .row-sub on the left, .val over .pnl on the right. The two
      sections stack on one page, so a second row vocabulary 1.5px apart in every
-     size read as a mistake rather than a distinction. What identifies a lot is
-     its DATE, so the date takes the name slot; line 2 is the account row's own
-     meta line — `60 sh · avg $13.20` — so shares-and-avg-cost is one learned
-     line everywhere in the app. Read-only, so no chevron (rule 09). */
-  .lot-date{ display:flex; align-items:baseline; gap:7px; font-family:'JetBrains Mono',monospace;
-             font-variant-numeric:tabular-nums; }
-  .lot-age{ font-weight:400; font-size:10.5px; color:var(--fg-3); }
+     size read as a mistake rather than a distinction. What a lot IS is shares
+     at a price, so `60 sh · avg $13.20` takes the name slot — the same learned
+     line the app uses for a slice of a position everywhere else — and when it
+     was bought drops to the meta line, age first because age is what the
+     section is sorted on. Read-only, so no chevron (rule 09). */
+  .lot-figs{ font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; }
   /* A lot bought above the current price is underwater — the one thing that
-     separates one lot from another at a glance, so it is the one thing tinted. */
-  .row-sub.under{ color:var(--loss); }
+     separates one lot from another at a glance, so it is the one thing tinted,
+     and it is now the avg cost itself that carries the tint. */
+  .lot-figs.under{ color:var(--loss); }
 
   /* .field-link is GONE — a link inside a .field-card put an action into the
      form vocabulary. Leaving the app is now .stat-link, up with the stat grid. */

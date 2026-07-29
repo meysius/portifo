@@ -497,12 +497,12 @@
                   <!-- SCOPE 3 · LOTS — oldest first, so the long-held shares read top-down. -->
                   <div class="divider sec"><span class="dl">Open lots</span><span class="dh"></span><span class="dm">3</span></div>
                   <!-- Same .row anatomy as the Accounts section on the parent
-                       page — the date takes the name slot, `sh · avg` the meta. -->
+                       page — `sh · avg` takes the name slot, age · date the meta. -->
                   <div class="list">
                     <div class="row">
                       <div class="row-main">
-                        <div class="row-name lot-date">Feb 12, 2021<span class="lot-age">5y 5m</span></div>
-                        <div class="row-sub">60 sh · avg $13.20</div>
+                        <div class="row-name lot-figs">60 sh · avg $13.20</div>
+                        <div class="row-sub">5y 5m · Feb 12, 2021</div>
                       </div>
                       <div class="row-end">
                         <div class="val">$11,345.40</div>
@@ -511,8 +511,8 @@
                     </div>
                     <div class="row">
                       <div class="row-main">
-                        <div class="row-name lot-date">Nov 03, 2022<span class="lot-age">3y 8m</span></div>
-                        <div class="row-sub">55 sh · avg $28.40</div>
+                        <div class="row-name lot-figs">55 sh · avg $28.40</div>
+                        <div class="row-sub">3y 8m · Nov 03, 2022</div>
                       </div>
                       <div class="row-end">
                         <div class="val">$10,399.95</div>
@@ -521,8 +521,8 @@
                     </div>
                     <div class="row">
                       <div class="row-main">
-                        <div class="row-name lot-date">Aug 21, 2024<span class="lot-age">1y 11m</span></div>
-                        <div class="row-sub">45 sh · avg $46.50</div>
+                        <div class="row-name lot-figs">45 sh · avg $46.50</div>
+                        <div class="row-sub">1y 11m · Aug 21, 2024</div>
                       </div>
                       <div class="row-end">
                         <div class="val">$8,509.05</div>
@@ -547,16 +547,16 @@
         <div class="spec-row"><span class="spec-k">Title</span><span class="spec-v">The <b>account</b> name, because the back button already says <code>NVDA</code> — together they read as the breadcrumb "NVDA → Fidelity Brokerage". The subtitle carries <code>NVDA · NVIDIA Corp</code> so the ticker is never more than a glance away.</span></div>
         <div class="spec-row"><span class="spec-k">No Market block</span><span class="spec-v">Live price and the chart link are properties of the security, so they live once on the parent page. This page carries no security-level content at all — it is about <em>your</em> shares, which is also why its hero meta line went.</span></div>
         <div class="spec-row"><span class="spec-k">Same block</span><span class="spec-v">Hero, then the same four <code>.stat-grid</code> cells in the same order, then the realized line. Only the scope of the numbers changed, which is the whole point of the push.</span></div>
-        <div class="spec-row"><span class="spec-k">Lot row</span><span class="spec-v">It is <b>the Accounts row</b>, not a shape of its own — same <code>.row</code> anatomy, same measures, one section further down the same page. Date + age takes the <code>.row-name</code> slot (a lot is identified by <em>when</em> it was bought), and line 2 is the account row's own meta line: <code>60 sh · avg $13.20</code>. It replaced <code>$792.00 (60 × $13.20)</code> — the total-(count × unit) idiom belongs to a row whose right column is <em>not</em> already the total, and here it was: cost basis on the left and market value on the right made two totals per row and the reader had to work out which was which. Shares-and-avg-cost is now the one meta line for a slice of a position everywhere in the app. Right column is unchanged — market value over total return.</span></div>
+        <div class="spec-row"><span class="spec-k">Lot row</span><span class="spec-v">It is <b>the Accounts row</b>, not a shape of its own — same <code>.row</code> anatomy, same measures, one section further down the same page. <code>60 sh · avg $13.20</code> takes the <code>.row-name</code> slot: a lot <em>is</em> a quantity of shares at a price, and shares-and-avg-cost is the one learned line for a slice of a position everywhere in the app, so it reads at the same weight here as the account rows above. Line 2 is <code>5y 5m · Feb 12, 2021</code> — age first, because age is what this section is sorted on and what the reader came for; the date follows so the exact purchase is still on the page. The name line replaced <code>$792.00 (60 × $13.20)</code> — the total-(count × unit) idiom belongs to a row whose right column is <em>not</em> already the total, and here it was: cost basis on the left and market value on the right made two totals per row and the reader had to work out which was which. Right column is unchanged — market value over total return.</span></div>
         <div class="spec-row"><span class="spec-k">Lot order</span><span class="spec-v">Oldest first. Age is the reason lots exist on this screen, so it drives the sort.</span></div>
-        <div class="spec-row"><span class="spec-k">Underwater</span><span class="spec-v">A lot whose avg cost is above the current price renders <code>.row-sub.under</code> in <code>--loss</code>. It is the only thing that separates one lot from another at a glance, so it is the only thing tinted.</span></div>
+        <div class="spec-row"><span class="spec-k">Underwater</span><span class="spec-v">A lot whose avg cost is above the current price renders <code>.lot-figs.under</code> in <code>--loss</code>. It is the only thing that separates one lot from another at a glance, so it is the only thing tinted — and the tint now sits on the avg cost itself, which is the number the reader is comparing.</span></div>
         <div class="spec-row"><span class="spec-k">No lot P&amp;L for today</span><span class="spec-v">Today's return per lot is the position's return scaled by share count — the same percentage on every row. It distinguishes nothing between lots and is omitted.</span></div>
         <div class="spec-row"><span class="spec-k">Big returns</span><span class="spec-v">Percentages ≥ 1000% drop the decimal (<code>+1332%</code>) — the tenth of a percent is noise at that magnitude and the extra glyph breaks the column.</span></div>
         <div class="spec-row"><span class="spec-k">Actions</span><span class="spec-v">Scoped: they open Add Transaction with both the account <em>and</em> the symbol prefilled, which is the reason to be on this page rather than the parent.</span></div>
         <div class="spec-row"><span class="spec-k">Lots are read-only</span><span class="spec-v">No chevron (rule 09). A lot is not a transaction once it has been partly sold, so pushing to the originating buy would be a half-truth.</span></div>
         <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Re-measured after the lot row became a <code>.row</code>: a lot grew <b>56pt → 63pt</b> (the row's 13pt padding and 14px name line against the old 10pt and 12.5px), so the content runs to <b>859pt</b> including the 34pt home-indicator pad. A three-lot position still needs no scroll — Sell ends at <b>825pt</b> inside the 852pt frame, nothing legible bisected (rule 12). Budget <b>~63pt per additional lot</b>: the fourth pushes Sell to ~888 and the screen starts scrolling, which is correct — it is a list.</span></div>
         <div class="spec-row"><span class="spec-k">Cost basis</span><span class="spec-v">The app is <b>average cost (ACB)</b> throughout — no screen mixes methods. Under ACB a sale comes out of an undifferentiated pool, so a lot is <em>not</em> drawn down FIFO. The ACB-native model is a <b>pro-rata drawdown</b>: selling 40 of 160 shares shrinks every open lot by 25%. That is exact, not an approximation — removing the same fraction from every lot removes exactly that fraction of total basis, so the surviving lot costs still sum to the Cost basis stat above them. Each lot keeps its own purchase price and date; only its share count shrinks, which is why fractional share counts (<code>41.25</code>) are normal here and not a rounding artifact.</span></div>
-        <div class="spec-row"><span class="spec-k">Lot dates</span><span class="spec-v">Formatted <code>en-US</code> like every other date in the app, but with a <b>2-digit day</b> where the rest of the app uses numeric — these dates form a column, and rule 10 wants a column of figures to line up. It is also why <code>.lot-date</code> keeps the <b>mono</b> face while taking <code>.row-name</code>'s 14px/600: an account name is a proper noun and takes the display face, a date is a figure. Same size, same weight, same baseline as the rows above — only the face differs, and it differs for the reason rule 10 gives.</span></div>
+        <div class="spec-row"><span class="spec-k">Lot dates</span><span class="spec-v">Formatted <code>en-US</code> like every other date in the app, but with a <b>2-digit day</b> where the rest of the app uses numeric — these dates form a column, and rule 10 wants a column of figures to line up. They sit in <code>.row-sub</code>, which is already mono, so they need nothing of their own. The name line is the one that does: <code>.lot-figs</code> keeps the <b>mono</b> face while taking <code>.row-name</code>'s 14px/600, because an account name is a proper noun and takes the display face while <code>60 sh · avg $13.20</code> is a figure. Same size, same weight, same baseline as the rows above — only the face differs, and it differs for the reason rule 10 gives.</span></div>
       </div>
     </div>
 

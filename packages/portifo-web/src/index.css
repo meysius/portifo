@@ -2265,33 +2265,26 @@ ion-toast {
    vocabulary. Leaving the app is .stat-link now, up with the stat grid. */
 
 /* Lot row. It is NOT a shape of its own — a lot is one more ion-item in the
-   same inset list the Accounts section uses, at the same measures: the date in
-   the h2 slot, `60 sh · avg $13.20` in the p. Read-only, so no chevron.
-   Everything below is a modifier on that row; the row itself is the
-   `ion-list.list-inset ion-item` block far above. */
+   same inset list the Accounts section uses, at the same measures:
+   `60 sh · avg $13.20` in the h2 slot, `5y 5m · Feb 12, 2021` in the p.
+   Read-only, so no chevron. Everything below is a modifier on that row; the
+   row itself is the `ion-list.list-inset ion-item` block far above. */
 
-/* The date is a figure, not a name, so it keeps mono where an account name
-   takes the display face — but at .row-name's own 14px/600, so the two
-   sections read as one list. `h2.lot-date` (0,2,3) is deliberate: the scoped
-   `.ios ion-item ion-label h2` rule is (0,1,3) and a bare `.lot-date` would
-   silently lose its font-family to it. */
-.ios ion-item ion-label h2.lot-date {
-  display: flex;
-  align-items: baseline;
-  gap: 7px;
+/* Shares-and-avg-cost is a figure, not a name, so it keeps mono where an
+   account name takes the display face — but at .row-name's own 14px/600, so
+   the two sections read as one list. `h2.lot-figs` (0,2,3) is deliberate: the
+   scoped `.ios ion-item ion-label h2` rule is (0,1,3) and a bare `.lot-figs`
+   would silently lose its font-family to it. The age · date line needs nothing
+   of its own — .row-sub is already mono. */
+.ios ion-item ion-label h2.lot-figs {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
 
-.lot-age {
-  font-weight: 400;
-  font-size: 10.5px;
-  color: var(--fg-3);
-}
-
 /* A lot bought above the current price is underwater — the one thing that
-   separates one lot from another at a glance, so it is the one thing tinted. */
-.ios ion-item ion-label p.row-sub.under {
+   separates one lot from another at a glance, so it is the one thing tinted,
+   on the avg cost itself since that is the number being compared. */
+.ios ion-item ion-label h2.lot-figs.under {
   color: var(--loss);
 }
 

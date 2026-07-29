@@ -176,16 +176,23 @@ function AccountHoldingPage({ match }: RouteComponentProps<{ symbol: string; acc
                 return (
                   <IonItem key={`${lot.date}-${i}`} detail={false}>
                     <IonLabel>
-                      <h2 className="row-name lot-date">
-                        {dateStr}
-                        <span className="lot-age">{fmtAge(lot.ageYears)}</span>
-                      </h2>
-                      {/* The account row's own meta line — shares and avg cost is
-                          the one learned line for a slice of a position. A lot
-                          bought above the current price is underwater, the one
-                          thing that separates one lot from another at a glance. */}
-                      <p className={lot.pricePerShare > price ? "row-sub under" : "row-sub"}>
+                      {/* Shares and avg cost is the one learned line for a slice
+                          of a position, so it takes the name slot. A lot bought
+                          above the current price is underwater, the one thing
+                          that separates one lot from another at a glance. */}
+                      <h2
+                        className={
+                          lot.pricePerShare > price
+                            ? "row-name lot-figs under"
+                            : "row-name lot-figs"
+                        }
+                      >
                         {fmtShares(lot.shares)} sh · avg {fmtCcy(lot.pricePerShare, currency)}
+                      </h2>
+                      {/* Age first — it is what this section is sorted on — then
+                          the date, so the exact purchase is still on the page. */}
+                      <p className="row-sub">
+                        {fmtAge(lot.ageYears)} · {dateStr}
                       </p>
                     </IonLabel>
                     <IonLabel slot="end">
