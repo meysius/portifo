@@ -182,12 +182,12 @@ function AccountHoldingPage({ match }: RouteComponentProps<{ symbol: string; acc
                           between the two numbers. Never tinted: a name takes
                           --fg-1 whatever the numbers beside it are doing, and
                           underwater is already said by the return on the right. */}
-                      {/* `/share` rather than the fuller `per share`: the left
-                          column is 205pt wide on a 390pt screen, and at 14px
-                          mono `209.01 @ $221.27 per share` is 218pt — it wrapped
-                          and pulled the meta line out of line with the return. */}
+                      {/* The same count × price idiom AddTransactionPage shows
+                          under its amount field, so the app states shares-times-
+                          price one way. Named, never resolved — the product
+                          itself is the right column two slots over. */}
                       <h2 className="row-name lot-figs">
-                        {fmtShares(lot.shares)} @ {fmtCcy(lot.pricePerShare, currency)}/share
+                        {fmtShares(lot.shares)} × {fmtCcy(lot.pricePerShare, currency)}
                       </h2>
                       {/* Age first — it is what this section is sorted on — then
                           the date, so the exact purchase is still on the page. */}

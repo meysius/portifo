@@ -2266,7 +2266,7 @@ ion-toast {
 
 /* Lot row. It is NOT a shape of its own — a lot is one more ion-item in the
    same inset list the Accounts section uses, at the same measures:
-   `60 @ $13.20/share` in the h2 slot, `5y 5m · Feb 12, 2021` in the p.
+   `60 × $13.20` in the h2 slot, `5y 5m · Feb 12, 2021` in the p.
    Read-only, so no chevron. The row itself is the `ion-list.list-inset
    ion-item` block far above.
 
