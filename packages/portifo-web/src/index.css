@@ -2266,26 +2266,24 @@ ion-toast {
 
 /* Lot row. It is NOT a shape of its own — a lot is one more ion-item in the
    same inset list the Accounts section uses, at the same measures:
-   `60 sh · avg $13.20` in the h2 slot, `5y 5m · Feb 12, 2021` in the p.
-   Read-only, so no chevron. Everything below is a modifier on that row; the
-   row itself is the `ion-list.list-inset ion-item` block far above. */
+   `60 @ $13.20/share` in the h2 slot, `5y 5m · Feb 12, 2021` in the p.
+   Read-only, so no chevron. The row itself is the `ion-list.list-inset
+   ion-item` block far above.
 
-/* Shares-and-avg-cost is a figure, not a name, so it keeps mono where an
-   account name takes the display face — but at .row-name's own 14px/600, so
-   the two sections read as one list. `h2.lot-figs` (0,2,3) is deliberate: the
-   scoped `.ios ion-item ion-label h2` rule is (0,1,3) and a bare `.lot-figs`
-   would silently lose its font-family to it. The age · date line needs nothing
-   of its own — .row-sub is already mono. */
+   Count-at-price is a figure, not a name, so it keeps mono where an account
+   name takes the display face — but at .row-name's own 14px/600, so the two
+   sections read as one list. `h2.lot-figs` (0,2,3) is deliberate: the scoped
+   `.ios ion-item ion-label h2` rule is (0,1,3) and a bare `.lot-figs` would
+   silently lose its font-family to it. The age · date line needs nothing of
+   its own — .row-sub is already mono.
+
+   No underwater modifier: the name line always takes --fg-1, whatever the
+   row's numbers are doing. A lot bought above the current price already shows
+   a --loss return in the right column, which is where the app says gain and
+   loss; tinting the name too said it twice. */
 .ios ion-item ion-label h2.lot-figs {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
-}
-
-/* A lot bought above the current price is underwater — the one thing that
-   separates one lot from another at a glance, so it is the one thing tinted,
-   on the avg cost itself since that is the number being compared. */
-.ios ion-item ion-label h2.lot-figs.under {
-  color: var(--loss);
 }
 
 @media (prefers-reduced-motion: reduce) {

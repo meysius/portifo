@@ -406,15 +406,14 @@
      .row-name over .row-sub on the left, .val over .pnl on the right. The two
      sections stack on one page, so a second row vocabulary 1.5px apart in every
      size read as a mistake rather than a distinction. What a lot IS is shares
-     at a price, so `60 sh · avg $13.20` takes the name slot — the same learned
-     line the app uses for a slice of a position everywhere else — and when it
+     at a price, so `60 @ $13.20/share` takes the name slot, and when it
      was bought drops to the meta line, age first because age is what the
-     section is sorted on. Read-only, so no chevron (rule 09). */
+     section is sorted on. Read-only, so no chevron (rule 09).
+
+     The name line is never tinted — it is a name, and a name takes --fg-1
+     whatever the row's numbers are doing. Underwater is already said by the
+     right column, in the one place the app says gain and loss. */
   .lot-figs{ font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; }
-  /* A lot bought above the current price is underwater — the one thing that
-     separates one lot from another at a glance, so it is the one thing tinted,
-     and it is now the avg cost itself that carries the tint. */
-  .lot-figs.under{ color:var(--loss); }
 
   /* .field-link is GONE — a link inside a .field-card put an action into the
      form vocabulary. Leaving the app is now .stat-link, up with the stat grid. */

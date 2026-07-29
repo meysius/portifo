@@ -176,18 +176,18 @@ function AccountHoldingPage({ match }: RouteComponentProps<{ symbol: string; acc
                 return (
                   <IonItem key={`${lot.date}-${i}`} detail={false}>
                     <IonLabel>
-                      {/* Shares and avg cost is the one learned line for a slice
-                          of a position, so it takes the name slot. A lot bought
-                          above the current price is underwater, the one thing
-                          that separates one lot from another at a glance. */}
-                      <h2
-                        className={
-                          lot.pricePerShare > price
-                            ? "row-name lot-figs under"
-                            : "row-name lot-figs"
-                        }
-                      >
-                        {fmtShares(lot.shares)} sh · avg {fmtCcy(lot.pricePerShare, currency)}
+                      {/* A lot IS a quantity of shares at a price, so that
+                          sentence is its name and takes the name slot — spelled
+                          out, so the reader is not left to supply the relation
+                          between the two numbers. Never tinted: a name takes
+                          --fg-1 whatever the numbers beside it are doing, and
+                          underwater is already said by the return on the right. */}
+                      {/* `/share` rather than the fuller `per share`: the left
+                          column is 205pt wide on a 390pt screen, and at 14px
+                          mono `209.01 @ $221.27 per share` is 218pt — it wrapped
+                          and pulled the meta line out of line with the return. */}
+                      <h2 className="row-name lot-figs">
+                        {fmtShares(lot.shares)} @ {fmtCcy(lot.pricePerShare, currency)}/share
                       </h2>
                       {/* Age first — it is what this section is sorted on — then
                           the date, so the exact purchase is still on the page. */}
