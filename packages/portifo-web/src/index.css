@@ -1089,104 +1089,37 @@ ion-item ion-label[slot="end"] h2 {
   font-weight: 500;
 }
 
-/* ---------- weighted holding row (DS .row-w / .list-w) ----------
-   Replaces the allocation bar, its legend and the whole category palette. Each
-   row states its own share of the portfolio, so there is no key to carry
-   across a section boundary and nothing to collide at the 5th holding.
+/* ---------- holding row (DS .list-hold) ----------
+   A holding's share of the portfolio is a .w-tag chip beside its ticker, and
+   nothing else. This row used to carry two encodings of that one number: a
+   30pt leading cell holding the figure, and a 6pt --signal bar as long as the
+   share riding the row's hairline. Both are gone. The bar restated the figure
+   next to it — the list is sorted, so rank is already carried by position —
+   and the pair charged 50pt of every row's leading edge to say it.
 
-   30pt cell + a 20pt gutter puts the ticker at 72pt from the screen edge —
-   the cell is sized by the widest figure it must hold ("100%" is 29pt at 13px
-   mono) and the surplus goes to the gutter, not to dead space against the
-   screen edge. The glyph it replaces was 30 + 12, i.e. the ticker moves 8pt
-   right. */
+   Three workarounds went with the bar, which is the tell that it was fighting
+   the platform: the host's border-radius had to be zeroed and re-applied to
+   ::part(native) so the bar's caps survived ion-item's `overflow: hidden`;
+   the host needed `position: relative` to anchor it; and the bar had to sit
+   ON the hairline rather than straddling it, because it could not leave the
+   host's box. Deleting it hands the row back to `ion-list.list-inset
+   ion-item`'s own 8px radius.
 
-ion-item div.row-w[slot="start"] {
-  flex: 0 0 30px;
-  width: 30px;
-  margin: 8px 20px 8px 0;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--fg-2);
-}
-
-/* the unit, stated quietly — a bare "47" in a row of money reads as dollars */
-ion-item div.row-w .u {
-  font-size: 0.72em;
-  font-weight: 500;
-  color: var(--fg-3);
-  margin-left: 1px;
-}
+   Names clip rather than wrap here, but that needs no rule: the global
+   `.ios ion-item ion-label p` already ellipsises every row subtitle. */
 
 /* A name clips at the gutter, never at the figure beside it. The end label
    grows with its Total line, and on a row whose name fills the column the two
    met at 0px — "Invesco QQQ Trust, …Total: +$2,937.99" with no space at all.
    The name column is the one that must give, so the gutter is a margin on the
-   figure and the label is free to shrink into it. 12px matches the DS .row's
-   own gap between row-main and row-end. */
-ion-item.row-weighted ion-label[slot="end"] {
+   end label and the name label is free to shrink into it. 12px matches the DS
+   .row's own gap between row-main and row-end. */
+ion-item.row-hold ion-label[slot="end"] {
   margin-inline-start: 12px;
 }
 
-ion-item.row-weighted ion-label.label-sym {
+ion-item.row-hold ion-label.label-sym {
   min-width: 0;
-}
-
-/* The bar rides OVER the row's hairline rather than replacing it: the item
-   keeps its --border-width, and this is a second, shorter mark on top. Drawn
-   *inside* the hairline first (a gradient from --fg-2 to --border) it read as
-   a broken separator, not as data. Not a --border double-paint — the hairline
-   is --border and the bar is --signal.
-
-   6px in --signal, not 2px in --fg-3: at the old size and colour the bar was
-   the same weight and the same grey as the hairline under it, the chevrons and
-   the movers' zero tick, so the one quantity on the row that isn't a figure was
-   drawn in the chrome colour. Cobalt and never --gain/--loss — the movers block
-   above already colours bars by direction (see .mv-plot), and those two
-   separate at only ΔE 6.5 under deuteranopia.
-
-   One strength for every bar, never a ramp keyed to the share: length already
-   carries the magnitude, so dimming the small bars states it twice and taxes
-   the rows that are hardest to see. --w defaults to 0, so a closed position
-   draws no bar at all.
-
-   Anchored to the host, whose box matches .item-native's full-bleed bottom
-   border, and sitting on that border rather than straddling it like the DS's
-   `bottom:-3px`, because ion-item is `overflow: hidden` in Ionic's own :host
-   and the bar cannot leave that box: at -2px the bottom third was simply cut
-   off. The 8px radius the inset row carries then cut it a second way — the
-   left cap sits inside the bottom-left corner's curve, so a semicircle came
-   out a lens, sharp against the row's edge. The radius exists only to round
-   --background-activated, which paints on .item-native, and that part clips
-   itself — so the radius moves onto the part, the host's clip goes back to a
-   plain rectangle, and both caps survive it.
-
-   Not `overflow: visible` on the host, which fixes the caps and costs the row
-   its layout: the clip is also what makes .item-native's flex line resolve at
-   350px, and without it a long name pushes the end label and the chevron past
-   the row's right edge, where ion-list's `contain: content` deletes them. */
-ion-list.list-inset ion-item.row-weighted {
-  position: relative;
-  border-radius: 0;
-}
-
-ion-item.row-weighted::part(native) {
-  border-radius: 8px;
-}
-
-ion-item.row-weighted::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  z-index: 1;
-  height: 6px;
-  width: var(--w, 0);
-  border-radius: 3px;
-  background: var(--signal);
-  pointer-events: none;
 }
 
 /* ---------- row glyphs (DS .glyph — 34px circles) ---------- */
@@ -1279,7 +1212,15 @@ ion-item.row-closed {
 /* DS .closed-tag — a small status/type badge riding a ticker, a member row, or
    the Settings profile block: mono, uppercase, hairline-bordered, tertiary ink.
    (Restored: a cleanup pass removed this while four screens still used it.) */
-.type-tag {
+/* One chip vocabulary for the ticker slot: a bordered mono caption stating one
+   quiet fact about the row. .type-tag says what the row is ("Closed"), .w-tag
+   says how much of the portfolio it is ("47%"). Same form on purpose — on the
+   Portfolio list the two appear 6px apart in the same slot, and two chip
+   treatments there would read as two different kinds of thing. Both stay
+   --fg-3: the row's figures are the money on the right, and a filled or
+   primary-ink chip would out-weigh the value it sits beside. */
+.type-tag,
+.w-tag {
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 600;
@@ -1290,6 +1231,12 @@ ion-item.row-closed {
   border-radius: 3px;
   padding: 1px 5px;
   flex-shrink: 0;
+}
+
+.w-tag {
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Trailing role pill (DS .closed-tag) ahead of a member row's chevron. */

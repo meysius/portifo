@@ -144,33 +144,30 @@
         <div class="sw-use">Negative money, and destructive actions only. <b>Selling is not destructive.</b></div></div>
     </div>
 
-    <h3 class="g-sub">Weight, not category colour</h3>
+    <h3 class="g-sub">Weight has no colour at all</h3>
     <p class="g-lead">There is no categorical palette. <code>--cat-1..4</code> and <code>--cat-cash</code>
       keyed a holding to its slice of the allocation bar, and both the bar and its legend are gone. The key
       was assigned by <b>rank</b>, so it changed meaning whenever prices moved; it recycled at the fifth
       holding, so a six-position portfolio painted two rows the same hue; and <code>--cat-1</code> aliased
-      <code>--signal</code>, spending the one accent on the largest slice. <b>A holding's share of the
-      portfolio is a figure in its own row</b> — <code>.row-w</code>, with a 6pt <code>--signal</code> bar
-      on the row's separator as long as that share. That bar is the one thing on the Portfolio screen
-      coloured for a reason other than money.</p>
-    <p class="g-lead"><b>One hue, one strength, length does the rest.</b> The bar was 2pt in
-      <code>--fg-3</code>, which made it the same weight and the same grey as the hairline beneath it, the
-      chevrons and the movers' zero tick — the one quantity on the row that isn't a figure, drawn in the
-      chrome colour, so the list read as seven identical dashes. 6pt in <code>--signal</code> makes it a
-      chart. <b>Every bar is the same cobalt</b>, whatever the share: length already carries the magnitude,
-      so dimming the small bars states it twice and taxes exactly the rows that are hardest to see. A fixed
-      colour also keeps the bar one recognisable object, so the eye compares lengths against each other
-      rather than weighing length against colour.</p>
+      <code>--signal</code>, spending the one accent on the largest slice.</p>
+    <p class="g-lead">What replaced it — a 30pt <code>.row-w</code> figure leading the row plus a 6pt
+      <code>--signal</code> bar on the separator as long as that share — is <b>also gone</b>, and for a
+      plainer reason: it said the same number twice. The bar carried no fact the figure hadn't already
+      given, the list is sorted so rank is carried by position, and the second encoding charged 50pt of
+      every row's leading edge and turned the separator into both an edge and a data mark.
+      <b>A holding's share of the portfolio is a chip beside its ticker</b> — <code>.w-tag</code>,
+      <code>--fg-3</code>, no fill, no length, no hue. <b>The Portfolio screen now has exactly one chart</b>
+      (Today's movers) and one accent (the header action and the tab marker), which is what makes
+      <code>--gain</code>/<code>--loss</code> unambiguously the return system.</p>
     <div class="g-do">
-      <div class="g-yes"><div class="lbl">Do</div><p>Encode a magnitude as a figure and a length. A
-        percentage in <code>.row-w</code> needs no key, survives forty holdings, and cannot collide with
-        itself.</p></div>
-      <div class="g-no"><div class="lbl">Don't</div><p>Reintroduce a hue ramp for weight. A sequential
-        ramp was drawn, validated and dropped — the screen does not want a second colour system when a
-        number and a bar length already carry the fact. And never colour a weight bar
-        <code>--gain</code>/<code>--loss</code>: the movers block above already colours by direction, and
-        those two separate at only ΔE 6.5 under deuteranopia — a second bar system in the same pair, with
-        no baseline to carry sign, is unreadable twice over.</p></div>
+      <div class="g-yes"><div class="lbl">Do</div><p>State a magnitude once. A percentage in
+        <code>.w-tag</code> needs no key, survives forty holdings, cannot collide with itself, and leaves
+        the row's leading edge to the ticker — where every other list in the app starts.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Draw the share again. A 2pt grey bar, a 6pt cobalt
+        bar, a cumulative rail, a hue ramp and a tinted row plate have each been built and each dropped —
+        the row already says 47%. And never colour a weight mark
+        <code>--gain</code>/<code>--loss</code>: the movers block already colours by direction, and those
+        two separate at only ΔE 6.5 under deuteranopia.</p></div>
     </div>
 
     <h3 class="g-sub">Elevation</h3>
@@ -224,6 +221,7 @@
           <tr><td class="dim">Row symbol</td><td class="dim">14px / 600</td><td>Mono</td><td>Ticker</td></tr>
           <tr><td class="dim">Row subtitle</td><td class="dim">12px / 400</td><td>Body</td><td>Company name, account type</td></tr>
           <tr><td class="dim">Section label</td><td class="dim">11px / 600</td><td>Mono</td><td><code>.dl</code> — uppercase, <code>0.14em</code> tracking</td></tr>
+          <tr><td class="dim">Row chip</td><td class="dim">9–9.5px / 600</td><td>Mono</td><td><code>.closed-tag</code>, <code>.w-tag</code> — bordered captions in the <code>.sym</code> slot</td></tr>
           <tr><td class="dim">Meta / cost basis</td><td class="dim">11px / 400</td><td>Mono</td><td><code>.meta</code>, <code>.pnl</code></td></tr>
         </tbody>
       </table>
@@ -259,28 +257,29 @@
       <div class="g-no"><div class="lbl">Don't</div><p>A bold sans heading. That style was removed from <code>base.css</code> on purpose — reintroducing it splits the system in two.</p></div>
     </div>
 
-    <h3 class="g-sub">Weighted holding row</h3>
-    <p class="g-lead">The Portfolio list only. A 30pt <code>.row-w</code> cell leads the row with the
-      holding's share of the portfolio, followed by a 20pt gutter that puts the ticker at 72pt. The row's
-      separator carries a 6pt <code>--signal</code> bar as long as that share, so the sorted list reads as a
-      bar chart with every bar on the same line as its own label. Every bar is the same cobalt at full
-      strength — only the length varies. <code>.name</code> clips rather than wraps, which is what keeps
-      every row the same height.</p>
+    <h3 class="g-sub">Holding row</h3>
+    <p class="g-lead">The Portfolio list only. The ticker starts at the gutter like every other list in the
+      app, and the holding's share rides beside it as a <code>.w-tag</code> — the same bordered mono chip
+      as <code>.closed-tag</code>, in the same slot inside <code>.sym</code>. <b>One chip vocabulary:</b>
+      a quiet caption stating one fact about the row, at a weight that cannot compete with the money on the
+      right. A closed position has no share, so it carries no tag. <code>.name</code> clips rather than
+      wraps, which is what keeps every row the same height — and that rule is scoped to
+      <code>.list-hold</code>, the list, not to any weight mark.</p>
     <div class="card" style="max-width:420px;">
       <div class="divider" style="margin-bottom:9px;"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
-      <div class="list list-w">
-        <div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-        <div class="row" style="--w:3.2%; padding:9px 2px;"><div class="row-w">3<span class="u">%</span></div><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="list list-hold">
+        <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">NVDA <span class="w-tag">47%</span></div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">QQQ <span class="w-tag">10%</span></div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">IBIT <span class="w-tag">3%</span></div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
       </div>
     </div>
     <div class="g-do">
-      <div class="g-yes"><div class="lbl">Do</div><p>Size the cell by the widest figure it must hold
-        (<code>100%</code> is 29pt at 13px mono) and give the surplus to the gutter. Round weights to
-        integers that sum to 100; anything under 0.5% shows <code>&lt;1%</code>.</p></div>
-      <div class="g-no"><div class="lbl">Don't</div><p>Draw the bar <i>inside</i> the hairline as a
-        gradient. The unfilled remainder is <code>--border</code> at 1px, which reads as a broken
-        separator rather than as data — and a 3% row appears to have no separator at all.</p></div>
+      <div class="g-yes"><div class="lbl">Do</div><p>Round weights to integers that sum to 100; anything
+        under 0.5% shows <code>&lt;1%</code>. Keep the tag <code>--fg-3</code> — it is a caption on the
+        ticker, not one of the row's figures.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Give the tag a fill, a tint or a second chip style.
+        It sits 6pt from <code>.closed-tag</code> on the same line; two chip treatments there read as two
+        different kinds of thing, and a filled one out-weighs the value it sits beside.</p></div>
     </div>
 
     <h3 class="g-sub">Today&rsquo;s movers</h3>
@@ -376,7 +375,7 @@
             <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
             <div style="padding:0 20px;">
               <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
-              <div class="list list-w"><div class="row" style="--w:15.8%; padding:9px 2px;"><div class="row-w">16<span class="u">%</span></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+              <div class="list list-hold"><div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">Cash <span class="w-tag">16%</span></div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">NVDA <span class="w-tag">47%</span></div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">QQQ <span class="w-tag">10%</span></div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
             </div>
           </div>
           <div class="ph-material solid"><div class="ph-inner"><div class="status-bar"><span>9:41</span><div class="status-icons"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg><svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg><svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg></div></div><div class="ph-bar"><span class="ph-bar-title">My Portfolio<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div></div></div>

@@ -60,8 +60,8 @@ function integerWeights(values: number[], total: number): number[] {
 // A holding under 0.5% rounds to 0, and "0%" next to a real balance reads as a
 // bug rather than as a small position.
 function fmtWeight(pct: number, exact: number) {
-  if (pct <= 0 && exact > 0) return "<1";
-  return String(pct);
+  if (pct <= 0 && exact > 0) return "<1%";
+  return `${pct}%`;
 }
 
 function HoldingsPage() {
@@ -428,22 +428,23 @@ function HoldingsPage() {
             />
             <IonList inset>
               <IonItem
-                className="row-weighted"
-                style={{ "--w": `${weightOf.get("cash")?.pct ?? 0}%` } as React.CSSProperties}
+                className="row-hold"
                 button
                 detail={false}
                 onClick={() => history.push(`${tabBase}/cash`)}
               >
-                {/* The weight replaces the glyph in the leading slot. The glyph
-                    held a colour dot keying the row to a slice of a bar that no
-                    longer exists; the slot now holds the number that dot was
-                    trying to encode. */}
-                <div slot="start" className="row-w">
-                  {fmtWeight(weightOf.get("cash")?.pct ?? 0, weightOf.get("cash")?.exact ?? 0)}
-                  <span className="u">%</span>
-                </div>
+                {/* The share is a chip on the ticker line and nothing else — no
+                    leading cell, no bar. Both said the same number, and the
+                    leading slot they occupied is why this list started 50pt in
+                    from the gutter while every other list in the app starts at
+                    it. */}
                 <IonLabel className="label-sym">
-                  <h2>Cash</h2>
+                  <h2>
+                    Cash{" "}
+                    <span className="w-tag">
+                      {fmtWeight(weightOf.get("cash")?.pct ?? 0, weightOf.get("cash")?.exact ?? 0)}
+                    </span>
+                  </h2>
                   <p>
                     {cashCodes.length === 0
                       ? "No balances yet"
@@ -464,18 +465,15 @@ function HoldingsPage() {
                 return (
                   <IonItem
                     key={h.symbol}
-                    className="row-weighted"
-                    style={{ "--w": `${w?.pct ?? 0}%` } as React.CSSProperties}
+                    className="row-hold"
                     button
                     detail={false}
                     onClick={() => history.push(`${tabBase}/asset/${h.symbol}`)}
                   >
-                    <div slot="start" className="row-w">
-                      {fmtWeight(w?.pct ?? 0, w?.exact ?? 0)}
-                      <span className="u">%</span>
-                    </div>
                     <IonLabel className="label-sym">
-                      <h2>{h.symbol}</h2>
+                      <h2>
+                        {h.symbol} <span className="w-tag">{fmtWeight(w?.pct ?? 0, w?.exact ?? 0)}</span>
+                      </h2>
                       <p>{h.name ?? `${fmtShares(h.shares)} sh`}</p>
                     </IonLabel>
                     <IonLabel slot="end">
@@ -518,10 +516,10 @@ function HoldingsPage() {
                         detail={false}
                         onClick={() => history.push(`${tabBase}/asset/${c.symbol}`)}
                       >
-                        {/* An empty weight cell, so a closed row's ticker lines
-                            up with the open ones above it. It gets no figure
-                            and no bar: a closed position has no weight. */}
-                        <div slot="start" className="row-w" aria-hidden="true" />
+                        {/* No .w-tag: a closed position has no share. Its
+                            "Closed" chip takes the same slot on the ticker line
+                            in the same form, and the ticker needs no spacer to
+                            line up with the open rows — nothing leads them. */}
                         <IonLabel className="label-sym">
                           <h2>
                             {c.symbol} <span className="type-tag">Closed</span>

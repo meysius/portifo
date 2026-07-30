@@ -103,49 +103,39 @@
   .sym{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px; color:var(--fg-1); display:flex; align-items:center; gap:6px; }
   .name{ font-size:12px; color:var(--fg-2); margin-top:2px; }
 
-  /* ── Weighted list — the Portfolio screen's holdings ──────────────────────
-     Replaces the allocation bar, its legend and the whole category palette.
-     Each row states its own share of the portfolio, so there is no key to
-     carry across a section boundary and nothing to collide at the 5th holding.
-     .row-w  30pt cell + 20pt gutter (12pt .row gap + 8pt margin), putting the
-             ticker at 72pt. Width is set by the widest figure it must hold —
-             "100%" at 13px mono is 29pt — and the surplus goes to the gutter,
-             not to dead space against the screen edge.
-     ::after 6pt bar as long as the row's weight, riding OVER the row's own
-             hairline rather than replacing it. Drawn inside the hairline first
-             (a gradient from --fg-2 to --border) it read as a broken
-             separator. Not a rule-01 double-paint: hairline is --border, bar
-             is --signal.
+  /* ── Holdings list — the Portfolio screen's own ───────────────────────────
+     A holding's share of the portfolio is a TAG, and only a tag. This row used
+     to carry two encodings of that one number: a 30pt .row-w figure leading it
+     and a 6pt --signal bar as long as the share riding its separator. The bar
+     is gone. Length restated exactly what the figure already said, in the same
+     place in the row, and it charged the row's leading edge to say it — while
+     overloading the separator into both the edge between two rows and a data
+     mark. Sort order already ranks the list; the figure already gives the
+     magnitude.
 
-             At 2pt in --fg-3 the bar was the same weight and the same grey as
-             the hairline it sat on, the chevrons and the movers' zero tick, so
-             the one QUANTITY on the row that isn't a figure was drawn in the
-             chrome colour and the list read as seven identical dashes. 6pt in
-             --signal makes it a chart. Cobalt and not --gain/--loss: the block
-             directly above already colours bars by direction, and those two
-             separate at only ΔE 6.5 under deuteranopia — a second bar system
-             in the same two hues, with no baseline to carry sign, would be
-             unreadable twice over. Share and return now own different hues.
+     Deleting it pays twice. The ticker returns to the gutter at 22pt, aligned
+     with every other list in the app instead of indented 50pt behind a cell no
+     other list has. And that 50pt goes to .name: measured at 393pt on a
+     six-position portfolio, five of seven security names ellipsised with the
+     cell in place and none do without it — "Invesco QQQ Trust, Series 1" now
+     fits whole.
 
-             ONE strength for every bar, never a ramp keyed to the share. An
-             intensity ramp was drawn and dropped: length already carries the
-             magnitude, so dimming the small bars states it twice and taxes the
-             rows that are hardest to see for a fact their length has already
-             given. Flat cobalt also keeps the bar a fixed, recognisable object
-             — the eye compares lengths against each other instead of weighing
-             length against colour.
-     .name   clips instead of wrapping here — row height was a function of how
-             verbose a security's name is, which cost a row off the fold. */
-  .list-w .row{ position:relative; }
-  /* --w defaults to 0 so a row with no weight — a closed position — draws no
-     bar rather than relying on an invalid width collapsing to nothing */
-  .list-w .row::after{ content:''; position:absolute; left:0; bottom:-3px; height:6px;
-        width:var(--w, 0); border-radius:3px; background:var(--signal); }
-  .list-w .name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .row-w{ flex:0 0 30px; margin-right:8px; text-align:right; font-family:'JetBrains Mono',monospace;
-          font-variant-numeric:tabular-nums; font-size:13px; font-weight:600; color:var(--fg-2); }
-  /* the unit, stated quietly — a bare "47" in a row of money reads as dollars */
-  .row-w .u{ font-size:0.72em; font-weight:500; color:var(--fg-3); margin-left:1px; }
+     No colour survives the change, which is the point. The Portfolio screen's
+     only remaining chart is Today's movers, so --gain/--loss are unambiguously
+     the return system and --signal is spent on the header action and the tab
+     marker alone. Do not reintroduce a bar, a hue ramp keyed to the share, or
+     a tinted row plate — each was drawn, and each states a second time what
+     the tag has already said.
+     .w-tag  the share, stated once, in the slot inside .sym where .closed-tag
+             already lives, and in the same bordered mono form. --fg-3 at 9.5px
+             keeps it a caption: the figures on the right are money, and the
+             share must not weigh as much as those. A closed position has no
+             share and therefore no tag.
+     .name   clips instead of wrapping — row height was a function of how
+             verbose a security's name is, which cost a row off the fold. The
+             rule belongs to the LIST, not to the weight; scoped to .list-w it
+             would have been deleted along with the bar. */
+  .list-hold .name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .row-end{ text-align:right; flex-shrink:0; }
   .val{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14.5px; color:var(--fg-1); font-variant-numeric:tabular-nums; }
   .meta{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3); margin-top:2px; font-variant-numeric:tabular-nums; }
@@ -153,7 +143,14 @@
   .pnl svg{ width:8px; height:8px; flex-shrink:0; }
   .pnl-label{ font-family:'Public Sans',sans-serif; color:var(--fg-3); font-weight:500; }
   .pnl.gain{ color:var(--gain); } .pnl.loss{ color:var(--loss); }
-  .closed-tag{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; color:var(--fg-3); border:1px solid var(--border); padding:1px 5px; border-radius:3px; }
+  /* One chip vocabulary for the .sym slot: a bordered mono caption stating one
+     quiet fact about the row. .closed-tag says what the row is, .w-tag says how
+     much of the portfolio it is. Same form on purpose — two chip styles 6pt
+     apart on the same line would read as two different kinds of thing. */
+  .closed-tag, .w-tag{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
+        letter-spacing:0.06em; text-transform:uppercase; color:var(--fg-3);
+        border:1px solid var(--border); padding:1px 5px; border-radius:3px; }
+  .w-tag{ font-size:9.5px; letter-spacing:0.04em; font-variant-numeric:tabular-nums; }
 
   /* tabbar */
   .tabbar{ display:flex; border-top:1px solid var(--border); background:var(--surface); }
