@@ -1153,17 +1153,34 @@ ion-item.row-weighted ion-label.label-sym {
    draws no bar at all.
 
    Anchored to the host, whose box matches .item-native's full-bleed bottom
-   border, and pulled down 2px so the 6px bar straddles that 1px border the way
-   the DS's `bottom:-3px` straddles .row's own. */
-ion-item.row-weighted {
+   border, and sitting on that border rather than straddling it like the DS's
+   `bottom:-3px`, because ion-item is `overflow: hidden` in Ionic's own :host
+   and the bar cannot leave that box: at -2px the bottom third was simply cut
+   off. The 8px radius the inset row carries then cut it a second way — the
+   left cap sits inside the bottom-left corner's curve, so a semicircle came
+   out a lens, sharp against the row's edge. The radius exists only to round
+   --background-activated, which paints on .item-native, and that part clips
+   itself — so the radius moves onto the part, the host's clip goes back to a
+   plain rectangle, and both caps survive it.
+
+   Not `overflow: visible` on the host, which fixes the caps and costs the row
+   its layout: the clip is also what makes .item-native's flex line resolve at
+   350px, and without it a long name pushes the end label and the chevron past
+   the row's right edge, where ion-list's `contain: content` deletes them. */
+ion-list.list-inset ion-item.row-weighted {
   position: relative;
+  border-radius: 0;
+}
+
+ion-item.row-weighted::part(native) {
+  border-radius: 8px;
 }
 
 ion-item.row-weighted::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: -2px;
+  bottom: 0;
   z-index: 1;
   height: 6px;
   width: var(--w, 0);
