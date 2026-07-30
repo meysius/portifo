@@ -74,6 +74,40 @@
   --ccy-gbp: #8b5fa0;
   --ccy-jpy: #4a8f92;
 
+  /* ── transaction type — the app's ONE categorical palette, spent only on
+        .tx-tag in the Transactions list. It exists because that row has no
+        glyph: the chip is the only cue for what kind of movement it is. Unlike
+        --cat-* above, which is keyed by RANK and so changes meaning whenever
+        prices move, a transaction type is a CLOSED SET OF FOUR whose meaning
+        never changes — that is the whole difference.
+
+        THE LIGHTNESS SPREAD IS LOAD-BEARING, NOT STYLING. Under dichromacy
+        colour is roughly two-dimensional (one chromatic axis plus lightness),
+        and these four cannot separate on hue alone: drawn at a common L*46-55
+        the first version put buy against withdraw at ΔE 2.4 for a protanope,
+        which is invisible. Spread across L*31-50 the tightest pair is ΔE 15.2
+        across normal, deuteranopic and protanopic vision in both themes.
+        Flattening the values to tidy them up re-breaks the palette.
+        Every collision with --gain/--loss/--signal/--fg-3 is ΔE >= 10.1; ink on
+        its own 12% tint is >= 4:1. See guidelines.html → Transaction type. ── */
+  --tx-buy-lt: #297cb7;
+  --tx-buy-lt-tint: rgba(41, 124, 183, 0.12);
+  --tx-sell-lt: #856207;
+  --tx-sell-lt-tint: rgba(133, 98, 7, 0.12);
+  --tx-deposit-lt: #267974;
+  --tx-deposit-lt-tint: rgba(38, 121, 116, 0.12);
+  --tx-withdraw-lt: #683471;
+  --tx-withdraw-lt-tint: rgba(104, 52, 113, 0.12);
+
+  --tx-buy-dk: #afd2ff;
+  --tx-buy-dk-tint: rgba(175, 210, 255, 0.12);
+  --tx-sell-dk: #edbb6f;
+  --tx-sell-dk-tint: rgba(237, 187, 111, 0.12);
+  --tx-deposit-dk: #a3eae2;
+  --tx-deposit-dk-tint: rgba(163, 234, 226, 0.12);
+  --tx-withdraw-dk: #c29dc1;
+  --tx-withdraw-dk-tint: rgba(194, 157, 193, 0.12);
+
   /* ── semantic ground: light. Page and cards are both #FFFFFF, so a card is
         separated by its 1px --border hairline and nothing else — the three card
         types are flat in both themes. ── */
@@ -95,6 +129,15 @@
   --loss: var(--loss-lt);
   --loss-tint: var(--loss-lt-tint);
   --loss-ink: var(--loss-lt-ink);
+
+  --tx-buy: var(--tx-buy-lt);
+  --tx-buy-tint: var(--tx-buy-lt-tint);
+  --tx-sell: var(--tx-sell-lt);
+  --tx-sell-tint: var(--tx-sell-lt-tint);
+  --tx-deposit: var(--tx-deposit-lt);
+  --tx-deposit-tint: var(--tx-deposit-lt-tint);
+  --tx-withdraw: var(--tx-withdraw-lt);
+  --tx-withdraw-tint: var(--tx-withdraw-lt-tint);
 
   /* ALL THREE ARE UNUSED BY DESIGN — nothing in the app casts a shadow. Every
      edge is one --border hairline (cards, tab bar) or the header's blur
@@ -184,6 +227,15 @@
   --loss: var(--loss-dk);
   --loss-tint: var(--loss-dk-tint);
   --loss-ink: var(--loss-dk-ink);
+
+  --tx-buy: var(--tx-buy-dk);
+  --tx-buy-tint: var(--tx-buy-dk-tint);
+  --tx-sell: var(--tx-sell-dk);
+  --tx-sell-tint: var(--tx-sell-dk-tint);
+  --tx-deposit: var(--tx-deposit-dk);
+  --tx-deposit-tint: var(--tx-deposit-dk-tint);
+  --tx-withdraw: var(--tx-withdraw-dk);
+  --tx-withdraw-tint: var(--tx-withdraw-dk-tint);
 
   --shadow-card: none;
   --shadow-bar: none;

@@ -1089,6 +1089,110 @@ ion-item ion-label[slot="end"] h2 {
   font-weight: 500;
 }
 
+/* ---------- Transaction row (DS .tx-row — guidelines → Transaction row) ----------
+
+   The Transactions list only. Same row skeleton as a holding, three differences:
+
+   .tx-rail  replaces the leading glyph. The glyph could only ever say what the
+             type chip says in words, so the leading 30pt buys something that is
+             NOT already stated. The month is the section head, so the rail
+             states only what varies inside the group — day over weekday, and
+             the weekday is what makes a bare "12" read as a date, not a count.
+   .tx-tag   the type, moved out of the subtitle where it sat in 12px body face
+             glued to the account. Same box as .w-tag (one chip vocabulary) but
+             COLOURED: with no glyph, this is the only cue for what kind of
+             movement the row is. See variables.css for why the four hues need
+             their lightness spread.
+   .tx-calc  shares x price in the meta slot the date used to hold, directly
+             under the total it multiplies to. Cut once for colliding with the
+             account — on the same LINE; in different columns they never meet.
+
+   Top-aligned, not centred: the left column is always two lines, the right is
+   one (cash), two (trade) or three (sell), and centring floated a Deposit's
+   total to the middle of the row and off the ticker's line. */
+ion-item.tx-row::part(native) {
+  align-items: flex-start;
+}
+
+ion-item.tx-row ion-label[slot="end"] {
+  align-self: flex-start;
+}
+
+/* The chevron re-centres itself against a row whose content hangs from the top. */
+ion-item.tx-row::part(detail-icon) {
+  align-self: center;
+}
+
+.tx-rail {
+  flex: 0 0 30px;
+  margin: 9px 12px 0 0;
+  text-align: center;
+}
+
+.tx-day {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.tx-dow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+  margin-top: 4px;
+}
+
+/* The derivation line never wraps and never truncates — it is the widest thing
+   in the column, and the account (below) is what absorbs the variation. */
+.ios ion-item.tx-row ion-label[slot="end"] p.tx-calc {
+  white-space: nowrap;
+}
+
+/* The account is the one thing here allowed to clip. Measured at 393pt it gets
+   111–145pt; the sell row is tightest because its P&L line is the widest
+   figure in the column. */
+.ios ion-item.tx-row ion-label.label-sym p {
+  color: var(--fg-3);
+}
+
+.tx-tag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.tx-tag.buy {
+  color: var(--tx-buy);
+  background: var(--tx-buy-tint);
+}
+
+.tx-tag.sell {
+  color: var(--tx-sell);
+  background: var(--tx-sell-tint);
+}
+
+.tx-tag.deposit {
+  color: var(--tx-deposit);
+  background: var(--tx-deposit-tint);
+}
+
+.tx-tag.withdraw {
+  color: var(--tx-withdraw);
+  background: var(--tx-withdraw-tint);
+}
+
 /* ---------- holding row (DS .list-hold) ----------
    A holding's share of the portfolio is a .w-tag chip beside its ticker, and
    nothing else. This row used to carry two encodings of that one number: a
@@ -1472,62 +1576,99 @@ ion-list.list-inset.fieldcard-list ion-item {
 
 /* ---------- filter chips (DS token language: recessed fill, mono data) ---------- */
 
+/* ---------- filter row (DS .f-row / .f-chip — guidelines → Filter row) ----------
+
+   Chips size to their CONTENT. Three flex:1 chips split 353pt into 113pt each
+   and then spent a 10.5pt uppercase label on top of each value, so
+   "Wealthsimple TFSA" arrived as "Wealthsim…" in a control whose whole job is
+   to show what you filtered by. A chip states its DIMENSION when unset and its
+   VALUE when set — the label was saying what the value already says.
+   One line at 34pt, scrolling rather than truncating. On is --surface-2 +
+   --fg-1, off is transparent + --fg-3: the separation .seg-item.active already
+   uses, and no new colour. */
 .filter-row {
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
   margin: 0;
-  padding: 4px 18px 10px;
+  padding: 6px var(--gutter) 14px;
 }
 
-.filter-chip {
+/* Only the DIMENSIONS scroll. Clear is an action on the whole row, not a fourth
+   dimension, and inside the scroller it was pushed past the gutter by a long
+   account name — measured 41px off a 390pt viewport with Symbol + Account set,
+   which hid the reset exactly when the most filters were on. */
+.filter-scroll {
   flex: 1;
   min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 4px;
-  padding: 10px 8px;
-  border-radius: 10px;
-  min-height: 44px;
-  background: var(--surface-2);
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* A chip cut dead at the scroller's edge — fill and text stopping at a
+     vertical line with no border — reads as a rendering fault, not as "there
+     is more". A 16px fade makes it an affordance. Harmless when the chips fit:
+     the scroller is flex:1, so those last 16px are empty and nothing fades. */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent 100%);
+}
+
+.filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  font-family: inherit;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-}
-
-.filter-chip-text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-}
-
-.filter-chip-label {
-  display: block;
+  background: transparent;
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-size: 12px;
   font-weight: 500;
+  letter-spacing: 0.01em;
   color: var(--fg-3);
-}
-
-.filter-chip-val {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--fg-1);
+  cursor: pointer;
 }
 
 .filter-chip svg {
+  width: 9px;
+  height: 6px;
   color: var(--fg-3);
   flex-shrink: 0;
+}
+
+.filter-chip.on {
+  background: var(--surface-2);
+  color: var(--fg-1);
+}
+
+.filter-chip.on svg {
+  color: var(--fg-2);
+}
+
+/* The filter row already spends 14px below itself, so the first section head
+   under it does not also pay --sec-gap — that stacked to ~38px and pushed the
+   first transaction down for nothing. Each month is wrapped in its own div, so
+   this reaches through that wrapper rather than being an adjacent sibling. */
+.filter-row + div > .list-divider {
+  margin-top: 0;
+}
+
+/* Clear exists only while something is set, and takes no accent — the header
+   action is this screen's one --signal. */
+.filter-clear {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12.5px;
+  color: var(--fg-2);
+  border-color: transparent;
 }
 
 /* ---------- detail head (DS .detail-head / .stat-grid) ---------- */

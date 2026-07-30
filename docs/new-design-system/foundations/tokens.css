@@ -60,6 +60,41 @@
        --gain/--loss unambiguously the return system and --signal spent only on
        the header action and the tab marker. */
 
+    /* Transaction type. The SECOND categorical set this system has had, and it
+       exists because the Transactions row has no glyph — the type chip is the
+       only thing on the row that says what kind of movement it is, so it earns
+       colour where a redundant mark would not.
+       Why this one is stable and --cat-1..4 was not: --cat-* was keyed by RANK,
+       so a colour changed meaning whenever prices moved and recycled past the
+       4th holding. A transaction type is a CLOSED SET OF FOUR whose meaning
+       never changes. That is the whole difference.
+       THE LIGHTNESS SPREAD IS LOAD-BEARING, NOT STYLING. Under dichromacy
+       colour is roughly two-dimensional — one chromatic axis plus lightness —
+       and these four cannot separate on hue alone: drawn at a common L*46-55
+       the first attempt put buy against withdraw at ΔE 2.4 for a protanope,
+       which is invisible. Spread across L*31-50 the tightest pair is ΔE 15.2
+       across normal, deuteranopic and protanopic vision, in both themes.
+       Flattening the values to "tidy up" re-breaks the palette.
+       Every collision against --gain, --loss, --signal and --fg-3 is ΔE >= 10.1;
+       ink on its own 12% tint is >= 4.0:1. Measured, not eyeballed — rule 11. */
+    --tx-buy:            #297CB7;
+    --tx-buy-tint:       rgba(41,124,183,0.12);
+    --tx-sell:           #856207;
+    --tx-sell-tint:      rgba(133,98,7,0.12);
+    --tx-deposit:        #267974;
+    --tx-deposit-tint:   rgba(38,121,116,0.12);
+    --tx-withdraw:       #683471;
+    --tx-withdraw-tint:  rgba(104,52,113,0.12);
+
+    --tx-buy-dk:           #AFD2FF;
+    --tx-buy-dk-tint:      rgba(175,210,255,0.12);
+    --tx-sell-dk:          #EDBB6F;
+    --tx-sell-dk-tint:     rgba(237,187,111,0.12);
+    --tx-deposit-dk:       #A3EAE2;
+    --tx-deposit-dk-tint:  rgba(163,234,226,0.12);
+    --tx-withdraw-dk:      #C29DC1;
+    --tx-withdraw-dk-tint: rgba(194,157,193,0.12);
+
     --ccy-usd: var(--signal);
     --ccy-cad: #C9793B;
     --ccy-eur: #6B6FA8;
@@ -101,6 +136,14 @@
       --loss:      var(--loss-dk);
       --loss-tint: var(--loss-dk-tint);
       --loss-ink:  var(--loss-dk-ink);
+      --tx-buy:           var(--tx-buy-dk);
+      --tx-buy-tint:      var(--tx-buy-dk-tint);
+      --tx-sell:          var(--tx-sell-dk);
+      --tx-sell-tint:     var(--tx-sell-dk-tint);
+      --tx-deposit:       var(--tx-deposit-dk);
+      --tx-deposit-tint:  var(--tx-deposit-dk-tint);
+      --tx-withdraw:      var(--tx-withdraw-dk);
+      --tx-withdraw-tint: var(--tx-withdraw-dk-tint);
     }
   }
   :root[data-theme="dark"]{
@@ -122,6 +165,14 @@
     --loss:      var(--loss-dk);
     --loss-tint: var(--loss-dk-tint);
     --loss-ink:  var(--loss-dk-ink);
+    --tx-buy:           var(--tx-buy-dk);
+    --tx-buy-tint:      var(--tx-buy-dk-tint);
+    --tx-sell:          var(--tx-sell-dk);
+    --tx-sell-tint:     var(--tx-sell-dk-tint);
+    --tx-deposit:       var(--tx-deposit-dk);
+    --tx-deposit-tint:  var(--tx-deposit-dk-tint);
+    --tx-withdraw:      var(--tx-withdraw-dk);
+    --tx-withdraw-tint: var(--tx-withdraw-dk-tint);
   }
   :root[data-theme="light"]{
     --bg:        var(--paper);
@@ -142,4 +193,12 @@
     --loss:      #D6483B;
     --loss-tint: rgba(214,72,59,0.10);
     --loss-ink:  #FFFFFF;
+    --tx-buy:           #297CB7;
+    --tx-buy-tint:      rgba(41,124,183,0.12);
+    --tx-sell:          #856207;
+    --tx-sell-tint:     rgba(133,98,7,0.12);
+    --tx-deposit:       #267974;
+    --tx-deposit-tint:  rgba(38,121,116,0.12);
+    --tx-withdraw:      #683471;
+    --tx-withdraw-tint: rgba(104,52,113,0.12);
   }

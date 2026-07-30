@@ -144,12 +144,49 @@
         <div class="sw-use">Negative money, and destructive actions only. <b>Selling is not destructive.</b></div></div>
     </div>
 
+    <h3 class="g-sub">Transaction type</h3>
+    <p class="g-lead"><b>The system&rsquo;s one categorical palette</b>, and the only place four hues are
+      spent at once. It exists because the Transactions row has <b>no glyph</b> — the type chip is the
+      only thing on that row saying what kind of movement it is, so it earns colour where a redundant
+      mark would not. Used on <code>.tx-tag</code> and nowhere else.</p>
+    <div class="sw-grid">
+      <div class="sw-item"><div class="sw-chip" style="background:var(--tx-buy)"></div>
+        <div class="sw-meta"><b>--tx-buy</b><span data-val="--tx-buy"></span></div>
+        <div class="sw-use">L*50. Nearest neighbour is <code>--signal</code> at ΔE 15.5 — the closest anything comes to the one accent.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--tx-sell)"></div>
+        <div class="sw-meta"><b>--tx-sell</b><span data-val="--tx-sell"></span></div>
+        <div class="sw-use">L*44. Darker than an ochre wants to be, because at L*53 it read as <code>--loss</code> for a deuteranope.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--tx-deposit)"></div>
+        <div class="sw-meta"><b>--tx-deposit</b><span data-val="--tx-deposit"></span></div>
+        <div class="sw-use">L*46. Pushed off green toward true teal so it cannot be read as <code>--gain</code>.</div></div>
+      <div class="sw-item"><div class="sw-chip" style="background:var(--tx-withdraw)"></div>
+        <div class="sw-meta"><b>--tx-withdraw</b><span data-val="--tx-withdraw"></span></div>
+        <div class="sw-use">L*31. The deliberate outlier — this value is what separates it from <code>--tx-buy</code>.</div></div>
+    </div>
+    <p class="g-lead"><b>The lightness spread is load-bearing, not styling.</b> Under dichromacy colour is
+      roughly two-dimensional — one chromatic axis plus lightness — and these four cannot separate on hue
+      alone. Drawn at a common L*46–55, the first version put <code>--tx-buy</code> against
+      <code>--tx-withdraw</code> at <b>ΔE 2.4</b> for a protanope, which is invisible. Spread across
+      L*31–50 the tightest pair is <b>ΔE 15.2</b> across normal, deuteranopic and protanopic vision in
+      both themes, roughly double the ΔE 6.5 this document already calls too close. Flattening the values
+      to tidy them up re-breaks the palette.</p>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Keep every collision against <code>--gain</code>,
+        <code>--loss</code>, <code>--signal</code> and <code>--fg-3</code> at ΔE ≥ 10, and ink on its own
+        12% tint at ≥ 4:1. Re-measure if any value moves — these were computed, not eyeballed (rule 11).</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Spend these anywhere but the type chip, and never
+        map Buy to <code>--gain</code> or Sell to <code>--loss</code>. <b>A Buy is not a loss</b>, and
+        those two hues mean return everywhere else in the app.</p></div>
+    </div>
+
     <h3 class="g-sub">Weight has no colour at all</h3>
-    <p class="g-lead">There is no categorical palette. <code>--cat-1..4</code> and <code>--cat-cash</code>
+    <p class="g-lead">Weight is not a category, and there is no palette for it. <code>--cat-1..4</code> and <code>--cat-cash</code>
       keyed a holding to its slice of the allocation bar, and both the bar and its legend are gone. The key
       was assigned by <b>rank</b>, so it changed meaning whenever prices moved; it recycled at the fifth
       holding, so a six-position portfolio painted two rows the same hue; and <code>--cat-1</code> aliased
-      <code>--signal</code>, spending the one accent on the largest slice.</p>
+      <code>--signal</code>, spending the one accent on the largest slice. <b>That is the test the
+      transaction-type palette above passes and this one failed</b> — four types is a closed set whose
+      meaning never changes, where rank is an ordering that never stops changing.</p>
     <p class="g-lead">What replaced it — a 30pt <code>.row-w</code> figure leading the row plus a 6pt
       <code>--signal</code> bar on the separator as long as that share — is <b>also gone</b>, and for a
       plainer reason: it said the same number twice. The bar carried no fact the figure hadn't already
@@ -280,6 +317,77 @@
       <div class="g-no"><div class="lbl">Don't</div><p>Give the tag a fill, a tint or a second chip style.
         It sits 6pt from <code>.closed-tag</code> on the same line; two chip treatments there read as two
         different kinds of thing, and a filled one out-weighs the value it sits beside.</p></div>
+    </div>
+
+    <h3 class="g-sub">Transaction row</h3>
+    <p class="g-lead">The Transactions list only. Same <code>.row</code> skeleton as a holding, three
+      differences, and each one pays for the last. <b>The leading 30pt is a day stamp, not a glyph</b> —
+      the glyph could only say what the type chip says in words, and the row needed that space for
+      something not already stated; the month is the section head, so the rail states only what varies
+      inside the group. <b>The type is a chip on the ticker&rsquo;s line</b>, not a word buried in the
+      subtitle. <b>The <code>.meta</code> slot carries the arithmetic</b>, <code>12 sh @ $187.32</code>,
+      sitting directly under the total it multiplies to — the row shows its own working, which is what a
+      trade confirmation does. The date moves to the subtitle beside the account.</p>
+    <div class="card" style="max-width:420px;">
+      <div class="divider" style="margin-bottom:9px;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">3 transactions</span></div>
+      <div class="list">
+        <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">12</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">AAPL <span class="tx-tag buy">Buy</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$2,247.84</div><div class="meta tx-calc">12 sh @ $187.32</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">08</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">USD <span class="tx-tag deposit">Deposit</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$5,000.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">05</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">NVDA <span class="tx-tag sell">Sell</span></div><div class="name">Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$3,781.80</div><div class="meta tx-calc">20 sh @ $189.09</div><div class="pnl gain">+$412.60 · +12.2%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">24</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">EUR <span class="tx-tag withdraw">Withdraw</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">€1,200.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      </div>
+    </div>
+    <p class="g-lead"><b>The row top-aligns.</b> The left column is always two lines; the right is one for
+      a cash movement, two for a trade and three for a Sell. Centred, a Deposit&rsquo;s total floated to
+      the middle of the row and off the ticker&rsquo;s line — hanging everything from the top keeps
+      <code>.val</code> on that line in all four types, and the chevron re-centres itself. Amounts stay in
+      the transaction&rsquo;s <b>own</b> currency, unsigned, in neutral ink: this is a ledger, so it must
+      match what the user entered, and a losing Sell still receives positive cash.</p>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Let the <b>account</b> be the thing that clips.
+        <code>.tx-calc</code> never wraps and never truncates — it is the widest thing in the right
+        column, and the account absorbs the variation. Measured at 393pt the account gets 111–145pt; the
+        Sell row is tightest because its P&amp;L line is the widest figure.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Re-add a glyph beside the chip, label the Sell
+        line <code>Realized:</code>, or sign the total. The first says the type twice, the second costs
+        50pt of the account to say what the only tinted figure in a ledger row could already only mean,
+        and the third makes the sign mean cash-flow direction while nothing else does.</p></div>
+    </div>
+
+    <h3 class="g-sub">Filter row</h3>
+    <p class="g-lead">Transactions only, directly under the page title. <b>Chips size to their
+      content</b> — three <code>flex:1</code> chips split 353pt into 113pt each and then spent a 10.5pt
+      uppercase label on top of each value, so <code>Wealthsimple TFSA</code> arrived as
+      <code>Wealthsim…</code> in a control whose whole job is to show what you filtered by. A chip states
+      its <b>dimension</b> when unset and its <b>value</b> when set; the label was saying what the value
+      already says. One line at 34pt, scrolling rather than truncating.</p>
+    <div class="card" style="max-width:420px; gap:0;">
+      <div class="f-row" style="padding-left:0; padding-right:0; padding-top:0; padding-bottom:8px;">
+        <div class="f-scroll">
+          <span class="f-chip">Symbol <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="f-chip">Type <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="f-chip">Account <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+      </div>
+      <div class="f-row" style="padding-left:0; padding-right:0; padding-top:0; padding-bottom:0;">
+        <div class="f-scroll">
+          <span class="f-chip on">AAPL <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="f-chip on">Wealthsimple TFSA <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <span class="f-chip">Account <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </div>
+        <span class="f-chip f-clear">Clear</span>
+      </div>
+    </div>
+    <div class="g-do">
+      <div class="g-yes"><div class="lbl">Do</div><p>Show <code>Clear</code> only while at least one
+        filter is set, and reset all three with it. Each chip opens the same picker sheet; choosing
+        <b>All</b> is what clears one. <b>Keep it outside <code>.f-scroll</code></b> — it is an action on
+        the row, not a fourth dimension, and inside the scroller a long account name pushed it 41px past
+        a 390pt viewport, hiding the reset exactly when the most filters were set.</p></div>
+      <div class="g-no"><div class="lbl">Don't</div><p>Give the on state an accent. <code>--surface-2</code>
+        + <code>--fg-1</code> against transparent + <code>--fg-3</code> is how <code>.seg-item.active</code>
+        already separates on from off, and the header action is the screen&rsquo;s one
+        <code>--signal</code>.</p></div>
     </div>
 
     <h3 class="g-sub">Today&rsquo;s movers</h3>

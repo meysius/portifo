@@ -1,0 +1,789 @@
+<title>Portifo — Transactions · redesign options</title>
+<link rel="stylesheet" href="foundations/fonts.css">
+<link rel="stylesheet" href="foundations/tokens.css">
+<link rel="stylesheet" href="foundations/base.css">
+
+<style>
+  /* ══════════════════════════════════════════════════════════════════════
+     PROPOSED — nothing here is in foundations/ yet. Everything below is
+     built from tokens only: no literal colour, no new face, no new size
+     that isn't already in the type scale. If an option is approved, these
+     rules move into base.css and the rest of this file is deleted.
+     ══════════════════════════════════════════════════════════════════════ */
+
+  /* ── the type tag ──────────────────────────────────────────────────────
+     Deliberately IDENTICAL to .w-tag / .closed-tag — same box, same ink,
+     same slot inside .sym. One chip vocabulary: a quiet caption stating
+     one fact about the row. The fact a ledger row has to state is what
+     kind of movement it is. */
+  .tx-tag{ font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:600;
+           letter-spacing:0.06em; text-transform:uppercase; color:var(--fg-3);
+           border:1px solid var(--border); padding:1px 5px; border-radius:3px;
+           flex-shrink:0; }
+
+  /* ── the row ───────────────────────────────────────────────────────────
+     Top-aligned, not centred. The left column is always exactly two lines;
+     the right column is one (cash), two (trade) or three (sell). Centring
+     floated the total to the middle of the row on cash movements and put it
+     off the ticker's line. Hanging everything from the top line keeps .val
+     on the ticker's baseline in every row. */
+  .tx-row{ align-items:flex-start; }
+  .tx-row .glyph{ margin-top:1px; }
+  .tx-row .row-chevron{ align-self:center; }
+  .tx-row .row-end{ display:flex; flex-direction:column; align-items:flex-end; }
+
+  /* the subtitle carries WHEN and WHERE. The date is mono (rule 10 — it is a
+     comparable figure), the account is body face and one step quieter: it is
+     provenance, and it is the one thing here that is allowed to clip. */
+  .tx-sub{ display:flex; align-items:baseline; gap:5px; margin-top:2px; min-width:0; }
+  .tx-when{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-2);
+            font-variant-numeric:tabular-nums; white-space:nowrap; flex-shrink:0; }
+  .tx-sep{ color:var(--fg-3); font-size:11px; flex-shrink:0; }
+  .tx-acct{ font-size:12px; color:var(--fg-3); min-width:0;
+            overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* the derivation line — shares and price, sitting directly under the total
+     they multiply to. Never wraps; it is the widest thing in the column and
+     the account absorbs the variation. */
+  .tx-calc{ white-space:nowrap; }
+
+  /* ── option B only: the day rail ───────────────────────────────────────
+     Replaces the glyph. The month is already in the divider above, so the
+     rail states only what varies inside the group. The weekday is what makes
+     a bare "12" read as a date and not a quantity. */
+  .tx-rail{ flex:0 0 30px; text-align:center; margin-top:1px; }
+  .tx-day{ font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:600;
+           line-height:1; color:var(--fg-2); font-variant-numeric:tabular-nums; }
+  .tx-dow{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
+           letter-spacing:0.08em; text-transform:uppercase; color:var(--fg-3); margin-top:4px; }
+
+  /* ── the filter row ────────────────────────────────────────────────────
+     Chips size to their content instead of splitting the width three ways.
+     A chip states its VALUE when set and its DIMENSION when not — the label
+     above the value was costing 11pt of a 113pt box to say a word the value
+     already implies. 34pt tall, one line, scrolls if a long account name
+     pushes past the gutter. */
+  .f-row{ display:flex; align-items:center; gap:8px;
+          padding:6px var(--gutter) 14px; overflow-x:auto; }
+  .f-chip{ display:inline-flex; align-items:center; gap:7px; flex-shrink:0;
+           height:34px; padding:0 11px; border-radius:8px;
+           border:1px solid var(--border); background:transparent;
+           font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500;
+           letter-spacing:0.01em; color:var(--fg-3); white-space:nowrap; }
+  .f-chip svg{ width:9px; height:6px; color:var(--fg-3); flex-shrink:0; }
+  .f-chip.on{ background:var(--surface-2); color:var(--fg-1); }
+  .f-chip.on svg{ color:var(--fg-2); }
+  .f-clear{ font-family:var(--font-display); font-weight:600; font-size:12.5px;
+            color:var(--fg-2); border-color:transparent; }
+
+  /* ══ PROPOSED · type colour ═══════════════════════════════════════════
+     Two hues on the DIRECTION axis. Four hues were built and measured and
+     they do not survive colour-vision deficiency — see section 06. These
+     two are tuned to sit clear of --gain, --loss and --signal in both
+     themes and under both red-green deficiencies. Set in both dark blocks
+     per rule 05. */
+  :root{
+    --tx-in:        #6A44A0;
+    --tx-in-tint:   rgba(106,68,160,0.12);
+    --tx-out:       #8A5A15;
+    --tx-out-tint:  rgba(138,90,21,0.12);
+    /* S3 AS FIRST DRAWN — kept only for the before/after strip. Do not ship:
+       buy/withdraw sit at ΔE 2.4 for a protanope. */
+    --t4-buy:#4A6FA5; --t4-buy-t:rgba(74,111,165,0.12);
+    --t4-sell:#B0722C; --t4-sell-t:rgba(176,114,44,0.12);
+    --t4-dep:#4A8F92; --t4-dep-t:rgba(74,143,146,0.12);
+    --t4-wd:#8B5FA0;  --t4-wd-t:rgba(139,95,160,0.12);
+    --tx-buy:#297CB7; --tx-buy-t:rgba(41,124,183,0.12);
+    --tx-sell:#856207; --tx-sell-t:rgba(133,98,7,0.12);
+    --tx-deposit:#267974; --tx-deposit-t:rgba(38,121,116,0.12);
+    --tx-withdraw:#683471;  --tx-withdraw-t:rgba(104,52,113,0.12);
+    /* S3′ — same four hue identities, tuned. Lightness is the second
+       separator, which is what survives dichromacy. */
+    --tx-buy:#297CB7; --tx-buy-t:rgba(41,124,183,0.12);
+    --tx-sell:#856207; --tx-sell-t:rgba(133,98,7,0.12);
+    --tx-deposit:#267974; --tx-deposit-t:rgba(38,121,116,0.12);
+    --tx-withdraw:#683471;  --tx-withdraw-t:rgba(104,52,113,0.12);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --tx-in:       #C9A5E8;  --tx-in-tint:  rgba(201,165,232,0.12);
+      --tx-out:      #E0B674;  --tx-out-tint: rgba(224,182,116,0.12);
+      --t4-buy:#8AA9DC; --t4-buy-t:rgba(138,169,220,0.12);
+      --t4-sell:#D9A05B; --t4-sell-t:rgba(217,160,91,0.12);
+      --t4-dep:#6FC0C3; --t4-dep-t:rgba(111,192,195,0.12);
+      --t4-wd:#B98FCC;  --t4-wd-t:rgba(185,143,204,0.12);
+      --tx-buy:#AFD2FF; --tx-buy-t:rgba(175,210,255,0.12);
+      --tx-sell:#EDBB6F; --tx-sell-t:rgba(237,187,111,0.12);
+      --tx-deposit:#A3EAE2; --tx-deposit-t:rgba(163,234,226,0.12);
+      --tx-withdraw:#C29DC1;  --tx-withdraw-t:rgba(194,157,193,0.12);
+    }
+  }
+  :root[data-theme="dark"]{
+    --tx-in:       #C9A5E8;  --tx-in-tint:  rgba(201,165,232,0.12);
+    --tx-out:      #E0B674;  --tx-out-tint: rgba(224,182,116,0.12);
+    --t4-buy:#8AA9DC; --t4-buy-t:rgba(138,169,220,0.12);
+    --t4-sell:#D9A05B; --t4-sell-t:rgba(217,160,91,0.12);
+    --t4-dep:#6FC0C3; --t4-dep-t:rgba(111,192,195,0.12);
+    --t4-wd:#B98FCC;  --t4-wd-t:rgba(185,143,204,0.12);
+    --tx-buy:#AFD2FF; --tx-buy-t:rgba(175,210,255,0.12);
+    --tx-sell:#EDBB6F; --tx-sell-t:rgba(237,187,111,0.12);
+    --tx-deposit:#A3EAE2; --tx-deposit-t:rgba(163,234,226,0.12);
+    --tx-withdraw:#C29DC1;  --tx-withdraw-t:rgba(194,157,193,0.12);
+  }
+  :root[data-theme="light"]{
+    --tx-in:       #6A44A0;  --tx-in-tint:  rgba(106,68,160,0.12);
+    --tx-out:      #8A5A15;  --tx-out-tint: rgba(138,90,21,0.12);
+    --t4-buy:#4A6FA5; --t4-buy-t:rgba(74,111,165,0.12);
+    --t4-sell:#B0722C; --t4-sell-t:rgba(176,114,44,0.12);
+    --t4-dep:#4A8F92; --t4-dep-t:rgba(74,143,146,0.12);
+    --t4-wd:#8B5FA0;  --t4-wd-t:rgba(139,95,160,0.12);
+  }
+
+  /* hue = direction. Filled tint = a trade; hairline in the same hue, no
+     fill = a cash movement. Two hues, two weights, four distinct badges. */
+  .tx-tag.in  { color:var(--tx-in);  background:var(--tx-in-tint);  border-color:transparent; }
+  .tx-tag.out { color:var(--tx-out); background:var(--tx-out-tint); border-color:transparent; }
+  .tx-tag.in.cash  { background:transparent; border-color:var(--tx-in); }
+  .tx-tag.out.cash { background:transparent; border-color:var(--tx-out); }
+  .tx-tag.t-buy { color:var(--t4-buy); background:var(--t4-buy-t); border-color:transparent; }
+  .tx-tag.t-sell{ color:var(--t4-sell);background:var(--t4-sell-t);border-color:transparent; }
+  .tx-tag.t-dep { color:var(--t4-dep); background:var(--t4-dep-t); border-color:transparent; }
+  .tx-tag.t-wd  { color:var(--t4-wd);  background:var(--t4-wd-t);  border-color:transparent; }
+  .tx-tag.x-buy { color:var(--tx-buy); background:var(--tx-buy-t); border-color:transparent; }
+  .tx-tag.x-sell{ color:var(--tx-sell);background:var(--tx-sell-t);border-color:transparent; }
+  .tx-tag.x-dep { color:var(--tx-deposit); background:var(--tx-deposit-t); border-color:transparent; }
+  .tx-tag.x-wd  { color:var(--tx-withdraw);  background:var(--tx-withdraw-t);  border-color:transparent; }
+
+  .scheme{ display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:20px; align-items:start; }
+  .scheme-h{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+             letter-spacing:0.14em; text-transform:uppercase; color:var(--fg-3); margin-bottom:9px; }
+  .scheme-h b{ color:var(--fg-1); }
+  .scheme-h i{ font-style:normal; color:var(--signal); }
+  .verdict-bad{ border-left-color:var(--loss); }
+
+  /* ── specimen chrome (this page only) ─────────────────────────────────── */
+  /* lifted verbatim from guidelines.html, which keeps them in its own <style>
+     rather than in base.css — same look, three columns instead of two */
+  .g-do{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:14px; }
+  .g-do > div{ border:1px solid var(--border); border-radius:8px; padding:13px 15px; background:var(--surface); }
+  .g-do .lbl{ font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em;
+              text-transform:uppercase; margin-bottom:7px; }
+  .g-yes .lbl{ color:var(--gain); } .g-no .lbl{ color:var(--loss); }
+  .g-do p{ margin:0; font-size:12.5px; line-height:1.55; color:var(--fg-2); }
+  .g-do code{ font-family:'JetBrains Mono',monospace; font-size:0.93em; color:var(--fg-1); }
+
+  .spec-strip{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  .gl-item{ display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center; }
+  .gl-big{ width:44px; height:44px; border-radius:9px; background:var(--surface-2);
+           border:1px solid var(--border); display:flex; align-items:center;
+           justify-content:center; color:var(--fg-2); }
+  .gl-big.cash{ background:var(--signal-tint); color:var(--signal); border-color:transparent; }
+  .gl-big svg{ width:22px; height:22px; }
+  .gl-name{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600;
+            letter-spacing:0.1em; text-transform:uppercase; color:var(--fg-1); }
+  .gl-note{ font-size:11.5px; line-height:1.45; color:var(--fg-3); max-width:22ch; }
+  .strip-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .verdict{ border-left:2px solid var(--signal); padding-left:14px; }
+  .verdict b{ color:var(--fg-1); }
+  .mini{ width:393px; max-width:100%; border:1px solid var(--border); border-radius:10px;
+         background:var(--bg); overflow:hidden; }
+  .opt-tag{ font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600;
+            letter-spacing:0.14em; text-transform:uppercase; color:var(--signal); }
+</style>
+
+<div class="wrap">
+
+  <div class="doc-top">
+    <div>
+      <span class="eyebrow">Portifo · Design System · Proposal</span>
+      <h1 class="doc-title">Transactions — redesign</h1>
+      <p class="doc-sub">Three complaints and one open decision, answered together. The screen cannot tell a Buy from a Sell at a glance; a row states less about a transaction than the transaction has to state; and the filter row is three controls crushed into 113pt each. <code>screens.html</code> already flags the last one — <b>&ldquo;either the filters get designed into this card or they get dropped — open decision, and until it is made the shipped screen has one element with no spec.&rdquo;</b> This page closes it. <b>Option B is chosen</b> (section 03) and section 05 follows from that choice: B drops the glyph, so the type chip becomes the only cue for what kind of movement a row is, and it earns colour — <b>S3′</b>, one hue per type, tuned so the four survive colour-vision deficiency. Nothing is implemented yet — per rule 14 the approved version moves into <code>guidelines.html</code> / <code>screens.html</code> / <code>foundations/</code> first, and only then into <code>packages/portifo-web</code>.</p>
+    </div>
+    <div class="theme-toggle" role="group" aria-label="Theme preview">
+      <button class="theme-btn" onclick="setTheme(null,this)">System</button>
+      <button class="theme-btn" onclick="setTheme('light',this)">Light</button>
+      <button class="theme-btn" onclick="setTheme('dark',this)">Dark</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ THE DIAGNOSIS ═══════════════════════ -->
+  <div>
+    <div class="divider"><span class="dl">01 — What is actually wrong</span><span class="dh"></span></div>
+    <p class="sec-note">Not a matter of taste — each of the three is a specific decision that can be named and reversed.</p>
+    <div class="table-wrap">
+      <table class="scale">
+        <thead><tr><th>Symptom</th><th>Cause</th><th>Move</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="dim">Buy vs Sell vs Deposit vs Withdraw don't separate</td>
+            <td>Four types share <b>two</b> glyphs. Buy and Deposit are the same arrow; Sell and Withdraw are the same arrow. The only thing separating them is the well tint, and the only thing naming them is the word <code>Buy</code> set in 12px body face, <code>--fg-2</code>, glued to the account inside the subtitle — the quietest string in the row.</td>
+            <td>Four glyphs on a 2 × 2 grid (direction × what moved), and the type promoted out of the subtitle into a chip on the ticker's line.</td>
+          </tr>
+          <tr>
+            <td class="dim">A row says too little</td>
+            <td>Shares and price were deliberately cut — <i>&ldquo;share maths stays on the detail screen — at these name lengths it collided with the account.&rdquo;</i> True at the time: both were fighting for the same subtitle. But the right column's second line was spending itself on <code>Jul 12</code>, a six-character figure.</td>
+            <td>Swap them. The date joins the account on the subtitle; <code>12 sh @ $187.32</code> takes the right column, directly under the total it multiplies to.</td>
+          </tr>
+          <tr>
+            <td class="dim">The filter row is cramped</td>
+            <td><code>flex:1</code> on three chips splits 353pt into 113pt each, and each chip then spends a 10.5pt uppercase label on top of its value. <code>Wealthsimple TFSA</code> arrives as <code>Wealthsim…</code> in a control whose whole job is to show you what you filtered by.</td>
+            <td>Content-sized chips on one line. The chip shows its dimension when unset and its value when set — the label was saying what the value already says.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ THE TYPE SYSTEM ═══════════════════════ -->
+  <div>
+    <div class="divider"><span class="dl">02 — Telling the four types apart</span><span class="dh"></span></div>
+    <p class="sec-note">Three cues, <b>no hue</b>. <code>--gain</code>/<code>--loss</code> stay the return system — a Buy is not a loss — and <code>--signal</code> stays spent on the header action and the tab marker. So differentiation has to come from shape, from the word, and from the well the app already uses to separate cash from trades.</p>
+
+    <div class="grid">
+      <div class="card wide">
+        <div class="divider" style="margin-bottom:4px;"><span class="dl">Cue 1 · the glyph, on a 2 × 2 grid</span><span class="dh"></span><span class="dm">direction × what moved</span></div>
+        <div class="spec-strip">
+          <div class="gl-item">
+            <div class="gl-big"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div class="gl-name">Buy</div>
+            <div class="gl-note">Arrow onto a bare line. A position arrives.</div>
+          </div>
+          <div class="gl-item">
+            <div class="gl-big"><svg viewBox="0 0 20 20" fill="none"><path d="M10 15.5v-8M10 7.5L6.8 10.7M10 7.5l3.2 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+            <div class="gl-name">Sell</div>
+            <div class="gl-note">Arrow off the line. A position leaves.</div>
+          </div>
+          <div class="gl-item">
+            <div class="gl-big cash"><svg viewBox="0 0 20 20" fill="none"><path d="M10 3.5v6.8M10 10.6L7.5 8.1M10 10.6l2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12v2.6a1.9 1.9 0 0 0 1.9 1.9h8.2a1.9 1.9 0 0 0 1.9-1.9V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="gl-name">Deposit</div>
+            <div class="gl-note">Arrow into an open tray. Cash arrives.</div>
+          </div>
+          <div class="gl-item">
+            <div class="gl-big cash"><svg viewBox="0 0 20 20" fill="none"><path d="M10 10.3V3.5M10 3.5L7.5 6M10 3.5l2.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12v2.6a1.9 1.9 0 0 0 1.9 1.9h8.2a1.9 1.9 0 0 0 1.9-1.9V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="gl-name">Withdraw</div>
+            <div class="gl-note">Arrow out of the tray. Cash leaves.</div>
+          </div>
+        </div>
+        <div class="card-caption">The arrow axis is unchanged — it still reads <b>direction</b>, and it is still never tinted <code>--gain</code>/<code>--loss</code>. What is new is the second axis: a <b>bare line</b> for a trade, an <b>open tray</b> for a cash movement. Today that axis exists only as the well tint, which is a 10%-alpha difference and the first thing to go under a bright screen. The tint stays as well — it is what matches the Cash row on Portfolio — so trade vs cash now carries two cues and direction carries one.</div>
+      </div>
+
+      <div class="card wide">
+        <div class="divider" style="margin-bottom:4px;"><span class="dl">Cue 2 · the type is a chip, not prose</span><span class="dh"></span></div>
+        <div class="strip-row">
+          <span class="sym">AAPL <span class="tx-tag">Buy</span></span>
+          <span style="width:14px"></span>
+          <span class="sym">NVDA <span class="tx-tag">Sell</span></span>
+          <span style="width:14px"></span>
+          <span class="sym">USD <span class="tx-tag">Deposit</span></span>
+          <span style="width:14px"></span>
+          <span class="sym">EUR <span class="tx-tag">Withdraw</span></span>
+        </div>
+        <div class="card-caption">Same box as <code>.w-tag</code> and <code>.closed-tag</code>: 9.5px mono, uppercase, 1px <code>--border</code>, no fill, <code>--fg-3</code>. <b>One chip vocabulary</b> — a quiet caption stating one fact about the row, at a weight that cannot compete with the money on the right. The type moves from the <em>quietest</em> string in the row to the <em>primary</em> line, without gaining a single point of size or a drop of colour.</div>
+      </div>
+
+      <div class="card wide">
+        <div class="divider" style="margin-bottom:4px;"><span class="dl">Considered and cut</span><span class="dh"></span></div>
+        <div class="g-do">
+          <div class="g-yes"><div class="lbl">Superseded</div><p><b>Colour the type.</b> Written here as a &ldquo;don't&rdquo;, and <b>reversed in section 05</b> once Option B was chosen: B deletes the glyph, so the chip stops being one of three cues and becomes the only one. <b>Green Buy / red Sell stays wrong</b> — a Buy is not a loss, and it puts a third meaning on the two hues reserved for return — but that rules out <em>those</em> hues, not colour.</p></div>
+          <div class="g-no"><div class="lbl">Don't</div><p><b>Sign the total.</b> <code>−$2,247.84</code> for a Buy would differentiate instantly at the value column — and would be a lie about the ledger: a losing Sell still receives positive cash, and the sign would have to mean cash-flow direction while the glyph means portfolio direction. Two axes, one mark.</p></div>
+          <div class="g-no"><div class="lbl">Don't</div><p><b>Put an arrow inside the chip.</b> <code>↓ BUY</code> restates the glyph three characters away from it. The row already says which way it went.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ THE ROWS ═══════════════════════ -->
+  <div>
+    <div class="divider"><span class="dl">03 — The row, at true scale</span><span class="dh"></span></div>
+    <p class="sec-note">Same six transactions in all three, at 393 × 852pt. <b>Current</b> is what ships today. <b>A</b> and <b>B</b> differ in one decision only: what occupies the row's leading 30pt.</p>
+
+    <div class="grid-devices">
+
+      <!-- ───────────── CURRENT ───────────── -->
+      <div class="device-card">
+        <div class="device-title">Current — as shipped</div>
+        <div class="device">
+          <span class="hw hw-l hw-action"></span>
+          <span class="hw hw-l hw-vol-up"></span>
+          <span class="hw hw-l hw-vol-dn"></span>
+          <span class="hw hw-r hw-side"></span>
+          <span class="hw hw-r hw-camera"></span>
+          <div class="bezel">
+            <div class="screen">
+              <div class="dyn-island"></div>
+              <div class="status-bar">
+                <span>9:41</span>
+                <div class="status-icons">
+                  <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                  <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+                </div>
+              </div>
+              <div class="screen-content">
+                <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                  <div class="ph-bar"></div>
+                  <div class="ph-large">Transactions<span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+
+                  <div style="display:flex; gap:6px; padding:4px 18px 10px;">
+                    <div style="flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:4px; padding:10px 8px; border-radius:10px; min-height:44px; background:var(--surface-2); border:1px solid var(--border);">
+                      <span style="min-width:0;"><span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.1em; font-weight:500; color:var(--fg-3);">Symbol</span><span style="display:block; font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500; color:var(--fg-1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">All</span></span>
+                      <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div style="flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:4px; padding:10px 8px; border-radius:10px; min-height:44px; background:var(--surface-2); border:1px solid var(--border);">
+                      <span style="min-width:0;"><span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.1em; font-weight:500; color:var(--fg-3);">Type</span><span style="display:block; font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500; color:var(--fg-1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">All</span></span>
+                      <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div style="flex:1; min-width:0; display:flex; align-items:center; justify-content:space-between; gap:4px; padding:10px 8px; border-radius:10px; min-height:44px; background:var(--surface-2); border:1px solid var(--border);">
+                      <span style="min-width:0;"><span style="display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.1em; font-weight:500; color:var(--fg-3);">Account</span><span style="display:block; font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500; color:var(--fg-1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Wealthsim…</span></span>
+                      <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                  </div>
+
+                  <div style="padding:0 20px;">
+                    <div class="divider sec" style="margin-top:0;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+                    <div class="list">
+                      <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">AAPL</div><div class="name">Buy · Fidelity Brokerage</div></div><div class="row-end"><div class="val">$2,247.84</div><div class="meta">Jul 12</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">USD</div><div class="name">Deposit · Fidelity Brokerage</div></div><div class="row-end"><div class="val">$5,000.00</div><div class="meta">Jul 8</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 15.5v-8M10 7.5L6.8 10.7M10 7.5l3.2 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">NVDA</div><div class="name">Sell · Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$3,781.80</div><div class="meta">Jul 5</div><div class="pnl gain">+$412.60 · +12.2%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">MSFT</div><div class="name">Buy · Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$4,168.40</div><div class="meta">Jul 2</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    </div>
+                    <div class="divider sec"><span class="dl">June 2026</span><span class="dh"></span><span class="dm">2 transactions</span></div>
+                    <div class="list">
+                      <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 15.5v-8M10 7.5L6.8 10.7M10 7.5l3.2 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">EUR</div><div class="name">Withdraw · Fidelity Brokerage</div></div><div class="row-end"><div class="val">€1,200.00</div><div class="meta">Jun 24</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><div class="row-main"><div class="sym">AAPL</div><div class="name">Buy · Fidelity Brokerage</div></div><div class="row-end"><div class="val">$1,873.20</div><div class="meta">Jun 18</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                  <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <div class="spec">
+          <div class="spec-h">Current · what it costs</div>
+          <div class="spec-row"><span class="spec-k">Filters</span><span class="spec-v">54pt of the fold, always — even with nothing filtered, which is the state the screen is in nearly every time it opens. Two of the three chips say <code>All</code>; the third has already truncated.</span></div>
+          <div class="spec-row"><span class="spec-k">Types</span><span class="spec-v">Four types, two glyphs. Cover the tint and Buy is indistinguishable from Deposit.</span></div>
+          <div class="spec-row"><span class="spec-k">Content</span><span class="spec-v">The row cannot answer &ldquo;how many, at what price&rdquo; — the question a ledger exists to answer — while spending its right-hand meta line on a six-character date.</span></div>
+        </div>
+      </div>
+
+      <!-- ───────────── OPTION A ───────────── -->
+      <div class="device-card">
+        <div class="device-title"><span class="opt-tag" style="color:var(--fg-3)">Option A</span> &nbsp;The slip &nbsp;<span style="color:var(--fg-3); font-weight:500;">— not taken</span></div>
+        <div class="device">
+          <span class="hw hw-l hw-action"></span>
+          <span class="hw hw-l hw-vol-up"></span>
+          <span class="hw hw-l hw-vol-dn"></span>
+          <span class="hw hw-r hw-side"></span>
+          <span class="hw hw-r hw-camera"></span>
+          <div class="bezel">
+            <div class="screen">
+              <div class="dyn-island"></div>
+              <div class="status-bar">
+                <span>9:41</span>
+                <div class="status-icons">
+                  <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                  <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+                </div>
+              </div>
+              <div class="screen-content">
+                <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                  <div class="ph-bar"></div>
+                  <div class="ph-large">Transactions<span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+
+                  <div class="f-row">
+                    <span class="f-chip">Symbol <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span class="f-chip">Type <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span class="f-chip">Account <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  </div>
+
+                  <div style="padding:0 20px;">
+                    <div class="divider sec" style="margin-top:0;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+                    <div class="list">
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                        <div class="row-main"><div class="sym">AAPL <span class="tx-tag">Buy</span></div><div class="tx-sub"><span class="tx-when">Jul 12</span><span class="tx-sep">·</span><span class="tx-acct">Fidelity Brokerage</span></div></div>
+                        <div class="row-end"><div class="val">$2,247.84</div><div class="meta tx-calc">12 sh @ $187.32</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 3.5v6.8M10 10.6L7.5 8.1M10 10.6l2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12v2.6a1.9 1.9 0 0 0 1.9 1.9h8.2a1.9 1.9 0 0 0 1.9-1.9V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <div class="row-main"><div class="sym">USD <span class="tx-tag">Deposit</span></div><div class="tx-sub"><span class="tx-when">Jul 8</span><span class="tx-sep">·</span><span class="tx-acct">Fidelity Brokerage</span></div></div>
+                        <div class="row-end"><div class="val">$5,000.00</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 15.5v-8M10 7.5L6.8 10.7M10 7.5l3.2 3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 4.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                        <div class="row-main"><div class="sym">NVDA <span class="tx-tag">Sell</span></div><div class="tx-sub"><span class="tx-when">Jul 5</span><span class="tx-sep">·</span><span class="tx-acct">Wealthsimple TFSA</span></div></div>
+                        <div class="row-end"><div class="val">$3,781.80</div><div class="meta tx-calc">20 sh @ $189.09</div><div class="pnl gain">+$412.60 · +12.2%</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                        <div class="row-main"><div class="sym">MSFT <span class="tx-tag">Buy</span></div><div class="tx-sub"><span class="tx-when">Jul 2</span><span class="tx-sep">·</span><span class="tx-acct">Wealthsimple TFSA</span></div></div>
+                        <div class="row-end"><div class="val">$4,168.40</div><div class="meta tx-calc">8 sh @ $521.05</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                    </div>
+                    <div class="divider sec"><span class="dl">June 2026</span><span class="dh"></span><span class="dm">2 transactions</span></div>
+                    <div class="list">
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 10.3V3.5M10 3.5L7.5 6M10 3.5l2.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12v2.6a1.9 1.9 0 0 0 1.9 1.9h8.2a1.9 1.9 0 0 0 1.9-1.9V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                        <div class="row-main"><div class="sym">EUR <span class="tx-tag">Withdraw</span></div><div class="tx-sub"><span class="tx-when">Jun 24</span><span class="tx-sep">·</span><span class="tx-acct">Fidelity Brokerage</span></div></div>
+                        <div class="row-end"><div class="val">€1,200.00</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+                        <div class="row-main"><div class="sym">AAPL <span class="tx-tag">Buy</span></div><div class="tx-sub"><span class="tx-when">Jun 18</span><span class="tx-sep">·</span><span class="tx-acct">Fidelity Brokerage</span></div></div>
+                        <div class="row-end"><div class="val">$1,873.20</div><div class="meta tx-calc">10 sh @ $187.32</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                  <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <div class="spec">
+          <div class="spec-h">Option A · build notes</div>
+          <div class="spec-row"><span class="spec-k">Row</span><span class="spec-v"><b>What moved · what happened · how much, and how it got there.</b> <code>.sym</code> is the ticker (currency for cash) plus the type chip; the subtitle is <code>date · account</code>; <code>.val</code> is the total; <code>.meta</code> is the derivation, <code>12 sh @ $187.32</code>, sitting directly under the number it multiplies to. That adjacency <em>is</em> the design — the row shows its own arithmetic, which is what a trade confirmation does.</span></div>
+          <div class="spec-row"><span class="spec-k">The swap</span><span class="spec-v">Nothing was added to the row. The date left the right column for the subtitle and the share maths took its place. Share maths was cut once because it collided with the account <em>on the same line</em> — in different columns they never meet. Measured at 393pt: the account gets <b>111–145pt</b>, enough for <code>Fidelity Brokerage</code> (102pt) and <code>Wealthsimple TFSA</code> (109pt) whole. <b>The sell row is the tightest at 111pt</b> — its P&amp;L line is the widest thing in the right column — so an account past roughly 19 characters clips there first and nowhere else.</span></div>
+          <div class="spec-row"><span class="spec-k">Alignment</span><span class="spec-v">The row top-aligns. A cash movement has no derivation line, so a centred right column floated its total to the middle of the row; hanging from the top keeps <code>.val</code> on the ticker's baseline in all four types. The chevron re-centres itself.</span></div>
+          <div class="spec-row"><span class="spec-k">Precision</span><span class="spec-v">Shares to at most 4 decimals, trailing zeros trimmed (<code>0.7482 sh</code>); price at the currency's own precision. The derivation line never wraps and never truncates — it is the widest thing in the column and the account absorbs the variation.</span></div>
+          <div class="spec-row"><span class="spec-k">Sell</span><span class="spec-v">Keeps its realized-P&amp;L third line, now under the derivation. Unlabelled: <code>+$412.60 · +12.2%</code>. Adding <code>Realized:</code> cost 50pt of the account's width to say what the only tinted figure in a ledger row could already only mean.</span></div>
+          <div class="spec-row"><span class="spec-k">Amounts</span><span class="spec-v">Unchanged — the transaction's own currency, unsigned, neutral ink. €1,200.00 stays euros.</span></div>
+        </div>
+      </div>
+
+      <!-- ───────────── OPTION B ───────────── -->
+      <div class="device-card">
+        <div class="device-title"><span class="opt-tag">Option B</span> &nbsp;The rail &nbsp;<span style="color:var(--signal); font-weight:500;">— chosen</span></div>
+        <div class="device">
+          <span class="hw hw-l hw-action"></span>
+          <span class="hw hw-l hw-vol-up"></span>
+          <span class="hw hw-l hw-vol-dn"></span>
+          <span class="hw hw-r hw-side"></span>
+          <span class="hw hw-r hw-camera"></span>
+          <div class="bezel">
+            <div class="screen">
+              <div class="dyn-island"></div>
+              <div class="status-bar">
+                <span>9:41</span>
+                <div class="status-icons">
+                  <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                  <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+                </div>
+              </div>
+              <div class="screen-content">
+                <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                  <div class="ph-bar"></div>
+                  <div class="ph-large">Transactions<span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+
+                  <div class="f-row">
+                    <span class="f-chip">Symbol <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span class="f-chip">Type <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                    <span class="f-chip">Account <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                  </div>
+
+                  <div style="padding:0 20px;">
+                    <div class="divider sec" style="margin-top:0;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+                    <div class="list">
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="tx-rail"><div class="tx-day">12</div><div class="tx-dow">Sun</div></div>
+                        <div class="row-main"><div class="sym">AAPL <span class="tx-tag">Buy</span></div><div class="name">Fidelity Brokerage</div></div>
+                        <div class="row-end"><div class="val">$2,247.84</div><div class="meta tx-calc">12 sh @ $187.32</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="tx-rail"><div class="tx-day">08</div><div class="tx-dow">Wed</div></div>
+                        <div class="row-main"><div class="sym">USD <span class="tx-tag">Deposit</span></div><div class="name">Fidelity Brokerage</div></div>
+                        <div class="row-end"><div class="val">$5,000.00</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="tx-rail"><div class="tx-day">05</div><div class="tx-dow">Sun</div></div>
+                        <div class="row-main"><div class="sym">NVDA <span class="tx-tag">Sell</span></div><div class="name">Wealthsimple TFSA</div></div>
+                        <div class="row-end"><div class="val">$3,781.80</div><div class="meta tx-calc">20 sh @ $189.09</div><div class="pnl gain">+$412.60 · +12.2%</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="tx-rail"><div class="tx-day">02</div><div class="tx-dow">Thu</div></div>
+                        <div class="row-main"><div class="sym">MSFT <span class="tx-tag">Buy</span></div><div class="name">Wealthsimple TFSA</div></div>
+                        <div class="row-end"><div class="val">$4,168.40</div><div class="meta tx-calc">8 sh @ $521.05</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                    </div>
+                    <div class="divider sec"><span class="dl">June 2026</span><span class="dh"></span><span class="dm">2 transactions</span></div>
+                    <div class="list">
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="tx-rail"><div class="tx-day">24</div><div class="tx-dow">Wed</div></div>
+                        <div class="row-main"><div class="sym">EUR <span class="tx-tag">Withdraw</span></div><div class="name">Fidelity Brokerage</div></div>
+                        <div class="row-end"><div class="val">€1,200.00</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                      <div class="row tx-row" style="padding:9px 2px;">
+                        <div class="tx-rail"><div class="tx-day">18</div><div class="tx-dow">Thu</div></div>
+                        <div class="row-main"><div class="sym">AAPL <span class="tx-tag">Buy</span></div><div class="name">Fidelity Brokerage</div></div>
+                        <div class="row-end"><div class="val">$1,873.20</div><div class="meta tx-calc">10 sh @ $187.32</div></div>
+                        <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                  <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <div class="spec">
+          <div class="spec-h">Option B · build notes</div>
+          <div class="spec-row"><span class="spec-k">Rail</span><span class="spec-v">The glyph's 30pt becomes a day stamp. The month is already the section head, so the rail states only what varies inside the group; the weekday is what makes a bare <code>12</code> read as a date rather than a quantity. A column of descending days is what a statement looks like, and it makes the month grouping visible instead of merely stated.</span></div>
+          <div class="spec-row"><span class="spec-k">What it buys</span><span class="spec-v">The subtitle carries the account <b>alone</b>, at full width — no truncation at any account name the app can produce. This is the only option where that is true.</span></div>
+          <div class="spec-row"><span class="spec-k">What it costs</span><span class="spec-v"><b>The glyph, and with it the direction cue.</b> Type differentiation falls entirely to the chip word. That is defensible by this system's own logic — a glyph that says <code>↓</code> next to a chip that says <code>BUY</code> is the same fact twice, and the doc has already deleted two marks for exactly that — but it is one cue where A has three, against a complaint that is specifically about telling types apart.</span></div>
+          <div class="spec-row"><span class="spec-k">Also costs</span><span class="spec-v">Every other list in the app leads with a glyph or a ticker. This list would lead with neither, which is a second row vocabulary for one screen.</span></div>
+          <div class="spec-row"><span class="spec-k">Identical to A</span><span class="spec-v">Filter row, glyph-free leading slot aside, right column, chip, month grouping and sell line are the same. <b>The leading 30pt is the only variable</b> — judge the two on that alone.</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ FILTERS ═══════════════════════ -->
+  <div>
+    <div class="divider"><span class="dl">04 — Filters, and the open decision</span><span class="dh"></span></div>
+    <p class="sec-note"><code>screens.html</code> says the filter row is either designed in or dropped. <b>It should be designed in</b> — a ledger without a filter is a scroll — but it should stop costing 54pt of every fold to say <code>All</code> three times. Two ways to do that; they are compatible with either row.</p>
+
+    <div class="grid">
+      <div class="card wide">
+        <div class="divider" style="margin-bottom:4px;"><span class="dl">F1 · content-sized chips <span style="color:var(--signal)">— recommended</span></span><span class="dh"></span><span class="dm">34pt, one line, scrolls</span></div>
+        <div class="mini" style="padding:12px 0;">
+          <div class="f-row" style="padding-bottom:6px;">
+            <span class="f-chip">Symbol <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="f-chip">Type <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="f-chip">Account <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+          <div class="f-row" style="padding-bottom:6px;">
+            <span class="f-chip on">AAPL <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="f-chip on">Buy <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="f-chip">Account <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="f-chip f-clear">Clear</span>
+          </div>
+          <div class="f-row" style="padding-bottom:0;">
+            <span class="f-chip">Symbol <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="f-chip on">Wealthsimple TFSA <svg viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <span class="f-chip f-clear">Clear</span>
+          </div>
+        </div>
+        <div class="card-caption">Unset, partly set, and set with a long account name. Measured slack to the far gutter: <b>90pt, 48pt, 30pt</b> — <code>Wealthsimple TFSA</code> plus a <code>Clear</code> still clears it, and anything longer scrolls rather than truncating. Each chip still opens the same <code>PickerSheet</code>; choosing <b>All</b> clears it, and <code>Clear</code> resets all three at once and exists only while something is set. <b>No new colour:</b> on is <code>--surface-2</code> + <code>--fg-1</code>, off is transparent + <code>--fg-3</code>, which is exactly how <code>.seg-item.active</code> already separates on from off.
+        <br><br><b>Corrected after build:</b> the rows above put <code>Clear</code> <em>inside</em> the scroller, and that is wrong — with Symbol and Account both set it was pushed <b>41px past a 390pt viewport</b>, hiding the reset exactly when the most filters were on. Shipped structure is <code>.f-row &gt; .f-scroll</code> (dimensions only, with a 16px trailing mask) and <code>.f-clear</code> as a sibling <em>outside</em> it. See the <b>Filter row</b> entry in <code>guidelines.html</code>, which is the spec.</div>
+      </div>
+
+      <div class="card wide">
+        <div class="divider" style="margin-bottom:4px;"><span class="dl">F2 · a header action</span><span class="dh"></span><span class="dm">zero chrome when unfiltered</span></div>
+        <div class="mini" style="padding:12px 0;">
+          <div class="ph-large" style="padding-top:0;">Transactions<span class="ph-actions"><span class="ph-act ghost"><svg viewBox="0 0 16 16" fill="none"><path d="M2 3.2h12L9.4 8.6v4.4L6.6 14.2V8.6L2 3.2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+          <div style="height:14px"></div>
+          <div style="padding:0 20px;">
+            <div class="divider" style="margin-bottom:9px;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+            <div class="list"><div class="row tx-row" style="padding:9px 2px; border-bottom:none;">
+              <div class="glyph" style="border-radius:50%;"><svg viewBox="0 0 20 20" fill="none"><path d="M10 4.5v8M10 12.5L6.8 9.3M10 12.5l3.2-3.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 15.5h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+              <div class="row-main"><div class="sym">AAPL <span class="tx-tag">Buy</span></div><div class="tx-sub"><span class="tx-when">Jul 12</span><span class="tx-sep">·</span><span class="tx-acct">Fidelity Brokerage</span></div></div>
+              <div class="row-end"><div class="val">$2,247.84</div><div class="meta tx-calc">12 sh @ $187.32</div></div>
+              <svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div></div>
+          </div>
+        </div>
+        <div class="card-caption">A second <code>.ph-act</code> beside <code>+</code>, in the ghost variant so the accent stays on the primary action. It opens one sheet holding all three as <code>.field</code> rows — label left, value right, chevron — the form idiom the app already uses everywhere else, which is what these three controls actually are. While a filter is set, the F1 chip line appears under the title; with nothing set, <b>the list starts 14pt under the title and the screen carries no filter chrome at all.</b> The cost is discoverability: filtering drops from one tap to two, and the entry point is a 30pt icon rather than three labelled controls.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ TYPE COLOUR ═══════════════════════ -->
+  <div>
+    <div class="divider"><span class="dl">05 — Colour on the type chip</span><span class="dh"></span></div>
+    <p class="sec-note">Section 02 argued the chip should stay monochrome. <b>Option B changes that argument</b>, and it should be said plainly rather than left contradicting itself: B deletes the glyph, so the chip is no longer <em>one of three</em> cues, it is <b>the only</b> cue for what kind of movement a row is. A single 9.5px grey word carrying the whole type axis is thin. Colour is the right answer here — but only a colour system that survives measurement, and only one that leaves <code>--gain</code>/<code>--loss</code> and <code>--signal</code> meaning what they already mean. <b>Four hues get there</b>, but not the four you would pick by eye.</p>
+
+    <div class="card wide" style="margin-bottom:22px;">
+      <div class="divider" style="margin-bottom:4px;"><span class="dl">Four hues: not by eye, but yes when tuned</span><span class="dh"></span><span class="dm">CIEDE2000, Viénot–Brettel–Mollon</span></div>
+      <div class="table-wrap">
+        <table class="scale">
+          <thead><tr><th>Palette</th><th>Closest type pair — normal</th><th>Deuteranopia</th><th>Protanopia</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td class="dim">Four hues · steel / ochre / teal / purple <i>(S3 as first drawn)</i></td><td class="dim">ΔE 20.3</td><td class="dim">ΔE 4.2</td><td class="dim">ΔE 2.4</td><td>Buy and Withdraw merge</td></tr>
+            <tr><td class="dim">Four hues · widened spread, equal lightness</td><td class="dim">ΔE 15.1</td><td class="dim">ΔE 1.8</td><td class="dim">ΔE 0.7</td><td>Sell and Withdraw merge</td></tr>
+            <tr><td class="dim">Two hues · direction</td><td class="dim">ΔE 48.8</td><td class="dim">ΔE 56.7</td><td class="dim">ΔE 56.2</td><td>Separates everywhere</td></tr>
+            <tr><td class="dim"><b>Four hues · same identities, lightness spread <i>(S3′)</i></b></td><td class="dim"><b>ΔE 15.5</b></td><td class="dim"><b>ΔE 16.2</b></td><td class="dim"><b>ΔE 15.2</b></td><td><b>Separates everywhere</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-caption">The first two rows are why four hues look like a trap: <b>picked by eye they collapse</b>, because red and green are both spoken for and those are exactly the poles a four-way set wants, so the remaining hues crowd. Worst measured collision was <b>ΔE 0.6</b> — invisible. <b>But hue was never the only axis.</b> Under dichromacy colour is roughly two-dimensional: one chromatic axis plus <b>lightness</b>, and lightness is untouched. Spreading the same four hue identities across L*31–50 instead of bunching them at L*46–55 lifts the tightest pair from <b>ΔE 2.4 to 15.2</b>, about double the ΔE 6.5 the guidelines already call too close. Four hues work — they just cannot all sit at the same value.</div>
+    </div>
+
+    <div class="card wide" style="margin-bottom:22px;">
+      <div class="divider" style="margin-bottom:4px;"><span class="dl">The pair, and what it clears</span><span class="dh"></span><span class="dm">measured, both themes</span></div>
+      <div class="spec-strip">
+        <div class="gl-item">
+          <div class="gl-big" style="background:var(--tx-in-tint); color:var(--tx-in); border-color:transparent; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;">IN</div>
+          <div class="gl-name">--tx-in</div>
+          <div class="gl-note">Buy, Deposit. <code>#6A44A0</code> light, <code>#C9A5E8</code> dark.</div>
+        </div>
+        <div class="gl-item">
+          <div class="gl-big" style="background:var(--tx-out-tint); color:var(--tx-out); border-color:transparent; font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:600;">OUT</div>
+          <div class="gl-name">--tx-out</div>
+          <div class="gl-note">Sell, Withdraw. <code>#8A5A15</code> light, <code>#E0B674</code> dark.</div>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:6px;">
+        <table class="scale">
+          <thead><tr><th>Separation</th><th>Light</th><th>Light · deuteranopia</th><th>Dark</th><th>Dark · deuteranopia</th></tr></thead>
+          <tbody>
+            <tr><td class="dim">in ↔ out</td><td class="dim">48.8</td><td class="dim">56.7</td><td class="dim">44.0</td><td class="dim">47.2</td></tr>
+            <tr><td class="dim">out ↔ <code>--loss</code></td><td class="dim">25.4</td><td class="dim">11.1</td><td class="dim">27.6</td><td class="dim">9.9</td></tr>
+            <tr><td class="dim">in ↔ <code>--signal</code></td><td class="dim">14.6</td><td class="dim">10.4</td><td class="dim">18.1</td><td class="dim">12.1</td></tr>
+            <tr><td class="dim">out ↔ <code>--gain</code></td><td class="dim">30.6</td><td class="dim">18.5</td><td class="dim">29.4</td><td class="dim">14.0</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-caption">The binding constraint was <b><code>--tx-out</code> against <code>--loss</code></b>: the obvious warm ochre landed at <b>ΔE 1.5</b> under deuteranopia — indistinguishable from the loss red sitting a few points away on the very same Sell row. Shifting <code>--tx-in</code> off cobalt toward violet and darkening <code>--tx-out</code> to bronze pulled every reserved-hue collision above <b>ΔE 9.9</b>, comfortably past the ΔE 6.5 the guidelines already call too close. Ink-on-tint contrast at 12%: <b>6.4 / 5.3</b> light, <b>4.3 / 4.5</b> dark.</div>
+    </div>
+
+    <div class="card wide" style="margin-bottom:22px;">
+      <div class="divider" style="margin-bottom:4px;"><span class="dl">S3 → S3′ · what the tuning changed</span><span class="dh"></span><span class="dm">hue held, lightness moved</span></div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div class="strip-row">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--fg-3); width:104px; flex-shrink:0;">As drawn</span>
+          <span class="tx-tag t-buy">Buy</span><span class="tx-tag t-sell">Sell</span><span class="tx-tag t-dep">Deposit</span><span class="tx-tag t-wd">Withdraw</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--loss); margin-left:8px;">Buy / Withdraw ΔE 2.4 · protanopia</span>
+        </div>
+        <div class="strip-row">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--fg-3); width:104px; flex-shrink:0;">S3′</span>
+          <span class="tx-tag x-buy">Buy</span><span class="tx-tag x-sell">Sell</span><span class="tx-tag x-dep">Deposit</span><span class="tx-tag x-wd">Withdraw</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--gain); margin-left:8px;">tightest pair ΔE 15.2 · all vision types</span>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:6px;">
+        <table class="scale">
+          <thead><tr><th>Token</th><th>Light</th><th>Dark</th><th>Was</th><th>Moved</th></tr></thead>
+          <tbody>
+            <tr><td class="dim">--tx-buy</td><td class="dim">#297CB7</td><td class="dim">#AFD2FF</td><td class="dim">#4A6FA5</td><td>Chroma up, hue held — it was the flattest of the four</td></tr>
+            <tr><td class="dim">--tx-sell</td><td class="dim">#856207</td><td class="dim">#EDBB6F</td><td class="dim">#B0722C</td><td>Darker; ochre at L*53 sat too near <code>--loss</code> for a deuteranope</td></tr>
+            <tr><td class="dim">--tx-deposit</td><td class="dim">#267974</td><td class="dim">#A3EAE2</td><td class="dim">#4A8F92</td><td>Pushed off green toward true teal, clear of <code>--gain</code></td></tr>
+            <tr><td class="dim">--tx-withdraw</td><td class="dim">#683471</td><td class="dim">#C29DC1</td><td class="dim">#8B5FA0</td><td><b>L*47 → L*31.</b> This is the move that fixes the Buy collision</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-caption">Every collision against a reserved hue is now <b>ΔE ≥ 10.1</b> in both themes and under both red-green deficiencies, and ink-on-tint contrast is <b>≥ 4.0</b> everywhere. The one number worth watching: <b>Buy sits ΔE 15.5 from <code>--signal</code></b> in light. Distinguishable, but it is the closest any element has come to the accent, and it is the thing to look at first on a real device.</div>
+    </div>
+
+    <p class="sec-note">Three schemes, all drawn on Option B rows at 393pt, sell row included so the badge sits beside a <code>--gain</code> figure.</p>
+
+    <div class="scheme">
+
+      <!-- S1 -->
+      <div>
+        <div class="scheme-h">S1 · <b>direction only</b> — two badges</div>
+        <div class="mini" style="padding:10px 0;">
+          <div style="padding:0 20px;">
+            <div class="divider" style="margin-bottom:9px;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+            <div class="list">
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">12</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">AAPL <span class="tx-tag in">Buy</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$2,247.84</div><div class="meta tx-calc">12 sh @ $187.32</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">08</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">USD <span class="tx-tag in">Deposit</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$5,000.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">05</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">NVDA <span class="tx-tag out">Sell</span></div><div class="name">Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$3,781.80</div><div class="meta tx-calc">20 sh @ $189.09</div><div class="pnl gain">+$412.60 · +12.2%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">02</div><div class="tx-dow">Thu</div></div><div class="row-main"><div class="sym">MSFT <span class="tx-tag in">Buy</span></div><div class="name">Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$4,168.40</div><div class="meta tx-calc">8 sh @ $521.05</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="divider sec"><span class="dl">June 2026</span><span class="dh"></span><span class="dm">2 transactions</span></div>
+            <div class="list">
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">24</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">EUR <span class="tx-tag out">Withdraw</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">€1,200.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">18</div><div class="tx-dow">Thu</div></div><div class="row-main"><div class="sym">AAPL <span class="tx-tag in">Buy</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$1,873.20</div><div class="meta tx-calc">10 sh @ $187.32</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-caption" style="border:none; padding-top:10px;">Hue states <b>direction</b> and nothing else. Quietest of the three, and the pair you named — Buy against Sell — separates at ΔE 48.8. <b>Buy and Deposit are the same colour</b>, as are Sell and Withdraw; the word and the ticker-vs-currency-code are what tell those apart.</div>
+      </div>
+
+      <!-- S2 -->
+      <div>
+        <div class="scheme-h">S2 · <b>direction × weight</b> — four badges</div>
+        <div class="mini" style="padding:10px 0;">
+          <div style="padding:0 20px;">
+            <div class="divider" style="margin-bottom:9px;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+            <div class="list">
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">12</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">AAPL <span class="tx-tag in">Buy</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$2,247.84</div><div class="meta tx-calc">12 sh @ $187.32</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">08</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">USD <span class="tx-tag in cash">Deposit</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$5,000.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">05</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">NVDA <span class="tx-tag out">Sell</span></div><div class="name">Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$3,781.80</div><div class="meta tx-calc">20 sh @ $189.09</div><div class="pnl gain">+$412.60 · +12.2%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">02</div><div class="tx-dow">Thu</div></div><div class="row-main"><div class="sym">MSFT <span class="tx-tag in">Buy</span></div><div class="name">Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$4,168.40</div><div class="meta tx-calc">8 sh @ $521.05</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="divider sec"><span class="dl">June 2026</span><span class="dh"></span><span class="dm">2 transactions</span></div>
+            <div class="list">
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">24</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">EUR <span class="tx-tag out cash">Withdraw</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">€1,200.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">18</div><div class="tx-dow">Thu</div></div><div class="row-main"><div class="sym">AAPL <span class="tx-tag in">Buy</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$1,873.20</div><div class="meta tx-calc">10 sh @ $187.32</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-caption" style="border:none; padding-top:10px;"><b>All four badges are visually unique on two hues.</b> Hue is direction; weight is what moved — a <b>filled tint for a trade</b>, a <b>hairline in the same hue for a cash movement</b>. It rebuilds the exact 2 × 2 the glyph carried in Option A, in the one element B has left, and it keeps the trade-vs-cash distinction B otherwise drops. The weight axis costs no hue, so it cannot collapse for any reader.</div>
+      </div>
+
+      <!-- S3 -->
+      <div>
+        <div class="scheme-h">S3′ · <b>four hues, tuned</b> &nbsp;<i>chosen</i></div>
+        <div class="mini" style="padding:10px 0;">
+          <div style="padding:0 20px;">
+            <div class="divider" style="margin-bottom:9px;"><span class="dl">July 2026</span><span class="dh"></span><span class="dm">4 transactions</span></div>
+            <div class="list">
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">12</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">AAPL <span class="tx-tag x-buy">Buy</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$2,247.84</div><div class="meta tx-calc">12 sh @ $187.32</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">08</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">USD <span class="tx-tag x-dep">Deposit</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$5,000.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">05</div><div class="tx-dow">Sun</div></div><div class="row-main"><div class="sym">NVDA <span class="tx-tag x-sell">Sell</span></div><div class="name">Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$3,781.80</div><div class="meta tx-calc">20 sh @ $189.09</div><div class="pnl gain">+$412.60 · +12.2%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">02</div><div class="tx-dow">Thu</div></div><div class="row-main"><div class="sym">MSFT <span class="tx-tag x-buy">Buy</span></div><div class="name">Wealthsimple TFSA</div></div><div class="row-end"><div class="val">$4,168.40</div><div class="meta tx-calc">8 sh @ $521.05</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+            <div class="divider sec"><span class="dl">June 2026</span><span class="dh"></span><span class="dm">2 transactions</span></div>
+            <div class="list">
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">24</div><div class="tx-dow">Wed</div></div><div class="row-main"><div class="sym">EUR <span class="tx-tag x-wd">Withdraw</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">€1,200.00</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+              <div class="row tx-row" style="padding:9px 2px;"><div class="tx-rail"><div class="tx-day">18</div><div class="tx-dow">Thu</div></div><div class="row-main"><div class="sym">AAPL <span class="tx-tag x-buy">Buy</span></div><div class="name">Fidelity Brokerage</div></div><div class="row-end"><div class="val">$1,873.20</div><div class="meta tx-calc">10 sh @ $187.32</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+        <div class="card-caption" style="border:none; padding-top:10px;"><b>One colour per type</b> — the most differentiated of the three to a normal-vision eye, and now the version that holds up to a dichromatic one. Same four hue identities as first drawn; what changed is <b>lightness</b>. Buy drops to L*50 and Withdraw to L*31, so the pair that collapsed is separated by value rather than hue, which is the axis dichromacy leaves intact. Cost, stated plainly: this is a <b>categorical palette</b>, the second the system has had, and Buy at ΔE 15.5 from <code>--signal</code> is the closest anything has come to competing with the one accent.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ RECOMMENDATION ═══════════════════════ -->
+  <div>
+    <div class="divider"><span class="dl">06 — Recommendation</span><span class="dh"></span></div>
+    <div class="card">
+      <div class="verdict">
+        <p class="sec-note" style="margin-bottom:12px;"><b>Option B + S3′ + F1.</b> The day rail, one colour per transaction type, and content-sized filter chips.</p>
+        <p class="sec-note" style="margin-bottom:12px;">S3 was chosen for the reason it is attractive — <b>four types, four colours, nothing to decode</b> — and the objection to it turned out to be an objection to how it was <em>drawn</em>, not to four hues as such. Four hues bunched at one lightness collapse; four hues spread across L*31–50 do not. S3′ keeps the palette that was picked and moves only what had to move.</p>
+        <p class="sec-note" style="margin:0;">S1 and S2 stay documented as the fallbacks. If the four badges read as too busy down a long list on device — four tinted chips per screenful is materially more colour than this app has carried anywhere — <b>S2 is the retreat</b>: same row, same tokens, two hues instead of four.</p>
+      </div>
+      <div class="card-caption">To implement: <code>--tx-buy</code> / <code>--tx-sell</code> / <code>--tx-deposit</code> / <code>--tx-withdraw</code> and their tints go into <code>foundations/tokens.css</code> — <b>all three theme blocks</b>, per rule 05 — with a note recording that this is the second categorical set after <code>--cat-1..4</code>, that it is keyed to a <b>fixed set of four whose meaning never changes</b> (which is exactly what <code>--cat-*</code> lacked, being keyed by rank), and that the lightness spread is load-bearing, not styling: flattening it re-breaks the palette. The day rail, <code>.tx-tag</code> and its four variants, the row's top-alignment and the derivation line go into <code>guidelines.html</code> (components → a <b>Transaction row</b> entry beside <b>Holding row</b>) and <code>foundations/base.css</code>; the filter chips get a <b>Filter row</b> entry; the <b>Not drawn</b> spec row on the Transactions card in <code>screens.html</code> is deleted and its card redrawn from Option B. Only then does <code>TransactionsPage.tsx</code> / <code>TransactionRow.tsx</code> change — rule 14. <b>Rule 12 still owes a check on device:</b> these hues have been measured, not yet seen on an iPhone in sunlight.</div>
+    </div>
+  </div>
+
+</div>
+
+<script src="foundations/theme-toggle.js"></script>

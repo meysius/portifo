@@ -16,7 +16,7 @@ import { useTabBase } from "../context/TabBaseContext";
 import PickerSheet from "../components/PickerSheet";
 import type { PickerOption } from "../components/PickerSheet";
 import TransactionRow from "../components/TransactionRow";
-import { ChevronRightIcon, EmptyState, LedgerIcon, ListDivider, PlusIcon } from "../components/ds";
+import { EmptyState, LedgerIcon, ListDivider, PlusIcon } from "../components/ds";
 import type { TransactionType } from "../api/portfolio";
 
 const TYPE_LABEL: Record<TransactionType, string> = {
@@ -30,14 +30,29 @@ const TYPE_ORDER: TransactionType[] = ["buy", "sell", "deposit", "withdraw"];
 
 type FilterKey = "symbol" | "type" | "account";
 
-function FilterChip({ label, display, onClick }: { label: string; display: string; onClick: () => void }) {
+function CaretDownIcon() {
   return (
-    <button type="button" className="filter-chip" onClick={onClick}>
-      <span className="filter-chip-text">
-        <span className="filter-chip-label">{label}</span>
-        <span className="filter-chip-val">{display}</span>
-      </span>
-      <ChevronRightIcon />
+    <svg viewBox="0 0 10 6" fill="none" aria-hidden="true">
+      <path d="M1 1l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/* A chip states its DIMENSION when unset and its VALUE when set — the label
+   above the value was saying what the value already says, and it was costing
+   11pt of a 113pt box to do it. Chips size to their content and the row scrolls
+   rather than truncating, so a long account name arrives whole. */
+function FilterChip({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {
+  const set = value !== "";
+  return (
+    <button
+      type="button"
+      className={`filter-chip${set ? " on" : ""}`}
+      aria-label={set ? `${label}: ${value}` : `Filter by ${label.toLowerCase()}`}
+      onClick={onClick}
+    >
+      {set ? value : label}
+      <CaretDownIcon />
     </button>
   );
 }
@@ -52,6 +67,7 @@ function TransactionsPage() {
   const [typeFilter, setTypeFilter] = useState("");
   const [accountFilter, setAccountFilter] = useState("");
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
+  const anyFilter = symbolFilter !== "" || typeFilter !== "" || accountFilter !== "";
 
   const symbolOptions: PickerOption[] = useMemo(() => {
     const set = new Set<string>();
@@ -130,13 +146,34 @@ function TransactionsPage() {
 
         {transactions.length > 0 && (
           <div className="filter-row">
-            <FilterChip label="Symbol" display={symbolFilter || "All"} onClick={() => setOpenFilter("symbol")} />
-            <FilterChip
-              label="Type"
-              display={typeFilter ? TYPE_LABEL[typeFilter as TransactionType] : "All"}
-              onClick={() => setOpenFilter("type")}
-            />
-            <FilterChip label="Account" display={accountFilter || "All"} onClick={() => setOpenFilter("account")} />
+            {/* Only the dimensions scroll. Clear sits outside this box because
+                it is an action on the row, not a fourth dimension — inside it,
+                a long account name pushed it off the viewport entirely. */}
+            <div className="filter-scroll">
+              <FilterChip label="Symbol" value={symbolFilter} onClick={() => setOpenFilter("symbol")} />
+              <FilterChip
+                label="Type"
+                value={typeFilter ? TYPE_LABEL[typeFilter as TransactionType] : ""}
+                onClick={() => setOpenFilter("type")}
+              />
+              <FilterChip label="Account" value={accountFilter} onClick={() => setOpenFilter("account")} />
+            </div>
+            {/* Clear exists only while something is set — an always-present
+                reset is chrome that says nothing on the state this screen
+                opens in nearly every time. */}
+            {anyFilter && (
+              <button
+                type="button"
+                className="filter-chip filter-clear"
+                onClick={() => {
+                  setSymbolFilter("");
+                  setTypeFilter("");
+                  setAccountFilter("");
+                }}
+              >
+                Clear
+              </button>
+            )}
           </div>
         )}
 

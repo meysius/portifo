@@ -152,6 +152,84 @@
         border:1px solid var(--border); padding:1px 5px; border-radius:3px; }
   .w-tag{ font-size:9.5px; letter-spacing:0.04em; font-variant-numeric:tabular-nums; }
 
+  /* ── Transaction row ────────────────────────────────────────────────────
+     The Transactions list only. Same .row skeleton, three differences, each
+     paying for the last:
+
+     .tx-rail  replaces the glyph. The glyph could only ever say what the type
+               chip says in words, and the row needed its leading 30pt for
+               something that was NOT already stated. The month is the section
+               head, so the rail states only what varies inside the group —
+               day over weekday. The weekday is what makes a bare "12" read as
+               a date and not a quantity; it is a label, not decoration.
+     .tx-tag   the type, moved out of the subtitle where it sat in 12px body
+               face glued to the account — the quietest string in the row for
+               the row's most important fact. Same box as .w-tag / .closed-tag
+               (one chip vocabulary), but COLOURED, because with the glyph gone
+               it is the only cue for what kind of movement this is. See
+               tokens.css for why four hues need the lightness spread.
+     .tx-calc  shares x price, in the .meta slot the date used to occupy,
+               directly under the total it multiplies to. That adjacency is
+               the point: the row shows its own arithmetic. It was cut once for
+               colliding with the account — on the same LINE. In different
+               columns they never meet.
+
+     Top-aligned, not centred: the left column is always two lines, the right
+     is one (cash), two (trade) or three (sell), and centring floated the total
+     to the middle of the row on Deposits. */
+  .tx-row{ align-items:flex-start; }
+  .tx-row .row-chevron{ align-self:center; }
+  .tx-row .row-end{ display:flex; flex-direction:column; align-items:flex-end; }
+  .tx-rail{ flex:0 0 30px; text-align:center; margin-top:1px; }
+  .tx-day{ font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:600;
+           line-height:1; color:var(--fg-2); font-variant-numeric:tabular-nums; }
+  .tx-dow{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
+           letter-spacing:0.08em; text-transform:uppercase; color:var(--fg-3); margin-top:4px; }
+  .tx-calc{ white-space:nowrap; }
+  .tx-tag{ font-family:'JetBrains Mono',monospace; font-size:9.5px; font-weight:600;
+           letter-spacing:0.06em; text-transform:uppercase; border:1px solid transparent;
+           padding:1px 5px; border-radius:3px; flex-shrink:0; }
+  .tx-tag.buy     { color:var(--tx-buy);      background:var(--tx-buy-tint); }
+  .tx-tag.sell    { color:var(--tx-sell);     background:var(--tx-sell-tint); }
+  .tx-tag.deposit { color:var(--tx-deposit);  background:var(--tx-deposit-tint); }
+  .tx-tag.withdraw{ color:var(--tx-withdraw); background:var(--tx-withdraw-tint); }
+
+  /* ── Filter row ─────────────────────────────────────────────────────────
+     Chips size to their CONTENT. Three flex:1 chips split 353pt into 113pt
+     each and then spent a 10.5pt uppercase label on top of each value, so
+     "Wealthsimple TFSA" arrived as "Wealthsim…" in a control whose whole job
+     is to show what you filtered by. A chip states its DIMENSION when unset
+     and its VALUE when set — the label said what the value already says.
+     One line, 34pt, scrolls rather than truncates. On is --surface-2 +
+     --fg-1, off is transparent + --fg-3: the same separation .seg-item.active
+     already uses, and no new colour. */
+  .f-row{ display:flex; align-items:center; gap:8px;
+          padding:6px var(--gutter) 14px; }
+  /* Only the DIMENSIONS scroll. .f-clear is an action on the whole row, not a
+     fourth dimension, and inside the scroller a long account name pushed it
+     past the gutter — measured 41px off a 390pt viewport with Symbol and
+     Account set, which hid the reset exactly when the most filters were on.
+     The 16px trailing mask makes a cut chip read as "there is more" rather
+     than as a rendering fault; the scroller is flex:1, so when the chips fit
+     those last 16px are empty and nothing fades. */
+  .f-scroll{ flex:1; min-width:0; display:flex; align-items:center; gap:8px;
+             overflow-x:auto; scrollbar-width:none;
+             -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 16px),transparent 100%);
+             mask-image:linear-gradient(to right,#000 calc(100% - 16px),transparent 100%); }
+  .f-scroll::-webkit-scrollbar{ display:none; }
+  .f-chip{ display:inline-flex; align-items:center; gap:7px; flex-shrink:0;
+           height:34px; padding:0 11px; border-radius:8px;
+           border:1px solid var(--border); background:transparent;
+           font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:500;
+           letter-spacing:0.01em; color:var(--fg-3); white-space:nowrap; }
+  .f-chip svg{ width:9px; height:6px; color:var(--fg-3); flex-shrink:0; }
+  .f-chip.on{ background:var(--surface-2); color:var(--fg-1); }
+  .f-chip.on svg{ color:var(--fg-2); }
+  /* Clear exists only while something is set, and takes no accent — the header
+     action is the screen's one --signal. */
+  .f-clear{ font-family:var(--font-display); font-weight:600; font-size:12.5px;
+            color:var(--fg-2); border-color:transparent; }
+
   /* tabbar */
   .tabbar{ display:flex; border-top:1px solid var(--border); background:var(--surface); }
   .tab{ flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0 9px; color:var(--fg-3); position:relative; }
