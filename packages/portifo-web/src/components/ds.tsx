@@ -209,11 +209,16 @@ export function roleLabel(role: "viewer" | "editor" | "owner"): string {
 export function ListDivider({
   label,
   meta,
+  metaTone,
   onAdd,
   addLabel,
 }: {
   label: string;
   meta?: string;
+  /* Today's divider carries the day's P&L as its meta — the one place a
+     divider's meta is tinted, because it is money. Everywhere else the meta is
+     a count and stays --fg-3. */
+  metaTone?: "gain" | "loss";
   onAdd?: () => void;
   addLabel?: string;
 }) {
@@ -221,7 +226,7 @@ export function ListDivider({
     <div className="list-divider">
       <span className="dl">{label}</span>
       <span className="dh" />
-      {meta && <span className="dm">{meta}</span>}
+      {meta && <span className={metaTone ? `dm ${metaTone}` : "dm"}>{meta}</span>}
       {onAdd && (
         <button type="button" className="add-fab" aria-label={addLabel ?? "Add"} onClick={onAdd}>
           <PlusIcon />

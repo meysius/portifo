@@ -1,0 +1,891 @@
+<title>Portifo — Portfolio screen, allocation & chart</title>
+<link rel="stylesheet" href="foundations/fonts.css">
+<link rel="stylesheet" href="foundations/tokens.css">
+<link rel="stylesheet" href="foundations/base.css">
+<style>
+  body{ padding:0 0 96px; }
+  .bar{ position:sticky; top:0; z-index:50; background:var(--bg); border-bottom:1px solid var(--border);
+        padding:14px 24px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .bar-title{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .bar-sub{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3); }
+  .theme-toggle{ margin-left:auto; }
+
+  .page{ padding:40px 24px 0; display:flex; flex-direction:column; gap:64px; max-width:1500px; }
+  .sec-h{ font-family:var(--font-display); font-weight:700; font-size:22px; letter-spacing:-0.02em; margin:0 0 6px; }
+  .sec-lead{ font-size:14px; line-height:1.65; color:var(--fg-2); max-width:78ch; margin:0 0 24px; }
+  .sec-lead b{ color:var(--fg-1); font-weight:600; }
+  .sec-lead code{ font-family:'JetBrains Mono',monospace; font-size:0.9em; background:var(--surface-2);
+        border:1px solid var(--border); border-radius:4px; padding:1px 5px; }
+
+  /* numbered rules — same device as guidelines.html § 04 */
+  .rule{ display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); max-width:96ch; }
+  .rule:last-child{ border-bottom:none; }
+  .rule-n{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:var(--signal);
+           flex:0 0 26px; padding-top:2px; }
+  .rule-b{ flex:1; min-width:0; font-size:13.5px; line-height:1.6; color:var(--fg-2); }
+  .rule-b b{ color:var(--fg-1); font-weight:600; }
+  .rule-b code{ font-family:'JetBrains Mono',monospace; font-size:0.93em; background:var(--surface-2);
+                padding:1px 5px; border-radius:3px; color:var(--fg-2); }
+
+  /* option heads, matching holding-detail-options.html */
+  .opt-head{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+  .opt-name{ font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-0.01em; }
+  .opt-tag{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+            border:1px solid var(--border); border-radius:5px; padding:2px 7px; }
+  .opt-tag.rec{ color:var(--signal); border-color:var(--signal); }
+  .opt-tag.no{ color:var(--loss); border-color:var(--loss); }
+  .opt-desc{ font-size:13.5px; line-height:1.65; color:var(--fg-2); max-width:80ch; margin:0 0 18px; }
+  .opt-desc b{ color:var(--fg-1); font-weight:600; }
+  .opt-desc code{ font-family:'JetBrains Mono',monospace; font-size:0.9em; background:var(--surface-2);
+            border:1px solid var(--border); border-radius:4px; padding:1px 5px; }
+
+  .crops{ display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  .crop{ display:flex; flex-direction:column; gap:10px; }
+  .crop-name{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em;
+              text-transform:uppercase; color:var(--fg-3); }
+  .crop-body{ width:393px; background:var(--bg); border:1px solid var(--border); border-radius:12px;
+              padding:16px 20px 18px; }
+  .crop-body.flag{ border-color:var(--loss); }
+  .crop-note{ width:393px; font-size:12px; line-height:1.55; color:var(--fg-3); }
+  .crop-note b{ color:var(--fg-2); font-weight:600; }
+  .devices{ display:flex; gap:44px; flex-wrap:wrap; align-items:flex-start; }
+
+  .metrics{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px; }
+  .metric{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-2);
+           background:var(--surface-2); border:1px solid var(--border); border-radius:5px; padding:3px 8px; }
+  .metric b{ color:var(--fg-3); font-weight:500; }
+  .metric.good{ color:var(--gain); } .metric.bad{ color:var(--loss); }
+
+  /* the collision callout on the "today" crop */
+  .collide{ display:flex; align-items:center; gap:7px; font-family:'JetBrains Mono',monospace;
+            font-size:11px; color:var(--loss); margin-top:10px; }
+  .collide .sw{ width:11px; height:11px; border-radius:3px; flex-shrink:0; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     A · WEIGHT, NOT COLOUR
+     The glyph well held a 9px dot whose only job was to point at a slice two
+     sections up. The slot is 30pt of the row's leading edge — the most
+     valuable column in a list — so it gets the number the dot was encoding.
+     ══════════════════════════════════════════════════════════════════════ */
+  /* Cell width is set by the widest figure it must hold — "100%" at 13px mono is
+     29pt — and the gutter to the ticker gets everything left over. The first cut
+     was 34pt + a 12pt gutter, which put 13pt of dead space against the screen
+     edge and left two mono figures 12pt apart: crowded on the inside, loose on
+     the outside. 30 + 20 spends the same 50pt the other way round, and the
+     20pt gutter rhymes with the screen's own. */
+  .row-w{ flex:0 0 30px; margin-right:8px; text-align:right; font-family:'JetBrains Mono',monospace;
+          font-variant-numeric:tabular-nums; font-size:13px; font-weight:600; color:var(--fg-2); }
+  /* The unit is stated once per figure, quietly — a bare "47" in a row of money
+     reads as dollars. */
+  .row-w .u{ font-size:0.72em; font-weight:500; color:var(--fg-3); margin-left:1px; }
+
+  /* One line, always. A security's name is a hint, not an identifier — the
+     ticker above it is the identifier — and letting it wrap made row height a
+     function of how verbose Yahoo's shortName happens to be: "VanEck
+     Semiconductor ETF" ran to three lines and cost a row off the fold while
+     "Shopify Inc" sat on one. Clipping it makes every holding row the same
+     height, which is the larger half of the spacing fix. */
+  .list-w .name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  /* THE SIGNATURE. The row's separator carries the row's weight as a 2px
+     underline over the hairline it already draws: the list still reads as a
+     list, and the fills form a bar chart whose bars sit on the same line as
+     their own labels. Measured first as a gradient *inside* the 1px hairline —
+     it read as a broken separator, not as data, so the bar sits on top of an
+     intact hairline instead. Not a --border double-paint (rule 01): the
+     hairline is --border, the overlay is --fg-3, two different inks. */
+  .list-w .row{ position:relative; }
+  .list-w .row::after{ content:''; position:absolute; left:0; bottom:-1px; height:2px;
+        width:var(--w); border-radius:1px; background:var(--fg-3); }
+  /* A1 — the same list with the bars off, for comparison. */
+  .list-plain .row::after{ display:none; }
+  /* REJECTED — kept as a render, not as an option. The bar drawn inside the
+     hairline: the unfilled remainder is --border at 1px, which is close enough
+     to nothing that the separator reads as damaged rather than as data. */
+  .list-broken .row{ border-bottom:none; }
+  .list-broken .row::after{ height:1px; width:auto; right:0; border-radius:0; bottom:0;
+        background:linear-gradient(to right, var(--fg-2) 0 var(--w), var(--border) var(--w)); }
+
+  /* one line where a 84pt section used to be */
+  .conc{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--fg-3);
+         margin-top:8px; font-variant-numeric:tabular-nums; }
+  .conc b{ color:var(--fg-2); font-weight:600; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     B · THE BAR LABELS ITSELF
+     ══════════════════════════════════════════════════════════════════════ */
+  .alloc-bar.tall{ height:24px; border-radius:6px; }
+  .alloc-bar.tall span{ display:flex; align-items:center; padding:0 6px; overflow:hidden;
+        font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:600; letter-spacing:0.02em;
+        white-space:nowrap; color:#FFFFFF; }
+  .alloc-bar.tall span.dark-ink{ color:#16181D; }
+  .alloc-bar.tall span.mute{ justify-content:center; color:var(--fg-2); background:var(--surface-2) !important; }
+  /* the rail replaces the dot: 3pt × full row height is ~10× the dot's area */
+  .list-rail .row{ padding-left:11px; position:relative; }
+  .list-rail .row::before{ content:''; position:absolute; left:0; top:6px; bottom:6px; width:3px;
+        border-radius:2px; background:var(--c); }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     CHART — the demoted sparkline
+     ══════════════════════════════════════════════════════════════════════ */
+  .hero-spark{ display:flex; align-items:flex-end; gap:8px; margin:10px var(--gutter,20px) 0; }
+  .hero-spark svg{ flex:1; height:34px; display:block; }
+  .hero-spark .rng{ font-family:'JetBrains Mono',monospace; font-size:10.5px; font-weight:500;
+        color:var(--fg-3); letter-spacing:0.08em; padding-bottom:2px; flex-shrink:0; }
+
+  /* contribution strip, option 3 */
+  .contrib{ display:flex; flex-direction:column; gap:5px; }
+  .cbar{ display:flex; align-items:center; gap:8px; }
+  .cbar .cl{ flex:0 0 44px; font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; color:var(--fg-1); }
+  .cbar .ct{ flex:1; height:9px; background:var(--surface-2); border-radius:3px; overflow:hidden; display:flex; justify-content:flex-end; }
+  .cbar .cf{ height:100%; background:var(--loss); border-radius:3px; }
+  .cbar .cv{ flex:0 0 74px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px;
+        font-variant-numeric:tabular-nums; color:var(--loss); }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     TODAY'S MOVERS — diverging: two arms off a neutral baseline.
+     Sign is carried by WHICH SIDE the bar falls on, not by its colour. That is
+     deliberate: --gain against --loss separates at ΔE 6.5 (light) and 4.7
+     (dark) under simulated deuteranopia, which is the 6–8 floor band and below
+     it — legal only with secondary encoding. Side of the baseline plus a signed
+     figure is that encoding.
+     ══════════════════════════════════════════════════════════════════════ */
+  .mv{ display:flex; flex-direction:column; gap:7px; }
+  .mv-row{ display:flex; align-items:center; gap:9px; }
+  .mv-t{ flex:0 0 40px; min-width:0; font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600;
+         color:var(--fg-1); }
+  /* A FIXED share of the row, never flex:1 — the baseline is the chart's zero and
+     must fall on the same x on every row, and each bar is a percentage of this
+     box, so it is the shared scale too. Measured drift when it flexed: 6.7px. */
+  .mv-plot{ flex:0 0 42%; height:10px; position:relative; }
+  .mv-plot::before{ content:''; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px;
+         background:var(--border); }
+  /* a real move never renders as nothing: IBIT's −$28 is 0.35% of the arm, so
+     the floor is 2px and only a genuine zero gets the neutral tick */
+  .mv-plot i{ position:absolute; top:0; bottom:0; display:block; min-width:2px; }
+  .mv-plot i.neg{ right:50%; background:var(--loss); border-radius:3px 0 0 3px; margin-right:1px; }
+  .mv-plot i.pos{ left:50%;  background:var(--gain); border-radius:0 3px 3px 0; margin-left:1px; }
+  .mv-plot i.flat{ left:calc(50% - 1px); width:2px; background:var(--fg-3); border-radius:1px; }
+  .mv-v{ flex:1 1 auto; min-width:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px;
+         font-variant-numeric:tabular-nums; color:var(--fg-2); white-space:nowrap; }
+  .mv-v .pc{ margin-left:4px; }
+  .mv-v.loss .pc{ color:var(--loss); } .mv-v.gain .pc{ color:var(--gain); }
+  .mv-tail{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+        display:flex; justify-content:space-between; padding-top:2px; }
+
+  /* the left-anchored alternative */
+  .mv.ranked .mv-plot::before{ display:none; }
+  .mv.ranked .mv-plot i.neg{ right:auto; left:0; border-radius:0 3px 3px 0; margin:0; }
+  .mv.ranked .mv-plot i.pos{ left:0; border-radius:0 3px 3px 0; margin:0; }
+
+  .foot{ font-size:12.5px; line-height:1.6; color:var(--fg-3); max-width:88ch; }
+  .foot code{ font-family:'JetBrains Mono',monospace; font-size:0.92em; }
+  .q{ display:flex; gap:12px; padding:11px 0; border-bottom:1px solid var(--border); max-width:96ch; }
+  .q:last-child{ border-bottom:none; }
+  .q-n{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; color:var(--fg-3); flex:0 0 26px; padding-top:2px; }
+  .q-b{ flex:1; font-size:13.5px; line-height:1.6; color:var(--fg-2); }
+  .q-b b{ color:var(--fg-1); font-weight:600; }
+</style>
+
+<div class="bar">
+  <span class="bar-title">Portfolio screen — allocation &amp; chart</span>
+  <span class="bar-sub">My Portfolio · real data · 6 open positions + cash · $229,589.09</span>
+  <div class="theme-toggle">
+    <button class="theme-btn" data-theme-set="light">Light</button>
+    <button class="theme-btn" data-theme-set="dark">Dark</button>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- ═══════════════════════════ THE DIAGNOSIS ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">The key is unlearnable, and the legend is the holdings list printed twice</h2>
+    <p class="sec-lead">Everything below is drawn with the real contents of <b>My Portfolio</b> at today's
+      quotes, because the design fails specifically at this portfolio's size. Seven slices — cash plus six
+      positions — and the shipped code has <code>CAT_COLORS[i % 4]</code>. <b>NVDA at 47.3% and URA at 5.9%
+      render the same blue. QQQ at 9.5% and IBIT at 3.2% render the same gold.</b> The mapping isn't
+      hard, it's ambiguous.</p>
+
+    <div class="crops">
+      <div class="crop">
+        <span class="crop-name">Today · as shipped, with your data</span>
+        <div class="crop-body flag">
+          <div class="divider"><span class="dl">Allocation</span><span class="dh"></span></div>
+          <div class="alloc-bar">
+            <span style="flex:15.8; background:var(--cat-cash);"></span>
+            <span style="flex:47.3; background:var(--cat-1);"></span>
+            <span style="flex:9.5;  background:var(--cat-2);"></span>
+            <span style="flex:9.4;  background:var(--cat-3);"></span>
+            <span style="flex:8.8;  background:var(--cat-4);"></span>
+            <span style="flex:5.9;  background:var(--cat-1);"></span>
+            <span style="flex:3.2;  background:var(--cat-2);"></span>
+          </div>
+          <div class="alloc-legend">
+            <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-cash)"></span><span class="alloc-lbl">Cash</span><span class="alloc-pct">15.8%</span></div>
+            <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">NVDA</span><span class="alloc-pct">47.3%</span></div>
+            <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">QQQ</span><span class="alloc-pct">9.5%</span></div>
+            <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-3)"></span><span class="alloc-lbl">SMH</span><span class="alloc-pct">9.4%</span></div>
+            <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-4)"></span><span class="alloc-lbl">SHOP</span><span class="alloc-pct">8.8%</span></div>
+            <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">URA</span><span class="alloc-pct">5.9%</span></div>
+            <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">IBIT</span><span class="alloc-pct">3.2%</span></div>
+          </div>
+          <div class="collide"><span class="sw" style="background:var(--cat-1)"></span>NVDA 47.3% = URA 5.9%<span class="sw" style="background:var(--cat-2); margin-left:10px;"></span>QQQ 9.5% = IBIT 3.2%</div>
+
+          <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions</span></div>
+          <div class="list">
+            <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%; background:var(--signal-tint); color:var(--signal); border-color:transparent;"><svg viewBox="0 0 20 20" fill="none"><rect x="2" y="5" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" stroke="currentColor" stroke-width="1.5"/></svg></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-1)"></span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$4,004.00 · −3.55%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="padding:9px 2px;"><div class="glyph" style="border-radius:50%;"><span class="sq" style="border-radius:50%; background:var(--cat-1)"></span></div><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$514.80 · −3.67%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <p class="crop-note">Two of the three rows shown carry the <b>same</b> 9px dot, and it is the app's
+          <code>--signal</code> blue — the colour already spoken for by the Add button, back links and the
+          active tab marker. Rows trimmed to three; the collision is four rows apart on the real screen.</p>
+      </div>
+
+      <div class="crop" style="flex:1; min-width:420px;">
+        <span class="crop-name">Why it can't be fixed by making the dot bigger</span>
+        <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>The key is assigned by rank,
+          so it cannot be learned.</b> <code>CAT_COLORS[i]</code> keys off position in the value-sorted
+          list. QQQ and SMH are $21,837 and $21,681 apart by <em>0.7%</em> — one ordinary day swaps them,
+          and gold becomes purple. A key that changes when prices move is not a key, it's a coincidence
+          the reader is asked to re-derive on every visit.</div></div>
+        <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>With this portfolio it isn't
+          even unique.</b> <code>i % 4</code> recycles at the fifth holding: NVDA/URA share
+          <code>--cat-1</code>, QQQ/IBIT share <code>--cat-2</code>. The guidelines say the tail should
+          aggregate into "Other" past <code>--cat-4</code> — the code recycles instead. Either way six
+          positions is normal and four hues is the ceiling.</div></div>
+        <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b><code>--cat-1</code> aliases
+          <code>--signal</code>.</b> The largest slice is painted in the one accent, which the colour
+          budget reserves for primary buttons, back links, the active tab marker and focus rings. The
+          biggest holding is therefore the same blue as every interactive thing on the screen.</div></div>
+        <div class="rule"><span class="rule-n">04</span><div class="rule-b"><b>The legend is a second
+          holdings list.</b> Same items, same order, and less in each one: a label and a percentage where
+          the row below has value, today and total. Seven chips exist to explain an encoding, then a
+          divider, then the seven rows they explain. <b>The section boundary is the mapping problem</b> —
+          the reader must carry a key across it.</div></div>
+        <div class="rule"><span class="rule-n">05</span><div class="rule-b"><b>The chart restates the hero
+          at 130pt.</b> The hero already gives Today (<code>−$6,266.77 · −3.14%</code>) and Total, each in
+          money and percent. The card adds shape, and a seven-target range row — the densest control on
+          the screen — to a question already answered 40pt above. It is also the only block fed by its
+          own endpoint, so it is the screen's most fragile 130pt: spinner, "not enough data", or a curve.
+          At rest it pushes the list down to <b>two visible rows</b> out of seven.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ OPTION A ═══════════════════════════ -->
+  <section>
+    <div class="opt-head"><span class="opt-name">A · Weight, not colour</span><span class="opt-tag rec">recommended</span><span class="opt-tag">deletes the Allocation section</span></div>
+    <p class="opt-desc">The mapping problem is solved by removing the thing being mapped. The bar, the
+      legend and the category palette all go; <b>each row states its own weight</b>, in the 34pt slot the
+      colour dot was occupying. The list is already sorted by value, so the leading column reads
+      <code>47 · 16 · 10 · 9 · 9 · 6 · 3</code> — a descending column of real numbers that needs no key,
+      survives forty holdings, and can't collide with itself.</p>
+    <p class="opt-desc">The one thing the stacked bar did well was make <em>concentration</em> a shape you
+      saw rather than a number you read. That comes back for almost nothing: <b>each row's separator carries
+      a 2pt underline as long as the row's weight</b>. No new colour, no new section — and because the rows
+      descend, the underlines form the bar chart the stacked bar was trying to be, rotated so that every bar
+      sits on the same line as its own label.</p>
+    <p class="opt-desc">The first attempt drew that bar <em>inside</em> the 1px hairline — filled to the
+      weight, <code>--border</code> for the remainder. Rendered, it read as a <em>broken separator</em>
+      rather than as data, which is why the bar now sits on top of an intact hairline instead. Both
+      renders are below; the rejected one is worth knowing about before someone tries it again.</p>
+    <div class="metrics">
+      <span class="metric good"><b>sections</b> 2 → 1</span>
+      <span class="metric good"><b>vertical cost</b> −99pt measured</span>
+      <span class="metric good"><b>lists of your holdings</b> 2 → 1</span>
+      <span class="metric good"><b>colours to learn</b> 5 → 0</span>
+      <span class="metric"><b>holdings before it breaks</b> 4 → ∞</span>
+    </div>
+
+    <div class="crops">
+      <div class="crop">
+        <span class="crop-name">A2 · weight column + weight bar</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
+          <div class="list list-w">
+            <div class="row" style="--w:15.8%; padding:9px 2px;"><div class="row-w">16<span class="u">%</span></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$4,004.00 · −3.55%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$454.08 · −2.04%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:9.4%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$1,091.34 · −4.79%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:8.8%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$174.27 · −0.85%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:5.9%; padding:9px 2px;"><div class="row-w">6<span class="u">%</span></div><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$514.80 · −3.67%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:3.2%; padding:9px 2px;"><div class="row-w">3<span class="u">%</span></div><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$28.28 · −0.39%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <p class="crop-note">The bars descend with the list, so the shape of the portfolio is legible
+          without reading a figure: <b>one long line, then a step down to five short ones.</b> That is the
+          concentration story the stacked bar told, told once instead of twice — and told next to the
+          labels it belongs to.</p>
+      </div>
+
+      <div class="crop">
+        <span class="crop-name">A1 · weight column only, separators plain</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
+          <div class="list list-w list-plain">
+            <div class="row" style="--w:15.8%; padding:9px 2px;"><div class="row-w">16<span class="u">%</span></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$4,004.00 · −3.55%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$454.08 · −2.04%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:9.4%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$1,091.34 · −4.79%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:8.8%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$174.27 · −0.85%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:5.9%; padding:9px 2px;"><div class="row-w">6<span class="u">%</span></div><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$514.80 · −3.67%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:3.2%; padding:9px 2px;"><div class="row-w">3<span class="u">%</span></div><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$28.28 · −0.39%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <p class="crop-note">The safe version, and the one to fall back to if the bars read as decoration
+          on device. The <code>--w</code> variable stays either way; hiding the bars is one line of CSS.
+          <b>Pick between these two, not between A and B.</b></p>
+      </div>
+
+      <div class="crop">
+        <span class="crop-name">Rejected · bar inside the hairline</span>
+        <div class="crop-body flag">
+          <div class="list list-w list-broken">
+            <div class="row" style="--w:15.8%; padding:9px 2px;"><div class="row-w">16<span class="u">%</span></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$4,004.00 · −3.55%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$454.08 · −2.04%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:3.2%; padding:9px 2px;"><div class="row-w">3<span class="u">%</span></div><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$28.28 · −0.39%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <p class="crop-note">The idea was cheaper — no new ink at all, the hairline simply changes value
+          at the weight. But <code>--border</code> at 1px is close enough to nothing that <b>the rows look
+          like they have broken separators</b>, and IBIT at 3% appears to have none. A 2pt bar over an
+          intact hairline costs one more line of CSS and reads as a measurement.</p>
+      </div>
+    </div>
+
+    <p class="opt-desc" style="margin-top:26px;">If concentration deserves a sentence as well as a shape,
+      it is one line under the hero and no section at all — the fact the bar existed to state, stated:</p>
+    <div class="crops">
+      <div class="crop">
+        <span class="crop-name">Optional · the concentration line</span>
+        <div class="crop-body">
+          <span class="eyebrow">Total portfolio value</span>
+          <div class="hero-row">
+            <div class="figure figure-hero" style="margin-top:2px;"><span class="cur">$</span>229,589<span class="cents">.09</span></div>
+            <button type="button" class="currency-chip">USD<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="gain-stack">
+            <p class="negative"><span class="pnl-label">Today:</span>−$6,266.77 · −3.14%</p>
+            <p class="negative"><span class="pnl-label">Total:</span>−$25,933.92 · −13.0%</p>
+          </div>
+          <div class="conc">NVDA is <b>47%</b> of the portfolio · top 3 hold <b>72%</b></div>
+        </div>
+        <p class="crop-note">20pt, no key, no legend, and it names the holding rather than asking the eye
+          to measure a slice. Optional: A works without it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ OPTION B ═══════════════════════════ -->
+  <section>
+    <div class="opt-head"><span class="opt-name">B · The bar labels itself</span><span class="opt-tag">keeps the palette</span><span class="opt-tag">conservative</span></div>
+    <p class="opt-desc">If the stacked bar stays, it has to carry its own labels and the rows have to carry
+      more than a dot. So: <b>the legend is deleted</b> and each slice ≥8% is written inside itself; the
+      tail collapses into one muted "+2" segment instead of recycling hues. On the rows the dot becomes a
+      <b>3 × 40pt leading rail</b> — 120pt² of colour against the dot's 64pt², at the row's leading edge
+      where the eye enters rather than floating inside a bordered well.</p>
+    <div class="crops">
+      <div class="crop">
+        <span class="crop-name">B · labelled bar + leading rails</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Allocation</span><span class="dh"></span></div>
+          <div class="alloc-bar tall">
+            <span style="flex:47.3; background:var(--cat-1);">NVDA 47%</span>
+            <span style="flex:15.8; background:var(--cat-cash);" class="dark-ink">Cash 16%</span>
+            <span style="flex:9.5;  background:var(--cat-2);">QQQ</span>
+            <span style="flex:9.4;  background:var(--cat-3);">SMH</span>
+            <span style="flex:8.8;  background:var(--cat-4);">SHOP</span>
+            <span style="flex:9.1;" class="mute">+2</span>
+          </div>
+
+          <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions</span></div>
+          <div class="list list-rail">
+            <div class="row" style="--c:var(--cat-cash); padding:9px 2px 9px 11px;"><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--c:var(--cat-1); padding:9px 2px 9px 11px;"><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$4,004.00 · −3.55%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--c:var(--cat-2); padding:9px 2px 9px 11px;"><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$454.08 · −2.04%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--c:var(--cat-3); padding:9px 2px 9px 11px;"><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$1,091.34 · −4.79%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--c:var(--cat-4); padding:9px 2px 9px 11px;"><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$174.27 · −0.85%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--c:var(--fg-3); padding:9px 2px 9px 11px;"><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$514.80 · −3.67%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--c:var(--fg-3); padding:9px 2px 9px 11px;"><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$28.28 · −0.39%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crop" style="flex:1; min-width:400px;">
+        <span class="crop-name">What B still costs</span>
+        <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>Rank is still the key.</b>
+          Fixing uniqueness does not fix instability — QQQ and SMH are 0.7% apart, and the day they swap,
+          two rows and two slices change colour with no event the reader can point to.</div></div>
+        <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>In-slice text needs a second
+          ink rule.</b> White reads on <code>--cat-1/3/4</code>, is marginal on <code>--cat-2</code>'s
+          <code>#B8862E</code>, and fails on <code>--cat-cash</code>'s <code>#9AA0A6</code> — so the bar
+          needs a per-hue ink switch that exists nowhere else in the language.</div></div>
+        <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>URA and IBIT lose their
+          identity.</b> Aggregating the tail is the honest fix for four hues, but the two rows in "+2" then
+          have a grey rail keying them to a segment with no name. Nine holdings makes that seven
+          rows.</div></div>
+        <div class="rule"><span class="rule-n">04</span><div class="rule-b"><b>It still spends a section and
+          84pt</b> on a fact A states in the rows for free — and it keeps the reader crossing a divider
+          with a key in their head, which is the original complaint.</div></div>
+        <p class="crop-note" style="margin-top:16px;">Worth building only if the stacked bar is something
+          you actively like looking at. It is a real improvement on today; it just does not remove the
+          class of problem.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ THE CHART ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">The chart: keep the curve, stop giving it a card</h2>
+    <p class="sec-lead">There is one thing a value line does that nothing else on this screen does — it
+      shows <em>shape</em>: whether $229,589 is a plateau, a climb or a recovery. That is worth about 34pt.
+      What it is not worth is a bordered card, a 7-target range row, a spinner state and an empty state, all
+      to re-answer the question the hero answers in words directly above it.</p>
+
+    <div class="crops">
+      <div class="crop">
+        <span class="crop-name">1 · Demote — recommended</span>
+        <div class="crop-body">
+          <span class="eyebrow">Total portfolio value</span>
+          <div class="hero-row">
+            <div class="figure figure-hero" style="margin-top:2px;"><span class="cur">$</span>229,589<span class="cents">.09</span></div>
+            <button type="button" class="currency-chip">USD<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="gain-stack">
+            <p class="negative"><span class="pnl-label">Today:</span>−$6,266.77 · −3.14%</p>
+            <p class="negative"><span class="pnl-label">Total:</span>−$25,933.92 · −13.0%</p>
+          </div>
+          <div class="hero-spark" style="margin-left:0; margin-right:0;">
+            <svg viewBox="0 0 300 34" preserveAspectRatio="none">
+              <defs><linearGradient id="sp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.20"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs>
+              <path d="M0,27 L25,25 L50,28 L75,20 L100,23 L125,15 L150,18 L175,9 L200,12 L225,4 L250,6 L275,3 L300,11 L300,34 L0,34 Z" fill="url(#sp)"/>
+              <path d="M0,27 L25,25 L50,28 L75,20 L100,23 L125,15 L150,18 L175,9 L200,12 L225,4 L250,6 L275,3 L300,11" fill="none" stroke="#1E9E6B" stroke-width="1.6"/>
+            </svg>
+            <span class="rng">1Y</span>
+          </div>
+        </div>
+        <p class="crop-note">Full-bleed to the gutter, no card, no hairline, one fixed range. Tapping it
+          pushes a full-height Performance screen where the ranges are the point. <b>−96pt</b>, and the
+          shape survives. The <code>1Y</code> label is the only chrome; a range delta can ride beside it if
+          the number is wanted.</p>
+      </div>
+
+      <div class="crop">
+        <span class="crop-name">2 · Delete</span>
+        <div class="crop-body">
+          <span class="eyebrow">Total portfolio value</span>
+          <div class="hero-row">
+            <div class="figure figure-hero" style="margin-top:2px;"><span class="cur">$</span>229,589<span class="cents">.09</span></div>
+            <button type="button" class="currency-chip">USD<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="gain-stack">
+            <p class="negative"><span class="pnl-label">Today:</span>−$6,266.77 · −3.14%</p>
+            <p class="negative"><span class="pnl-label">Total:</span>−$25,933.92 · −13.0%</p>
+          </div>
+          <div class="conc">NVDA is <b>47%</b> of the portfolio · top 3 hold <b>72%</b></div>
+        </div>
+        <p class="crop-note"><b>−130pt</b> and the whole list clears the fold. The curve moves behind a
+          chevron on the hero. Take this one if, after a week on option 1, you find you never look at the
+          sparkline — it is the same change, one step further.</p>
+      </div>
+
+      <div class="crop">
+        <span class="crop-name">3 · Replace with today's movers — chosen</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Today</span><span class="dh"></span><span class="dm">−$6,266.77</span></div>
+          <div class="contrib">
+            <div class="cbar"><span class="cl">NVDA</span><span class="ct"><span class="cf" style="width:100%"></span></span><span class="cv">−$4,004</span></div>
+            <div class="cbar"><span class="cl">SMH</span><span class="ct"><span class="cf" style="width:27%"></span></span><span class="cv">−$1,091</span></div>
+            <div class="cbar"><span class="cl">URA</span><span class="ct"><span class="cf" style="width:13%"></span></span><span class="cv">−$515</span></div>
+            <div class="cbar"><span class="cl">QQQ</span><span class="ct"><span class="cf" style="width:11%"></span></span><span class="cv">−$454</span></div>
+            <div class="cbar"><span class="cl">SHOP</span><span class="ct"><span class="cf" style="width:4%"></span></span><span class="cv">−$174</span></div>
+            <div class="cbar"><span class="cl">IBIT</span><span class="ct"><span class="cf" style="width:1%"></span></span><span class="cv">−$28</span></div>
+          </div>
+        </div>
+        <p class="crop-note">Answers a question the line never could: <em>why</em> is today −$6,267 —
+          NVDA is 64% of the loss. Its one cost is that every figure in it also sits in the rows' Today
+          line. <b>Chosen — and that duplication is resolved by moving Today out of the rows</b>; the
+          finished form, scaled and colour-checked, is in the next section.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ THE COMBINATION ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">Movers, and what it does to the rows</h2>
+    <p class="sec-lead">Movers had exactly one objection against it: every figure in the block also sat in
+      the rows' <code>Today:</code> line. That resolves in the block's favour — <b>the line moves out of
+      the rows and into the block</b>, where it is ranked, scaled and given a bar. Every row loses a line,
+      which is most of what the block costs.</p>
+    <p class="sec-lead"><b>The weight column stays as it is in A2</b> — the figure in ink, the 2pt bar in
+      <code>--fg-3</code>, no colour. A sequential ramp on the tiles was drawn and dropped; the record is
+      in the last section. The screen therefore carries no categorical colour at all, which is the
+      simplest possible answer to the diagnosis: nothing to key, nothing to learn.</p>
+
+    <div class="crops">
+      <div class="crop">
+        <span class="crop-name">Holdings · no Today line</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
+          <div class="list list-w">
+            <div class="row" style="--w:15.8%; padding:9px 2px;"><div class="row-w">16<span class="u">%</span></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:9.4%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:8.8%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:5.9%; padding:9px 2px;"><div class="row-w">6<span class="u">%</span></div><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="row" style="--w:3.2%; padding:9px 2px;"><div class="row-w">3<span class="u">%</span></div><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+        </div>
+        <p class="crop-note">Same rows as A2, one line lighter. QQQ and SHOP lose their only P&amp;L line and
+          collapse to 53pt; the rest keep Total. <b>The column still reads 16 · 47 · 10 · 9 · 9 · 6 · 3</b>
+          — which is the fact the allocation bar and its five hues existed to convey.</p>
+      </div>
+
+      <div class="crop">
+        <span class="crop-name">Today · diverging off a neutral baseline</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Today</span><span class="dh"></span><span class="dm" style="color:var(--loss)">−$6,266.77 · −3.14%</span></div>
+          <div class="mv">
+            <div class="mv-row"><span class="mv-t">NVDA</span><span class="mv-plot"><i class="neg" style="width:50%"></i></span><span class="mv-v loss">−$4,004.00 · <span class="pc">−3.55%</span></span></div>
+            <div class="mv-row"><span class="mv-t">SMH</span><span class="mv-plot"><i class="neg" style="width:13.65%"></i></span><span class="mv-v loss">−$1,091.34 · <span class="pc">−4.79%</span></span></div>
+            <div class="mv-row"><span class="mv-t">URA</span><span class="mv-plot"><i class="neg" style="width:6.45%"></i></span><span class="mv-v loss">−$514.80 · <span class="pc">−3.67%</span></span></div>
+            <div class="mv-row"><span class="mv-t">QQQ</span><span class="mv-plot"><i class="neg" style="width:5.67%"></i></span><span class="mv-v loss">−$454.08 · <span class="pc">−2.04%</span></span></div>
+            <div class="mv-row"><span class="mv-t">SHOP</span><span class="mv-plot"><i class="neg" style="width:2.18%"></i></span><span class="mv-v loss">−$174.27 · <span class="pc">−0.85%</span></span></div>
+            <div class="mv-row"><span class="mv-t">IBIT</span><span class="mv-plot"><i class="neg" style="width:0.35%"></i></span><span class="mv-v loss">−$28.28 · <span class="pc">−0.39%</span></span></div>
+          </div>
+        </div>
+        <p class="crop-note">Sorted by size of contribution, scaled to the largest. Today every arm falls
+          left, and <b>that one-sidedness is the reading</b> — nothing was up. NVDA is 64% of the day's
+          loss, which the hero's <code>−$6,266.77</code> cannot tell you and the value line never
+          could.</p>
+
+        <span class="crop-name" style="margin-top:20px;">A mixed day, for the shape</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Today</span><span class="dh"></span><span class="dm" style="color:var(--gain)">+$2,481.00 · +1.28%</span></div>
+          <div class="mv">
+            <div class="mv-row"><span class="mv-t">NVDA</span><span class="mv-plot"><i class="pos" style="width:50%"></i></span><span class="mv-v gain">+$3,140.00 · <span class="pc">+2.94%</span></span></div>
+            <div class="mv-row"><span class="mv-t">SMH</span><span class="mv-plot"><i class="neg" style="width:17%"></i></span><span class="mv-v loss">−$1,068.00 · <span class="pc">−4.69%</span></span></div>
+            <div class="mv-row"><span class="mv-t">QQQ</span><span class="mv-plot"><i class="pos" style="width:9%"></i></span><span class="mv-v gain">+$566.00 · <span class="pc">+2.66%</span></span></div>
+            <div class="mv-row"><span class="mv-t">URA</span><span class="mv-plot"><i class="neg" style="width:4%"></i></span><span class="mv-v loss">−$251.00 · <span class="pc">−1.82%</span></span></div>
+            <div class="mv-row"><span class="mv-t">IBIT</span><span class="mv-plot"><i class="pos" style="width:1.5%"></i></span><span class="mv-v gain">+$94.00 · <span class="pc">+1.31%</span></span></div>
+            <div class="mv-row"><span class="mv-t">SHOP</span><span class="mv-plot"><i class="flat"></i></span><span class="mv-v">unchanged</span></div>
+          </div>
+        </div>
+        <p class="crop-note">Illustrative figures. <b>Sign is the side of the baseline, never the colour</b>
+          — <code>--gain</code> and <code>--loss</code> separate at only ΔE 6.5 light / 4.7 dark under
+          simulated deuteranopia, so a red-green reader gets sign from position and from the signed figure.
+          A genuine zero is the neutral tick; IBIT's −$28 is a real move at 0.35% of the arm, so bars floor
+          at 2px rather than vanish.</p>
+      </div>
+
+      <div class="crop" style="flex:1; min-width:380px;">
+        <span class="crop-name">Decisions inside this section</span>
+        <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>Today leaves the rows.</b>
+          It is not deleted — it is promoted. The block carries the same money and the same percentage,
+          plus a rank and a scale the rows could never show. Rows keep value and Total, and drop from 72pt
+          to a uniform 53–55pt.</div></div>
+        <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>The block replaces the chart
+          rather than joining it.</b> Both answer "what happened"; only one of them answers "because of
+          what". Long-run shape moves to a pushed Performance screen off the hero.</div></div>
+        <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>Diverging, not ranked
+          left-to-right.</b> A centre baseline spends half the width, and on a one-way day like today one
+          arm sits empty — that is the trade for sign that survives colour blindness and needs no
+          legend. Left-anchored bars buy back ~90pt of bar length if the block ever feels
+          cramped.</div></div>
+        <div class="rule"><span class="rule-n">04</span><div class="rule-b"><b>Long lists truncate, they do
+          not scroll.</b> Past six movers the block shows the top five and a
+          <code>+12 more · −$412</code> tail line, so the section has a fixed ceiling of about
+          130pt.</div></div>
+        <div class="rule"><span class="rule-n">05</span><div class="rule-b"><b>Cash has no row here.</b> It
+          does not move, and a permanent neutral tick at the baseline would be six pixels of noise on
+          every render.</div></div>
+        <div class="rule"><span class="rule-n">06</span><div class="rule-b"><b>The hero drops its Today
+          line.</b> Rendered side by side, the hero said "Today" 40pt above a section head that also said
+          "Today". The day's total moves to that head as its <code>.dm</code> meta — the one place in the
+          system where a divider's meta is tinted, because it is money — and the hero keeps Total alone.
+          Nothing is lost and the hero is a line shorter.</div></div>
+        <div class="rule"><span class="rule-n">07</span><div class="rule-b"><b>Nothing on this screen is
+          coloured except money.</b> With <code>--cat-*</code> retired and no ramp replacing it, the
+          palette in play is <code>--gain</code>/<code>--loss</code> for figures and
+          <code>--signal</code> for the two interactive marks. One pair, one accent — and weight is
+          carried entirely by a figure and a bar length.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ THE SCREEN ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">Both compositions, at 393 × 852</h2>
+    <p class="sec-lead">Left: <b>A + the demoted sparkline</b> — hero, curve, fx note, Holdings. Right:
+      <b>A + movers</b>, with Today's breakdown standing where the chart card used to. Measured
+      in the frame rather than estimated, against today's 615pt:</p>
+    <p class="sec-lead" style="margin-bottom:14px;">In the mocks below the sparkline version puts the
+      first row at <b>376pt</b> and the movers version at <b>483pt</b>. <b>Measured in the shipped app</b>
+      — where <code>ion-item</code>'s 60pt minimum makes rows 61pt and the real toolbar is shorter than
+      the mock's — the movers screen puts the first row at <b>418pt</b> and clears <b>six of its seven
+      rows</b>, against two today. The block costs 148pt and the shortened rows pay for nearly all of
+      it.</p>
+    <div class="devices">
+      <div class="device-card">
+        <div class="device-title">Portfolio · proposed</div>
+        <div class="device">
+          <span class="hw hw-l hw-action"></span>
+          <span class="hw hw-l hw-vol-up"></span>
+          <span class="hw hw-l hw-vol-dn"></span>
+          <span class="hw hw-r hw-side"></span>
+          <span class="hw hw-r hw-camera"></span>
+          <div class="bezel">
+            <div class="screen">
+              <div class="dyn-island"></div>
+              <div class="status-bar">
+                <span>9:41</span>
+                <div class="status-icons">
+                  <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                  <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+                </div>
+              </div>
+              <div class="screen-content">
+                <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                  <div class="ph-bar"></div>
+                  <div class="ph-large">My Portfolio<svg class="ph-chev" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+                  <div style="padding:0 20px;">
+                    <span class="eyebrow" style="display:block; margin-top:12px;">Total portfolio value</span>
+                    <div class="hero-row">
+                      <div class="figure figure-hero" style="margin-top:2px;"><span class="cur">$</span>229,589<span class="cents">.09</span></div>
+                      <button type="button" class="currency-chip">USD<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    </div>
+                    <div class="gain-stack">
+                      <p class="negative"><span class="pnl-label">Today:</span>−$6,266.77 · −3.14%</p>
+                      <p class="negative"><span class="pnl-label">Total:</span>−$25,933.92 · −13.0%</p>
+                    </div>
+                  </div>
+
+                  <div class="hero-spark">
+                    <svg viewBox="0 0 300 34" preserveAspectRatio="none">
+                      <defs><linearGradient id="sp2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1E9E6B" stop-opacity="0.20"/><stop offset="100%" stop-color="#1E9E6B" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0,27 L25,25 L50,28 L75,20 L100,23 L125,15 L150,18 L175,9 L200,12 L225,4 L250,6 L275,3 L300,11 L300,34 L0,34 Z" fill="url(#sp2)"/>
+                      <path d="M0,27 L25,25 L50,28 L75,20 L100,23 L125,15 L150,18 L175,9 L200,12 L225,4 L250,6 L275,3 L300,11" fill="none" stroke="#1E9E6B" stroke-width="1.6"/>
+                    </svg>
+                    <span class="rng">1Y</span>
+                  </div>
+
+                  <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
+
+                  <div style="padding:0 20px;">
+                    <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
+                    <div class="list list-w">
+                      <div class="row" style="--w:15.8%; padding:9px 2px;"><div class="row-w">16<span class="u">%</span></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$4,004.00 · −3.55%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$454.08 · −2.04%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:9.4%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$1,091.34 · −4.79%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:8.8%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$174.27 · −0.85%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:5.9%; padding:9px 2px;"><div class="row-w">6<span class="u">%</span></div><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$514.80 · −3.67%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:3.2%; padding:9px 2px;"><div class="row-w">3<span class="u">%</span></div><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Today:</span>−$28.28 · −0.39%</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <div class="device-caption">Every position visible at rest, weights in the leading column, the
+          curve reduced to the one thing only it can say.</div>
+      </div>
+
+      <div class="device-card">
+        <div class="device-title">Portfolio · movers</div>
+        <div class="device">
+          <span class="hw hw-l hw-action"></span>
+          <span class="hw hw-l hw-vol-up"></span>
+          <span class="hw hw-l hw-vol-dn"></span>
+          <span class="hw hw-r hw-side"></span>
+          <span class="hw hw-r hw-camera"></span>
+          <div class="bezel">
+            <div class="screen">
+              <div class="dyn-island"></div>
+              <div class="status-bar">
+                <span>9:41</span>
+                <div class="status-icons">
+                  <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="7" width="3" height="5" rx="0.5"/><rect x="5" y="5" width="3" height="7" rx="0.5"/><rect x="10" y="3" width="3" height="9" rx="0.5"/><rect x="15" y="0" width="3" height="12" rx="0.5"/></svg>
+                  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1 4.6a10 10 0 0 1 14 0"/><path d="M3.8 7.4a6 6 0 0 1 8.4 0"/><circle cx="8" cy="10.3" r="1.1" fill="currentColor" stroke="none"/></svg>
+                  <svg width="25" height="12" viewBox="0 0 25 12" fill="none"><rect x="0.75" y="0.75" width="21" height="10.5" rx="2.5" stroke="currentColor" stroke-opacity="0.5"/><rect x="2.25" y="2.25" width="16" height="7.5" rx="1.3" fill="currentColor"/><rect x="23" y="4" width="1.5" height="4" rx="0.75" fill="currentColor" fill-opacity="0.5"/></svg>
+                </div>
+              </div>
+              <div class="screen-content">
+                <div class="stage" style="padding:0; gap:0; min-height:0; overflow:hidden;">
+                  <div class="ph-bar"></div>
+                  <div class="ph-large">My Portfolio<svg class="ph-chev" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="ph-actions"><span class="ph-act"><svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5V14.5M1.5 8H14.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span></span></div>
+                  <div style="padding:0 20px;">
+                    <span class="eyebrow" style="display:block; margin-top:12px;">Total portfolio value</span>
+                    <div class="hero-row">
+                      <div class="figure figure-hero" style="margin-top:2px;"><span class="cur">$</span>229,589<span class="cents">.09</span></div>
+                      <button type="button" class="currency-chip">USD<svg viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                    </div>
+                    <div class="gain-stack">
+                      <p class="negative"><span class="pnl-label">Total:</span>−$25,933.92 · −13.0%</p>
+                    </div>
+
+                    <div class="divider sec"><span class="dl">Today</span><span class="dh"></span><span class="dm" style="color:var(--loss)">−$6,266.77 · −3.14%</span></div>
+                    <div class="mv">
+                      <div class="mv-row"><span class="mv-t">NVDA</span><span class="mv-plot"><i class="neg" style="width:50%"></i></span><span class="mv-v loss">−$4,004.00 · <span class="pc">−3.55%</span></span></div>
+                      <div class="mv-row"><span class="mv-t">SMH</span><span class="mv-plot"><i class="neg" style="width:13.65%"></i></span><span class="mv-v loss">−$1,091.34 · <span class="pc">−4.79%</span></span></div>
+                      <div class="mv-row"><span class="mv-t">URA</span><span class="mv-plot"><i class="neg" style="width:6.45%"></i></span><span class="mv-v loss">−$514.80 · <span class="pc">−3.67%</span></span></div>
+                      <div class="mv-row"><span class="mv-t">QQQ</span><span class="mv-plot"><i class="neg" style="width:5.67%"></i></span><span class="mv-v loss">−$454.08 · <span class="pc">−2.04%</span></span></div>
+                      <div class="mv-row"><span class="mv-t">SHOP</span><span class="mv-plot"><i class="neg" style="width:2.18%"></i></span><span class="mv-v loss">−$174.27 · <span class="pc">−0.85%</span></span></div>
+                      <div class="mv-row"><span class="mv-t">IBIT</span><span class="mv-plot"><i class="neg" style="width:0.35%"></i></span><span class="mv-v loss">−$28.28 · <span class="pc">−0.39%</span></span></div>
+                    </div>
+                  </div>
+
+                  <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
+
+                  <div style="padding:0 20px;">
+                    <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
+                    <div class="list list-w">
+                      <div class="row" style="--w:15.8%; padding:9px 2px;"><div class="row-w">16<span class="u">%</span></div><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:47.3%; padding:9px 2px;"><div class="row-w">47<span class="u">%</span></div><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:9.5%; padding:9px 2px;"><div class="row-w">10<span class="u">%</span></div><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:9.4%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:8.8%; padding:9px 2px;"><div class="row-w">9<span class="u">%</span></div><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:5.9%; padding:9px 2px;"><div class="row-w">6<span class="u">%</span></div><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                      <div class="row" style="--w:3.2%; padding:9px 2px;"><div class="row-w">3<span class="u">%</span></div><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="tabbar">
+                  <div class="tab active"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20.7 15.5A9.3 9.3 0 1 1 8.4 3.43" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M21.3 12A9.3 9.3 0 0 0 12 2.7V12h9.3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span><span class="tab-label">Portfolio</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 8h13M17 8l-3.2-3.2M17 8l-3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 16H7M7 16l3.2-3.2M7 16l3.2 3.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="tab-label">Transactions</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="6" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M8 6V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/></svg></span><span class="tab-label">Accounts</span></div>
+                  <div class="tab"><span class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg></span><span class="tab-label">Settings</span></div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+        <div class="device-caption">Today's move broken down where the chart used to be. The only colour on
+          the screen is money.</div>
+      </div>
+
+      <div style="flex:1; min-width:420px;">
+        <div class="metrics">
+          <span class="metric"><b>· · · sparkline · · ·</b></span>
+          <span class="metric good"><b>rows clearing the tab bar</b> 2 → 6</span>
+          <span class="metric good"><b>screen top to first row</b> 615 → 376pt</span>
+          <span class="metric good"><b>chart block</b> 160 → 44pt</span>
+          <span class="metric good"><b>tap targets before the list</b> 10 → 4</span>
+        </div>
+        <div class="metrics">
+          <span class="metric"><b>· · · movers · · ·</b></span>
+          <span class="metric good"><b>rows clearing the tab bar</b> 2 → 6 <i>in-app</i></span>
+          <span class="metric good"><b>screen top to first row</b> 615 → 418pt <i>in-app</i></span>
+          <span class="metric"><b>chart block</b> 160 → 148pt</span>
+          <span class="metric good"><b>holding row</b> 88 → 61pt, uniform</span>
+          <span class="metric good"><b>tap targets before the list</b> 10 → 3</span>
+        </div>
+        <h2 class="sec-h" style="font-size:17px; margin-top:26px;">Build notes</h2>
+        <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>The weight bar rides over the
+          hairline, it does not replace it.</b> The row keeps its <code>border-bottom</code>;
+          <code>::after</code> adds <code>height:2px; width:var(--w); background:var(--fg-3)</code> at
+          <code>bottom:-1px</code>. That is not the rule-01 trap — the hairline is <code>--border</code> and
+          the bar is <code>--fg-3</code>, so nothing paints <code>--border</code> twice. <code>--w</code> is
+          the only per-row inline value.</div></div>
+        <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>Ionic detail.</b>
+          <code>IonItem</code> draws its separator inset via <code>::part(native)</code>, so a bar anchored
+          to the item's own box will start 16px left of where that line begins. Set
+          <code>lines="none"</code> and own both the hairline and the bar on one wrapper. Measure it
+          (rule 11) before calling it done.</div></div>
+        <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>The weight column is 30pt
+          wide with a 20pt gutter, and the ticker lands at 72pt.</b> The width is set by the widest figure
+          the cell must hold — <code>100%</code> at 13px mono is 29pt — and everything left over goes to
+          the gutter. The first cut had it backwards at 34 + 12, which left 13pt of dead space against the
+          screen edge and put two mono figures 12pt apart. Same 50pt, spent the other way.</div></div>
+        <div class="rule"><span class="rule-n">04</span><div class="rule-b"><b>The name line clips, it does
+          not wrap.</b> <code>white-space:nowrap</code> + <code>text-overflow:ellipsis</code>. Row height
+          was a function of how verbose Yahoo's <code>shortName</code> is — "VanEck Semiconductor ETF" ran
+          to three lines and cost a row off the fold. Uniform rows are worth more than the tail of a name
+          the ticker already identifies. <b>Scoped to the holdings list</b>, not to <code>.name</code>
+          everywhere — check Accounts before generalising it.</div></div>
+        <div class="rule"><span class="rule-n">05</span><div class="rule-b"><b>Weights are integers, and
+          they must sum to 100.</b> Round half-up and give the largest holding the remainder, or the column
+          reads 99 or 101. Anything under 0.5% shows <code>&lt;1%</code> rather than <code>0%</code>.</div></div>
+        <div class="rule"><span class="rule-n">06</span><div class="rule-b"><b><code>--cat-*</code> becomes
+          dead on this screen.</b> Under A the palette has no remaining call site, and
+          <code>--cat-1</code>'s aliasing of <code>--signal</code> stops being a problem by not existing.
+          Delete the "Category colors" block from <code>guidelines.html</code> in the same pass, or it
+          documents a system nothing uses.</div></div>
+        <div class="rule"><span class="rule-n">07</span><div class="rule-b"><b>The glyph column goes with
+          it.</b> Cash keeps no icon — it is identified by the word "Cash", its currency sub-line and its
+          weight, like every other row. That removes the second thing the current screen asks the eye to
+          decode.</div></div>
+        <div class="rule"><span class="rule-n">08</span><div class="rule-b"><b>Sparkline range.</b> One
+          fixed range, fetched once. <code>1Y</code> if there is a year of history, else <code>All</code>;
+          the label states which. The <code>PriceChart</code> component already draws this — it needs a
+          <code>compact</code> variant with no card, no axis and no <code>RangePicker</code>.</div></div>
+        <div class="rule"><span class="rule-n">09</span><div class="rule-b"><b>Closed positions are
+          untouched.</b> They keep their divider, their dimmed rows and realized P&amp;L, and they get no
+          weight cell — they have no weight.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ OPEN QUESTIONS ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">Open questions</h2>
+    <div class="q"><span class="q-n">01</span><div class="q-b"><b>Do the weighted separators survive
+      device?</b> They are 1px of <code>--fg-2</code> on a 353pt row. On the doc they read as intent; on
+      glass at 3× they may read as an artifact, in which case A1 ships and nothing else changes.</div></div>
+    <div class="q"><span class="q-n">02</span><div class="q-b"><b>Is weight worth the leading column, or
+      should it sit under the value?</b> Leading gives it a sorted column of its own, which is the whole
+      argument. Trailing keeps the money together but buries it in a stack of three figures. Leading is
+      the recommendation; it is a 20-minute change to test the other.</div></div>
+    <div class="q"><span class="q-n">03</span><div class="q-b"><b>Answered by building it: six.</b> The
+      concern was that movers would cost too much of the fold. In the app the whole portfolio bar one row
+      clears the tab bar, against two rows today. If it ever gets tight, the lever is the movers block's
+      row gap and label width, not the list.</div></div>
+    <div class="q"><span class="q-n">04</span><div class="q-b"><b>Does the long-run curve survive at
+      all?</b> Movers replaces the chart, so the value line has nowhere left on this screen. Either it
+      moves to a pushed Performance screen off the hero, or it goes. Worth deciding deliberately rather
+      than discovering later that it quietly vanished.</div></div>
+    <div class="q"><span class="q-n">05</span><div class="q-b"><b>Cash inside the weights, or beside
+      them?</b> Cash at 16% is the second-largest line in this portfolio, so it belongs in the ranking. But
+      it is also the one row with no return, which makes it the odd row in a list where every other row has
+      two P&amp;L lines. Shown in-list here.</div></div>
+    <h2 class="sec-h" style="font-size:17px; margin-top:30px;">Considered and dropped</h2>
+    <div class="rule"><span class="rule-n">—</span><div class="rule-b"><b>A sequential colour ramp on the
+      weight column.</b> Four steps of one hue keyed to weight bands, tile fills with the figure in ink on
+      top. It was technically sound — colour as a function of the value rather than the rank, so it fixed
+      the instability that broke the category palette, and it validated (monotone OKLab lightness both
+      modes, text 6.3–14.3:1). <b>Dropped on preference:</b> the screen does not want another colour system,
+      and a figure plus a bar length already carries weight without one. Recorded so the idea is not
+      re-proposed as new.</div></div>
+    <div class="rule"><span class="rule-n">—</span><div class="rule-b"><b>The weight bar drawn inside the
+      hairline</b> — see the rejected crop in section A. Read as a broken separator.</div></div>
+    <div class="rule"><span class="rule-n">—</span><div class="rule-b"><b>Option B, the self-labelling
+      stacked bar.</b> A real improvement on today, but it keeps a rank-assigned key, needs a per-hue ink
+      switch for in-slice text, and still spends a section and 84pt on what the rows now state
+      themselves.</div></div>
+
+    <p class="foot" style="margin-top:20px;">Data is My Portfolio at today's quotes, pulled from the local
+      DB and Yahoo: <code>NVDA 190.01 · SMH 504.22 · URA 37.52 · IBIT 36.00 · QQQ 661.73 · SHOP 129.17</code>,
+      <code>USDCAD 1.404</code>. Every figure was
+      re-read out of the running app after implementation, so the returns here are the app's own
+      average-cost accounting rather than a net-cash-flow estimate: <b>NVDA is down 11.4% on remaining
+      basis</b>, not up 32%. <b>SHOP alone carries no cost basis</b> (transferred in at zero), so it shows
+      no Total line — in the app and here.</p>
+  </section>
+</div>
+
+<script src="foundations/theme-toggle.js"></script>

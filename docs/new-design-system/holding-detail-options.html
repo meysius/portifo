@@ -1,0 +1,819 @@
+<meta charset="utf-8">
+<title>Portifo — One Holding screen</title>
+<link rel="stylesheet" href="foundations/fonts.css">
+<link rel="stylesheet" href="foundations/tokens.css">
+<link rel="stylesheet" href="foundations/base.css">
+<style>
+  body{ padding:0 0 96px; }
+  .bar{ position:sticky; top:0; z-index:50; background:var(--bg); border-bottom:1px solid var(--border);
+        padding:14px 24px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+  .bar-title{ font-family:var(--font-display); font-weight:700; font-size:15px; }
+  .bar-sub{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3); }
+
+  .page{ padding:40px 24px 0; display:flex; flex-direction:column; gap:64px; max-width:1500px; }
+  .sec-h{ font-family:var(--font-display); font-weight:700; font-size:22px; letter-spacing:-0.02em; margin:0 0 6px; }
+  .sec-lead{ font-size:14px; line-height:1.65; color:var(--fg-2); max-width:78ch; margin:0 0 24px; }
+  .sec-lead b{ color:var(--fg-1); font-weight:600; }
+  .sec-lead em{ color:var(--fg-1); font-style:italic; }
+  .sec-lead code{ font-family:'JetBrains Mono',monospace; font-size:0.9em; background:var(--surface-2);
+        border:1px solid var(--border); border-radius:4px; padding:1px 5px; }
+
+  .opt-head{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+  .opt-name{ font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-0.01em; }
+  .opt-tag{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+            border:1px solid var(--border); border-radius:5px; padding:2px 7px; }
+  .opt-tag.rec{ color:var(--signal); border-color:var(--signal); }
+  .opt-tag.no{ color:var(--loss); border-color:var(--loss); }
+  .opt-desc{ font-size:13.5px; line-height:1.65; color:var(--fg-2); max-width:80ch; margin:0 0 18px; }
+  .opt-desc b{ color:var(--fg-1); font-weight:600; }
+  .opt-desc code{ font-family:'JetBrains Mono',monospace; font-size:0.9em; background:var(--surface-2);
+            border:1px solid var(--border); border-radius:4px; padding:1px 5px; }
+
+  .crops{ display:flex; gap:28px; flex-wrap:wrap; align-items:flex-start; }
+  .crop{ display:flex; flex-direction:column; gap:10px; }
+  .crop-name{ font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:0.12em;
+              text-transform:uppercase; color:var(--fg-3); }
+  .crop-body{ width:393px; background:var(--bg); border:1px solid var(--border); border-radius:12px;
+              padding:16px 20px 18px; }
+  .devices{ display:flex; gap:44px; flex-wrap:wrap; align-items:flex-start; }
+  /* The merged screen is taller than the frame by design — it is a list. Show it
+     as a continuous plate rather than pretending it fits a device. */
+  .plate{ width:393px; border:1px solid var(--border); border-radius:12px; overflow:hidden;
+          background:var(--bg); }
+  .plate-inner{ padding:12px 20px 24px; }
+
+  .metrics{ display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px; }
+  .metric{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-2);
+           background:var(--surface-2); border:1px solid var(--border); border-radius:5px; padding:3px 8px; }
+  .metric b{ color:var(--fg-3); font-weight:500; }
+  .metric.good{ color:var(--gain); } .metric.bad{ color:var(--loss); }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     THE COLOUR BUDGET — tint the percentage, never the money.
+     ══════════════════════════════════════════════════════════════════════ */
+  .gain-stack.ranked p{ font-size:13.5px; font-weight:600; color:var(--fg-2); }
+  .gain-stack.ranked p.sub{ font-size:11.5px; font-weight:500; }
+  .gain-stack.ranked p.positive, .gain-stack.ranked p.negative{ color:var(--fg-2); }
+  .gain-stack.ranked .pc{ font-variant-numeric:tabular-nums; }
+  .gain-stack.ranked p.positive .pc{ color:var(--gain); }
+  .gain-stack.ranked p.negative .pc{ color:var(--loss); }
+  .gain-stack.ranked .pnl-label{ min-width:38px; }
+
+  /* Realized becomes the Position grid's full-width footer cell instead of an
+     orphan line with no divider between two dividered sections. */
+  .stat-grid .stat-cell.wide{ grid-column:1 / -1; flex-direction:row; align-items:baseline; gap:8px; }
+  .stat-cell.wide .stat-label{ flex-shrink:0; }
+  .stat-cell.wide .rz{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px;
+        line-height:20px; font-variant-numeric:tabular-nums; color:var(--fg-2); }
+  .stat-cell.wide .rz .pc{ color:var(--gain); }
+  .stat-cell.wide .rz.loss .pc{ color:var(--loss); }
+  .stat-cell.wide .rz-n{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+        margin-left:auto; flex-shrink:0; }
+
+  .btn-row{ display:flex; gap:9px; }
+  .btn-row .btn{ flex:1; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ACCOUNTS — a rollup table, not a list of destinations.
+     Once the account no longer pushes anywhere (rule 09: no chevron), the row
+     stops needing a tappable two-line shape and becomes one line of four
+     columns. Five accounts read as a table you scan down, at 40pt not 61pt.
+
+     Column widths are tight on purpose: at gap:10px with a 58pt shares column
+     the name got 115pt and `Fidelity Brokerage` (18 chars, the longest in the
+     data) ellipsized to `Fidelity Broker…`. An account name is the row's
+     identifier and must never truncate, so the three figure columns give back
+     what they can and the name keeps 133pt against the 113pt it needs. That is
+     20pt of slack — a 21-character account name truncates, so this is the row
+     to re-measure if account names get longer. */
+  .acct{ display:flex; align-items:baseline; gap:8px; padding:10px 2px;
+         border-bottom:1px solid var(--border); }
+  .acct:last-child{ border-bottom:none; }
+  .acct-n{ font-family:var(--font-display); font-weight:600; font-size:13px; color:var(--fg-1);
+           flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .acct-sh{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+            font-variant-numeric:tabular-nums; width:46px; text-align:right; flex-shrink:0; }
+  .acct-v{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:13px; color:var(--fg-1);
+           font-variant-numeric:tabular-nums; width:86px; text-align:right; flex-shrink:0; }
+  .acct-p{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:12.5px;
+           font-variant-numeric:tabular-nums; width:58px; text-align:right; flex-shrink:0; }
+  .acct-p.gain{ color:var(--gain); } .acct-p.loss{ color:var(--loss); }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     THE LOT ROW — two lines on a three-column grid.
+     Line 1 is the identity and the verdict; line 2 is the receipt. The account
+     name LEADS, in the display face: in a list that spans accounts, which
+     account a lot sits in is the thing you scan for, and an account name is a
+     proper noun (the same reasoning .row-name already uses). The figures that
+     used to be the row's name move to line 2 — a purchase price is a caption on
+     a past event, not a peer of the market value beside it.
+     ══════════════════════════════════════════════════════════════════════ */
+  .lot{ display:grid; grid-template-columns:1fr auto 64px; align-items:baseline;
+        column-gap:12px; row-gap:3px; padding:12px 2px; border-bottom:1px solid var(--border); }
+  .lot:last-child{ border-bottom:none; }
+  .lot-acct{ font-family:var(--font-display); font-weight:600; font-size:14px; color:var(--fg-1);
+             overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lot-val{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14.5px;
+            color:var(--fg-1); font-variant-numeric:tabular-nums; text-align:right; }
+  /* The one figure that is comparable across lots of different sizes, so it
+     takes the fixed column and the colour. */
+  .lot-ret{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:13.5px;
+            font-variant-numeric:tabular-nums; text-align:right; }
+  .lot-ret.gain{ color:var(--gain); } .lot-ret.loss{ color:var(--loss); }
+  /* Line 2 spans ALL THREE columns — the return column's line-2 cell is empty,
+     and at `1 / 3` the receipt got only 275pt and wrapped to a third line on
+     every row, which pulled the meta out of alignment with the return above it.
+     Full span gives it 349pt against the 310pt it needs. */
+  .lot-meta{ grid-column:1 / -1; font-family:'JetBrains Mono',monospace; font-size:11px;
+             color:var(--fg-3); font-variant-numeric:tabular-nums;
+             display:flex; justify-content:space-between; gap:12px; }
+  .lot-abs{ flex-shrink:0; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     GROUPED BY ACCOUNT — rebuilt.
+
+     The head and its lots share ONE column grid, so an account's total sits
+     directly above the lot values that sum to it. That is the entire payoff of
+     grouping and the first mock threw it away by pushing the head's figures to
+     `margin-left:auto`, where they landed at arbitrary x-positions.
+
+     Column widths are worst-case, not fitted to this holding. The value column
+     is 98pt because a holding kept in ONE account puts the entire position on an
+     account line — `$173,972.25` measures 96pt, and the first pass at 86pt was
+     already clipping `$66,255.30` by a point. The return column is 60pt, which
+     holds `+999.9%`; anything past 1000% drops its decimal under the existing
+     rule and fits. Head and lot share one template — change one, change both, or
+     the alignment that justifies this layout is gone.
+     ══════════════════════════════════════════════════════════════════════ */
+  .agrp{ border-top:1px solid var(--border); }
+  .agrp:first-child{ border-top:none; }
+
+  /* The head outranks its lots on every axis: display face against mono,
+     700 against 600, --fg-1 against --fg-2, and no indent against 14pt of it.
+     In the first mock the LOT was bigger and darker than its own heading. */
+  .ah{ display:grid; grid-template-columns:1fr 98px 60px; align-items:baseline;
+       column-gap:10px; row-gap:3px; padding:12px 2px; }
+  .ah-n{ font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--fg-1);
+         overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ah-v{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14.5px; color:var(--fg-1);
+         font-variant-numeric:tabular-nums; text-align:right; }
+  .ah-p{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:13.5px;
+         font-variant-numeric:tabular-nums; text-align:right; }
+  .ah-p.gain{ color:var(--gain); } .ah-p.loss{ color:var(--loss); }
+  .ah-m{ grid-column:1 / -1; font-family:'JetBrains Mono',monospace; font-size:11px;
+         color:var(--fg-3); font-variant-numeric:tabular-nums;
+         display:flex; justify-content:space-between; gap:12px; }
+
+  /* The lots of one account, bracketed by a rail. The rail is absolutely
+     positioned so it cannot shift the grid — indenting the row itself would
+     move the value and return columns and break the alignment with the head,
+     which is the one thing this layout exists to provide. */
+  .glots{ position:relative; padding-bottom:6px; }
+  .glots::before{ content:''; position:absolute; left:3px; top:0; bottom:12px;
+                  width:2px; border-radius:1px; background:var(--border); }
+
+  /* No hairline between lots of the same account. Uniform borders on every row
+     are what made the first mock read as one long list with occasional bold
+     lines instead of as five groups. The only rules on this screen now separate
+     ACCOUNTS from each other. */
+  .glot{ display:grid; grid-template-columns:1fr 98px 60px; align-items:baseline;
+         column-gap:10px; row-gap:2px; padding:7px 2px 7px 0; }
+  .glot-px{ padding-left:16px; font-family:'JetBrains Mono',monospace; font-size:13px;
+            color:var(--fg-2); font-variant-numeric:tabular-nums; }
+  .glot-px b{ color:var(--fg-1); font-weight:600; }
+  .glot-v{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:13px; color:var(--fg-2);
+           font-variant-numeric:tabular-nums; text-align:right; }
+  .glot-p{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:12.5px;
+           font-variant-numeric:tabular-nums; text-align:right; }
+  .glot-p.gain{ color:var(--gain); } .glot-p.loss{ color:var(--loss); }
+  .glot-m{ grid-column:1 / -1; padding-left:16px; font-family:'JetBrains Mono',monospace;
+           font-size:11px; color:var(--fg-3); font-variant-numeric:tabular-nums;
+           display:flex; justify-content:space-between; gap:12px; }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ALT · LEDGER — the lots as a real table.
+
+     Same group heads. What changes is the lot: instead of two lines carrying
+     connective words ("at", the dots, a spelled-out date), it becomes one line
+     of five labelled columns. Every word that was only there to join two figures
+     is gone, which is rule 10 taken to its conclusion — these are comparable
+     figures, so they belong in columns with a header, not in a sentence.
+     The header appears once per multi-lot group; a single-lot account collapses
+     to its head as before, so this screen carries two headers, not five.
+
+     Column 1 is AGE, not BOUGHT, and that is forced rather than chosen. Five
+     columns on a 393pt screen leave 341pt of content: a 2-digit date
+     (`05/18/26`) measures 58pt and a 4-digit price (`$1,221.27`) 65pt, and the
+     first attempt at 53/54pt clipped both — the date visibly, the price only
+     once NVDA passes $1,000. `2m` is 13pt in a 34pt column and the whole grid
+     drops to 312pt with 29pt of slack. The cost is the exact purchase date,
+     which this option gives up and the other two keep.
+     ══════════════════════════════════════════════════════════════════════ */
+  .ledgrid{ display:grid; grid-template-columns:34px 40px 66px 1fr 64px;
+            column-gap:6px; align-items:baseline; }
+  .ledh{ padding:6px 2px 5px 10px; }
+  .ledh span{ font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:0.06em;
+              text-transform:uppercase; color:var(--fg-3); }
+  .ledh span:not(:nth-child(1)){ text-align:right; }
+  .led{ padding:6px 2px 6px 10px; }
+  .led span{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--fg-2);
+             font-variant-numeric:tabular-nums; }
+  .led span:not(:nth-child(1)){ text-align:right; }
+  .led .sh{ color:var(--fg-1); font-weight:600; }
+  .led .v{ color:var(--fg-1); font-weight:600; }
+  .led .r{ font-weight:600; }
+  .led .r.gain{ color:var(--gain); } .led .r.loss{ color:var(--loss); }
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ALT · CARDS — containment by box instead of by rail.
+
+     Five discrete objects rather than one continuous list, so an account's
+     extent is unambiguous at a glance instead of inferred from a rule and a
+     rail. The head sits on --surface-2, which makes the head/lot distinction
+     structural rather than only typographic. Idiomatic for this app: the
+     accounts and lots lists are already `IonList inset`.
+     ══════════════════════════════════════════════════════════════════════ */
+  .cards{ display:flex; flex-direction:column; gap:10px; }
+  .card-a{ border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+  .card-a .ah{ background:var(--surface-2); padding:11px 12px; }
+  /* A single-lot account has no lots to head, so tinting it made three of the
+     five cards read as a header waiting for content that never arrives. A card
+     with nothing under it is a row: no tint. */
+  .card-a.solo .ah{ background:transparent; }
+  /* Only a card WITH lots needs the head separated from them. */
+  .card-a .glots{ padding:2px 12px 6px; }
+  .card-a .glots::before{ display:none; }
+  .card-a .glot{ padding:7px 0; }
+  .card-a .glot-px, .card-a .glot-m{ padding-left:0; }
+  .card-a .glot + .glot{ border-top:1px solid var(--border); }
+  .card-a .ledh, .card-a .led{ padding-left:12px; padding-right:12px; }
+</style>
+
+<div class="bar">
+  <span class="bar-title">One Holding screen</span>
+  <span class="bar-sub">NVDA · real data · 5 accounts · 7 open lots</span>
+</div>
+
+<div class="page">
+
+  <!-- ═══════════════════════════ THE REAL PROBLEM ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">The real problem is the split, not the density</h2>
+    <p class="sec-lead">Your own data makes the case. <b>NVDA is held in 5 accounts across 7 open lots.</b>
+      To read those 7 lots today you push into an account, read, come back, push into the next — <b>10
+      navigations</b>, holding numbers in your head the whole way, because no screen ever shows two
+      accounts' lots at once.</p>
+    <p class="sec-lead">And the thing that split hides is not hypothetical. Sorted by date, your two
+      largest lots — <code>268 sh</code> in Meysam's TFSA and <code>173 sh</code> in Haniyeh's TFSA — were
+      bought <em>on the same day</em>, at <code>$221.27</code> and <code>$221.74</code>, and are
+      <em>both about 6% underwater</em>. They are the two biggest bets in the position and they are the same
+      bet. Today they live on different screens, two pushes apart, and nothing in the app will ever put
+      them side by side.</p>
+    <p class="sec-lead">That is worth fixing before any typography. So: <b>yes — merge.</b> The argument is
+      already written in Account Holding's own spec, which describes it as "the same block as the parent
+      page at a smaller magnification" carrying "<b>NO security-level content</b>". A screen that is its
+      parent at a smaller magnification is not a second view of the data — it is a <em>filter</em>. It adds
+      a navigation layer and no new information, and the price of that filter grows with every account you
+      open.</p>
+    <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>Nothing is lost by
+      flattening</b> except the per-account rollup and two scoped buttons, and the rollup is a five-row
+      table — it does not need a screen each.</div></div>
+    <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>The screen gets long, and that is
+      correct.</b> 7 lots and 5 accounts runs to roughly 1.5 screens. Scrolling one list beats 10
+      navigations, and it is the only arrangement in which cross-account comparison is possible at
+      all.</div></div>
+    <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>The bars are gone.</b> They asked
+      the reader to learn an encoding to read a list — the wrong trade on a screen whose complaint was that
+      it is hard to read. What survives from the last pass is the part that needed no explaining: rank the
+      figures, tint only percentages, give the returns a real column.</div></div>
+  </section>
+
+  <!-- ═══════════════════════════ THE MERGED SCREEN ═══════════════════════════ -->
+  <section>
+    <div class="opt-head"><span class="opt-name">Holding — merged</span><span class="opt-tag rec">recommended</span><span class="opt-tag">replaces both screens</span></div>
+    <p class="opt-desc">One screen per holding. Hero and Market unchanged. <b>Position</b> is the
+      all-accounts cost side with Realized as its footer cell. <b>Accounts</b> becomes a five-row rollup
+      table that no longer pushes anywhere. <b>Open lots</b> is every lot in the holding, oldest first,
+      across all accounts — the section that did not exist before.</p>
+    <div class="metrics">
+      <span class="metric good"><b>navigations to read all lots</b> 10 → 0</span>
+      <span class="metric good"><b>screens</b> 2 → 1</span>
+      <span class="metric"><b>lot row</b> 61pt</span>
+      <span class="metric"><b>account row</b> 61 → 38pt</span>
+      <span class="metric"><b>screen</b> 1379pt · 1.6 screens</span>
+    </div>
+
+    <div class="crops">
+      <div class="crop">
+        <span class="crop-name">Full screen · scrolls</span>
+        <div class="plate">
+          <div class="ph-bar" style="padding-left:16px;"><span class="ph-back"><svg viewBox="0 0 7 12" fill="none"><path d="M6 1L1 6L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Holdings</span></div>
+          <div class="ph-large">NVDA</div>
+          <div class="plate-inner">
+            <div class="detail-head">
+              <div class="detail-name" style="margin:2px 0 8px;">NVIDIA Corp</div>
+              <span class="eyebrow">Market value</span>
+              <div class="figure figure-mid" style="margin-top:2px;"><span class="cur">$</span>173,972<span class="cents">.25</span></div>
+              <div class="gain-stack ranked">
+                <p class="positive"><span class="pnl-label">Total</span>+$44,697.65<span class="pc">+34.6%</span></p>
+                <p class="positive sub"><span class="pnl-label">Today</span>+$1,085.50<span class="pc">+0.63%</span></p>
+              </div>
+            </div>
+
+            <div class="divider sec"><span class="dl">Market</span><span class="dh"></span><span class="dm">USD</span></div>
+            <div class="stat-grid">
+              <div class="stat-cell"><span class="stat-label">Price / share</span><span class="stat-value">$208.35</span></div>
+              <a class="stat-cell" href="#"><span class="stat-label">Chart</span><span class="stat-link">Yahoo Finance</span></a>
+            </div>
+
+            <div class="divider sec"><span class="dl">Position</span><span class="dh"></span><span class="dm">all accounts</span></div>
+            <div class="stat-grid">
+              <div class="stat-cell"><span class="stat-label">Shares</span><span class="stat-value">835</span></div>
+              <div class="stat-cell"><span class="stat-label">Avg cost / share</span><span class="stat-value">$154.82</span></div>
+              <div class="stat-cell"><span class="stat-label">Cost basis</span><span class="stat-value">$129,274.60</span></div>
+              <div class="stat-cell"><span class="stat-label">Avg age</span><span class="stat-value">1y 8m</span></div>
+              <div class="stat-cell wide"><span class="stat-label">Realized</span><span class="rz">+$44,730.48 <span class="pc">+46.0%</span></span><span class="rz-n">784 sh sold</span></div>
+            </div>
+
+            <div class="divider sec"><span class="dl">Accounts</span><span class="dh"></span><span class="dm">5</span></div>
+            <div class="list">
+              <div class="acct"><span class="acct-n">Meysam's TFSA</span><span class="acct-sh">318 sh</span><span class="acct-v">$66,255.30</span><span class="acct-p loss">−4.6%</span></div>
+              <div class="acct"><span class="acct-n">Haniyeh's TFSA</span><span class="acct-sh">199 sh</span><span class="acct-v">$41,461.65</span><span class="acct-p loss">−5.0%</span></div>
+              <div class="acct"><span class="acct-n">Fidelity Brokerage</span><span class="acct-sh">160 sh</span><span class="acct-v">$33,336.00</span><span class="acct-p gain">+1438%</span></div>
+              <div class="acct"><span class="acct-n">Wealthsimple TFSA</span><span class="acct-sh">103 sh</span><span class="acct-v">$21,460.05</span><span class="acct-p gain">+383.4%</span></div>
+              <div class="acct"><span class="acct-n">Meysam's Margin</span><span class="acct-sh">55 sh</span><span class="acct-v">$11,459.25</span><span class="acct-p gain">+19.7%</span></div>
+            </div>
+
+            <div class="divider sec"><span class="dl">Open lots</span><span class="dh"></span><span class="dm">7 · all accounts</span></div>
+            <div class="list">
+              <div class="lot">
+                <span class="lot-acct">Fidelity Brokerage</span>
+                <span class="lot-val">$33,336.00</span>
+                <span class="lot-ret gain">+1438%</span>
+                <span class="lot-meta"><span>160 at $13.55 · Mar 15, 2021 · 5y 5m</span><span class="lot-abs">+$31,168.00</span></span>
+              </div>
+              <div class="lot">
+                <span class="lot-acct">Wealthsimple TFSA</span>
+                <span class="lot-val">$21,460.05</span>
+                <span class="lot-ret gain">+383.4%</span>
+                <span class="lot-meta"><span>103 at $43.10 · Aug 02, 2022 · 4y</span><span class="lot-abs">+$17,020.75</span></span>
+              </div>
+              <div class="lot">
+                <span class="lot-acct">Meysam's Margin</span>
+                <span class="lot-val">$11,459.25</span>
+                <span class="lot-ret gain">+19.7%</span>
+                <span class="lot-meta"><span>55 at $174.00 · Apr 23, 2026 · 3m</span><span class="lot-abs">+$1,889.25</span></span>
+              </div>
+              <div class="lot">
+                <span class="lot-acct">Meysam's TFSA</span>
+                <span class="lot-val">$55,837.80</span>
+                <span class="lot-ret loss">−5.8%</span>
+                <span class="lot-meta"><span>268 at $221.27 · May 18, 2026 · 2m</span><span class="lot-abs">−$3,462.56</span></span>
+              </div>
+              <div class="lot">
+                <span class="lot-acct">Haniyeh's TFSA</span>
+                <span class="lot-val">$36,044.55</span>
+                <span class="lot-ret loss">−6.0%</span>
+                <span class="lot-meta"><span>173 at $221.74 · May 18, 2026 · 2m</span><span class="lot-abs">−$2,316.47</span></span>
+              </div>
+              <div class="lot">
+                <span class="lot-acct">Haniyeh's TFSA</span>
+                <span class="lot-val">$5,417.10</span>
+                <span class="lot-ret gain">+2.8%</span>
+                <span class="lot-meta"><span>26 at $202.67 · Jun 11, 2026 · 2m</span><span class="lot-abs">+$147.68</span></span>
+              </div>
+              <div class="lot">
+                <span class="lot-acct">Meysam's TFSA</span>
+                <span class="lot-val">$10,417.50</span>
+                <span class="lot-ret gain">+2.5%</span>
+                <span class="lot-meta"><span>50 at $203.33 · Jun 23, 2026 · 1m</span><span class="lot-abs">+$251.00</span></span>
+              </div>
+            </div>
+
+            <div class="btn-row sec">
+              <button class="btn btn-primary">Buy NVDA</button>
+              <button class="btn btn-secondary">Sell NVDA</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crop">
+        <span class="crop-name">Open lots · close-up</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Open lots</span><span class="dh"></span><span class="dm">7 · all accounts</span></div>
+          <div class="list">
+            <div class="lot">
+              <span class="lot-acct">Fidelity Brokerage</span><span class="lot-val">$33,336.00</span><span class="lot-ret gain">+1438%</span>
+              <span class="lot-meta"><span>160 at $13.55 · Mar 15, 2021 · 5y 5m</span><span class="lot-abs">+$31,168.00</span></span>
+            </div>
+            <div class="lot">
+              <span class="lot-acct">Wealthsimple TFSA</span><span class="lot-val">$21,460.05</span><span class="lot-ret gain">+383.4%</span>
+              <span class="lot-meta"><span>103 at $43.10 · Aug 02, 2022 · 4y</span><span class="lot-abs">+$17,020.75</span></span>
+            </div>
+            <div class="lot">
+              <span class="lot-acct">Meysam's Margin</span><span class="lot-val">$11,459.25</span><span class="lot-ret gain">+19.7%</span>
+              <span class="lot-meta"><span>55 at $174.00 · Apr 23, 2026 · 3m</span><span class="lot-abs">+$1,889.25</span></span>
+            </div>
+            <div class="lot">
+              <span class="lot-acct">Meysam's TFSA</span><span class="lot-val">$55,837.80</span><span class="lot-ret loss">−5.8%</span>
+              <span class="lot-meta"><span>268 at $221.27 · May 18, 2026 · 2m</span><span class="lot-abs">−$3,462.56</span></span>
+            </div>
+            <div class="lot">
+              <span class="lot-acct">Haniyeh's TFSA</span><span class="lot-val">$36,044.55</span><span class="lot-ret loss">−6.0%</span>
+              <span class="lot-meta"><span>173 at $221.74 · May 18, 2026 · 2m</span><span class="lot-abs">−$2,316.47</span></span>
+            </div>
+            <div class="lot">
+              <span class="lot-acct">Haniyeh's TFSA</span><span class="lot-val">$5,417.10</span><span class="lot-ret gain">+2.8%</span>
+              <span class="lot-meta"><span>26 at $202.67 · Jun 11, 2026 · 2m</span><span class="lot-abs">+$147.68</span></span>
+            </div>
+            <div class="lot">
+              <span class="lot-acct">Meysam's TFSA</span><span class="lot-val">$10,417.50</span><span class="lot-ret gain">+2.5%</span>
+              <span class="lot-meta"><span>50 at $203.33 · Jun 23, 2026 · 1m</span><span class="lot-abs">+$251.00</span></span>
+            </div>
+          </div>
+        </div>
+
+        <span class="crop-name" style="margin-top:22px;">Grouped by account · rebuilt</span>
+        <div class="crop-body">
+          <!-- One section, not two. The group heads ARE the account rollup, so the
+               separate Accounts table is gone and nothing is stated twice. -->
+          <div class="divider"><span class="dl">Accounts</span><span class="dh"></span><span class="dm">5 · 7 lots</span></div>
+
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Meysam's TFSA</span><span class="ah-v">$66,255.30</span><span class="ah-p loss">−4.6%</span>
+              <span class="ah-m"><span>318 sh · avg $218.45</span><span>−$3,211.56</span></span>
+            </div>
+            <div class="glots">
+              <div class="glot">
+                <span class="glot-px"><b>268</b> at $221.27</span><span class="glot-v">$55,837.80</span><span class="glot-p loss">−5.8%</span>
+                <span class="glot-m"><span>May 18, 2026 · 2m</span><span>−$3,462.56</span></span>
+              </div>
+              <div class="glot">
+                <span class="glot-px"><b>50</b> at $203.33</span><span class="glot-v">$10,417.50</span><span class="glot-p gain">+2.5%</span>
+                <span class="glot-m"><span>Jun 23, 2026 · 1m</span><span>+$251.00</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Haniyeh's TFSA</span><span class="ah-v">$41,461.65</span><span class="ah-p loss">−5.0%</span>
+              <span class="ah-m"><span>199 sh · avg $219.25</span><span>−$2,168.79</span></span>
+            </div>
+            <div class="glots">
+              <div class="glot">
+                <span class="glot-px"><b>173</b> at $221.74</span><span class="glot-v">$36,044.55</span><span class="glot-p loss">−6.0%</span>
+                <span class="glot-m"><span>May 18, 2026 · 2m</span><span>−$2,316.47</span></span>
+              </div>
+              <div class="glot">
+                <span class="glot-px"><b>26</b> at $202.67</span><span class="glot-v">$5,417.10</span><span class="glot-p gain">+2.8%</span>
+                <span class="glot-m"><span>Jun 11, 2026 · 2m</span><span>+$147.68</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- One lot: the head and the lot are the same object, so they render as
+               one row. No rail, no child, nothing repeated. -->
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Fidelity Brokerage</span><span class="ah-v">$33,336.00</span><span class="ah-p gain">+1438%</span>
+              <span class="ah-m"><span>160 at $13.55 · Mar 15, 2021 · 5y 5m</span><span>+$31,168.00</span></span>
+            </div>
+          </div>
+
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Wealthsimple TFSA</span><span class="ah-v">$21,460.05</span><span class="ah-p gain">+383.4%</span>
+              <span class="ah-m"><span>103 at $43.10 · Aug 02, 2022 · 4y</span><span>+$17,020.75</span></span>
+            </div>
+          </div>
+
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Meysam's Margin</span><span class="ah-v">$11,459.25</span><span class="ah-p gain">+19.7%</span>
+              <span class="ah-m"><span>55 at $174.00 · Apr 23, 2026 · 3m</span><span>+$1,889.25</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════ TWO MORE ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">Two more to choose from</h2>
+    <p class="sec-lead">Both keep what is working — the grouping, the group head that <em>is</em> the rollup,
+      the shared column grid, single-lot accounts collapsing to one row. What varies is <b>how a lot row is
+      built</b>, which is the last thing I had not tried.</p>
+
+    <div class="crops">
+
+      <div class="crop">
+        <span class="crop-name">Alt 1 · Ledger — lots as a table</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Accounts</span><span class="dh"></span><span class="dm">5 · 7 lots</span></div>
+
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Meysam's TFSA</span><span class="ah-v">$66,255.30</span><span class="ah-p loss">−4.6%</span>
+              <span class="ah-m"><span>318 sh · avg $218.45</span><span>−$3,211.56</span></span>
+            </div>
+            <div class="glots">
+              <div class="ledh ledgrid"><span>Age</span><span>Shares</span><span>Price</span><span>Value</span><span>Return</span></div>
+              <div class="led ledgrid"><span>2m</span><span class="sh">268</span><span>$221.27</span><span class="v">$55,837.80</span><span class="r loss">−5.8%</span></div>
+              <div class="led ledgrid"><span>1m</span><span class="sh">50</span><span>$203.33</span><span class="v">$10,417.50</span><span class="r gain">+2.5%</span></div>
+            </div>
+          </div>
+
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Haniyeh's TFSA</span><span class="ah-v">$41,461.65</span><span class="ah-p loss">−5.0%</span>
+              <span class="ah-m"><span>199 sh · avg $219.25</span><span>−$2,168.79</span></span>
+            </div>
+            <div class="glots">
+              <div class="ledh ledgrid"><span>Age</span><span>Shares</span><span>Price</span><span>Value</span><span>Return</span></div>
+              <div class="led ledgrid"><span>2m</span><span class="sh">173</span><span>$221.74</span><span class="v">$36,044.55</span><span class="r loss">−6.0%</span></div>
+              <div class="led ledgrid"><span>2m</span><span class="sh">26</span><span>$202.67</span><span class="v">$5,417.10</span><span class="r gain">+2.8%</span></div>
+            </div>
+          </div>
+
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Fidelity Brokerage</span><span class="ah-v">$33,336.00</span><span class="ah-p gain">+1438%</span>
+              <span class="ah-m"><span>160 at $13.55 · Mar 15, 2021 · 5y 5m</span><span>+$31,168.00</span></span>
+            </div>
+          </div>
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Wealthsimple TFSA</span><span class="ah-v">$21,460.05</span><span class="ah-p gain">+383.4%</span>
+              <span class="ah-m"><span>103 at $43.10 · Aug 02, 2022 · 4y</span><span>+$17,020.75</span></span>
+            </div>
+          </div>
+          <div class="agrp">
+            <div class="ah">
+              <span class="ah-n">Meysam's Margin</span><span class="ah-v">$11,459.25</span><span class="ah-p gain">+19.7%</span>
+              <span class="ah-m"><span>55 at $174.00 · Apr 23, 2026 · 3m</span><span>+$1,889.25</span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="crop">
+        <span class="crop-name">Alt 2 · Cards — one box per account</span>
+        <div class="crop-body">
+          <div class="divider"><span class="dl">Accounts</span><span class="dh"></span><span class="dm">5 · 7 lots</span></div>
+          <div class="cards">
+
+            <div class="card-a">
+              <div class="ah">
+                <span class="ah-n">Meysam's TFSA</span><span class="ah-v">$66,255.30</span><span class="ah-p loss">−4.6%</span>
+                <span class="ah-m"><span>318 sh · avg $218.45</span><span>−$3,211.56</span></span>
+              </div>
+              <div class="glots">
+                <div class="glot">
+                  <span class="glot-px"><b>268</b> at $221.27</span><span class="glot-v">$55,837.80</span><span class="glot-p loss">−5.8%</span>
+                  <span class="glot-m"><span>May 18, 2026 · 2m</span><span>−$3,462.56</span></span>
+                </div>
+                <div class="glot">
+                  <span class="glot-px"><b>50</b> at $203.33</span><span class="glot-v">$10,417.50</span><span class="glot-p gain">+2.5%</span>
+                  <span class="glot-m"><span>Jun 23, 2026 · 1m</span><span>+$251.00</span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-a">
+              <div class="ah">
+                <span class="ah-n">Haniyeh's TFSA</span><span class="ah-v">$41,461.65</span><span class="ah-p loss">−5.0%</span>
+                <span class="ah-m"><span>199 sh · avg $219.25</span><span>−$2,168.79</span></span>
+              </div>
+              <div class="glots">
+                <div class="glot">
+                  <span class="glot-px"><b>173</b> at $221.74</span><span class="glot-v">$36,044.55</span><span class="glot-p loss">−6.0%</span>
+                  <span class="glot-m"><span>May 18, 2026 · 2m</span><span>−$2,316.47</span></span>
+                </div>
+                <div class="glot">
+                  <span class="glot-px"><b>26</b> at $202.67</span><span class="glot-v">$5,417.10</span><span class="glot-p gain">+2.8%</span>
+                  <span class="glot-m"><span>Jun 11, 2026 · 2m</span><span>+$147.68</span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-a solo">
+              <div class="ah">
+                <span class="ah-n">Fidelity Brokerage</span><span class="ah-v">$33,336.00</span><span class="ah-p gain">+1438%</span>
+                <span class="ah-m"><span>160 at $13.55 · Mar 15, 2021 · 5y 5m</span><span>+$31,168.00</span></span>
+              </div>
+            </div>
+            <div class="card-a solo">
+              <div class="ah">
+                <span class="ah-n">Wealthsimple TFSA</span><span class="ah-v">$21,460.05</span><span class="ah-p gain">+383.4%</span>
+                <span class="ah-m"><span>103 at $43.10 · Aug 02, 2022 · 4y</span><span>+$17,020.75</span></span>
+              </div>
+            </div>
+            <div class="card-a solo">
+              <div class="ah">
+                <span class="ah-n">Meysam's Margin</span><span class="ah-v">$11,459.25</span><span class="ah-p gain">+19.7%</span>
+                <span class="ah-m"><span>55 at $174.00 · Apr 23, 2026 · 3m</span><span>+$1,889.25</span></span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-h">Notes on the two alternatives</h2>
+
+    <div class="opt-head"><span class="opt-name">Alt 1 · Ledger</span><span class="opt-tag">densest</span><span class="opt-tag">545pt</span></div>
+    <p class="opt-desc">The lot stops being a list item and becomes a table row: five labelled columns, no
+      connective words. <b>28pt a lot</b> against the rail's 61pt.</p>
+    <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>Every joining word is gone.</b>
+      <code>at</code>, the dots, the spelled-out date — all of them existed only to relate two figures, and a
+      column header does that job once instead of on every row. This is rule 10 followed to its conclusion:
+      these are comparable figures, so they belong in columns with a header, not in a
+      sentence.</div></div>
+    <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>It gives up the exact purchase
+      date, and that was forced.</b> Five columns leave 341pt of content. A 2-digit date measures <b>58pt</b>
+      and a 4-digit price <b>65pt</b>; my first pass at 53/54pt clipped the date immediately and would clip
+      the price the day NVDA passes $1,000. Swapping <code>BOUGHT</code> for <code>AGE</code> costs 13pt in a
+      34pt column and brings the grid to 312pt with 29pt of slack. The date still lives on the transaction
+      that created the lot — but it is off this screen, and the other two options keep
+      it.</div></div>
+    <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>The header appears twice, not
+      five times.</b> Only multi-lot accounts get one; single-lot accounts collapse to their head as before.
+      A holding spread over eight accounts with two lots each would carry eight headers, which is the
+      condition under which this option gets worse rather than better.</div></div>
+    <div class="rule"><span class="rule-n">04</span><div class="rule-b"><b>Value and return still align with
+      the head.</b> Verified: both right edges land at 324pt and 394pt in the head and in every ledger row.
+      The head keeps its own <code>1fr 98 60</code> grid and the ledger has a different one, so only the
+      right edges are shared — change either template and re-measure, because the alignment is doing the
+      work here.</div></div>
+
+    <div class="opt-head" style="margin-top:34px;"><span class="opt-name">Alt 2 · Cards</span><span class="opt-tag">clearest grouping</span><span class="opt-tag">614pt</span></div>
+    <p class="opt-desc">Containment by box instead of by rail. Five discrete objects, so an account's extent
+      is unambiguous rather than inferred from a rule plus a rail. Idiomatic — the app's accounts and lots
+      lists are already <code>IonList inset</code>.</p>
+    <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>The head sits on
+      <code>--surface-2</code></b>, which makes the head/lot distinction structural instead of only
+      typographic. It is the one thing the rail version leans entirely on weight and face to
+      convey.</div></div>
+    <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>A single-lot card carries no
+      tint</b> (<code>.solo</code>). Tinted, three of the five cards read as a header waiting for content
+      that never arrives — a card with nothing under it is a row, not a head. This was visible only once
+      rendered.</div></div>
+    <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>It is the tallest, and the boxes
+      are the reason.</b> 614pt against the rail's 573 and the ledger's 545 — five borders, five radii and
+      four 10pt gaps. It also introduces the most new chrome to a design system whose light mode is
+      deliberately "a single white plane where a card is separated by a 1px hairline and nothing else". Five
+      tinted strips is the furthest of the three from that.</div></div>
+  </section>
+
+  <!-- ═══════════════════════════ NOTES ═══════════════════════════ -->
+  <section>
+    <h2 class="sec-h">Build notes</h2>
+
+    <div class="rule"><span class="rule-n">01</span><div class="rule-b"><b>The lot row: two lines, three
+      columns.</b> Line 1 is identity and verdict — account name, market value, return. Line 2 is the
+      receipt — <code>160 at $13.55 · Mar 15, 2021 · 5y 5m</code> on the left, the dollar delta right-aligned.
+      Line 2 spans the first two grid columns so the receipt gets its width while the 64pt return column
+      stays clear.</div></div>
+    <div class="rule"><span class="rule-n">02</span><div class="rule-b"><b>The account name leads, in the
+      display face.</b> This inverts the old row, where <code>60 × $13.20</code> was the name. In a list
+      that spans accounts, <em>which account</em> is what you scan for, and an account name is a proper
+      noun — the same reasoning <code>.row-name</code> already applies on the Accounts section. The purchase
+      figures drop to line 2 in <code>--fg-3</code>: a price paid in 2021 is a caption on a past event, not a
+      peer of the market value beside it. Rule 10 is intact — the figures stay mono; only which of them is
+      allowed to be <code>--fg-1</code> changed.</div></div>
+    <div class="rule"><span class="rule-n">03</span><div class="rule-b"><b>Sorted oldest first, across
+      accounts.</b> Same sort the section already used, now spanning the whole holding — which is what makes
+      the two same-day May 18 lots land next to each other. This is the entire point of the
+      merge.</div></div>
+    <div class="rule"><span class="rule-n">04</span><div class="rule-b"><b>Accounts becomes a 40pt one-line
+      rollup.</b> A two-line 61pt row with a chevron was the shape of a <em>destination</em>; once it
+      pushes nowhere (rule 09 — the chevrons must come off) it should read as a table: name, shares, value,
+      return. Five rows fit in 200pt instead of 305pt. <b>Dropped from the old per-account block:</b>
+      per-account cost basis and avg age. Per-account avg cost is dropped from the row too — every lot
+      beneath it carries its own price, which is the better version of that fact. Say if any of those three
+      is load-bearing and it goes back as a second line.</div></div>
+    <div class="rule"><span class="rule-n">05</span><div class="rule-b"><b>Scoped Buy/Sell are lost, and
+      that is the real cost of the merge.</b> Today Account Holding opens Add Transaction with the account
+      <em>and</em> symbol prefilled. Merged, the page-level buttons can only prefill the symbol and the
+      account gets picked in Add Transaction — which already has an account field. Arguably better: you no
+      longer navigate <em>into</em> an account in order to pre-select it. But it is a real
+      regression for the two-tap buy, so it is the thing to weigh.</div></div>
+    <div class="rule"><span class="rule-n">06</span><div class="rule-b"><b>Long account names.</b> Longest
+      in the data is <code>Fidelity Brokerage</code> at 18 characters. Both the rollup name and the lot's
+      account name ellipsize rather than wrap — a wrapped name would break the row into three lines and
+      pull the meta line out of alignment with the return column beside it.</div></div>
+    <div class="rule"><span class="rule-n">07</span><div class="rule-b"><b>Grouped by account — and why the
+      first mock of it was unreadable.</b> Four separate failures, all fixed in the rebuild:
+      <b>(a)</b> the head's figures were pushed out with <code>margin-left:auto</code>, so an account's total
+      landed at an arbitrary x-position instead of above the lot values that sum to it — the alignment
+      <em>is</em> the reason to group, and it was the one thing missing. <b>(b)</b> The hierarchy was
+      inverted: the group head was 13px/600 <code>--fg-2</code> while its own lots were 14px/600
+      <code>--fg-1</code>, so the child outranked the parent. <b>(c)</b> Every row carried a hairline, so
+      five groups read as one long list with occasional bold lines; now only <em>accounts</em> are separated
+      by a rule and an account's lots are bound together by a rail instead. <b>(d)</b> The lot's purchase
+      figures were sitting in <code>.lot-acct</code>, which sets the display face — a mono figure in the
+      display face, straight against rule 10.</div></div>
+    <div class="rule"><span class="rule-n">08</span><div class="rule-b"><b>Grouping deletes the Accounts
+      table, which is the real argument for it.</b> The group heads <em>are</em> the rollup, so the screen
+      goes from two sections that restate each other to one section that states each fact once — the exact
+      duplication flagged below as the flat layout's weak point. Measured: the grouped section is
+      <b>573pt</b> against <b>677pt</b> for a separate Accounts table plus a flat lot list. Shorter
+      <em>and</em> non-repeating.</div></div>
+    <div class="rule"><span class="rule-n">09</span><div class="rule-b"><b>An account with one lot renders as
+      one row.</b> Three of your five NVDA accounts hold a single lot, where the head and the lot are the
+      same object — so there is no group to draw, and the head's meta line carries the lot's receipt
+      (<code>160 at $13.55 · Mar 15, 2021 · 5y 5m</code>) instead of a shares/avg-cost summary. This is not
+      a layout that changes shape by count; it is a group of one having no grouping to show. Without it, half
+      the screen is a head followed by one child repeating its numbers.</div></div>
+    <div class="rule"><span class="rule-n">10</span><div class="rule-b"><b>What grouping costs.</b> The
+      cross-account chronology goes. Your two same-day May 18 lots land in different groups again, and the
+      ages restart in every group — so the insight that made the strongest case for merging is <em>not</em>
+      visible in this arrangement. It is still one screen and zero navigations, which was the complaint; but
+      if you want both readings, the honest way is a <code>By account / By date</code> segmented control
+      over the one section, since the two views are the same rows in a different order.</div></div>
+    <div class="rule"><span class="rule-n">11</span><div class="rule-b"><b>A single-account holding.</b> Most
+      of your holdings are in one account. There the Accounts section is one row and the lot rows all repeat
+      the same name — noise. Options: keep it (one layout, no special cases, consistent with the
+      single-account rule already in the spec), or drop the lot row's account line when the holding has one
+      account. <b>Recommend keeping it</b>; a one-row table is cheap and a layout that changes shape by
+      account count is the thing rule 03 warns about. Flagging it because it is a judgement
+      call.</div></div>
+    <div class="rule"><span class="rule-n">12</span><div class="rule-b"><b>Closed positions.</b>
+      <code>AssetDetailPage</code> already inverts for a closed holding — realized takes the hero, Market and
+      the open stats go, accounts lose their chevron. That path is unaffected by the merge except that the
+      chevron removal is now unconditional, which simplifies it: no <code>agg.closed</code> branch on the
+      accounts rows at all.</div></div>
+    <div class="rule"><span class="rule-n">13</span><div class="rule-b"><b>What gets deleted.</b>
+      <code>AccountHoldingPage.tsx</code>, its route <code>/asset/:symbol/account/:account</code>, and the
+      Account Holding device card in <code>screens.html</code>. The lots move into
+      <code>AssetDetailPage</code>, flattened from <code>agg.perAccount[].lots[]</code> with the account name
+      carried onto each lot. No API or data-model change — <code>positions.ts</code> already computes
+      everything this screen needs.</div></div>
+  </section>
+
+  <section>
+    <h2 class="sec-h">Which arrangement</h2>
+    <p class="sec-lead">Both are one screen and zero navigations, so the merge is settled either way. What
+      is left is the order of the rows, and it is a genuine trade rather than a better/worse:</p>
+    <div class="rule"><span class="rule-n">A</span><div class="rule-b"><b>Grouped by account</b> — one
+      <code>ACCOUNTS</code> section, group heads that <em>are</em> the rollup, lots bracketed underneath.
+      States every fact once, deletes the separate Accounts table, 573pt, and an account's total sits in the
+      same column as the lots that sum to it. Answers <em>"what is in each account"</em> perfectly. Cannot
+      answer <em>"what are my oldest / most underwater lots"</em> — the chronology is broken across
+      groups.</div></div>
+    <div class="rule"><span class="rule-n">B</span><div class="rule-b"><b>Flat, oldest first</b> — a rollup
+      table plus one chronological list spanning accounts, 677pt. Answers <em>"what are all my lots"</em>
+      perfectly, which is where the two same-day underwater May 18 lots become visible. Costs the
+      duplication: three of five accounts have one lot, so three rollup rows repeat a lot row
+      exactly.</div></div>
+    <div class="rule"><span class="rule-n">A+</span><div class="rule-b"><b>Grouped, with a
+      <code>By account / By date</code> segment</b> — same rows, two orders, one section. It is the only
+      arrangement that answers both questions, and the segment is honest about being a sort rather than a
+      new view. Costs one control on a screen whose complaint was that it is hard to read, so it should be
+      added only if you find yourself wanting the flat order once the grouped one is
+      live.</div></div>
+    <p class="sec-lead" style="margin-top:20px;">I would ship <b>A</b> and see whether you miss the
+      chronology before building the segment. A is the better <em>structure</em> — it is the version where
+      nothing is stated twice — and the cross-account chronology, though it produced the sharpest insight in
+      your data, is the rarer question.</p>
+    <p class="sec-lead">On the three <em>lot treatments</em>, all grouped, all measured: <b>Rail 573pt</b> ·
+      <b>Ledger 545pt</b> · <b>Cards 614pt</b>. Ledger is the most scannable and the only one that loses the
+      purchase date. Cards group most unambiguously and add the most chrome. Rail sits between them and adds
+      nothing to the design system — it is one absolutely-positioned 2px rule. If none of the three is
+      obviously right, that is a signal to ship <b>Rail</b>, which is the cheapest to change
+      later.</p>
+  </section>
+
+  <section>
+    <h2 class="sec-h">Open questions</h2>
+    <p class="sec-lead">Three things I would not decide for you:</p>
+    <div class="rule"><span class="rule-n">?</span><div class="rule-b"><b>Is the two-tap scoped buy worth
+      keeping a screen for?</b> If yes, the merge still works — Account Holding survives as a rarely-visited
+      leaf, but the Accounts rows keep their chevrons and the lots appear in <em>both</em> places, which is
+      duplication I would rather avoid.</div></div>
+    <div class="rule"><span class="rule-n">?</span><div class="rule-b"><b>Does the Accounts rollup still earn
+      its place? The render says: only half.</b> Three of your five NVDA accounts hold <em>exactly one
+      lot</em> — so <code>Fidelity Brokerage · 160 sh · $33,336.00 · +1438%</code> appears in the rollup and
+      then again, number for number, as a lot row 200pt further down. The rollup only adds information for
+      the two accounts that hold more than one lot (Meysam's TFSA, Haniyeh's TFSA). Options: keep it as-is
+      (one shape, no special cases), cut it entirely and let the lots carry the accounts, or show a rollup
+      row only where an account has 2+ lots — which is honest but makes the table's row count stop matching
+      the section's <code>5</code>. I lean <b>keep</b>, because the duplication is cheap and predictable
+      while a conditional table is neither, but this is the weakest part of the screen and worth your
+      call.</div></div>
+    <div class="rule"><span class="rule-n">?</span><div class="rule-b"><b>Is oldest-first still right when
+      the list spans accounts?</b> An alternative is largest-first, which would put your two underwater
+      $36k–56k lots at the top instead of the 2021 lot that can only ever look good. Oldest-first is what
+      the section already did; largest-first is arguably the better default now that the list is the
+      screen's centre of gravity.</div></div>
+  </section>
+
+</div>

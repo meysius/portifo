@@ -48,11 +48,14 @@
     --loss-dk-tint: rgba(230,117,103,0.14);
     --loss-dk-ink:  #22090A;
 
-    --cat-1: var(--signal);
-    --cat-2: #B8862E;
-    --cat-3: #7A5FB3;
-    --cat-4: #A65A9E;
-    --cat-cash: #9AA0A6;
+    /* --cat-1..4 / --cat-cash are gone. They keyed a holding to its slice of
+       the allocation bar, and both the bar and its legend were deleted: the
+       key was assigned by RANK, so it changed meaning whenever prices moved,
+       it recycled at the 5th holding (a 6-position portfolio painted two rows
+       the same hue), and --cat-1 aliased --signal, spending the one accent on
+       the largest slice. A holding's share of the portfolio is now a figure in
+       its own row. No token replaced them — weight is carried by a number and
+       a bar length, so the screen has no categorical colour at all. */
 
     --ccy-usd: var(--signal);
     --ccy-cad: #C9793B;

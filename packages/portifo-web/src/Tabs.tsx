@@ -6,7 +6,6 @@ import AccountsPage from "./pages/AccountsPage";
 import SettingsPage from "./pages/SettingsPage";
 import ManagePortfolioPage from "./pages/ManagePortfolioPage";
 import AddMemberPage from "./pages/AddMemberPage";
-import AccountHoldingPage from "./pages/AccountHoldingPage";
 import AssetDetailPage from "./pages/AssetDetailPage";
 import AccountDetailPage from "./pages/AccountDetailPage";
 import CashAccountDetailPage from "./pages/CashAccountDetailPage";
@@ -85,7 +84,6 @@ function PortfolioStack() {
       <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/portfolio" component={HoldingsPage} />
         <Route exact path="/tabs/portfolio/asset/:symbol" component={AssetDetailPage} />
-        <Route exact path="/tabs/portfolio/asset/:symbol/account/:account" component={AccountHoldingPage} />
         <Route exact path="/tabs/portfolio/cash" component={CashDetailPage} />
         <Route exact path="/tabs/portfolio/account/:accountId" component={AccountDetailPage} />
         <Route exact path="/tabs/portfolio/cash-account/:accountId" component={CashAccountDetailPage} />
@@ -106,7 +104,6 @@ function AccountsStack() {
         <Route exact path="/tabs/accounts/account/:accountId" component={AccountDetailPage} />
         <Route exact path="/tabs/accounts/cash-account/:accountId" component={CashAccountDetailPage} />
         <Route exact path="/tabs/accounts/asset/:symbol" component={AssetDetailPage} />
-        <Route exact path="/tabs/accounts/asset/:symbol/account/:account" component={AccountHoldingPage} />
         <Route exact path="/tabs/accounts/update-balance/:accountId" component={UpdateBalancePage} />
         <Route exact path="/tabs/accounts/update-balance/:accountId/:currency" component={UpdateBalancePage} />
         <Route exact path="/tabs/accounts/add-transaction" component={AddTransactionPage} />

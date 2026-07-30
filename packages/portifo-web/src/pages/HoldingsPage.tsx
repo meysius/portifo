@@ -1,5 +1,4 @@
 import {
-  IonAvatar,
   IonContent,
   IonHeader,
   IonIcon,
@@ -15,10 +14,9 @@ import {
   IonToolbar,
 } from "@ionic/react";
 import { refreshOutline } from "ionicons/icons";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { RefresherEventDetail } from "@ionic/react";
 import { useHistory } from "react-router-dom";
-import PriceChart, { RangePicker } from "../PriceChart";
 import CurrencyPickerSheet from "../CurrencyPickerSheet";
 import ActionSheetModal from "../components/ActionSheetModal";
 import AddPortfolioModal from "../components/AddPortfolioModal";
@@ -26,29 +24,45 @@ import {
   ActionPlusIcon,
   ArrowDownIcon,
   ArrowUpIcon,
-  CashGlyphIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  ClosedGlyphIcon,
   EmptyState,
   ListDivider,
   MoneyHero,
   PlusIcon,
   StackIcon,
 } from "../components/ds";
-import { getPortfolioHistory } from "../api/portfolio";
-import type { HistoryPoint, HistoryRange } from "../api/market";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtShares } from "../lib/fx";
 
-// Categorical allocation palette, assigned by POSITION in the sorted list and
-// never by asset type (guidelines § Category colors). --cat-cash is the one
-// fixed assignment, and every slice is paired with a text label in the legend —
-// never colour alone.
-const CAT_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)"];
-const CASH_COLOR = "var(--cat-cash)";
+// Past this many movers the Today block truncates to a "+n more" tail rather
+// than scrolling, so the section has a fixed ceiling of about 130pt.
+const MAX_MOVERS = 6;
+
+// Integer weights that sum to 100: round half-up, then give the largest holding
+// the remainder. Rounding each independently leaves the column reading 99 or
+// 101, which is the kind of thing a reader notices and cannot explain.
+function integerWeights(values: number[], total: number): number[] {
+  if (total <= 1e-9) return values.map(() => 0);
+  const exact = values.map((v) => (v / total) * 100);
+  const out = exact.map((p) => Math.round(p));
+  const drift = 100 - out.reduce((s, p) => s + p, 0);
+  if (drift !== 0 && out.length) {
+    let biggest = 0;
+    for (let i = 1; i < exact.length; i++) if (exact[i] > exact[biggest]) biggest = i;
+    out[biggest] += drift;
+  }
+  return out;
+}
+
+// A holding under 0.5% rounds to 0, and "0%" next to a real balance reads as a
+// bug rather than as a small position.
+function fmtWeight(pct: number, exact: number) {
+  if (pct <= 0 && exact > 0) return "<1";
+  return String(pct);
+}
 
 function HoldingsPage() {
   const history = useHistory();
@@ -76,12 +90,6 @@ function HoldingsPage() {
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
   const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
 
-  const [range, setRange] = useState<HistoryRange>("1M");
-  const [chartHistory, setChartHistory] = useState<HistoryPoint[]>([]);
-  const [historyLoading, setHistoryLoading] = useState(true);
-
-  const chartRequestId = useRef(0);
-
   const openPositions = tickerAggregates.filter((t) => !t.closed);
   const openSymbols = openPositions.map((t) => t.symbol);
   const symbolsKey = openSymbols.join(",");
@@ -91,47 +99,16 @@ function HoldingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbolsKey]);
 
-  // `silent` skips the chart's spinner: on pull-to-refresh the refresher's own
-  // spinner is already showing, and blanking the curve mid-pull reads as a
-  // glitch. The request-id guard makes the last request win either way.
-  const loadHistory = useCallback(
-    async ({ silent = false }: { silent?: boolean } = {}) => {
-      const id = ++chartRequestId.current;
-      if (!silent) setHistoryLoading(true);
-      try {
-        const points = await getPortfolioHistory(range, displayCurrency);
-        if (chartRequestId.current === id) setChartHistory(points);
-      } catch {
-        if (chartRequestId.current === id) setChartHistory([]);
-      } finally {
-        if (chartRequestId.current === id && !silent) setHistoryLoading(false);
-      }
-    },
-    [range, displayCurrency],
-  );
-
-  useEffect(() => {
-    if (!hasActivity && !loading.accounts) {
-      setChartHistory([]);
-      setHistoryLoading(false);
-      return;
-    }
-    loadHistory();
-    // activePortfolio?.id: switching portfolios must refetch even when the
-    // other deps (range, hasActivity) happen to be identical.
-  }, [loadHistory, hasActivity, loading.accounts, activePortfolio?.id]);
-
   // Pull-to-refresh refetches everything this screen shows, not just quotes:
   // the ledger (another member may have added a transaction), the balances the
-  // Cash row and total are built from, live prices/fx, and the chart series.
-  // Silent so the rows and curve stay put under the refresher's spinner.
+  // Cash row and total are built from, and live prices/fx. Silent so the rows
+  // stay put under the refresher's own spinner.
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     try {
       await Promise.all([
         refreshTransactions({ silent: true }),
         refreshAccounts({ silent: true }),
         refreshMarket(openSymbols),
-        loadHistory({ silent: true }),
       ]);
     } finally {
       e.detail.complete();
@@ -246,17 +223,41 @@ function HoldingsPage() {
       };
     });
 
-  const allocSlices = [
-    { key: "cash", label: "Cash", value: cashTotalDisplay, color: CASH_COLOR },
-    ...sortedHoldings.map((h, i) => ({
+  // Each row's share of the portfolio, in the leading cell. This is what
+  // replaced the allocation bar and its colour key: the figure needs no legend,
+  // survives any number of holdings, and cannot collide with itself. Cash is in
+  // the ranking because at 16% it is the second-largest line here.
+  const weightRows = [
+    { key: "cash", value: cashTotalDisplay },
+    ...sortedHoldings.map((h) => ({
       key: h.symbol,
-      label: h.symbol,
       value: convert(h.price * h.shares, h.currency, displayCurrency, fxRates),
-      color: CAT_COLORS[i % CAT_COLORS.length],
     })),
   ];
-  const allocTotal = allocSlices.reduce((s, x) => s + x.value, 0) || 1;
-  const holdingColor = new Map(allocSlices.map((s) => [s.key, s.color]));
+  const weightTotal = weightRows.reduce((s, x) => s + x.value, 0);
+  const weightInts = integerWeights(
+    weightRows.map((r) => r.value),
+    weightTotal,
+  );
+  const weightOf = new Map(
+    weightRows.map((r, i) => [
+      r.key,
+      { pct: weightInts[i], exact: weightTotal > 1e-9 ? (r.value / weightTotal) * 100 : 0 },
+    ]),
+  );
+
+  // Today's movers — the block standing where the value chart used to. Sorted
+  // by the SIZE of the contribution regardless of direction, so the row that
+  // moved the total most is first whichever way it went, and scaled to that
+  // largest mover. Cash never appears: it has nothing to contribute.
+  const movers = sortedHoldings
+    .filter((h) => h.todayDisplay != null && h.todayPct != null)
+    .map((h) => ({ symbol: h.symbol, amount: h.todayDisplay as number, pct: h.todayPct as number }))
+    .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount));
+  const moversShown = movers.slice(0, MAX_MOVERS);
+  const moversRest = movers.slice(MAX_MOVERS);
+  const moversRestSum = moversRest.reduce((s, m) => s + m.amount, 0);
+  const moverScale = Math.max(...movers.map((m) => Math.abs(m.amount)), 0);
 
   const quotesLoading = loading.market && openSymbols.length > 0 && Object.keys(quotes).length === 0;
   const isEmpty = !hasActivity && !loading.accounts;
@@ -324,43 +325,78 @@ function HoldingsPage() {
                   <ChevronDownIcon />
                 </button>
               </div>
-              {sortedHoldings.length > 0 && (
+              {/* Total only. Today's figure lives on the Today divider below,
+                  so the screen doesn't say "Today" twice 40pt apart. */}
+              {sortedHoldings.length > 0 && costBasisSumDisplay > 1e-9 && (
                 <div className="gain-stack">
-                  {hasTodayData && (
-                    <p className={todayGainAgg ? "positive" : "negative"}>
-                      <span className="pnl-label">Today:</span>
-                      {todayGainAgg ? "+" : "−"}
-                      {fmtCcy(Math.abs(todaySumDisplay), displayCurrency)} · {todayGainAgg ? "+" : "−"}
-                      {Math.abs(todayPctAgg).toFixed(1)}%
-                    </p>
-                  )}
-                  {costBasisSumDisplay > 1e-9 && (
-                    <p className={unrealizedGainAgg ? "positive" : "negative"}>
-                      <span className="pnl-label">Total:</span>
-                      {unrealizedGainAgg ? "+" : "−"}
-                      {fmtCcy(Math.abs(unrealizedSumDisplay), displayCurrency)} ·{" "}
-                      {unrealizedGainAgg ? "+" : "−"}
-                      {Math.abs(unrealizedPctAgg).toFixed(1)}%
-                    </p>
-                  )}
+                  <p className={unrealizedGainAgg ? "positive" : "negative"}>
+                    <span className="pnl-label">Total:</span>
+                    {unrealizedGainAgg ? "+" : "−"}
+                    {fmtCcy(Math.abs(unrealizedSumDisplay), displayCurrency)} ·{" "}
+                    {unrealizedGainAgg ? "+" : "−"}
+                    {Math.abs(unrealizedPctAgg).toFixed(1)}%
+                  </p>
                 </div>
               )}
             </div>
 
-            <div className="chart-card">
-              {historyLoading ? (
-                <div className="chart-loading">
-                  <IonSpinner name="crescent" />
+            {/* Today's movers — what the value chart used to occupy. The chart
+                restated the hero's own figure; this answers the question the
+                hero raises and the curve never could: which holding moved the
+                total, and by how much. */}
+            {hasTodayData && (
+              <>
+                <ListDivider
+                  label="Today"
+                  meta={`${todayGainAgg ? "+" : "−"}${fmtCcy(Math.abs(todaySumDisplay), displayCurrency)} · ${
+                    todayGainAgg ? "+" : "−"
+                  }${Math.abs(todayPctAgg).toFixed(2)}%`}
+                  metaTone={todayGainAgg ? "gain" : "loss"}
+                />
+                <div className="movers">
+                  {moversShown.map((m) => {
+                    const gain = m.amount > 0;
+                    // Sign is the SIDE of the baseline, not the colour:
+                    // --gain and --loss separate at only ΔE 6.5 under
+                    // simulated deuteranopia. Each arm is half the plot, so a
+                    // full-scale bar is 50% of its width.
+                    const flat = Math.abs(m.amount) < 0.005;
+                    const width = moverScale > 1e-9 ? (Math.abs(m.amount) / moverScale) * 50 : 0;
+                    return (
+                      <div className="mv-row" key={m.symbol}>
+                        <span className="mv-t">{m.symbol}</span>
+                        <span className="mv-plot">
+                          <i
+                            className={flat ? "flat" : gain ? "pos" : "neg"}
+                            style={flat ? undefined : { width: `${width}%` }}
+                          />
+                        </span>
+                        <span className={`mv-v${flat ? "" : gain ? " gain" : " loss"}`}>
+                          {flat ? (
+                            "unchanged"
+                          ) : (
+                            <>
+                              {gain ? "+" : "−"}
+                              {fmtCcy(Math.abs(m.amount), displayCurrency)} ·{" "}
+                              <span className="pc">
+                                {gain ? "+" : "−"}
+                                {Math.abs(m.pct).toFixed(2)}%
+                              </span>
+                            </>
+                          )}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ) : chartHistory.length > 1 ? (
-                <PriceChart points={chartHistory} currency={displayCurrency} />
-              ) : (
-                <div className="chart-loading">
-                  <IonNote>Not enough data for this range</IonNote>
-                </div>
-              )}
-              <RangePicker range={range} onChange={setRange} />
-            </div>
+                {moversRest.length > 0 && (
+                  <div className="mv-tail">
+                    +{moversRest.length} more · {moversRestSum >= 0 ? "+" : "−"}
+                    {fmtCcy(Math.abs(moversRestSum), displayCurrency)}
+                  </div>
+                )}
+              </>
+            )}
 
             <div className={`fx-note${fxAsOf ? "" : " fx-note--fallback"}`}>
               <span className="fx-dot" />
@@ -382,35 +418,30 @@ function HoldingsPage() {
               )}
             </div>
 
-            <ListDivider label="Allocation" />
-            <div className="alloc-bar">
-              {allocSlices.map((s) => (
-                <span key={s.key} style={{ flex: (s.value / allocTotal) * 100, background: s.color }} />
-              ))}
-            </div>
-            <div className="alloc-legend">
-              {allocSlices.map((s) => (
-                <div className="alloc-chip" key={s.key}>
-                  <span className="alloc-dot" style={{ background: s.color }} />
-                  <span className="alloc-lbl">{s.label}</span>
-                  <span className="alloc-pct">{((s.value / allocTotal) * 100).toFixed(1)}%</span>
-                </div>
-              ))}
-            </div>
-
             <ListDivider
               label="Holdings"
               meta={
                 sortedHoldings.length > 0
-                  ? `${sortedHoldings.length} position${sortedHoldings.length === 1 ? "" : "s"}`
+                  ? `${sortedHoldings.length} position${sortedHoldings.length === 1 ? "" : "s"} · % of total`
                   : undefined
               }
             />
             <IonList inset>
-              <IonItem button detail={false} onClick={() => history.push(`${tabBase}/cash`)}>
-                <IonAvatar slot="start" className="glyph glyph-cash">
-                  <CashGlyphIcon />
-                </IonAvatar>
+              <IonItem
+                className="row-weighted"
+                style={{ "--w": `${weightOf.get("cash")?.pct ?? 0}%` } as React.CSSProperties}
+                button
+                detail={false}
+                onClick={() => history.push(`${tabBase}/cash`)}
+              >
+                {/* The weight replaces the glyph in the leading slot. The glyph
+                    held a colour dot keying the row to a slice of a bar that no
+                    longer exists; the slot now holds the number that dot was
+                    trying to encode. */}
+                <div slot="start" className="row-w">
+                  {fmtWeight(weightOf.get("cash")?.pct ?? 0, weightOf.get("cash")?.exact ?? 0)}
+                  <span className="u">%</span>
+                </div>
                 <IonLabel className="label-sym">
                   <h2>Cash</h2>
                   <p>
@@ -428,34 +459,34 @@ function HoldingsPage() {
               </IonItem>
 
               {sortedHoldings.map((h) => {
-                const todayGain = h.todayPct != null && h.todayPct >= 0;
                 const gain = h.unrealizedPct != null && h.unrealizedPct >= 0;
+                const w = weightOf.get(h.symbol);
                 return (
-                  <IonItem key={h.symbol} button detail={false} onClick={() => history.push(`${tabBase}/asset/${h.symbol}`)}>
-                    <IonAvatar slot="start" className="glyph glyph-stock">
-                      <span className="glyph-dot" style={{ background: holdingColor.get(h.symbol) }} />
-                    </IonAvatar>
+                  <IonItem
+                    key={h.symbol}
+                    className="row-weighted"
+                    style={{ "--w": `${w?.pct ?? 0}%` } as React.CSSProperties}
+                    button
+                    detail={false}
+                    onClick={() => history.push(`${tabBase}/asset/${h.symbol}`)}
+                  >
+                    <div slot="start" className="row-w">
+                      {fmtWeight(w?.pct ?? 0, w?.exact ?? 0)}
+                      <span className="u">%</span>
+                    </div>
                     <IonLabel className="label-sym">
                       <h2>{h.symbol}</h2>
                       <p>{h.name ?? `${fmtShares(h.shares)} sh`}</p>
                     </IonLabel>
                     <IonLabel slot="end">
                       <h2>{fmtCcy(h.price * h.shares, h.currency)}</h2>
-                      {/* The same two lines, in the same order and the same
-                          money-then-percentage shape, as the hero of the
-                          Holding Detail this row pushes (screens.html ->
-                          Portfolio rows): the label is the neutral tag read
-                          first, and only the figures carry gain/loss. Both
-                          amounts are in displayCurrency so the column adds up
-                          across a mixed-currency list. */}
-                      {h.todayPct != null && h.todayDisplay != null && (
-                        <p className={todayGain ? "positive" : "negative"}>
-                          <span className="pnl-label">Today:</span>
-                          {todayGain ? "+" : "−"}
-                          {fmtCcy(Math.abs(h.todayDisplay), displayCurrency)} · {todayGain ? "+" : "−"}
-                          {Math.abs(h.todayPct).toFixed(2)}%
-                        </p>
-                      )}
+                      {/* Total only — Today moved out of the rows and into the
+                          movers block above, where it is ranked and scaled.
+                          Keeping both would print every figure twice, and it is
+                          what shortened these rows from 72pt to 55pt. The label
+                          is the neutral tag read first, and only the figures
+                          carry gain/loss; the amount is in displayCurrency so
+                          the column adds up across a mixed-currency list. */}
                       {h.unrealizedPct != null && h.unrealizedDisplay != null && (
                         <p className={gain ? "positive" : "negative"}>
                           <span className="pnl-label">Total:</span>
@@ -487,9 +518,10 @@ function HoldingsPage() {
                         detail={false}
                         onClick={() => history.push(`${tabBase}/asset/${c.symbol}`)}
                       >
-                        <IonAvatar slot="start" className="glyph glyph-closed">
-                          <ClosedGlyphIcon />
-                        </IonAvatar>
+                        {/* An empty weight cell, so a closed row's ticker lines
+                            up with the open ones above it. It gets no figure
+                            and no bar: a closed position has no weight. */}
+                        <div slot="start" className="row-w" aria-hidden="true" />
                         <IonLabel className="label-sym">
                           <h2>
                             {c.symbol} <span className="type-tag">Closed</span>
