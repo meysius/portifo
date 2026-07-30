@@ -533,6 +533,48 @@ ion-tab-button svg {
   font-weight: 500;
 }
 
+/* THE COLOUR BUDGET (DS .gain-stack.ranked). --gain/--loss tint the PERCENTAGE
+   only; a dollar delta is a function of how many shares you happen to own and
+   is not comparable to anything, so it takes --fg-2 like any other supporting
+   figure. Measured on the holding screen: 106 tinted glyphs down to 40. With
+   every figure tinted, green stopped meaning gain and became the page's
+   texture — +0.69% and +1332% arrived in the same colour at the same size.
+
+   Total sits ABOVE Today and keeps full size: the hero figure is market value
+   and the total return is how it got there, so they are one thought. Today is a
+   different horizon and drops to 11.5px. */
+.gain-stack.ranked p {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--fg-2);
+}
+
+.gain-stack.ranked p.sub {
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.gain-stack.ranked p.positive,
+.gain-stack.ranked p.negative {
+  color: var(--fg-2);
+}
+
+.gain-stack.ranked .pc {
+  font-variant-numeric: tabular-nums;
+}
+
+.gain-stack.ranked p.positive .pc {
+  color: var(--gain);
+}
+
+.gain-stack.ranked p.negative .pc {
+  color: var(--loss);
+}
+
+.gain-stack.ranked .pnl-label {
+  min-width: 38px;
+}
+
 /* DS .ccy-pill — recessed display-currency selector. */
 .currency-chip {
   display: flex;
@@ -782,61 +824,136 @@ ion-tab-button svg {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------- allocation (DS .partition / .legend) ---------- */
+/* ---------- today's movers (DS .mv) ----------
+   Stands where the portfolio value chart used to. Diverging off one neutral
+   baseline: gains right, losses left, sorted by size of contribution and
+   scaled to the largest. SIGN IS THE SIDE OF THE BASELINE, never the colour —
+   --gain against --loss separates at only ΔE 6.5 (light) / 4.7 (dark) under
+   simulated deuteranopia, so a red-green reader takes sign from position and
+   from the signed figure. */
 
-.alloc-bar {
+.movers {
   display: flex;
-  gap: 2px;
-  height: 10px;
+  flex-direction: column;
+  gap: 7px;
   margin: 0 var(--gutter);
-  border-radius: 6px;
-  overflow: hidden;
 }
 
-.alloc-bar span {
+.mv-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.mv-t {
+  flex: 0 0 40px;
+  /* same reason: an unusually long ticker must not shift the baseline */
+  min-width: 0;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+
+.mv-plot {
+  position: relative;
+  /* A FIXED share of the row, never `flex: 1`. The baseline is the chart's
+     zero, so it has to fall on the same x on every row — and each bar's width
+     is a percentage of this box, so the box is also the shared scale. With
+     `flex: 1` the plot inherited whatever the value column left over, and a
+     flex item's automatic minimum size lets `flex: 0 0 116px` grow past its
+     basis: the rows reading "−$4,004.00 · −3.55%" took 129.5px and the rest
+     116px, which put the zero line at 151.8px on two rows and 158.4px on the
+     other four, and made a 50% bar mean 82.8px on one row and 89.4px on
+     another. A percentage basis is identical on every row and scales with the
+     screen. */
+  flex: 0 0 42%;
+  height: 10px;
+}
+
+.mv-plot::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--border);
+}
+
+/* a real move never renders as nothing: a −$28 day on a small position is
+   0.35% of the arm, so bars floor at 2px and only a true zero gets the tick */
+.mv-plot i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
   display: block;
   min-width: 2px;
 }
 
-.alloc-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin: 6px var(--gutter) 0;
+.mv-plot i.neg {
+  right: 50%;
+  margin-right: 1px;
+  border-radius: 3px 0 0 3px;
+  background: var(--loss);
 }
 
-.alloc-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+.mv-plot i.pos {
+  left: 50%;
+  margin-left: 1px;
+  border-radius: 0 3px 3px 0;
+  background: var(--gain);
+}
+
+.mv-plot i.flat {
+  left: calc(50% - 1px);
+  width: 2px;
+  border-radius: 1px;
+  background: var(--fg-3);
+}
+
+.mv-v {
+  /* absorbs the width the plot does not take; min-width:0 keeps a long figure
+     from stealing back from the plot */
+  flex: 1 1 auto;
   min-width: 0;
-}
-
-.alloc-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.alloc-lbl {
-  min-width: 0;
+  text-align: right;
   font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--fg-1);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.alloc-pct {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 400;
-  color: var(--fg-3);
+  font-size: 11px;
   font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.mv-v .pc {
+  margin-left: 4px;
+}
+
+.mv-v.gain .pc {
+  color: var(--gain);
+}
+
+.mv-v.loss .pc {
+  color: var(--loss);
+}
+
+/* past six movers the block truncates rather than scrolls, so the section has
+   a fixed ceiling of about 130pt */
+.mv-tail {
+  margin: 2px var(--gutter) 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+/* the day's total rides on the Today divider's meta — the one place a
+   divider's meta is tinted, because it is money */
+.list-divider .dm.gain {
+  color: var(--gain);
+}
+
+.list-divider .dm.loss {
+  color: var(--loss);
 }
 
 /* ---------- lists as plain rows (DS .row anatomy) ----------
@@ -970,6 +1087,75 @@ ion-item ion-label[slot="end"] h2 {
   font-family: var(--font-body);
   color: var(--fg-3);
   font-weight: 500;
+}
+
+/* ---------- weighted holding row (DS .row-w / .list-w) ----------
+   Replaces the allocation bar, its legend and the whole category palette. Each
+   row states its own share of the portfolio, so there is no key to carry
+   across a section boundary and nothing to collide at the 5th holding.
+
+   30pt cell + a 20pt gutter puts the ticker at 72pt from the screen edge —
+   the cell is sized by the widest figure it must hold ("100%" is 29pt at 13px
+   mono) and the surplus goes to the gutter, not to dead space against the
+   screen edge. The glyph it replaces was 30 + 12, i.e. the ticker moves 8pt
+   right. */
+
+ion-item div.row-w[slot="start"] {
+  flex: 0 0 30px;
+  width: 30px;
+  margin: 8px 20px 8px 0;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
+}
+
+/* the unit, stated quietly — a bare "47" in a row of money reads as dollars */
+ion-item div.row-w .u {
+  font-size: 0.72em;
+  font-weight: 500;
+  color: var(--fg-3);
+  margin-left: 1px;
+}
+
+/* A name clips at the gutter, never at the figure beside it. The end label
+   grows with its Total line, and on a row whose name fills the column the two
+   met at 0px — "Invesco QQQ Trust, …Total: +$2,937.99" with no space at all.
+   The name column is the one that must give, so the gutter is a margin on the
+   figure and the label is free to shrink into it. 12px matches the DS .row's
+   own gap between row-main and row-end. */
+ion-item.row-weighted ion-label[slot="end"] {
+  margin-inline-start: 12px;
+}
+
+ion-item.row-weighted ion-label.label-sym {
+  min-width: 0;
+}
+
+/* The bar rides OVER the row's hairline rather than replacing it: the item
+   keeps its --border-width, and this is a second, shorter mark on top. Drawn
+   *inside* the hairline first (a gradient from --fg-2 to --border) it read as
+   a broken separator, not as data. Not a --border double-paint — the hairline
+   is --border and the bar is --fg-3.
+   Anchored to the host, whose box matches .item-native's full-bleed bottom
+   border; --w defaults to 0 so a closed position draws no bar. */
+ion-item.row-weighted {
+  position: relative;
+}
+
+ion-item.row-weighted::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  z-index: 1;
+  height: 2px;
+  width: var(--w, 0);
+  border-radius: 1px;
+  background: var(--fg-3);
+  pointer-events: none;
 }
 
 /* ---------- row glyphs (DS .glyph — 34px circles) ---------- */
@@ -1563,6 +1749,20 @@ a.stat-cell {
 .detail-cta .btn {
   width: 100%;
   flex: 0 0 auto;
+}
+
+/* Side by side (DS .btn-row). Two stacked full-width buttons spent 105pt
+   restating the page title; the title is the ticker, so `Buy NVDA` / `Sell
+   NVDA` need 48pt between them. Overrides the column rules above, so it must
+   restate flex:1 — .detail-cta .btn sets `flex: 0 0 auto` for the column case
+   and would otherwise shrink each button to its text height. */
+.detail-cta.row {
+  flex-direction: row;
+}
+
+.detail-cta.row .btn {
+  flex: 1 1 0;
+  width: auto;
 }
 
 /* ---------- empty state (DS .empty-state) ---------- */
@@ -2197,11 +2397,22 @@ ion-toast {
   color: var(--loss);
 }
 
-/* ---------- Holding detail: market block, realized line, lots ----------
-   Ported from docs/new-design-system (Holding Detail + Account Holding). The
-   same block renders at two magnifications across two pages — the account and
-   lot scopes live on AccountHoldingPage, one push deeper. Nothing here is a new
-   card type; the Market block reuses .fieldcard-list. */
+/* ---------- Holding detail: one screen, accounts as groups ----------
+   Ported from docs/new-design-system. There is ONE holding screen. The old
+   split (AssetDetailPage for the portfolio scope, AccountHoldingPage for the
+   account + lot scope) was a filter, not a second view: the deeper page carried
+   no security-level content and repeated its parent's block at a smaller
+   magnification. Its cost scaled with account count — NVDA in 5 accounts took
+   10 navigations to read 7 lots, and no screen could show two accounts' lots at
+   once, which hid the fact that the two largest lots were bought the same day
+   at the same price in different accounts.
+
+   So accounts are GROUPS here. The group head is the account rollup and its
+   lots hang beneath it. Head and lots share one column grid so an account's
+   total sits directly above the lot values that sum to it — that alignment is
+   the reason to group, and it is the first thing to check if this is ever
+   restyled. These are plain divs, not ion-items, so none of the .ios
+   ion-item specificity dance applies. */
 
 /* A name in a row is a name, not a figure — display face. Rule 10 keeps mono
    for the things that line up in a column, which a proper noun never does. */
@@ -2220,70 +2431,209 @@ ion-toast {
   font-variant-numeric: tabular-nums;
 }
 
-/* Realized P&L is closed money, categorically different from the open position,
-   so it sits OUTSIDE the stat grid on its own line rather than becoming a fifth
-   cell that reads like part of the current holding. */
-.realized {
-  display: flex;
+/* Realized P&L is closed money, but it is still a fact about the POSITION, so
+   it is the Position grid's full-width footer cell. As a floating line it was
+   the only block on the screen with neither a divider nor a box, sitting 11pt
+   under the grid and reading as a fifth grid row that had lost its border.
+   (The old .realized / -k / -v / -n line is gone.) */
+.stat-grid .stat-cell.wide {
+  grid-column: 1 / -1;
+  flex-direction: row;
   align-items: baseline;
   gap: 8px;
-  margin: 0 var(--gutter);
-  padding: 11px 2px 0;
 }
 
-.realized-k {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--fg-2);
+.stat-cell.wide .stat-label {
   flex-shrink: 0;
 }
 
-.realized-v {
+.stat-cell.wide .rz {
   font-family: var(--font-mono);
-  font-size: 12.5px;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 20px;
   font-variant-numeric: tabular-nums;
+  color: var(--fg-2);
 }
 
-.realized-v.positive {
+.stat-cell.wide .rz .pc {
   color: var(--gain);
 }
 
-.realized-v.negative {
+.stat-cell.wide .rz.loss .pc {
   color: var(--loss);
 }
 
-.realized-n {
+.stat-cell.wide .rz-n {
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--fg-3);
   margin-left: auto;
-  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
 }
 
 /* .field-link is GONE — a link inside a .field-card put an action into the form
    vocabulary. Leaving the app is .stat-link now, up with the stat grid. */
 
-/* Lot row. It is NOT a shape of its own — a lot is one more ion-item in the
-   same inset list the Accounts section uses, at the same measures:
-   `60 × $13.20` in the h2 slot, `5y 5m · Feb 12, 2021` in the p.
-   Read-only, so no chevron. The row itself is the `ion-list.list-inset
-   ion-item` block far above.
+/* ---- The account group ----
+   A rule separates ACCOUNTS from each other and nothing else. Uniform hairlines
+   between every row made five groups read as one long list with occasional bold
+   lines; an account's lots are bound together by a rail instead. Every group
+   carries the top rule — on the first one it doubles as the section head's
+   baseline. */
+.agrp {
+  margin: 0 var(--gutter);
+  border-top: 1px solid var(--border);
+}
 
-   Count-at-price is a figure, not a name, so it keeps mono where an account
-   name takes the display face — but at .row-name's own 14px/600, so the two
-   sections read as one list. `h2.lot-figs` (0,2,3) is deliberate: the scoped
-   `.ios ion-item ion-label h2` rule is (0,1,3) and a bare `.lot-figs` would
-   silently lose its font-family to it. The age · date line needs nothing of
-   its own — .row-sub is already mono.
+/* The head outranks its lots on every axis at once — display face against mono,
+   700 against 600, --fg-1 against --fg-2, no indent against 16pt of it. Getting
+   any one of these backwards makes the child read as the parent.
 
-   No underwater modifier: the name line always takes --fg-1, whatever the
-   row's numbers are doing. A lot bought above the current price already shows
-   a --loss return in the right column, which is where the app says gain and
-   loss; tinting the name too said it twice. */
-.ios ion-item ion-label h2.lot-figs {
+   Fixed columns are sized to the WORST case, not to a sample holding: a holding
+   kept in one account puts the whole position on an account line, so the value
+   column holds `$173,972.25` (96pt) and 98pt is the floor. The return column
+   holds `+999.9%` at 60pt; past 1000% the decimal is dropped by fmtPct and it
+   still fits. */
+.ah {
+  display: grid;
+  grid-template-columns: 1fr 98px 60px;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 3px;
+  padding: 12px 2px;
+}
+
+.ah-n {
+  font-family: var(--ion-font-family);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--fg-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-v {
   font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 14.5px;
+  color: var(--fg-1);
   font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ah-p {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ah-p.gain {
+  color: var(--gain);
+}
+
+.ah-p.loss {
+  color: var(--loss);
+}
+
+/* Line 2 spans all three columns. The return column's second row is empty, and
+   at `1 / 3` the meta had 275pt against the 310pt it needs and wrapped on every
+   row, pulling itself out of line with the return above it. */
+.ah-m {
+  grid-column: 1 / -1;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* The rail is absolutely positioned on purpose: indenting the row itself would
+   shift the value and return columns and destroy the alignment with the head,
+   which is the one thing this layout exists to provide. Only the first cell's
+   CONTENT is indented. */
+.glots {
+  position: relative;
+  padding-bottom: 6px;
+}
+
+.glots::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 0;
+  bottom: 12px;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--border);
+}
+
+.glot {
+  display: grid;
+  grid-template-columns: 1fr 98px 60px;
+  align-items: baseline;
+  column-gap: 10px;
+  row-gap: 2px;
+  padding: 7px 2px 7px 0;
+}
+
+/* A lot's purchase price is a caption on a past event, not a peer of the market
+   value beside it — so it takes --fg-2 and only the share count stays --fg-1.
+   Rule 10 is intact: every figure is still mono and tabular; what changed is
+   which one is allowed to be the darkest thing in the row. */
+.glot-px {
+  padding-left: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.glot-px b {
+  color: var(--fg-1);
+  font-weight: 600;
+}
+
+.glot-v {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.glot-p {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.glot-p.gain {
+  color: var(--gain);
+}
+
+.glot-p.loss {
+  color: var(--loss);
+}
+
+.glot-m {
+  grid-column: 1 / -1;
+  padding-left: 16px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {

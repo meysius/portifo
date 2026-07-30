@@ -83,12 +83,8 @@
   .add-btn{ width:32px; height:32px; border-radius:6px; background:var(--signal-tint); color:var(--signal); display:flex; align-items:center; justify-content:center; }
   .add-btn svg{ width:15px; height:15px; }
 
-  /* gauge / allocation */
-  .gauge-ticks{ height:5px; background-image:repeating-linear-gradient(to right, var(--border) 0 1px, transparent 1px 20px); }
-  .gauge-bar{ display:flex; height:9px; background:var(--surface-2); overflow:hidden; }
-  .gauge-seg{ border-right:1px solid var(--bg); }
-  .gauge-seg:last-child{ border-right:none; }
-  .gauge-seg.cash{ background-image:repeating-linear-gradient(-45deg, var(--cat-cash) 0 3px, transparent 3px 6px); }
+  /* .gauge-* lived here and is gone with the allocation bar — it was the only
+     consumer of --cat-cash, and it had no call site in any screen. */
   .legend{ display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:2px; }
   .legend-item{ display:flex; align-items:center; gap:6px; }
   .legend-sq{ width:7px; height:7px; border-radius:1px; flex-shrink:0; }
@@ -106,6 +102,32 @@
   .row-main{ flex:1; min-width:0; }
   .sym{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px; color:var(--fg-1); display:flex; align-items:center; gap:6px; }
   .name{ font-size:12px; color:var(--fg-2); margin-top:2px; }
+
+  /* ── Weighted list — the Portfolio screen's holdings ──────────────────────
+     Replaces the allocation bar, its legend and the whole category palette.
+     Each row states its own share of the portfolio, so there is no key to
+     carry across a section boundary and nothing to collide at the 5th holding.
+     .row-w  30pt cell + 20pt gutter (12pt .row gap + 8pt margin), putting the
+             ticker at 72pt. Width is set by the widest figure it must hold —
+             "100%" at 13px mono is 29pt — and the surplus goes to the gutter,
+             not to dead space against the screen edge.
+     ::after 2pt bar as long as the row's weight, riding OVER the row's own
+             hairline rather than replacing it. Drawn inside the hairline first
+             (a gradient from --fg-2 to --border) it read as a broken
+             separator. Not a rule-01 double-paint: hairline is --border, bar
+             is --fg-3.
+     .name   clips instead of wrapping here — row height was a function of how
+             verbose a security's name is, which cost a row off the fold. */
+  .list-w .row{ position:relative; }
+  /* --w defaults to 0 so a row with no weight — a closed position — draws no
+     bar rather than relying on an invalid width collapsing to nothing */
+  .list-w .row::after{ content:''; position:absolute; left:0; bottom:-1px; height:2px;
+        width:var(--w, 0); border-radius:1px; background:var(--fg-3); }
+  .list-w .name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row-w{ flex:0 0 30px; margin-right:8px; text-align:right; font-family:'JetBrains Mono',monospace;
+          font-variant-numeric:tabular-nums; font-size:13px; font-weight:600; color:var(--fg-2); }
+  /* the unit, stated quietly — a bare "47" in a row of money reads as dollars */
+  .row-w .u{ font-size:0.72em; font-weight:500; color:var(--fg-3); margin-left:1px; }
   .row-end{ text-align:right; flex-shrink:0; }
   .val{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14.5px; color:var(--fg-1); font-variant-numeric:tabular-nums; }
   .meta{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3); margin-top:2px; font-variant-numeric:tabular-nums; }
@@ -290,6 +312,29 @@
   .gain-stack p{ margin:0; display:flex; align-items:center; gap:4px; font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500; font-variant-numeric:tabular-nums; color:var(--fg-3); }
   .gain-stack p.positive{ color:var(--gain); }
   .gain-stack p.negative{ color:var(--loss); }
+
+  /* THE COLOUR BUDGET. --gain/--loss tint the PERCENTAGE only; a dollar delta
+     is a function of how many shares you happen to own and is not comparable to
+     anything, so it takes --fg-2 like any other supporting figure. Measured on
+     the holding screen: 106 tinted glyphs down to 40. With everything tinted,
+     green stopped meaning gain and became the page's texture — +0.69% and
+     +1332% arrived in the same colour at the same size.
+
+     Total sits ABOVE Today and keeps full size: the hero figure is market value
+     and the total return is how it got there, so they are one thought. Today is
+     a different horizon and drops to 11.5px. */
+  .gain-stack.ranked p{ font-size:13.5px; font-weight:600; color:var(--fg-2); }
+  .gain-stack.ranked p.sub{ font-size:11.5px; font-weight:500; }
+  .gain-stack.ranked p.positive, .gain-stack.ranked p.negative{ color:var(--fg-2); }
+  .gain-stack.ranked .pc{ font-variant-numeric:tabular-nums; }
+  .gain-stack.ranked p.positive .pc{ color:var(--gain); }
+  .gain-stack.ranked p.negative .pc{ color:var(--loss); }
+  .gain-stack.ranked .pnl-label{ min-width:38px; }
+
+  /* Two stacked full-width buttons spent 105pt of the fold restating the page
+     title. Side by side they spend 48pt and the title supplies the scope. */
+  .btn-row{ display:flex; gap:9px; }
+  .btn-row .btn{ flex:1; }
   .chart-range-badge{ position:absolute; top:6px; left:6px; font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:600; font-variant-numeric:tabular-nums; padding:3px 8px; border-radius:7px; background:var(--surface-2); }
   .chart-range-badge.positive{ color:var(--gain); }
   .chart-range-badge.negative{ color:var(--loss); }
@@ -298,13 +343,39 @@
   /* Every in-screen section is headed by the same rule-divider: mono label,
      hairline, optional trailing meta. There is no second header style. */
   .divider .dm{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; color:var(--fg-3); white-space:nowrap; }
-  .alloc-bar{ display:flex; gap:2px; height:10px; border-radius:6px; overflow:hidden; }
-  .alloc-bar span{ display:block; min-width:2px; }
-  .alloc-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:6px; }
-  .alloc-chip{ display:flex; align-items:center; gap:6px; min-width:0; }
-  .alloc-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
-  .alloc-lbl{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:500; color:var(--fg-1); }
-  .alloc-pct{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:400; color:var(--fg-3); }
+  /* ── Today's movers ──────────────────────────────────────────────────────
+     Stands where the portfolio value chart used to. The chart re-stated the
+     hero's own figure at 130pt; this answers the question the hero raises and
+     the curve never could — which holding moved the total, and by how much.
+     Diverging: one neutral baseline, gains right, losses left, sorted by size
+     of contribution and scaled to the largest. SIGN IS THE SIDE OF THE
+     BASELINE, never the colour: --gain against --loss separates at only
+     ΔE 6.5 (light) / 4.7 (dark) under simulated deuteranopia, so a red-green
+     reader takes sign from position and from the signed figure.
+     The day's total rides on the divider's .dm — the one place a divider's
+     meta is tinted, because it is money — so the hero does not say "Today"
+     40pt above a section head that says it too. */
+  .mv{ display:flex; flex-direction:column; gap:7px; }
+  .mv-row{ display:flex; align-items:center; gap:9px; }
+  .mv-t{ flex:0 0 40px; min-width:0; font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; color:var(--fg-1); }
+  /* A FIXED share of the row, never flex:1 — the baseline is the chart's zero and
+     must fall on the same x on every row, and each bar is a percentage of this
+     box, so it is the shared scale too. Measured drift when it flexed: 6.7px. */
+  .mv-plot{ flex:0 0 42%; height:10px; position:relative; }
+  .mv-plot::before{ content:''; position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background:var(--border); }
+  /* a real move never renders as nothing: a −$28 day on a small position is
+     0.35% of the arm, so bars floor at 2px and only a true zero gets the tick */
+  .mv-plot i{ position:absolute; top:0; bottom:0; display:block; min-width:2px; }
+  .mv-plot i.neg{ right:50%; background:var(--loss); border-radius:3px 0 0 3px; margin-right:1px; }
+  .mv-plot i.pos{ left:50%;  background:var(--gain); border-radius:0 3px 3px 0; margin-left:1px; }
+  .mv-plot i.flat{ left:calc(50% - 1px); width:2px; background:var(--fg-3); border-radius:1px; }
+  .mv-v{ flex:1 1 auto; min-width:0; text-align:right; font-family:'JetBrains Mono',monospace; font-size:11px;
+         font-variant-numeric:tabular-nums; color:var(--fg-2); white-space:nowrap; }
+  .mv-v .pc{ margin-left:4px; }
+  .mv-v.loss .pc{ color:var(--loss); } .mv-v.gain .pc{ color:var(--gain); }
+  /* past six movers the block truncates rather than scrolls, so the section
+     has a fixed ceiling of about 130pt */
+  .mv-tail{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3); padding-top:2px; }
 
   /* Navbar preview — iOS large-title bar (F7 Navbar `large`), resting vs. scrolled/collapsed */
   .navbar-bar{ height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
@@ -375,13 +446,22 @@
       color-mix(in srgb, var(--bg) 88%, transparent) 0%,
       color-mix(in srgb, var(--bg) 70%, transparent) 55%, transparent 100%); }
 
-  /* ══ Holding detail — scopes, rows, lots ═════════════════════════════════
-     The same measures at more than one magnification become SEPARATE PAGES,
-     not an accordion: Holding Detail is the portfolio scope, Account Holding is
-     the account + lot scope. Each page repeats the same block — .divider head,
-     .stat-grid for the cost side, .gain-stack for returns — so the reader learns
-     it once. Nothing here is a new card type; the three from guidelines.html
-     still hold. */
+  /* ══ Holding detail — one screen, accounts as groups ═════════════════════
+     There is ONE holding screen. The old split (Holding Detail for the
+     portfolio scope, Account Holding for the account + lot scope) was a filter,
+     not a second view: the deeper page carried no security-level content and
+     repeated its parent's block at a smaller magnification. Its cost scaled
+     with account count — a holding in 5 accounts took 10 navigations to read 7
+     lots, and no screen could ever show two accounts' lots at once, which hid
+     the fact that the two largest lots were bought the same day at the same
+     price in different accounts.
+
+     So the accounts become GROUPS on the one screen. The group head is the
+     account rollup and its lots hang beneath it. Head and lots share one column
+     grid so an account's total sits directly above the lot values that sum to
+     it — that alignment is the whole reason to group, and it is the first thing
+     to check if this is ever restyled. Nothing here is a new card type; the
+     three from guidelines.html still hold. */
 
   /* A name in a row is a name, not a figure — display face. Rule 10 keeps mono
      for the things that line up in a column, which a proper noun never does.
@@ -390,30 +470,86 @@
   .row-sub{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
             margin-top:2px; font-variant-numeric:tabular-nums; }
 
-  /* Realized P&L is closed money, categorically different from the open
-     position, so it sits OUTSIDE the stat grid on its own line rather than
-     becoming a fifth cell that reads like part of the current holding. */
-  .realized{ display:flex; align-items:baseline; gap:8px; padding:11px 2px 0; }
-  .realized-k{ font-size:12.5px; font-weight:500; color:var(--fg-2); flex-shrink:0; }
-  .realized-v{ font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:500;
-               font-variant-numeric:tabular-nums; }
-  .realized-v.gain{ color:var(--gain); } .realized-v.loss{ color:var(--loss); }
-  .realized-n{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
-               margin-left:auto; font-variant-numeric:tabular-nums; }
+  /* Realized P&L is closed money, but it is still a fact about the POSITION, so
+     it became the Position grid's full-width footer cell. As a floating line it
+     was the only block on the screen with neither a divider nor a box, sitting
+     11pt under the grid and reading as a fifth grid row that had lost its
+     border. Inside the grid it inherits the grid's hairlines and label style.
+     (The old .realized / .realized-k / .realized-v / .realized-n line is gone.) */
+  .stat-grid .stat-cell.wide{ grid-column:1 / -1; flex-direction:row; align-items:baseline; gap:8px; }
+  .stat-cell.wide .stat-label{ flex-shrink:0; }
+  .stat-cell.wide .rz{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14px;
+        line-height:20px; font-variant-numeric:tabular-nums; color:var(--fg-2); }
+  .stat-cell.wide .rz .pc{ color:var(--gain); }
+  .stat-cell.wide .rz.loss .pc{ color:var(--loss); }
+  .stat-cell.wide .rz-n{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--fg-3);
+        margin-left:auto; flex-shrink:0; }
 
-  /* Lot row. It is NOT a shape of its own — a lot is one more row in the same
-     .row anatomy the Accounts section above it uses, at the same measures:
-     .row-name over .row-sub on the left, .val over .pnl on the right. The two
-     sections stack on one page, so a second row vocabulary 1.5px apart in every
-     size read as a mistake rather than a distinction. What a lot IS is shares
-     at a price, so `60 × $13.20` takes the name slot, and when it
-     was bought drops to the meta line, age first because age is what the
-     section is sorted on. Read-only, so no chevron (rule 09).
+  /* ── The account group ──────────────────────────────────────────────────
+     A rule separates ACCOUNTS from each other and nothing else. Uniform
+     hairlines between every row made five groups read as one long list with
+     occasional bold lines; an account's lots are bound together by a rail
+     instead, and the group's extent is legible without counting. */
+  .agrp{ border-top:1px solid var(--border); }
+  .agrp:first-child{ border-top:none; }
 
-     The name line is never tinted — it is a name, and a name takes --fg-1
-     whatever the row's numbers are doing. Underwater is already said by the
-     right column, in the one place the app says gain and loss. */
-  .lot-figs{ font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; }
+  /* The head outranks its lots on every axis at once — display face against
+     mono, 700 against 600, --fg-1 against --fg-2, no indent against 16pt of it.
+     Getting any one of these backwards makes the child read as the parent.
+
+     EVERY group is the same shape: the lots are always listed, at any count,
+     and the head always reads `shares · N lots · avg cost`. Collapsing a
+     one-lot account into its head avoids repeating three figures but makes the
+     meta slot mean two different things depending on the group, so the column
+     cannot be read straight down, and the lot count becomes discoverable only
+     by noticing the absence of child rows. State the count; never make it
+     something the reader has to infer by counting.
+
+     Fixed columns are sized to the WORST case, not to a sample holding: a
+     holding kept in one account puts the whole position on an account line, so
+     the value column holds `$173,972.25` (96pt) and 98pt is the floor. The
+     return column holds `+999.9%` at 60pt; past 1000% the decimal is dropped by
+     the existing rule and it still fits. */
+  .ah{ display:grid; grid-template-columns:1fr 98px 60px; align-items:baseline;
+       column-gap:10px; row-gap:3px; padding:12px 2px; }
+  .ah-n{ font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--fg-1);
+         overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ah-v{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:14.5px; color:var(--fg-1);
+         font-variant-numeric:tabular-nums; text-align:right; }
+  .ah-p{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:13.5px;
+         font-variant-numeric:tabular-nums; text-align:right; }
+  .ah-p.gain{ color:var(--gain); } .ah-p.loss{ color:var(--loss); }
+  /* Line 2 spans all three columns. The return column's second row is empty, and
+     at `1 / 3` the meta had 275pt against the 310pt it needs and wrapped on
+     every row, pulling itself out of line with the return above it. */
+  .ah-m{ grid-column:1 / -1; font-family:'JetBrains Mono',monospace; font-size:11px;
+         color:var(--fg-3); font-variant-numeric:tabular-nums;
+         display:flex; justify-content:space-between; gap:12px; }
+
+  /* The rail is absolutely positioned on purpose: indenting the row itself
+     would shift the value and return columns and destroy the alignment with the
+     head, which is the one thing this layout exists to provide. Only the first
+     cell's CONTENT is indented. */
+  .glots{ position:relative; padding-bottom:6px; }
+  .glots::before{ content:''; position:absolute; left:3px; top:0; bottom:12px;
+                  width:2px; border-radius:1px; background:var(--border); }
+  .glot{ display:grid; grid-template-columns:1fr 98px 60px; align-items:baseline;
+         column-gap:10px; row-gap:2px; padding:7px 2px 7px 0; }
+  /* A lot's purchase price is a caption on a past event, not a peer of the
+     market value beside it — so it takes --fg-2 and only the share count stays
+     --fg-1. Rule 10 is intact: every figure here is still mono and tabular;
+     what changed is which one is allowed to be the darkest thing in the row. */
+  .glot-px{ padding-left:16px; font-family:'JetBrains Mono',monospace; font-size:13px;
+            color:var(--fg-2); font-variant-numeric:tabular-nums; }
+  .glot-px b{ color:var(--fg-1); font-weight:600; }
+  .glot-v{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:13px; color:var(--fg-2);
+           font-variant-numeric:tabular-nums; text-align:right; }
+  .glot-p{ font-family:'JetBrains Mono',monospace; font-weight:600; font-size:12.5px;
+           font-variant-numeric:tabular-nums; text-align:right; }
+  .glot-p.gain{ color:var(--gain); } .glot-p.loss{ color:var(--loss); }
+  .glot-m{ grid-column:1 / -1; padding-left:16px; font-family:'JetBrains Mono',monospace;
+           font-size:11px; color:var(--fg-3); font-variant-numeric:tabular-nums;
+           display:flex; justify-content:space-between; gap:12px; }
 
   /* .field-link is GONE — a link inside a .field-card put an action into the
      form vocabulary. Leaving the app is now .stat-link, up with the stat grid. */
