@@ -111,18 +111,36 @@
              ticker at 72pt. Width is set by the widest figure it must hold —
              "100%" at 13px mono is 29pt — and the surplus goes to the gutter,
              not to dead space against the screen edge.
-     ::after 2pt bar as long as the row's weight, riding OVER the row's own
+     ::after 6pt bar as long as the row's weight, riding OVER the row's own
              hairline rather than replacing it. Drawn inside the hairline first
              (a gradient from --fg-2 to --border) it read as a broken
              separator. Not a rule-01 double-paint: hairline is --border, bar
-             is --fg-3.
+             is --signal.
+
+             At 2pt in --fg-3 the bar was the same weight and the same grey as
+             the hairline it sat on, the chevrons and the movers' zero tick, so
+             the one QUANTITY on the row that isn't a figure was drawn in the
+             chrome colour and the list read as seven identical dashes. 6pt in
+             --signal makes it a chart. Cobalt and not --gain/--loss: the block
+             directly above already colours bars by direction, and those two
+             separate at only ΔE 6.5 under deuteranopia — a second bar system
+             in the same two hues, with no baseline to carry sign, would be
+             unreadable twice over. Share and return now own different hues.
+
+             ONE strength for every bar, never a ramp keyed to the share. An
+             intensity ramp was drawn and dropped: length already carries the
+             magnitude, so dimming the small bars states it twice and taxes the
+             rows that are hardest to see for a fact their length has already
+             given. Flat cobalt also keeps the bar a fixed, recognisable object
+             — the eye compares lengths against each other instead of weighing
+             length against colour.
      .name   clips instead of wrapping here — row height was a function of how
              verbose a security's name is, which cost a row off the fold. */
   .list-w .row{ position:relative; }
   /* --w defaults to 0 so a row with no weight — a closed position — draws no
      bar rather than relying on an invalid width collapsing to nothing */
-  .list-w .row::after{ content:''; position:absolute; left:0; bottom:-1px; height:2px;
-        width:var(--w, 0); border-radius:1px; background:var(--fg-3); }
+  .list-w .row::after{ content:''; position:absolute; left:0; bottom:-3px; height:6px;
+        width:var(--w, 0); border-radius:3px; background:var(--signal); }
   .list-w .name{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .row-w{ flex:0 0 30px; margin-right:8px; text-align:right; font-family:'JetBrains Mono',monospace;
           font-variant-numeric:tabular-nums; font-size:13px; font-weight:600; color:var(--fg-2); }

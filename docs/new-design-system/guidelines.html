@@ -150,15 +150,27 @@
       was assigned by <b>rank</b>, so it changed meaning whenever prices moved; it recycled at the fifth
       holding, so a six-position portfolio painted two rows the same hue; and <code>--cat-1</code> aliased
       <code>--signal</code>, spending the one accent on the largest slice. <b>A holding's share of the
-      portfolio is a figure in its own row</b> — <code>.row-w</code>, with a 2pt bar on the row's separator
-      as long as that share. Nothing on the Portfolio screen is coloured except money.</p>
+      portfolio is a figure in its own row</b> — <code>.row-w</code>, with a 6pt <code>--signal</code> bar
+      on the row's separator as long as that share. That bar is the one thing on the Portfolio screen
+      coloured for a reason other than money.</p>
+    <p class="g-lead"><b>One hue, one strength, length does the rest.</b> The bar was 2pt in
+      <code>--fg-3</code>, which made it the same weight and the same grey as the hairline beneath it, the
+      chevrons and the movers' zero tick — the one quantity on the row that isn't a figure, drawn in the
+      chrome colour, so the list read as seven identical dashes. 6pt in <code>--signal</code> makes it a
+      chart. <b>Every bar is the same cobalt</b>, whatever the share: length already carries the magnitude,
+      so dimming the small bars states it twice and taxes exactly the rows that are hardest to see. A fixed
+      colour also keeps the bar one recognisable object, so the eye compares lengths against each other
+      rather than weighing length against colour.</p>
     <div class="g-do">
       <div class="g-yes"><div class="lbl">Do</div><p>Encode a magnitude as a figure and a length. A
         percentage in <code>.row-w</code> needs no key, survives forty holdings, and cannot collide with
         itself.</p></div>
       <div class="g-no"><div class="lbl">Don't</div><p>Reintroduce a hue ramp for weight. A sequential
         ramp was drawn, validated and dropped — the screen does not want a second colour system when a
-        number and a bar length already carry the fact.</p></div>
+        number and a bar length already carry the fact. And never colour a weight bar
+        <code>--gain</code>/<code>--loss</code>: the movers block above already colours by direction, and
+        those two separate at only ΔE 6.5 under deuteranopia — a second bar system in the same pair, with
+        no baseline to carry sign, is unreadable twice over.</p></div>
     </div>
 
     <h3 class="g-sub">Elevation</h3>
@@ -250,9 +262,10 @@
     <h3 class="g-sub">Weighted holding row</h3>
     <p class="g-lead">The Portfolio list only. A 30pt <code>.row-w</code> cell leads the row with the
       holding's share of the portfolio, followed by a 20pt gutter that puts the ticker at 72pt. The row's
-      separator carries a 2pt <code>--fg-3</code> bar as long as that share, so the sorted list reads as a
-      bar chart with every bar on the same line as its own label. <code>.name</code> clips rather than
-      wraps, which is what keeps every row the same height.</p>
+      separator carries a 6pt <code>--signal</code> bar as long as that share, so the sorted list reads as a
+      bar chart with every bar on the same line as its own label. Every bar is the same cobalt at full
+      strength — only the length varies. <code>.name</code> clips rather than wraps, which is what keeps
+      every row the same height.</p>
     <div class="card" style="max-width:420px;">
       <div class="divider" style="margin-bottom:9px;"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
       <div class="list list-w">

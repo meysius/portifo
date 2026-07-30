@@ -1138,9 +1138,23 @@ ion-item.row-weighted ion-label.label-sym {
    keeps its --border-width, and this is a second, shorter mark on top. Drawn
    *inside* the hairline first (a gradient from --fg-2 to --border) it read as
    a broken separator, not as data. Not a --border double-paint — the hairline
-   is --border and the bar is --fg-3.
+   is --border and the bar is --signal.
+
+   6px in --signal, not 2px in --fg-3: at the old size and colour the bar was
+   the same weight and the same grey as the hairline under it, the chevrons and
+   the movers' zero tick, so the one quantity on the row that isn't a figure was
+   drawn in the chrome colour. Cobalt and never --gain/--loss — the movers block
+   above already colours bars by direction (see .mv-plot), and those two
+   separate at only ΔE 6.5 under deuteranopia.
+
+   One strength for every bar, never a ramp keyed to the share: length already
+   carries the magnitude, so dimming the small bars states it twice and taxes
+   the rows that are hardest to see. --w defaults to 0, so a closed position
+   draws no bar at all.
+
    Anchored to the host, whose box matches .item-native's full-bleed bottom
-   border; --w defaults to 0 so a closed position draws no bar. */
+   border, and pulled down 2px so the 6px bar straddles that 1px border the way
+   the DS's `bottom:-3px` straddles .row's own. */
 ion-item.row-weighted {
   position: relative;
 }
@@ -1149,12 +1163,12 @@ ion-item.row-weighted::after {
   content: "";
   position: absolute;
   left: 0;
-  bottom: 0;
+  bottom: -2px;
   z-index: 1;
-  height: 2px;
+  height: 6px;
   width: var(--w, 0);
-  border-radius: 1px;
-  background: var(--fg-3);
+  border-radius: 3px;
+  background: var(--signal);
   pointer-events: none;
 }
 
