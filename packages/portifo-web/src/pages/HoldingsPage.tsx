@@ -14,10 +14,11 @@ import {
   IonToolbar,
 } from "@ionic/react";
 import { refreshOutline } from "ionicons/icons";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { RefresherEventDetail } from "@ionic/react";
 import { useHistory } from "react-router-dom";
 import CurrencyPickerSheet from "../CurrencyPickerSheet";
+import PriceChart, { RangePicker } from "../PriceChart";
 import ActionSheetModal from "../components/ActionSheetModal";
 import AddPortfolioModal from "../components/AddPortfolioModal";
 import {
@@ -33,6 +34,8 @@ import {
   PlusIcon,
   StackIcon,
 } from "../components/ds";
+import { getPortfolioHistory } from "../api/portfolio";
+import type { HistoryPoint, HistoryRange } from "../api/market";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtShares } from "../lib/fx";
@@ -41,28 +44,13 @@ import { convert, fmtCcy, fmtShares } from "../lib/fx";
 // than scrolling, so the section has a fixed ceiling of about 130pt.
 const MAX_MOVERS = 6;
 
-// Integer weights that sum to 100: round half-up, then give the largest holding
-// the remainder. Rounding each independently leaves the column reading 99 or
-// 101, which is the kind of thing a reader notices and cannot explain.
-function integerWeights(values: number[], total: number): number[] {
-  if (total <= 1e-9) return values.map(() => 0);
-  const exact = values.map((v) => (v / total) * 100);
-  const out = exact.map((p) => Math.round(p));
-  const drift = 100 - out.reduce((s, p) => s + p, 0);
-  if (drift !== 0 && out.length) {
-    let biggest = 0;
-    for (let i = 1; i < exact.length; i++) if (exact[i] > exact[biggest]) biggest = i;
-    out[biggest] += drift;
-  }
-  return out;
-}
-
-// A holding under 0.5% rounds to 0, and "0%" next to a real balance reads as a
-// bug rather than as a small position.
-function fmtWeight(pct: number, exact: number) {
-  if (pct <= 0 && exact > 0) return "<1%";
-  return `${pct}%`;
-}
+// Allocation slices, assigned by POSITION in the sorted list and never by asset
+// type (guidelines § Weight is coloured in exactly one place). --cat-cash is the
+// one fixed assignment. The ramp recycles at the 5th slice on purpose: every
+// slice is paired with its ticker and share in the legend directly under the
+// bar, so position and label disambiguate — more hues would not separate.
+const CAT_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)"];
+const CASH_COLOR = "var(--cat-cash)";
 
 function HoldingsPage() {
   const history = useHistory();
@@ -90,6 +78,12 @@ function HoldingsPage() {
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
   const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
 
+  const [range, setRange] = useState<HistoryRange>("1M");
+  const [chartHistory, setChartHistory] = useState<HistoryPoint[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  const chartRequestId = useRef(0);
+
   const openPositions = tickerAggregates.filter((t) => !t.closed);
   const openSymbols = openPositions.map((t) => t.symbol);
   const symbolsKey = openSymbols.join(",");
@@ -99,16 +93,47 @@ function HoldingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbolsKey]);
 
+  // `silent` skips the chart's spinner: on pull-to-refresh the refresher's own
+  // spinner is already showing, and blanking the curve mid-pull reads as a
+  // glitch. The request-id guard makes the last request win either way.
+  const loadHistory = useCallback(
+    async ({ silent = false }: { silent?: boolean } = {}) => {
+      const id = ++chartRequestId.current;
+      if (!silent) setHistoryLoading(true);
+      try {
+        const points = await getPortfolioHistory(range, displayCurrency);
+        if (chartRequestId.current === id) setChartHistory(points);
+      } catch {
+        if (chartRequestId.current === id) setChartHistory([]);
+      } finally {
+        if (chartRequestId.current === id && !silent) setHistoryLoading(false);
+      }
+    },
+    [range, displayCurrency],
+  );
+
+  useEffect(() => {
+    if (!hasActivity && !loading.accounts) {
+      setChartHistory([]);
+      setHistoryLoading(false);
+      return;
+    }
+    loadHistory();
+    // activePortfolio?.id: switching portfolios must refetch even when the
+    // other deps (range, hasActivity) happen to be identical.
+  }, [loadHistory, hasActivity, loading.accounts, activePortfolio?.id]);
+
   // Pull-to-refresh refetches everything this screen shows, not just quotes:
   // the ledger (another member may have added a transaction), the balances the
-  // Cash row and total are built from, and live prices/fx. Silent so the rows
-  // stay put under the refresher's own spinner.
+  // Cash row and total are built from, live prices/fx, and the chart series.
+  // Silent so the rows and the curve stay put under the refresher's own spinner.
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     try {
       await Promise.all([
         refreshTransactions({ silent: true }),
         refreshAccounts({ silent: true }),
         refreshMarket(openSymbols),
+        loadHistory({ silent: true }),
       ]);
     } finally {
       e.detail.complete();
@@ -223,28 +248,21 @@ function HoldingsPage() {
       };
     });
 
-  // Each row's share of the portfolio, in the leading cell. This is what
-  // replaced the allocation bar and its colour key: the figure needs no legend,
-  // survives any number of holdings, and cannot collide with itself. Cash is in
-  // the ranking because at 16% it is the second-largest line here.
-  const weightRows = [
-    { key: "cash", value: cashTotalDisplay },
-    ...sortedHoldings.map((h) => ({
+  // Allocation — the partition bar and its legend, which is the ONE place a
+  // holding's share is stated. Cash leads (at 16% it is the second-largest line
+  // here), then holdings by value, and the legend repeats that order exactly:
+  // the reader matches slice to label by position first and hue second, which
+  // is what survives the palette recycling at the 5th slice.
+  const allocSlices = [
+    { key: "cash", label: "Cash", value: cashTotalDisplay, color: CASH_COLOR },
+    ...sortedHoldings.map((h, i) => ({
       key: h.symbol,
+      label: h.symbol,
       value: convert(h.price * h.shares, h.currency, displayCurrency, fxRates),
+      color: CAT_COLORS[i % CAT_COLORS.length],
     })),
   ];
-  const weightTotal = weightRows.reduce((s, x) => s + x.value, 0);
-  const weightInts = integerWeights(
-    weightRows.map((r) => r.value),
-    weightTotal,
-  );
-  const weightOf = new Map(
-    weightRows.map((r, i) => [
-      r.key,
-      { pct: weightInts[i], exact: weightTotal > 1e-9 ? (r.value / weightTotal) * 100 : 0 },
-    ]),
-  );
+  const allocTotal = allocSlices.reduce((s, x) => s + x.value, 0) || 1;
 
   // Today's movers — the block standing where the value chart used to. Sorted
   // by the SIZE of the contribution regardless of direction, so the row that
@@ -340,10 +358,28 @@ function HoldingsPage() {
               )}
             </div>
 
-            {/* Today's movers — what the value chart used to occupy. The chart
-                restated the hero's own figure; this answers the question the
-                hero raises and the curve never could: which holding moved the
-                total, and by how much. */}
+            {/* Portfolio value over the selected range, in the display
+                currency. Full-bleed block carrying its own gutter, so its edges
+                line up with the text column above and below it. */}
+            <div className="chart-card">
+              {historyLoading ? (
+                <div className="chart-loading">
+                  <IonSpinner name="crescent" />
+                </div>
+              ) : chartHistory.length > 1 ? (
+                <PriceChart points={chartHistory} currency={displayCurrency} />
+              ) : (
+                <div className="chart-loading">
+                  <IonNote>Not enough data for this range</IonNote>
+                </div>
+              )}
+              <RangePicker range={range} onChange={setRange} />
+            </div>
+
+            {/* Today's movers. Not a second telling of the curve above: that is
+                the total over the selected range, this is the current day broken
+                down by holding — which one moved the total, and by how much,
+                which the curve cannot say at any range. */}
             {hasTodayData && (
               <>
                 <ListDivider
@@ -418,11 +454,30 @@ function HoldingsPage() {
               )}
             </div>
 
+            {/* Bar and legend ship together and never apart — the legend is
+                where the share is read, and it is what makes --cat-* legal
+                (guidelines § Weight is coloured in exactly one place). */}
+            <ListDivider label="Allocation" />
+            <div className="alloc-bar">
+              {allocSlices.map((s) => (
+                <span key={s.key} style={{ flex: (s.value / allocTotal) * 100, background: s.color }} />
+              ))}
+            </div>
+            <div className="alloc-legend">
+              {allocSlices.map((s) => (
+                <div className="alloc-chip" key={s.key}>
+                  <span className="alloc-dot" style={{ background: s.color }} />
+                  <span className="alloc-lbl">{s.label}</span>
+                  <span className="alloc-pct">{((s.value / allocTotal) * 100).toFixed(1)}%</span>
+                </div>
+              ))}
+            </div>
+
             <ListDivider
               label="Holdings"
               meta={
                 sortedHoldings.length > 0
-                  ? `${sortedHoldings.length} position${sortedHoldings.length === 1 ? "" : "s"} · % of total`
+                  ? `${sortedHoldings.length} position${sortedHoldings.length === 1 ? "" : "s"}`
                   : undefined
               }
             />
@@ -433,18 +488,13 @@ function HoldingsPage() {
                 detail={false}
                 onClick={() => history.push(`${tabBase}/cash`)}
               >
-                {/* The share is a chip on the ticker line and nothing else — no
-                    leading cell, no bar. Both said the same number, and the
-                    leading slot they occupied is why this list started 50pt in
-                    from the gutter while every other list in the app starts at
-                    it. */}
+                {/* No share on the row in any form — no leading cell, no bar,
+                    no chip. The legend a section above states it once, and the
+                    leading slot those marks occupied is why this list started
+                    50pt in from the gutter while every other list in the app
+                    starts at it. */}
                 <IonLabel className="label-sym">
-                  <h2>
-                    Cash{" "}
-                    <span className="w-tag">
-                      {fmtWeight(weightOf.get("cash")?.pct ?? 0, weightOf.get("cash")?.exact ?? 0)}
-                    </span>
-                  </h2>
+                  <h2>Cash</h2>
                   <p>
                     {cashCodes.length === 0
                       ? "No balances yet"
@@ -461,7 +511,6 @@ function HoldingsPage() {
 
               {sortedHoldings.map((h) => {
                 const gain = h.unrealizedPct != null && h.unrealizedPct >= 0;
-                const w = weightOf.get(h.symbol);
                 return (
                   <IonItem
                     key={h.symbol}
@@ -471,9 +520,7 @@ function HoldingsPage() {
                     onClick={() => history.push(`${tabBase}/asset/${h.symbol}`)}
                   >
                     <IonLabel className="label-sym">
-                      <h2>
-                        {h.symbol} <span className="w-tag">{fmtWeight(w?.pct ?? 0, w?.exact ?? 0)}</span>
-                      </h2>
+                      <h2>{h.symbol}</h2>
                       <p>{h.name ?? `${fmtShares(h.shares)} sh`}</p>
                     </IonLabel>
                     <IonLabel slot="end">
@@ -516,10 +563,11 @@ function HoldingsPage() {
                         detail={false}
                         onClick={() => history.push(`${tabBase}/asset/${c.symbol}`)}
                       >
-                        {/* No .w-tag: a closed position has no share. Its
-                            "Closed" chip takes the same slot on the ticker line
-                            in the same form, and the ticker needs no spacer to
-                            line up with the open rows — nothing leads them. */}
+                        {/* A closed position has no share, so it is absent from
+                            the allocation bar. Its "Closed" chip is the only
+                            thing in this slot on any row, and the ticker needs
+                            no spacer to line up with the open rows above —
+                            nothing leads them. */}
                         <IonLabel className="label-sym">
                           <h2>
                             {c.symbol} <span className="type-tag">Closed</span>

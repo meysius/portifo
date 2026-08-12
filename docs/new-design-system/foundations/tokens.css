@@ -48,26 +48,40 @@
     --loss-dk-tint: rgba(230,117,103,0.14);
     --loss-dk-ink:  #22090A;
 
-    /* --cat-1..4 / --cat-cash are gone. They keyed a holding to its slice of
-       the allocation bar, and both the bar and its legend were deleted: the
-       key was assigned by RANK, so it changed meaning whenever prices moved,
-       it recycled at the 5th holding (a 6-position portfolio painted two rows
-       the same hue), and --cat-1 aliased --signal, spending the one accent on
-       the largest slice. The 6pt --signal weight bar that replaced them is
-       gone too — it restated the figure sitting next to it. A holding's share
-       is now a .w-tag chip beside its ticker: --fg-3, no fill, no length. No
-       token replaced any of it. Weight carries NO colour, which is what leaves
-       --gain/--loss unambiguously the return system and --signal spent only on
-       the header action and the tab marker. */
+    /* Allocation slices. Assigned by POSITION in the sorted list, never by
+       asset type; --cat-cash is the one fixed assignment. This set is scoped to
+       ONE component — the allocation bar and its legend on the Portfolio
+       screen — and it may not be used anywhere else, which is what keeps
+       --gain/--loss the return system and --signal the header action and tab
+       marker everywhere else on the page.
+       The three constraints that make it safe there, and only there:
+       · A slice is NEVER colour alone. Every one is paired with its ticker and
+         its percentage in the legend directly under the bar, so the hue is a
+         pointer between two adjacent marks, not the encoding. A reader who
+         cannot separate --cat-3 from --cat-4 loses nothing.
+       · Keyed by RANK, so a hue changes meaning when prices move. Tolerable in
+         a bar read as one glance with its own legend; it is why this set must
+         not key a row, a glyph or anything that persists across screens.
+       · It recycles past the 4th slice. A 6-position portfolio paints two
+         slices the same hue — the legend is what disambiguates them. Do not
+         extend the ramp to fix this; more hues will not separate. */
+    --cat-1: var(--signal);
+    --cat-2: #b8862e;
+    --cat-3: #7a5fb3;
+    --cat-4: #a65a9e;
+    --cat-cash: #9aa0a6;
 
     /* Transaction type. The SECOND categorical set this system has had, and it
        exists because the Transactions row has no glyph — the type chip is the
        only thing on the row that says what kind of movement it is, so it earns
        colour where a redundant mark would not.
-       Why this one is stable and --cat-1..4 was not: --cat-* was keyed by RANK,
-       so a colour changed meaning whenever prices moved and recycled past the
-       4th holding. A transaction type is a CLOSED SET OF FOUR whose meaning
-       never changes. That is the whole difference.
+       Why this one carries meaning where --cat-1..4 does not: --cat-* is keyed
+       by RANK, so a colour changes meaning whenever prices move and recycles
+       past the 4th holding — which is why it is legal only beside a legend that
+       renames every slice. A transaction type is a CLOSED SET OF FOUR whose
+       meaning never changes, so this set can stand on its own on a row. That is
+       the whole difference, and it is why --tx-* is measured for dichromacy
+       below while --cat-* is not.
        THE LIGHTNESS SPREAD IS LOAD-BEARING, NOT STYLING. Under dichromacy
        colour is roughly two-dimensional — one chromatic axis plus lightness —
        and these four cannot separate on hue alone: drawn at a common L*46-55

@@ -83,8 +83,27 @@
   .add-btn{ width:32px; height:32px; border-radius:6px; background:var(--signal-tint); color:var(--signal); display:flex; align-items:center; justify-content:center; }
   .add-btn svg{ width:15px; height:15px; }
 
-  /* .gauge-* lived here and is gone with the allocation bar — it was the only
-     consumer of --cat-cash, and it had no call site in any screen. */
+  /* ── Allocation — the partition bar and its legend ───────────────────────
+     Portfolio screen only, under its own divider. One 10pt bar cut into a slice
+     per line, cash first and then holdings by value; the legend under it names
+     every slice and prints its share. THE LEGEND IS NOT OPTIONAL — it is what
+     makes the hues legal (see --cat-* in tokens.css) and it is where the
+     percentage is actually read. The bar answers a question no column of
+     figures does: whether the portfolio is one position wearing a disguise.
+     2px gaps, not hairline borders: a 1% slice is 3.6px wide at 393pt and a
+     border would eat most of it, so slices are separated by ground instead.
+     min-width:2px on the slice for the same reason — a real position never
+     renders as nothing. */
+  .alloc-bar{ display:flex; gap:2px; height:10px; border-radius:6px; overflow:hidden; }
+  .alloc-bar span{ display:block; min-width:2px; }
+  .alloc-legend{ display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:6px; }
+  .alloc-chip{ display:flex; align-items:center; gap:6px; min-width:0; }
+  .alloc-dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .alloc-lbl{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:500; color:var(--fg-1); }
+  .alloc-pct{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:400; color:var(--fg-3); }
+
+  /* .gauge-* (ticked/hatched variant of the same bar) is gone and stays gone —
+     it had no call site in any screen. */
   .legend{ display:flex; flex-wrap:wrap; gap:10px 18px; margin-top:2px; }
   .legend-item{ display:flex; align-items:center; gap:6px; }
   .legend-sq{ width:7px; height:7px; border-radius:1px; flex-shrink:0; }
@@ -104,33 +123,25 @@
   .name{ font-size:12px; color:var(--fg-2); margin-top:2px; }
 
   /* ── Holdings list — the Portfolio screen's own ───────────────────────────
-     A holding's share of the portfolio is a TAG, and only a tag. This row used
-     to carry two encodings of that one number: a 30pt .row-w figure leading it
-     and a 6pt --signal bar as long as the share riding its separator. The bar
-     is gone. Length restated exactly what the figure already said, in the same
-     place in the row, and it charged the row's leading edge to say it — while
-     overloading the separator into both the edge between two rows and a data
-     mark. Sort order already ranks the list; the figure already gives the
-     magnitude.
+     THE SHARE IS STATED ONCE, IN THE ALLOCATION LEGEND, AND NOT ON THE ROW.
+     Three encodings of that one number have been drawn into this row and each
+     was deleted: a 30pt .row-w figure leading it, a 6pt --signal bar as long as
+     the share riding its separator, and a .w-tag chip beside the ticker. The
+     legend 40pt above already names every line and prints its percentage, so
+     anything here is the second telling. Do not reintroduce a bar, a hue ramp
+     keyed to the share, a tinted row plate or a chip.
 
-     Deleting it pays twice. The ticker returns to the gutter at 22pt, aligned
-     with every other list in the app instead of indented 50pt behind a cell no
-     other list has. And that 50pt goes to .name: measured at 393pt on a
+     Keeping the row clean pays twice. The ticker sits at the gutter at 22pt,
+     aligned with every other list in the app instead of indented 50pt behind a
+     cell no other list has. And that 50pt goes to .name: measured at 393pt on a
      six-position portfolio, five of seven security names ellipsised with the
-     cell in place and none do without it — "Invesco QQQ Trust, Series 1" now
-     fits whole.
+     cell in place and none do without it — "Invesco QQQ Trust, Series 1" fits
+     whole.
 
-     No colour survives the change, which is the point. The Portfolio screen's
-     only remaining chart is Today's movers, so --gain/--loss are unambiguously
-     the return system and --signal is spent on the header action and the tab
-     marker alone. Do not reintroduce a bar, a hue ramp keyed to the share, or
-     a tinted row plate — each was drawn, and each states a second time what
-     the tag has already said.
-     .w-tag  the share, stated once, in the slot inside .sym where .closed-tag
-             already lives, and in the same bordered mono form. --fg-3 at 9.5px
-             keeps it a caption: the figures on the right are money, and the
-             share must not weigh as much as those. A closed position has no
-             share and therefore no tag.
+     The row carries no colour but --gain/--loss on its Total percentage. The
+     hue budget on this screen is spent on the allocation bar, which is the one
+     place a categorical set is legal, and it is spent there BECAUSE the legend
+     is adjacent — see --cat-* in tokens.css.
      .name   clips instead of wrapping — row height was a function of how
              verbose a security's name is, which cost a row off the fold. The
              rule belongs to the LIST, not to the weight; scoped to .list-w it
@@ -143,14 +154,13 @@
   .pnl svg{ width:8px; height:8px; flex-shrink:0; }
   .pnl-label{ font-family:'Public Sans',sans-serif; color:var(--fg-3); font-weight:500; }
   .pnl.gain{ color:var(--gain); } .pnl.loss{ color:var(--loss); }
-  /* One chip vocabulary for the .sym slot: a bordered mono caption stating one
-     quiet fact about the row. .closed-tag says what the row is, .w-tag says how
-     much of the portfolio it is. Same form on purpose — two chip styles 6pt
-     apart on the same line would read as two different kinds of thing. */
-  .closed-tag, .w-tag{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
+  /* The one chip in the .sym slot: a bordered mono caption stating what the row
+     IS. .closed-tag is the whole vocabulary — .w-tag lived here too and is
+     gone, because the allocation legend states the share. A second chip style
+     on this line would read as a second kind of thing. */
+  .closed-tag{ font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:600;
         letter-spacing:0.06em; text-transform:uppercase; color:var(--fg-3);
         border:1px solid var(--border); padding:1px 5px; border-radius:3px; }
-  .w-tag{ font-size:9.5px; letter-spacing:0.04em; font-variant-numeric:tabular-nums; }
 
   /* ── Transaction row ────────────────────────────────────────────────────
      The Transactions list only. Same .row skeleton, three differences, each
@@ -437,9 +447,10 @@
      hairline, optional trailing meta. There is no second header style. */
   .divider .dm{ font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:500; color:var(--fg-3); white-space:nowrap; }
   /* ── Today's movers ──────────────────────────────────────────────────────
-     Stands where the portfolio value chart used to. The chart re-stated the
-     hero's own figure at 130pt; this answers the question the hero raises and
-     the curve never could — which holding moved the total, and by how much.
+     Sits directly under the chart card, and the two do not overlap: the curve
+     is the total over the selected range, this is the breakdown of the current
+     day — which holding moved the total, and by how much, which the curve
+     cannot say at any range.
      Diverging: one neutral baseline, gains right, losses left, sorted by size
      of contribution and scaled to the largest. SIGN IS THE SIDE OF THE
      BASELINE, never the colour: --gain against --loss separates at only

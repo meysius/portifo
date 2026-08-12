@@ -786,6 +786,71 @@ ion-tab-button svg {
   cursor: pointer;
 }
 
+/* ---------- allocation (DS .alloc-bar / .alloc-legend) ----------
+ * One component, two parts, never shipped apart. The bar answers what a sorted
+ * column of figures does not — whether the portfolio is a single position
+ * wearing a disguise — and the legend under it is where the share is actually
+ * read. THE LEGEND IS WHAT MAKES --cat-* LEGAL (guidelines § Weight is coloured
+ * in exactly one place): the palette is keyed by rank and recycles at the fifth
+ * slice, so hue is a pointer between two adjacent marks, never the encoding.
+ * Do not draw the bar without it, and do not spend --cat-* anywhere else.
+ *
+ * 2px gaps rather than hairline borders between slices: a 1% slice is 3.5px
+ * wide at 393pt and a border would eat most of it, so slices are separated by
+ * ground. min-width for the same reason — a real position never renders as
+ * nothing.
+ */
+
+.alloc-bar {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 9px var(--gutter) 0;
+}
+
+.alloc-bar span {
+  display: block;
+  min-width: 2px;
+}
+
+.alloc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 6px var(--gutter) 0;
+}
+
+.alloc-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.alloc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.alloc-lbl {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+
+.alloc-pct {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---------- section head ----------
  * ONE style, everywhere (guidelines § Components): mono uppercase label, a
  * hairline filling the remainder, optional right-aligned meta. --sec-gap above
@@ -1194,12 +1259,12 @@ ion-item.tx-row::part(detail-icon) {
 }
 
 /* ---------- holding row (DS .list-hold) ----------
-   A holding's share of the portfolio is a .w-tag chip beside its ticker, and
-   nothing else. This row used to carry two encodings of that one number: a
-   30pt leading cell holding the figure, and a 6pt --signal bar as long as the
-   share riding the row's hairline. Both are gone. The bar restated the figure
-   next to it — the list is sorted, so rank is already carried by position —
-   and the pair charged 50pt of every row's leading edge to say it.
+   The share is stated ONCE, in the allocation legend a section above, and not
+   on this row. Three encodings of that one number have been drawn here and all
+   three are gone: a 30pt leading cell holding the figure, a 6pt --signal bar as
+   long as the share riding the row's hairline, and a .w-tag chip beside the
+   ticker. The list is sorted, so rank is already carried by position, and the
+   first two charged 50pt of every row's leading edge to say it.
 
    Three workarounds went with the bar, which is the tell that it was fighting
    the platform: the host's border-radius had to be zeroed and re-applied to
@@ -1316,15 +1381,12 @@ ion-item.row-closed {
 /* DS .closed-tag — a small status/type badge riding a ticker, a member row, or
    the Settings profile block: mono, uppercase, hairline-bordered, tertiary ink.
    (Restored: a cleanup pass removed this while four screens still used it.) */
-/* One chip vocabulary for the ticker slot: a bordered mono caption stating one
-   quiet fact about the row. .type-tag says what the row is ("Closed"), .w-tag
-   says how much of the portfolio it is ("47%"). Same form on purpose — on the
-   Portfolio list the two appear 6px apart in the same slot, and two chip
-   treatments there would read as two different kinds of thing. Both stay
-   --fg-3: the row's figures are the money on the right, and a filled or
-   primary-ink chip would out-weigh the value it sits beside. */
-.type-tag,
-.w-tag {
+/* One chip in the ticker slot: a bordered mono caption stating what the row IS
+   ("Closed"). A .w-tag stating the row's share of the portfolio lived here too
+   and is gone — the allocation legend states it a section above. Stays --fg-3:
+   the row's figures are the money on the right, and a filled or primary-ink
+   chip would out-weigh the value it sits beside. */
+.type-tag {
   font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 600;
@@ -1335,12 +1397,6 @@ ion-item.row-closed {
   border-radius: 3px;
   padding: 1px 5px;
   flex-shrink: 0;
-}
-
-.w-tag {
-  font-size: 9.5px;
-  letter-spacing: 0.04em;
-  font-variant-numeric: tabular-nums;
 }
 
 /* Trailing role pill (DS .closed-tag) ahead of a member row's chevron. */

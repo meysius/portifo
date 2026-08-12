@@ -178,7 +178,24 @@
                   <div class="gain-stack">
                     <p class="negative"><span class="pnl-label">Total:</span>−$25,933.92 · −13.0%</p>
                   </div>
+                </div>
 
+                <!-- Full-bleed (.sec-gutter), so the card's edges line up with the text
+                     column above and below it. The badge is the change over the SELECTED
+                     range, not the day — the day is the block underneath. -->
+                <div class="chart-card sec-gutter">
+                  <div style="position:relative;">
+                    <span class="chart-range-badge negative">−$18,204.55 · −7.4%</span>
+                    <svg viewBox="0 0 300 88" preserveAspectRatio="none" style="width:100%; display:block;">
+                      <defs><linearGradient id="fg-portfolio" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D6483B" stop-opacity="0.22"/><stop offset="100%" stop-color="#D6483B" stop-opacity="0"/></linearGradient></defs>
+                      <path d="M0,18 L25,13 L50,24 L75,20 L100,33 L125,28 L150,41 L175,36 L200,52 L225,45 L250,58 L275,54 L300,71 L300,88 L0,88 Z" fill="url(#fg-portfolio)"/>
+                      <path d="M0,18 L25,13 L50,24 L75,20 L100,33 L125,28 L150,41 L175,36 L200,52 L225,45 L250,58 L275,54 L300,71" fill="none" stroke="#D6483B" stroke-width="2"/>
+                    </svg>
+                  </div>
+                  <div class="ranges"><span>1D</span><span>1W</span><span class="on">1M</span><span>3M</span><span>6M</span><span>1Y</span><span>All</span></div>
+                </div>
+
+                <div style="padding:0 20px;">
                     <div class="divider sec"><span class="dl">Today</span><span class="dh"></span><span class="dm" style="color:var(--loss)">−$6,266.77 · −3.14%</span></div>
                     <div class="mv">
                       <div class="mv-row"><span class="mv-t">NVDA</span><span class="mv-plot"><i class="neg" style="width:50%"></i></span><span class="mv-v neg">−$4,004.00 · <span class="pc">−3.55%</span></span></div>
@@ -193,15 +210,38 @@
                 <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
 
                 <div style="padding:0 20px;">
-                  <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
+                  <!-- Bar order and legend order are identical, cash first, then holdings by
+                       value — the reader matches slice to label by position first, hue second,
+                       which is what survives the palette recycling at the fifth holding. -->
+                  <div class="divider sec"><span class="dl">Allocation</span><span class="dh"></span></div>
+                  <div class="alloc-bar">
+                    <span style="flex:15.8; background:var(--cat-cash);"></span>
+                    <span style="flex:47.3; background:var(--cat-1);"></span>
+                    <span style="flex:9.5; background:var(--cat-2);"></span>
+                    <span style="flex:9.4; background:var(--cat-3);"></span>
+                    <span style="flex:8.8; background:var(--cat-4);"></span>
+                    <span style="flex:5.9; background:var(--cat-1);"></span>
+                    <span style="flex:3.2; background:var(--cat-2);"></span>
+                  </div>
+                  <div class="alloc-legend">
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-cash)"></span><span class="alloc-lbl">Cash</span><span class="alloc-pct">15.8%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">NVDA</span><span class="alloc-pct">47.3%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">QQQ</span><span class="alloc-pct">9.5%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-3)"></span><span class="alloc-lbl">SMH</span><span class="alloc-pct">9.4%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-4)"></span><span class="alloc-lbl">SHOP</span><span class="alloc-pct">8.8%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">URA</span><span class="alloc-pct">5.9%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">IBIT</span><span class="alloc-pct">3.2%</span></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions</span></div>
                   <div class="list list-hold">
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">Cash <span class="w-tag">16%</span></div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">NVDA <span class="w-tag">47%</span></div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">QQQ <span class="w-tag">10%</span></div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SMH <span class="w-tag">9%</span></div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SHOP <span class="w-tag">9%</span></div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">URA <span class="w-tag">6%</span></div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">IBIT <span class="w-tag">3%</span></div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                   </div>
                 </div>
               </div>
@@ -219,11 +259,13 @@
       <div class="spec">
         <div class="spec-h">Portfolio · build notes</div>
         <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 1 — tab root at rest. Title, chevron and trailing action per the Portfolio row of the header table in <code>guidelines.html</code>.</span></div>
-        <div class="spec-row"><span class="spec-k">Order</span><span class="spec-v">Hero → Today → fx-note → Holdings → Closed. There is no chart card and no Allocation section: the value curve restated the hero at 130pt, and the allocation bar needed a colour key, and the weight bar that replaced it needed a leading cell — the share is a chip on the ticker line now. <code>.fx-note</code> is the only full-bleed block left.</span></div>
+        <div class="spec-row"><span class="spec-k">Order</span><span class="spec-v">Hero → chart → Today → fx-note → Allocation → Holdings → Closed. The chart card and <code>.fx-note</code> are the full-bleed blocks (<code>.sec-gutter</code>), so their edges line up with the text column above and below them.</span></div>
         <div class="spec-row"><span class="spec-k">Hero</span><span class="spec-v">Total only — the day&rsquo;s figure lives on the Today divider, so the screen does not say &ldquo;Today&rdquo; twice 40pt apart. The currency chip is a tap target that opens the display-currency sheet, not a label.</span></div>
-        <div class="spec-row"><span class="spec-k">Today</span><span class="spec-v">Diverging contribution bars, sorted by size and scaled to the largest mover. Sign is the side of the baseline, never the colour. Truncates to a <code>+n more</code> tail past six rows; cash never appears, having nothing to contribute.</span></div>
-        <div class="spec-row"><span class="spec-k">Rows</span><span class="spec-v">Ticker over name at the gutter, then value over Total, with the holding’s share as a <code>.w-tag</code> chip beside the ticker. <b>No weight cell and no bar</b> — both stated the share a second time and cost 50pt of every row’s leading edge; the list now starts where every other list in the app starts. Today is <b>not</b> in the row — it moved to the block above, where it is ranked. Every row pushes a detail screen, hence the chevrons.</span></div>
-        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured at 393 × 852: first row at 483pt, five of seven rows clear the tab bar, and with the leading cell gone <b>no security name ellipsises</b> (five of seven did). Content clips there on purpose; the list continues past it — see the scrolled card.</span></div>
+        <div class="spec-row"><span class="spec-k">Chart</span><span class="spec-v">Portfolio value over the selected range, from <code>GET /portfolio/history</code> in the display currency. The badge is the change <b>over that range</b>, tinted <code>--gain</code>/<code>--loss</code>; scrubbing swaps it for the point readout. Range row is a hairline-topped strip running edge to edge inside the card. Changing range or currency refetches; pull-to-refresh refetches silently so the curve does not blank mid-pull.</span></div>
+        <div class="spec-row"><span class="spec-k">Chart vs Today</span><span class="spec-v">They do not overlap and must not be merged. The curve is <b>the total over a range</b>; the movers block is <b>the current day, broken down by holding</b> — which line moved the total, which the curve cannot say at any range. Diverging bars sorted by size and scaled to the largest mover, sign carried by the side of the baseline, never the colour. Truncates to a <code>+n more</code> tail past six rows; cash never appears, having nothing to contribute.</span></div>
+        <div class="spec-row"><span class="spec-k">Allocation</span><span class="spec-v">Partition bar plus legend, <b>always together</b> — the legend is where the share is read and it is what makes <code>--cat-*</code> legal (guidelines § Weight is coloured in exactly one place). Same order in both, cash first then holdings by value. The palette recycles at the fifth slice on purpose; position and label disambiguate, not more hues.</span></div>
+        <div class="spec-row"><span class="spec-k">Rows</span><span class="spec-v">Ticker over name at the gutter, then value over Total. <b>No weight cell, no bar and no chip</b> — all three stated the share a second time, and the first two cost 50pt of every row’s leading edge; the list starts where every other list in the app starts. Today is <b>not</b> in the row — it is in the movers block, where it is ranked. Every row pushes a detail screen, hence the chevrons.</span></div>
+        <div class="spec-row"><span class="spec-k">Fold</span><span class="spec-v">Measured at 393 × 852: the chart and Allocation put the first holding row below the fold, so at rest the screen reads hero → curve → today&rsquo;s damage and the list is a scroll away. That is the trade for having both — see the scrolled card, which is the state the list is read in. With no leading cell <b>no security name ellipsises</b> (five of seven did).</span></div>
         <div class="spec-row"><span class="spec-k">States</span><span class="spec-v">Empty portfolio swaps the hero and list for the shared empty state. Stale prices dim the <code>val</code> to <code>--fg-2</code> and the fx-note carries the last-updated time. A portfolio with no movement today shows the Today divider with a flat total and neutral ticks.</span></div>
       </div>
     </div>
@@ -241,12 +283,12 @@
           <div class="screen">
             <div class="dyn-island"></div>
             <div class="screen-content">
-              <!-- The negative margin IS the scroll position: content is 64pt further up than
-                   at rest, so the chart's range row passes under the header material. The
-                   status bar lives inside .ph-material below, not as a sibling above. -->
-              <div class="stage" style="flex:0 1 auto; padding:0; gap:0; min-height:0; overflow:hidden; margin-top:-64px;">
+              <!-- The negative margin IS the scroll position: the hero and the chart card
+                   have passed under the header material. With both of those above it, the
+                   list is read HERE and not at rest — this card is the Holdings state. -->
+              <div class="stage" style="flex:0 1 auto; padding:0; gap:0; min-height:0; overflow:hidden; margin-top:-30px;">
                 <div style="padding:0 20px;">
-                  <div class="divider sec"><span class="dl">Today</span><span class="dh"></span><span class="dm" style="color:var(--loss)">−$6,266.77 · −3.14%</span></div>
+                  <div class="divider sec" style="margin-top:0;"><span class="dl">Today</span><span class="dh"></span><span class="dm" style="color:var(--loss)">−$6,266.77 · −3.14%</span></div>
                   <div class="mv">
                       <div class="mv-row"><span class="mv-t">NVDA</span><span class="mv-plot"><i class="neg" style="width:50%"></i></span><span class="mv-v neg">−$4,004.00 · <span class="pc">−3.55%</span></span></div>
                       <div class="mv-row"><span class="mv-t">SMH</span><span class="mv-plot"><i class="neg" style="width:13.65%"></i></span><span class="mv-v neg">−$1,091.34 · <span class="pc">−4.79%</span></span></div>
@@ -260,15 +302,35 @@
                 <div class="fx-note"><span class="fx-dot"></span>Displaying in USD · no conversion needed</div>
 
                 <div style="padding:0 20px;">
-                  <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions · % of total</span></div>
+                  <div class="divider sec"><span class="dl">Allocation</span><span class="dh"></span></div>
+                  <div class="alloc-bar">
+                    <span style="flex:15.8; background:var(--cat-cash);"></span>
+                    <span style="flex:47.3; background:var(--cat-1);"></span>
+                    <span style="flex:9.5; background:var(--cat-2);"></span>
+                    <span style="flex:9.4; background:var(--cat-3);"></span>
+                    <span style="flex:8.8; background:var(--cat-4);"></span>
+                    <span style="flex:5.9; background:var(--cat-1);"></span>
+                    <span style="flex:3.2; background:var(--cat-2);"></span>
+                  </div>
+                  <div class="alloc-legend">
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-cash)"></span><span class="alloc-lbl">Cash</span><span class="alloc-pct">15.8%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">NVDA</span><span class="alloc-pct">47.3%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">QQQ</span><span class="alloc-pct">9.5%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-3)"></span><span class="alloc-lbl">SMH</span><span class="alloc-pct">9.4%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-4)"></span><span class="alloc-lbl">SHOP</span><span class="alloc-pct">8.8%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-1)"></span><span class="alloc-lbl">URA</span><span class="alloc-pct">5.9%</span></div>
+                    <div class="alloc-chip"><span class="alloc-dot" style="background:var(--cat-2)"></span><span class="alloc-lbl">IBIT</span><span class="alloc-pct">3.2%</span></div>
+                  </div>
+
+                  <div class="divider sec"><span class="dl">Holdings</span><span class="dh"></span><span class="dm">6 positions</span></div>
                   <div class="list list-hold">
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">Cash <span class="w-tag">16%</span></div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">NVDA <span class="w-tag">47%</span></div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">QQQ <span class="w-tag">10%</span></div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SMH <span class="w-tag">9%</span></div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SHOP <span class="w-tag">9%</span></div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">URA <span class="w-tag">6%</span></div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">IBIT <span class="w-tag">3%</span></div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">Cash</div><div class="name">2 currencies · CAD, USD</div></div><div class="row-end"><div class="val">$36,325.93</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">NVDA</div><div class="name">NVIDIA Corporation</div></div><div class="row-end"><div class="val">$108,685.72</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$13,981.58 · −11.4%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">QQQ</div><div class="name">Invesco QQQ Trust, Series 1</div></div><div class="row-end"><div class="val">$21,837.09</div><div class="pnl gain"><span class="pnl-label">Total:</span>+$2,937.99 · +15.5%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SMH</div><div class="name">VanEck Semiconductor ETF</div></div><div class="row-end"><div class="val">$21,681.46</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$5,194.59 · −19.3%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                     <div class="divider sec"><span class="dl">Closed</span><span class="dh"></span></div>
                     <div class="row closed" style="padding:9px 2px;"><div class="row-main"><div class="sym">META <span class="closed-tag">Closed</span></div><div class="name">Jul 2026</div></div><div class="row-end"><div class="val">Realized</div><div class="pnl loss"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>−$162.08 · −3.2%</div></div></div>
                   </div>
@@ -301,8 +363,8 @@
       </div>
       <div class="spec">
         <div class="spec-h">Portfolio · scrolled — build notes</div>
-        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 2 — the same screen collapsed. Scroll position here is 64pt past rest, which puts the Today block behind the translucent material; the hairline is where content passes under the bar.</span></div>
-        <div class="spec-row"><span class="spec-k">Reveals</span><span class="spec-v">Scrolling past the hero surfaces the Closed section — META sits below the <code>Closed</code> divider, dimmed, with realized P&amp;L and <b>no <code>.w-tag</code></b>, since a closed position has no share. Its <code>.closed-tag</code> takes the same slot on the ticker line, in the same chip form.</span></div>
+        <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 2 — the same screen collapsed. The chart card and the head of the movers block have passed under the translucent material; the hairline is where content passes under the bar.</span></div>
+        <div class="spec-row"><span class="spec-k">Reveals</span><span class="spec-v"><b>This is the state the list is read in.</b> Allocation, the full Holdings list and Closed all sit here — META below the <code>Closed</code> divider, dimmed, with realized P&amp;L and its <code>.closed-tag</code> in the <code>.sym</code> slot. Open rows carry nothing in that slot: the share is in the legend directly above.</span></div>
       </div>
     </div>
 
