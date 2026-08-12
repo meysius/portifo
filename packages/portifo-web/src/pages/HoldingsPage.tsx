@@ -39,8 +39,6 @@ import type { HistoryPoint, HistoryRange } from "../api/market";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtShares } from "../lib/fx";
-// TEMPORARY — see lib/chartDiagnostic.ts; remove once the hero/chart gap is explained.
-import { logChartDiagnostic } from "../lib/chartDiagnostic";
 
 // Past this many movers the Today block truncates to a "+n more" tail rather
 // than scrolling, so the section has a fixed ceiling of about 130pt.
@@ -84,7 +82,6 @@ function HoldingsPage() {
   const [chartHistory, setChartHistory] = useState<HistoryPoint[]>([]);
   const [chartEstimatedTickers, setChartEstimatedTickers] = useState<string[]>([]);
   const [chartEstimatedCurrencies, setChartEstimatedCurrencies] = useState<string[]>([]);
-  const [chartReconciledCash, setChartReconciledCash] = useState<{ currency: string; amount: number }[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
 
   const chartRequestId = useRef(0);
@@ -111,14 +108,12 @@ function HoldingsPage() {
           setChartHistory(history.points);
           setChartEstimatedTickers(history.estimatedTickers);
           setChartEstimatedCurrencies(history.estimatedCurrencies);
-          setChartReconciledCash(history.reconciledCash ?? []);
         }
       } catch {
         if (chartRequestId.current === id) {
           setChartHistory([]);
           setChartEstimatedTickers([]);
           setChartEstimatedCurrencies([]);
-          setChartReconciledCash([]);
         }
       } finally {
         if (chartRequestId.current === id && !silent) setHistoryLoading(false);
@@ -291,33 +286,6 @@ function HoldingsPage() {
   const moversRest = movers.slice(MAX_MOVERS);
   const moversRestSum = moversRest.reduce((s, m) => s + m.amount, 0);
   const moverScale = Math.max(...movers.map((m) => Math.abs(m.amount)), 0);
-
-  // TEMPORARY — remove with lib/chartDiagnostic.ts once the hero/chart gap is
-  // explained. Prod runs on a VM with no shell access from here, so the browser
-  // console is the only way to read its numbers.
-  useEffect(() => {
-    if (historyLoading || chartHistory.length === 0 || sortedHoldings.length === 0) return;
-    logChartDiagnostic({
-      portfolioName: activePortfolio?.name,
-      portfolioId: activePortfolio?.id,
-      displayCurrency,
-      range,
-      cashByCurrency,
-      fxRates,
-      fxAsOf,
-      positions: sortedHoldings.map((h) => ({
-        symbol: h.symbol,
-        shares: h.shares,
-        price: h.price,
-        currency: h.currency,
-      })),
-      points: chartHistory,
-      estimatedTickers: chartEstimatedTickers,
-      estimatedCurrencies: chartEstimatedCurrencies,
-      reconciledCash: chartReconciledCash,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historyLoading, chartHistory, displayCurrency, range, activePortfolio?.id, quotes, cashByCurrency]);
 
   const quotesLoading = loading.market && openSymbols.length > 0 && Object.keys(quotes).length === 0;
   const isEmpty = !hasActivity && !loading.accounts;
