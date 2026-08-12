@@ -19,6 +19,11 @@ export type PortfolioValueHistory = {
   points: HistoryPoint[];
   estimatedTickers: string[];
   estimatedCurrencies: string[];
+  // Cash the stored balances hold that no transaction accounts for, carried
+  // into the replay as an opening balance. Reported rather than folded in
+  // silently: a non-empty list means the ledger and the balances disagree, and
+  // that is worth knowing even though the chart now survives it.
+  reconciledCash: { currency: string; amount: number }[];
 };
 
 export class PortfolioService {
@@ -169,7 +174,42 @@ export class PortfolioService {
       accounts.map((account) => this.portfolioRepo.listTransactionsByAccount(account.id)),
     );
     const transactions = transactionsByAccount.flat().sort((a, b) => a.date.localeCompare(b.date));
-    if (transactions.length === 0) return { points: [], estimatedTickers: [], estimatedCurrencies: [] };
+    if (transactions.length === 0) {
+      return { points: [], estimatedTickers: [], estimatedCurrencies: [], reconciledCash: [] };
+    }
+
+    // THE OPENING BALANCE. The hero on the Portfolio screen totals the stored
+    // currency_balances; this method only ever knew transactions, so any
+    // balance that never came from one was invisible to it — a balance seeded
+    // straight into the database, or set before setCashAccountBalance began
+    // writing its balancing deposit/withdraw. The result was a curve sitting
+    // permanently below the hero at every range, by a constant nobody could
+    // account for (15,938.12 in the report that led here).
+    //
+    // Reconciling to the balances rather than trusting the ledger alone is what
+    // makes the chart's last point equal the figure printed above it, and it
+    // keeps doing so if the two drift again for a reason nobody has thought of
+    // yet. The difference is treated as cash the portfolio ALREADY HELD when
+    // the series begins, which is what an opening balance is; the alternative,
+    // adding it at the right-hand end, would draw a step today for money that
+    // did not arrive today.
+    const balancesByAccount = await Promise.all(
+      accounts.map((account) => this.portfolioRepo.listCurrencyBalancesByAccount(account.id)),
+    );
+    const storedByCurrency = new Map<string, number>();
+    for (const balance of balancesByAccount.flat()) {
+      storedByCurrency.set(balance.currency, (storedByCurrency.get(balance.currency) ?? 0) + Number(balance.balance));
+    }
+    const ledgerByCurrency = new Map<string, number>();
+    for (const t of transactions) {
+      ledgerByCurrency.set(t.currency, (ledgerByCurrency.get(t.currency) ?? 0) + this.computeCashDelta(t));
+    }
+    const openingCash = new Map<string, number>();
+    for (const currency of new Set([...storedByCurrency.keys(), ...ledgerByCurrency.keys()])) {
+      const unledgered = (storedByCurrency.get(currency) ?? 0) - (ledgerByCurrency.get(currency) ?? 0);
+      // Below a cent is rounding in the numeric columns, not a real balance.
+      if (Math.abs(unledgered) >= 0.01) openingCash.set(currency, unledgered);
+    }
 
     const tickers = [...new Set(transactions.filter((t) => t.ticker).map((t) => t.ticker as string))];
 
@@ -204,7 +244,9 @@ export class PortfolioService {
     const nativeCurrencyByTicker = new Map(quotes.map((q) => [q.symbol, q.currency]));
     const livePriceByTicker = new Map(quotes.map((q) => [q.symbol, q.price]));
 
-    const fxCurrencies = new Set(transactions.map((t) => t.currency));
+    // Balance-only currencies belong here too: a CAD balance with no CAD
+    // transaction still needs a CAD rate, and without this it converted at 1.
+    const fxCurrencies = new Set([...transactions.map((t) => t.currency), ...storedByCurrency.keys()]);
     for (const ticker of tickers) fxCurrencies.add(nativeCurrencyByTicker.get(ticker) ?? displayCurrency);
     fxCurrencies.delete(displayCurrency);
     const fxHistoryByCurrency = new Map<string, HistoryPoint[]>();
@@ -289,7 +331,9 @@ export class PortfolioService {
 
     let txIndex = 0;
     const sharesHeld = new Map<string, number>();
-    const cashByCurrency = new Map<string, number>();
+    // Seeded with the unledgered opening balance, so the replay starts from
+    // what the portfolio actually held rather than from zero.
+    const cashByCurrency = new Map<string, number>(openingCash);
     // Last price the LEDGER has seen for a ticker, filled in as the replay
     // walks past each buy/sell. The last-resort price for a symbol the market
     // data provider does not recognise.
@@ -339,6 +383,7 @@ export class PortfolioService {
       points,
       estimatedTickers: [...estimatedTickers],
       estimatedCurrencies: [...estimatedCurrencies],
+      reconciledCash: [...openingCash].map(([currency, amount]) => ({ currency, amount })),
     };
   }
 

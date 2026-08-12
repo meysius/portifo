@@ -84,6 +84,7 @@ function HoldingsPage() {
   const [chartHistory, setChartHistory] = useState<HistoryPoint[]>([]);
   const [chartEstimatedTickers, setChartEstimatedTickers] = useState<string[]>([]);
   const [chartEstimatedCurrencies, setChartEstimatedCurrencies] = useState<string[]>([]);
+  const [chartReconciledCash, setChartReconciledCash] = useState<{ currency: string; amount: number }[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
 
   const chartRequestId = useRef(0);
@@ -110,12 +111,14 @@ function HoldingsPage() {
           setChartHistory(history.points);
           setChartEstimatedTickers(history.estimatedTickers);
           setChartEstimatedCurrencies(history.estimatedCurrencies);
+          setChartReconciledCash(history.reconciledCash ?? []);
         }
       } catch {
         if (chartRequestId.current === id) {
           setChartHistory([]);
           setChartEstimatedTickers([]);
           setChartEstimatedCurrencies([]);
+          setChartReconciledCash([]);
         }
       } finally {
         if (chartRequestId.current === id && !silent) setHistoryLoading(false);
@@ -311,6 +314,7 @@ function HoldingsPage() {
       points: chartHistory,
       estimatedTickers: chartEstimatedTickers,
       estimatedCurrencies: chartEstimatedCurrencies,
+      reconciledCash: chartReconciledCash,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [historyLoading, chartHistory, displayCurrency, range, activePortfolio?.id, quotes, cashByCurrency]);

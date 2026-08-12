@@ -185,6 +185,10 @@ export interface PortfolioHistoryDto {
   points: HistoryPoint[];
   estimatedTickers: string[];
   estimatedCurrencies: string[];
+  // Cash held in the stored balances that no transaction accounts for, which
+  // the server now carries into the replay as an opening balance instead of
+  // drawing a curve permanently below the hero.
+  reconciledCash: { currency: string; amount: number }[];
 }
 
 export async function getPortfolioHistory(range: HistoryRange, currency: string): Promise<PortfolioHistoryDto> {

@@ -34,6 +34,7 @@ export type ChartDiagnosticInput = {
   points: HistoryPoint[];
   estimatedTickers: string[];
   estimatedCurrencies: string[];
+  reconciledCash: { currency: string; amount: number }[];
 };
 
 export function logChartDiagnostic(input: ChartDiagnosticInput): void {
@@ -49,6 +50,7 @@ export function logChartDiagnostic(input: ChartDiagnosticInput): void {
     points,
     estimatedTickers,
     estimatedCurrencies,
+    reconciledCash,
   } = input;
 
   const cash = Object.entries(cashByCurrency)
@@ -113,7 +115,7 @@ export function logChartDiagnostic(input: ChartDiagnosticInput): void {
       firstClose: points[0] ? round(points[0].close) : null,
       lastClose: chartLast == null ? null : round(chartLast),
     },
-    serverReported: { estimatedTickers, estimatedCurrencies },
+    serverReported: { estimatedTickers, estimatedCurrencies, reconciledCash },
     buildHasEstimateFix: Array.isArray(estimatedTickers),
   };
 
