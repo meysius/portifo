@@ -39,6 +39,8 @@ import type { HistoryPoint, HistoryRange } from "../api/market";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtShares } from "../lib/fx";
+// TEMPORARY — see lib/chartDiagnostic.ts; remove once the hero/chart gap is explained.
+import { logChartDiagnostic } from "../lib/chartDiagnostic";
 
 // Past this many movers the Today block truncates to a "+n more" tail rather
 // than scrolling, so the section has a fixed ceiling of about 130pt.
@@ -80,7 +82,8 @@ function HoldingsPage() {
 
   const [range, setRange] = useState<HistoryRange>("1M");
   const [chartHistory, setChartHistory] = useState<HistoryPoint[]>([]);
-  const [chartEstimated, setChartEstimated] = useState<string[]>([]);
+  const [chartEstimatedTickers, setChartEstimatedTickers] = useState<string[]>([]);
+  const [chartEstimatedCurrencies, setChartEstimatedCurrencies] = useState<string[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
 
   const chartRequestId = useRef(0);
@@ -105,12 +108,14 @@ function HoldingsPage() {
         const history = await getPortfolioHistory(range, displayCurrency);
         if (chartRequestId.current === id) {
           setChartHistory(history.points);
-          setChartEstimated([...history.estimatedTickers, ...history.estimatedCurrencies]);
+          setChartEstimatedTickers(history.estimatedTickers);
+          setChartEstimatedCurrencies(history.estimatedCurrencies);
         }
       } catch {
         if (chartRequestId.current === id) {
           setChartHistory([]);
-          setChartEstimated([]);
+          setChartEstimatedTickers([]);
+          setChartEstimatedCurrencies([]);
         }
       } finally {
         if (chartRequestId.current === id && !silent) setHistoryLoading(false);
@@ -284,6 +289,32 @@ function HoldingsPage() {
   const moversRestSum = moversRest.reduce((s, m) => s + m.amount, 0);
   const moverScale = Math.max(...movers.map((m) => Math.abs(m.amount)), 0);
 
+  // TEMPORARY — remove with lib/chartDiagnostic.ts once the hero/chart gap is
+  // explained. Prod runs on a VM with no shell access from here, so the browser
+  // console is the only way to read its numbers.
+  useEffect(() => {
+    if (historyLoading || chartHistory.length === 0 || sortedHoldings.length === 0) return;
+    logChartDiagnostic({
+      portfolioName: activePortfolio?.name,
+      portfolioId: activePortfolio?.id,
+      displayCurrency,
+      range,
+      cashByCurrency,
+      fxRates,
+      fxAsOf,
+      positions: sortedHoldings.map((h) => ({
+        symbol: h.symbol,
+        shares: h.shares,
+        price: h.price,
+        currency: h.currency,
+      })),
+      points: chartHistory,
+      estimatedTickers: chartEstimatedTickers,
+      estimatedCurrencies: chartEstimatedCurrencies,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyLoading, chartHistory, displayCurrency, range, activePortfolio?.id, quotes, cashByCurrency]);
+
   const quotesLoading = loading.market && openSymbols.length > 0 && Object.keys(quotes).length === 0;
   const isEmpty = !hasActivity && !loading.accounts;
   // Pre-fills Add Transaction's Account field with Onboarding's Investment
@@ -386,8 +417,10 @@ function HoldingsPage() {
                   to be estimated the chart says which — the alternative, and
                   what this replaced, was dropping it and drawing a total below
                   the hero with nothing to explain the gap. */}
-              {chartEstimated.length > 0 && (
-                <p className="chart-estimate-note">Estimated for {chartEstimated.join(", ")} — no price history</p>
+              {chartEstimatedTickers.length + chartEstimatedCurrencies.length > 0 && (
+                <p className="chart-estimate-note">
+                  Estimated for {[...chartEstimatedTickers, ...chartEstimatedCurrencies].join(", ")} — no price history
+                </p>
               )}
             </div>
 
