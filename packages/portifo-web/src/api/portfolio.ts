@@ -176,7 +176,18 @@ export async function removeMember(memberId: string): Promise<void> {
   }
 }
 
-export async function getPortfolioHistory(range: HistoryRange, currency: string): Promise<HistoryPoint[]> {
+// `estimated*` name what the server could not price from real market data for
+// this range — a ticker with no price series, or a currency with no fx series.
+// They used to be dropped from the total silently, which drew a curve below the
+// portfolio total on the same screen; they are now estimated and named so the
+// chart can say so.
+export interface PortfolioHistoryDto {
+  points: HistoryPoint[];
+  estimatedTickers: string[];
+  estimatedCurrencies: string[];
+}
+
+export async function getPortfolioHistory(range: HistoryRange, currency: string): Promise<PortfolioHistoryDto> {
   const res = await apiFetch(
     `/portfolio/history?range=${encodeURIComponent(range)}&currency=${encodeURIComponent(currency)}`,
   );

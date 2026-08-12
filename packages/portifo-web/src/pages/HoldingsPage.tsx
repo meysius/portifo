@@ -80,6 +80,7 @@ function HoldingsPage() {
 
   const [range, setRange] = useState<HistoryRange>("1M");
   const [chartHistory, setChartHistory] = useState<HistoryPoint[]>([]);
+  const [chartEstimated, setChartEstimated] = useState<string[]>([]);
   const [historyLoading, setHistoryLoading] = useState(true);
 
   const chartRequestId = useRef(0);
@@ -101,10 +102,16 @@ function HoldingsPage() {
       const id = ++chartRequestId.current;
       if (!silent) setHistoryLoading(true);
       try {
-        const points = await getPortfolioHistory(range, displayCurrency);
-        if (chartRequestId.current === id) setChartHistory(points);
+        const history = await getPortfolioHistory(range, displayCurrency);
+        if (chartRequestId.current === id) {
+          setChartHistory(history.points);
+          setChartEstimated([...history.estimatedTickers, ...history.estimatedCurrencies]);
+        }
       } catch {
-        if (chartRequestId.current === id) setChartHistory([]);
+        if (chartRequestId.current === id) {
+          setChartHistory([]);
+          setChartEstimated([]);
+        }
       } finally {
         if (chartRequestId.current === id && !silent) setHistoryLoading(false);
       }
@@ -374,6 +381,14 @@ function HoldingsPage() {
                 </div>
               )}
               <RangePicker range={range} onChange={setRange} />
+              {/* The curve is a reconstruction from the ledger, so it can only
+                  be as good as the price history behind it. When something had
+                  to be estimated the chart says which — the alternative, and
+                  what this replaced, was dropping it and drawing a total below
+                  the hero with nothing to explain the gap. */}
+              {chartEstimated.length > 0 && (
+                <p className="chart-estimate-note">Estimated for {chartEstimated.join(", ")} — no price history</p>
+              )}
             </div>
 
             {/* Today's movers. Not a second telling of the curve above: that is

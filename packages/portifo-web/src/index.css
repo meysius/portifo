@@ -702,6 +702,18 @@ ion-tab-button svg {
   justify-content: center;
 }
 
+/* Caption under the range strip, shown only when the series had to be
+   estimated. Tertiary ink at caption size: it qualifies the curve, it is not
+   an error, and it must not out-weigh the figures inside the card. */
+.chart-estimate-note {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--fg-3);
+  text-align: center;
+}
+
 /* Range picker: neutral raised state like DS .seg-item.active — signal is
    reserved for the single primary action on the screen. */
 /* An internal rule is never inset by its card's padding (rule 02): the

@@ -10,6 +10,17 @@ import {
 } from "./portfolio.schema";
 import { MarketService, HistoryRange, HistoryPoint } from "@/domain/market/market.service";
 
+// The reconstructed value series, plus what could not be reconstructed from
+// real market data. A ticker with no price series used to be dropped from the
+// total and a missing fx rate used to be treated as par, so the curve came out
+// LOWER than the portfolio total on the same screen with nothing to explain the
+// gap. Both now fall back to the nearest available price/rate and say so here.
+export type PortfolioValueHistory = {
+  points: HistoryPoint[];
+  estimatedTickers: string[];
+  estimatedCurrencies: string[];
+};
+
 export class PortfolioService {
   constructor(
     private readonly logger: SWLogger,
@@ -141,31 +152,57 @@ export class PortfolioService {
   // edits generate — against historical prices/fx. Cash accounts have no
   // ledger UI, but they do have a ledger now (see setCashAccountBalance),
   // which is exactly what makes this reconstruction possible.
-  async getPortfolioValueHistory(portfolioId: string, range: HistoryRange, displayCurrency: string): Promise<HistoryPoint[]> {
+  //
+  // This is a SECOND, independent computation of the figure the Portfolio hero
+  // shows (which is stored balances + live quotes, computed client-side), so
+  // the two agree only if this one can price everything. Where it cannot, it
+  // now estimates and reports rather than silently omitting — see
+  // PortfolioValueHistory. The remaining honest gap is that the last point is
+  // the last CLOSE while the hero is the live quote.
+  async getPortfolioValueHistory(
+    portfolioId: string,
+    range: HistoryRange,
+    displayCurrency: string,
+  ): Promise<PortfolioValueHistory> {
     const accounts = await this.portfolioRepo.listAccountsByPortfolio(portfolioId);
     const transactionsByAccount = await Promise.all(
       accounts.map((account) => this.portfolioRepo.listTransactionsByAccount(account.id)),
     );
     const transactions = transactionsByAccount.flat().sort((a, b) => a.date.localeCompare(b.date));
-    if (transactions.length === 0) return [];
+    if (transactions.length === 0) return { points: [], estimatedTickers: [], estimatedCurrencies: [] };
 
     const tickers = [...new Set(transactions.filter((t) => t.ticker).map((t) => t.ticker as string))];
 
+    // ONE symbol the provider rejects must not take the whole chart down. It
+    // used to: the provider throws on an unknown symbol, the rejection escaped
+    // this method, and the controller turned it into a 502 — so a single
+    // delisted or mistyped ticker replaced the entire curve with an error,
+    // rather than costing only its own contribution. An empty series here
+    // routes into the fallbacks below and is reported as estimated.
+    const safeHistory = async (symbol: string): Promise<HistoryPoint[]> => {
+      try {
+        return await this.marketService.getHistory(symbol, range);
+      } catch {
+        return [];
+      }
+    };
+
+    const priceHistoryByTicker = new Map<string, HistoryPoint[]>(
+      await Promise.all(tickers.map(async (ticker): Promise<[string, HistoryPoint[]]> => [ticker, await safeHistory(ticker)])),
+    );
+
     // Anchor the chart's timestamp grid (and its granularity — 5m bars for 1D,
-    // daily for 1Y, etc.) to one real price series. A cash-only portfolio has
-    // no such series, so fall back to a synthetic daily grid.
-    const gridSource = tickers.length > 0 ? await this.marketService.getHistory(tickers[0], range) : [];
+    // daily for 1Y, etc.) to a real price series: the first ticker that HAS
+    // one, not simply the first ticker — that distinction is what stops an
+    // unpriceable symbol at the head of the ledger from flattening every other
+    // holding onto a synthetic grid. A cash-only portfolio has no series at
+    // all, and falls back to a synthetic daily one.
+    const gridSource = tickers.map((t) => priceHistoryByTicker.get(t) ?? []).find((series) => series.length > 0) ?? [];
     const grid = gridSource.length > 0 ? gridSource.map((p) => p.date) : this.syntheticDateGrid(range, transactions[0].date);
 
-    const quotes = await this.marketService.getQuotes(tickers);
+    const quotes = await this.marketService.getQuotes(tickers).catch(() => []);
     const nativeCurrencyByTicker = new Map(quotes.map((q) => [q.symbol, q.currency]));
-
-    const priceHistoryByTicker = new Map<string, HistoryPoint[]>([[tickers[0], gridSource]]);
-    await Promise.all(
-      tickers
-        .slice(1)
-        .map(async (ticker) => priceHistoryByTicker.set(ticker, await this.marketService.getHistory(ticker, range))),
-    );
+    const livePriceByTicker = new Map(quotes.map((q) => [q.symbol, q.price]));
 
     const fxCurrencies = new Set(transactions.map((t) => t.currency));
     for (const ticker of tickers) fxCurrencies.add(nativeCurrencyByTicker.get(ticker) ?? displayCurrency);
@@ -173,29 +210,90 @@ export class PortfolioService {
     const fxHistoryByCurrency = new Map<string, HistoryPoint[]>();
     await Promise.all(
       [...fxCurrencies].map(async (currency) =>
-        fxHistoryByCurrency.set(currency, await this.marketService.getFxHistory(currency, displayCurrency, range)),
+        // Same reasoning as safeHistory: an fx pair the provider has no series
+        // for costs that currency its historical rate, not the whole chart.
+        fxHistoryByCurrency.set(
+          currency,
+          await this.marketService.getFxHistory(currency, displayCurrency, range).catch(() => []),
+        ),
       ),
     );
 
+    // Live rates, as the fallback for a currency whose HISTORICAL series came
+    // back empty. getFxRates(base, targets) is quoted as targets-per-1-base, so
+    // asking with displayCurrency as the base and inverting gives what the
+    // valuation below wants: displayCurrency per 1 unit of `currency`.
+    const liveFxByCurrency = new Map<string, number>();
+    if (fxCurrencies.size > 0) {
+      try {
+        const inverse = await this.marketService.getFxRates(displayCurrency, [...fxCurrencies]);
+        for (const [currency, rate] of Object.entries(inverse)) {
+          if (Number.isFinite(rate) && rate > 0) liveFxByCurrency.set(currency, 1 / rate);
+        }
+      } catch {
+        // Leave the map empty — the callers below degrade to 1 and say so.
+      }
+    }
+
+    // Anything valued by a fallback rather than by its own historical series.
+    // Reported alongside the points so the chart can say the total is an
+    // estimate, instead of quietly drawing a curve that is too low.
+    const estimatedTickers = new Set<string>();
+    const estimatedCurrencies = new Set<string>();
+
     const priceCursors = new Map<string, number>();
     const fxCursors = new Map<string, number>();
+    // A missing rate used to return 1, which does not mean "unknown" — it means
+    // "this currency is at par with the display currency", and it silently
+    // undervalued every foreign balance. Back-fill from the start of the series
+    // for timestamps that precede it, fall back to the live rate when there is
+    // no series at all, and only then give up (flagging it either way).
     const fxRateAt = (currency: string, timestamp: string): number => {
       if (currency === displayCurrency) return 1;
       const series = fxHistoryByCurrency.get(currency) ?? [];
+      if (series.length === 0) {
+        const live = liveFxByCurrency.get(currency);
+        estimatedCurrencies.add(currency);
+        return live ?? 1;
+      }
       const idx = this.advanceCursor(series, timestamp, fxCursors.get(currency) ?? -1);
       fxCursors.set(currency, idx);
-      return idx >= 0 ? series[idx].close : 1;
+      // Before the series starts: its first close is the nearest real rate.
+      if (idx < 0) {
+        estimatedCurrencies.add(currency);
+        return series[0].close;
+      }
+      return series[idx].close;
     };
-    const priceAt = (ticker: string, timestamp: string): number | undefined => {
+    // Same failure, worse consequence: a ticker with no series contributed
+    // NOTHING to any point, so a real holding vanished from the chart while
+    // still counting in the portfolio total on the same screen. `lastLedger`
+    // is the most recent price the ledger itself has seen for the ticker, which
+    // is the only price available for a symbol the market data does not know.
+    const priceAt = (ticker: string, timestamp: string, lastLedger: number | undefined): number | undefined => {
       const series = priceHistoryByTicker.get(ticker) ?? [];
+      if (series.length === 0) {
+        const fallback = livePriceByTicker.get(ticker) ?? lastLedger;
+        if (fallback == null) return undefined;
+        estimatedTickers.add(ticker);
+        return fallback;
+      }
       const idx = this.advanceCursor(series, timestamp, priceCursors.get(ticker) ?? -1);
       priceCursors.set(ticker, idx);
-      return idx >= 0 ? series[idx].close : undefined;
+      if (idx < 0) {
+        estimatedTickers.add(ticker);
+        return series[0].close;
+      }
+      return series[idx].close;
     };
 
     let txIndex = 0;
     const sharesHeld = new Map<string, number>();
     const cashByCurrency = new Map<string, number>();
+    // Last price the LEDGER has seen for a ticker, filled in as the replay
+    // walks past each buy/sell. The last-resort price for a symbol the market
+    // data provider does not recognise.
+    const ledgerPriceByTicker = new Map<string, number>();
 
     const points: HistoryPoint[] = [];
     for (const timestamp of grid) {
@@ -207,6 +305,8 @@ export class PortfolioService {
         if (t.ticker) {
           const shares = Number(t.shares) * (t.type === "sell" ? -1 : 1);
           sharesHeld.set(t.ticker, (sharesHeld.get(t.ticker) ?? 0) + shares);
+          const paid = Number(t.pricePerShare);
+          if (Number.isFinite(paid) && paid > 0) ledgerPriceByTicker.set(t.ticker, paid);
         }
         // Every transaction moves cash, buys and sells included — the same
         // delta applyCashDelta writes to currency_balances live. Skipping it
@@ -222,15 +322,24 @@ export class PortfolioService {
       }
       for (const [ticker, shares] of sharesHeld) {
         if (Math.abs(shares) < 1e-9) continue;
-        const price = priceAt(ticker, timestamp);
-        if (price == null) continue;
+        const price = priceAt(ticker, timestamp, ledgerPriceByTicker.get(ticker));
+        // Only when the symbol has no series, no quote and no ledger price —
+        // i.e. genuinely nothing to value it with. It is still reported.
+        if (price == null) {
+          estimatedTickers.add(ticker);
+          continue;
+        }
         const nativeCurrency = nativeCurrencyByTicker.get(ticker) ?? displayCurrency;
         value += shares * price * fxRateAt(nativeCurrency, timestamp);
       }
       points.push({ date: timestamp, close: value });
     }
 
-    return points;
+    return {
+      points,
+      estimatedTickers: [...estimatedTickers],
+      estimatedCurrencies: [...estimatedCurrencies],
+    };
   }
 
   // `series` is sorted ascending by date; advances `from` to the last index
