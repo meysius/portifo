@@ -404,6 +404,21 @@
   .btn-google{ background:var(--surface); border:1px solid var(--border); color:var(--fg-1); box-shadow:0 1px 2px rgba(0,0,0,0.04); }
   .login-fine{ font-size:10.5px; line-height:1.5; color:var(--fg-3); text-align:center; padding:0 10px; }
 
+  /* Open-source note. A hairline separates it from the CTA so it reads as a
+     footnote about the software, not a third auth choice. The repo is a mono
+     chip — the one technical string on the screen, and the only tappable thing
+     below the fold of the CTA. */
+  .login-oss{ display:flex; flex-direction:column; align-items:center; gap:9px;
+              border-top:1px solid var(--border); padding-top:14px; margin-top:2px; }
+  .login-oss-body{ font-size:11.5px; line-height:1.55; color:var(--fg-2); text-align:center; max-width:34ch; text-wrap:balance; }
+  .login-oss-body b{ font-weight:600; color:var(--fg-1); }
+  .login-oss-link{ display:inline-flex; align-items:center; gap:7px; text-decoration:none;
+                   background:var(--surface-2); border:1px solid var(--border); border-radius:100px;
+                   padding:9px 15px 9px 13px;
+                   font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:500;
+                   letter-spacing:0.01em; color:var(--fg-1); }
+  .login-oss-link svg{ width:14px; height:14px; color:var(--fg-2); flex-shrink:0; }
+
   .onboard-stage{ flex:1; display:flex; flex-direction:column; padding:0 26px 22px; }
   .onboard-bottom{ display:flex; flex-direction:column; gap:10px; margin-top:24px; }
 

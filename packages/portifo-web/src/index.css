@@ -2136,6 +2136,58 @@ a.stat-cell {
   margin: 0;
 }
 
+/* Open-source note. A hairline separates it from the CTA so it reads as a
+   footnote about the software, not a third auth choice. The repo is a mono
+   chip — the one technical string on the screen. */
+.login-oss {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-top: 2px;
+}
+
+.login-oss-body {
+  max-width: 34ch;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  text-wrap: balance;
+  margin: 0;
+}
+
+.login-oss-body b {
+  font-weight: 600;
+  color: var(--fg-1);
+}
+
+.login-oss-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 9px 15px 9px 13px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--fg-1);
+}
+
+.login-oss-link svg {
+  width: 14px;
+  height: 14px;
+  color: var(--fg-2);
+  flex-shrink: 0;
+}
+
 /* ---------- install guide (InstallAppSheet) ---------- */
 
 .install-steps {
