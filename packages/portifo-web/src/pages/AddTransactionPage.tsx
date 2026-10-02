@@ -8,8 +8,6 @@ import {
   IonLabel,
   IonList,
   IonPage,
-  IonSegment,
-  IonSegmentButton,
   IonTextarea,
   IonTitle,
   IonToolbar,
@@ -36,6 +34,13 @@ type LocationState = { type?: TransactionType; symbol?: string; account?: string
 
 const SYMBOL_DEBOUNCE_MS = 250;
 
+const TYPE_OPTIONS: PickerOption[] = [
+  { value: "buy", label: "Buy" },
+  { value: "sell", label: "Sell" },
+  { value: "deposit", label: "Deposit" },
+  { value: "withdraw", label: "Withdraw" },
+];
+
 // Handles both create (/add-transaction) and edit (/add-transaction/:transactionId).
 // Edit mode wins over any create-mode location.state prefill (used by Holdings'
 // "Buy"/"Add Cash" entry points).
@@ -60,6 +65,7 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
   const [dateSheetOpen, setDateSheetOpen] = useState(false);
   const [currency, setCurrency] = useState("USD");
   const [currencySheetOpen, setCurrencySheetOpen] = useState(false);
+  const [typeSheetOpen, setTypeSheetOpen] = useState(false);
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [symbol, setSymbol] = useState(locationState?.symbol ?? "");
   const [symbolName, setSymbolName] = useState("");
@@ -293,26 +299,15 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
           </IonToolbar>
         </IonHeader>
 
-        <IonSegment
-          value={type}
-          onIonChange={(e) => setType(e.detail.value as TransactionType)}
-          className="type-segment"
-        >
-          <IonSegmentButton value="buy">
-            <IonLabel>Buy</IonLabel>
-          </IonSegmentButton>
-          <IonSegmentButton value="sell">
-            <IonLabel>Sell</IonLabel>
-          </IonSegmentButton>
-          <IonSegmentButton value="deposit">
-            <IonLabel>Deposit</IonLabel>
-          </IonSegmentButton>
-          <IonSegmentButton value="withdraw">
-            <IonLabel>Withdraw</IonLabel>
-          </IonSegmentButton>
-        </IonSegment>
-
         <IonList inset className="fieldcard-list form-list">
+          {/* First row because it decides which rows follow. */}
+          <IonItem button detail onClick={() => setTypeSheetOpen(true)}>
+            <IonLabel>Type</IonLabel>
+            <IonLabel slot="end" key={type} className="ion-text-end">
+              {TYPE_OPTIONS.find((o) => o.value === type)?.label}
+            </IonLabel>
+          </IonItem>
+
           <IonItem button detail onClick={() => setAccountSheetOpen(true)}>
             <IonLabel>Account</IonLabel>
             {/* key forces a remount when the value changes — patching a bare text
@@ -462,6 +457,16 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
         </div>
 
         <DateSheet isOpen={dateSheetOpen} value={date} onSelect={setDate} onClose={() => setDateSheetOpen(false)} />
+
+        <PickerSheet
+          mode="static"
+          isOpen={typeSheetOpen}
+          title="Type"
+          selected={type}
+          onClose={() => setTypeSheetOpen(false)}
+          onSelect={(value) => setType(value as TransactionType)}
+          options={TYPE_OPTIONS}
+        />
 
         <PickerSheet
           mode="static"

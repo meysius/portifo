@@ -11,6 +11,7 @@ import AccountDetailPage from "./pages/AccountDetailPage";
 import CashAccountDetailPage from "./pages/CashAccountDetailPage";
 import CashDetailPage from "./pages/CashDetailPage";
 import AddTransactionPage from "./pages/AddTransactionPage";
+import AddTransactionWizardPage from "./pages/AddTransactionWizardPage";
 import TransactionDetailPage from "./pages/TransactionDetailPage";
 import UpdateBalancePage from "./pages/UpdateBalancePage";
 import { TabBaseProvider } from "./context/TabBaseContext";
@@ -89,7 +90,7 @@ function PortfolioStack() {
         <Route exact path="/tabs/portfolio/cash-account/:accountId" component={CashAccountDetailPage} />
         <Route exact path="/tabs/portfolio/update-balance/:accountId" component={UpdateBalancePage} />
         <Route exact path="/tabs/portfolio/update-balance/:accountId/:currency" component={UpdateBalancePage} />
-        <Route exact path="/tabs/portfolio/add-transaction" component={AddTransactionPage} />
+        <Route exact path="/tabs/portfolio/add-transaction" component={AddTransactionWizardPage} />
       </IonRouterOutlet>
     </TabBaseProvider>
   );
@@ -106,7 +107,7 @@ function AccountsStack() {
         <Route exact path="/tabs/accounts/asset/:symbol" component={AssetDetailPage} />
         <Route exact path="/tabs/accounts/update-balance/:accountId" component={UpdateBalancePage} />
         <Route exact path="/tabs/accounts/update-balance/:accountId/:currency" component={UpdateBalancePage} />
-        <Route exact path="/tabs/accounts/add-transaction" component={AddTransactionPage} />
+        <Route exact path="/tabs/accounts/add-transaction" component={AddTransactionWizardPage} />
       </IonRouterOutlet>
     </TabBaseProvider>
   );
@@ -119,7 +120,7 @@ function TransactionsStack() {
       <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/transactions" component={TransactionsPage} />
         <Route exact path="/tabs/transactions/transaction/:transactionId" component={TransactionDetailPage} />
-        <Route exact path="/tabs/transactions/add-transaction" component={AddTransactionPage} />
+        <Route exact path="/tabs/transactions/add-transaction" component={AddTransactionWizardPage} />
         <Route exact path="/tabs/transactions/add-transaction/:transactionId" component={AddTransactionPage} />
       </IonRouterOutlet>
     </TabBaseProvider>
