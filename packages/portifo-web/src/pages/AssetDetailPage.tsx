@@ -111,6 +111,14 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle size="large">{symbol}</IonTitle>
+            {/* DS .closed-tag on the .ph-large row — the same chip the Holdings
+                row carries, so the push lands on a page that says the same
+                thing. It scrolls away with the title. */}
+            {agg.closed && (
+              <span slot="end" className="type-tag">
+                Closed
+              </span>
+            )}
           </IonToolbar>
         </IonHeader>
 

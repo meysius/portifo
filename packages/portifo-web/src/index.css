@@ -273,6 +273,11 @@ ion-toolbar .add-fab {
   margin-inline-end: 16px;
 }
 
+/* Same inset for a chip riding the large-title row (a closed holding). */
+ion-toolbar > .type-tag[slot="end"] {
+  margin-inline-end: 16px;
+}
+
 /* ---------- tab bar ----------
  * Four fixed tabs, always in the same order, tab roots only (guidelines § Tab
  * bar). 55pt of content + the 34pt home-indicator gutter = 89pt, taller than
