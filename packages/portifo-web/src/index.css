@@ -132,8 +132,12 @@ ion-header:not(.header-collapse-condense)::after {
 /* Ionic's own .header-background (rendered by `translucent` in iOS mode) carries
    the same saturate(180%) blur(20px). Neutralise it so the plate above is the
    single material — otherwise the band is blurred twice, and it would keep
-   blurring at rest, where the language says there is no material at all. */
-ion-header .header-background {
+   blurring at rest, where the language says there is no material at all.
+   Ionic re-declares the blur for the at-rest state as
+   `.header-collapse-condense-inactive .header-background` (two classes), so a
+   bare `ion-header .header-background` loses to it and the large title smears
+   as it scrolls under the status bar. The selector below out-ranks both. */
+ion-header.header-ios .header-background {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -150,7 +154,16 @@ ion-header:not(.header-collapse-condense).header-collapse-condense-inactive::aft
   opacity: 0;
 }
 
+/* The plate is opaque by default: a header without `translucent` sits above its
+   IonContent (the wizard, the sheets, the loading states), so nothing is ever
+   behind it and a backdrop-filter there has only the header's own chrome left
+   to sample. Only `translucent` headers, whose fullscreen content does scroll
+   beneath, get the blur. */
 ion-header:not(.header-collapse-condense)::before {
+  background: var(--surface);
+}
+
+ion-header.header-translucent-ios:not(.header-collapse-condense)::before {
   background: color-mix(in srgb, var(--surface) 72%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
