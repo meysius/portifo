@@ -238,8 +238,8 @@ function HoldingsPage() {
     .filter((c) => Math.abs(cashByCurrency[c]) > 1e-9)
     .sort();
 
-  // Closed positions (every share sold) sit at the very bottom under their
-  // own divider, dimmed, with realized P&L — DS .row.closed.
+  // Closed positions (every share sold) are the last rows of the Holdings
+  // list, after every open one, carrying realized P&L in the value column.
   const closedHoldings = tickerAggregates
     .filter((t) => t.closed && t.realizedCostBasis > 1e-9)
     .map((t) => {
@@ -567,48 +567,42 @@ function HoldingsPage() {
                   </IonItem>
                 );
               })}
+              {/* Closed positions are rows of this same list, always after every
+                  open one, at full strength. The "Closed" chip is the only mark:
+                  a divider said it a second time, and dimming read as disabled
+                  on a row that pushes like the rest. */}
+              {closedHoldings.map((c) => {
+                const gain = c.realizedPL >= 0;
+                return (
+                  <IonItem
+                    key={c.symbol}
+                    className="row-hold"
+                    button
+                    detail={false}
+                    onClick={() => history.push(`${tabBase}/asset/${c.symbol}`)}
+                  >
+                    <IonLabel className="label-sym">
+                      <h2>
+                        {c.symbol} <span className="type-tag">Closed</span>
+                      </h2>
+                      {c.closedOn && <p>{c.closedOn}</p>}
+                    </IonLabel>
+                    <IonLabel slot="end">
+                      <h2>Realized</h2>
+                      <p className={gain ? "positive" : "negative"}>
+                        {gain ? <ArrowUpIcon /> : <ArrowDownIcon />}
+                        {gain ? "+" : "−"}
+                        {fmtCcy(Math.abs(c.realizedPL), c.currency)} · {gain ? "+" : "−"}
+                        {Math.abs(c.realizedPct).toFixed(1)}%
+                      </p>
+                    </IonLabel>
+                    <span slot="end" className="row-chevron" aria-hidden="true">
+                      <ChevronRightIcon />
+                    </span>
+                  </IonItem>
+                );
+              })}
             </IonList>
-
-            {closedHoldings.length > 0 && (
-              <>
-                <ListDivider label="Closed" />
-                <IonList inset>
-                  {closedHoldings.map((c) => {
-                    const gain = c.realizedPL >= 0;
-                    return (
-                      <IonItem
-                        key={c.symbol}
-                        className="row-closed"
-                        button
-                        detail={false}
-                        onClick={() => history.push(`${tabBase}/asset/${c.symbol}`)}
-                      >
-                        {/* A closed position has no share, so it is absent from
-                            the allocation bar. Its "Closed" chip is the only
-                            thing in this slot on any row, and the ticker needs
-                            no spacer to line up with the open rows above —
-                            nothing leads them. */}
-                        <IonLabel className="label-sym">
-                          <h2>
-                            {c.symbol} <span className="type-tag">Closed</span>
-                          </h2>
-                          {c.closedOn && <p>{c.closedOn}</p>}
-                        </IonLabel>
-                        <IonLabel slot="end">
-                          <h2>Realized</h2>
-                          <p className={gain ? "positive" : "negative"}>
-                            {gain ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                            {gain ? "+" : "−"}
-                            {fmtCcy(Math.abs(c.realizedPL), c.currency)} · {gain ? "+" : "−"}
-                            {Math.abs(c.realizedPct).toFixed(1)}%
-                          </p>
-                        </IonLabel>
-                      </IonItem>
-                    );
-                  })}
-                </IonList>
-              </>
-            )}
           </>
         )}
 

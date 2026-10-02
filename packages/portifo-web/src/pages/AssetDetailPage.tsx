@@ -83,9 +83,9 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const realizedGain = agg.realizedPL >= 0;
   const realizedPct = agg.realizedCostBasis > 1e-9 ? (agg.realizedPL / agg.realizedCostBasis) * 100 : 0;
 
-  // A closed position inverts the page: realized P&L takes the hero, the market
-  // block and the open-position stats go, and the accounts carry realized
-  // figures with no lots behind them.
+  // A closed position inverts the page: realized P&L takes the hero, the
+  // open-position stats go, and the accounts carry realized figures with no
+  // lots behind them. The market block stays — it is about the security.
   const realizedAccounts = agg.perAccount.filter((pa) => pa.realizedCostBasis > 1e-9);
   // Groups sort by market value desc — largest first is the useful default for
   // a rollup. Lots sort oldest first within a group, which is the sort the lot
@@ -174,32 +174,33 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
         {/* The security, not the position. Portifo does not compete with a
             charting product: it carries the live price and hands the chart to
             Yahoo Finance, which is also where the app's own prices come from,
-            so the stored symbol is guaranteed to resolve there. */}
-        {!agg.closed && (
-          <>
-            <ListDivider label="Market" meta={currency} />
-            <div className="stat-grid">
-              <div className="stat-cell">
-                <span className="stat-label">Price / Share</span>
-                <span className="stat-value">{fmtCcy(price, currency)}</span>
-              </div>
-              {/* Leaves the app, so an outward arrow — never a chevron. The whole
-                  cell is the anchor. */}
-              <a
-                className="stat-cell"
-                href={yahooQuoteUrl(symbol)}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="stat-label">Chart</span>
-                <span className="stat-link">
-                  Yahoo Finance
-                  <ExternalLinkIcon />
-                </span>
-              </a>
-            </div>
-          </>
-        )}
+            so the stored symbol is guaranteed to resolve there. It stays on
+            a closed position: the price is what "Buy again" is weighed
+            against. */}
+        <ListDivider label="Market" meta={currency} />
+        <div className="stat-grid">
+          <div className="stat-cell">
+            <span className="stat-label">Price / Share</span>
+            {/* A closed position has no stake in the price, so with no quote
+                the cell is a dash: the avg-cost fallback the open screen uses
+                would pass a historical figure off as a live one. */}
+            <span className="stat-value">{agg.closed && !quote ? "—" : fmtCcy(price, currency)}</span>
+          </div>
+          {/* Leaves the app, so an outward arrow — never a chevron. The whole
+              cell is the anchor. */}
+          <a
+            className="stat-cell"
+            href={yahooQuoteUrl(symbol)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span className="stat-label">Chart</span>
+            <span className="stat-link">
+              Yahoo Finance
+              <ExternalLinkIcon />
+            </span>
+          </a>
+        </div>
 
         {/* The cost side. The hero says what it is worth; this says what it cost.
             Realized is the grid's full-width footer cell — outside it, it was the

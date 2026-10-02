@@ -1363,7 +1363,9 @@ ion-item ion-avatar[slot="start"] {
   flex-shrink: 0;
 }
 
-/* DS .glyph.closed-g + .row.closed — closed positions dim as a whole row. */
+/* DS .glyph.closed-g + .row.closed — a row that is not live yet (a pending
+   member invite) dims as a whole. Closed positions do NOT: they are full-
+   strength rows at the end of the Holdings list. */
 .glyph-closed {
   background: var(--surface-2);
   color: var(--fg-3);

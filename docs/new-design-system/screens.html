@@ -267,7 +267,7 @@
       <div class="spec">
         <div class="spec-h">Portfolio · build notes</div>
         <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 1 — tab root at rest. Title, chevron and trailing action per the Portfolio row of the header table in <code>guidelines.html</code>.</span></div>
-        <div class="spec-row"><span class="spec-k">Order</span><span class="spec-v">Hero → chart → Today → fx-note → Allocation → Holdings → Closed. The chart card and <code>.fx-note</code> are the full-bleed blocks (<code>.sec-gutter</code>), so their edges line up with the text column above and below them.</span></div>
+        <div class="spec-row"><span class="spec-k">Order</span><span class="spec-v">Hero → chart → Today → fx-note → Allocation → Holdings. Closed positions are the last rows of Holdings, never a section of their own. The chart card and <code>.fx-note</code> are the full-bleed blocks (<code>.sec-gutter</code>), so their edges line up with the text column above and below them.</span></div>
         <div class="spec-row"><span class="spec-k">Hero</span><span class="spec-v">Total only — the day&rsquo;s figure lives on the Today divider, so the screen does not say &ldquo;Today&rdquo; twice 40pt apart. The currency chip is a tap target that opens the display-currency sheet, not a label.</span></div>
         <div class="spec-row"><span class="spec-k">Chart</span><span class="spec-v">Portfolio value over the selected range, from <code>GET /portfolio/history</code> in the display currency. The badge is the change <b>over that range</b>, tinted <code>--gain</code>/<code>--loss</code>; scrubbing swaps it for the point readout. Range row is a hairline-topped strip running edge to edge inside the card. Changing range or currency refetches; pull-to-refresh refetches silently so the curve does not blank mid-pull.</span></div>
         <div class="spec-row"><span class="spec-k">Chart vs Today</span><span class="spec-v">They do not overlap and must not be merged. The curve is <b>the total over a range</b>; the movers block is <b>the current day, broken down by holding</b> — which line moved the total, which the curve cannot say at any range. Diverging bars sorted by size and scaled to the largest mover, sign carried by the side of the baseline, never the colour. Truncates to a <code>+n more</code> tail past six rows; cash never appears, having nothing to contribute.</span></div>
@@ -339,8 +339,7 @@
                     <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">SHOP</div><div class="name">Shopify Inc.</div></div><div class="row-end"><div class="val">$20,279.69</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                     <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">URA</div><div class="name">Global X Uranium ETF</div></div><div class="row-end"><div class="val">$13,507.20</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$6,894.00 · −33.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                     <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">IBIT</div><div class="name">iShares Bitcoin Trust ETF</div></div><div class="row-end"><div class="val">$7,272.00</div><div class="pnl loss"><span class="pnl-label">Total:</span>−$2,801.74 · −27.8%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-                    <div class="divider sec"><span class="dl">Closed</span><span class="dh"></span></div>
-                    <div class="row closed" style="padding:9px 2px;"><div class="row-main"><div class="sym">META <span class="closed-tag">Closed</span></div><div class="name">Jul 2026</div></div><div class="row-end"><div class="val">Realized</div><div class="pnl loss"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>−$162.08 · −3.2%</div></div></div>
+                    <div class="row" style="padding:9px 2px;"><div class="row-main"><div class="sym">META <span class="closed-tag">Closed</span></div><div class="name">Jul 2026</div></div><div class="row-end"><div class="val">Realized</div><div class="pnl loss"><svg viewBox="0 0 10 10" fill="none"><path d="M5 1v8M1 5l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>−$162.08 · −3.2%</div></div><svg class="row-chevron" viewBox="0 0 7 12" fill="none"><path d="M1 1L6 6L1 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
                   </div>
                 </div>
               </div>
@@ -372,7 +371,7 @@
       <div class="spec">
         <div class="spec-h">Portfolio · scrolled — build notes</div>
         <div class="spec-row"><span class="spec-k">Header</span><span class="spec-v">State 2 — the same screen collapsed. The chart card and the head of the movers block have passed under the translucent material; the hairline is where content passes under the bar.</span></div>
-        <div class="spec-row"><span class="spec-k">Reveals</span><span class="spec-v"><b>This is the state the list is read in.</b> Allocation, the full Holdings list and Closed all sit here — META below the <code>Closed</code> divider, dimmed, with realized P&amp;L and its <code>.closed-tag</code> in the <code>.sym</code> slot. Open rows carry nothing in that slot: the share is in the legend directly above.</span></div>
+        <div class="spec-row"><span class="spec-k">Reveals</span><span class="spec-v"><b>This is the state the list is read in.</b> Allocation and the full Holdings list sit here. <b>Closed positions are rows of that same list, always after every open one</b> — META is last, at full strength, with realized P&amp;L in the value column and its <code>.closed-tag</code> in the <code>.sym</code> slot. No <code>Closed</code> divider and no dimming: the chip already says what the row is, a faded row reads as disabled when it pushes like any other, and the fade landed on the one figure the row exists to show. Open rows carry nothing in the <code>.sym</code> slot: the share is in the legend directly above.</span></div>
       </div>
     </div>
 
@@ -587,6 +586,15 @@
                     <div class="meta" style="margin-top:6px; font-size:12.5px;">120 sh · closed 04 Mar 2026 · held 1y 9m</div>
                   </div>
 
+                  <!-- The security, not the position — so it stays when the position
+                       is gone. Same block, same slot as the open screen: the live
+                       price is what "Buy PLTR again" is weighed against. -->
+                  <div class="divider sec"><span class="dl">Market</span><span class="dh"></span><span class="dm">USD</span></div>
+                  <div class="stat-grid">
+                    <div class="stat-cell"><span class="stat-label">Price / share</span><span class="stat-value">$61.20</span></div>
+                    <a class="stat-cell" href="#"><span class="stat-label">Chart</span><span class="stat-link">Yahoo Finance<svg viewBox="0 0 12 12" fill="none"><path d="M3 9L9 3M9 3H4.2M9 3v4.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></a>
+                  </div>
+
                   <div class="divider sec"><span class="dl">Position</span><span class="dh"></span><span class="dm">all accounts</span></div>
                   <div class="stat-grid">
                     <div class="stat-cell"><span class="stat-label">Shares sold</span><span class="stat-value">120</span></div>
@@ -628,7 +636,8 @@
       </div>
       <div class="spec">
         <div class="spec-h">Closed position · build notes</div>
-        <div class="spec-row"><span class="spec-k">Inversion</span><span class="spec-v">Nothing is open, so realized P&amp;L takes the hero and the page loses the chart, the lots and the today line. Same parts, different subset — no alternate layout.</span></div>
+        <div class="spec-row"><span class="spec-k">Inversion</span><span class="spec-v">Nothing is open, so realized P&amp;L takes the hero and the page loses the lots and the today line. Same parts, different subset — no alternate layout.</span></div>
+        <div class="spec-row"><span class="spec-k">Market</span><span class="spec-v"><b>Stays, unchanged from the open screen.</b> It describes the security, not the position, so closing the position does not remove it: live price per share and the Yahoo Finance link sit directly under the hero, above Position. With no quote yet, the price cell shows a dash rather than falling back to the average cost — on a closed name that fallback would pass a historical figure off as a live one.</span></div>
         <div class="spec-row"><span class="spec-k">Accounts</span><span class="spec-v">The <b>same <code>.agrp</code> / <code>.ah</code> shape as the open screen, with nothing under it</b>: a closed account has no lots, so the group head <em>is</em> the whole row — One shape across open and closed, rather than a second row vocabulary for the rarer state. Realized return takes the value column and the meta line is <code>N sh sold</code>. No chevron and not tappable — there was never anything to push to (rule 09), and now there is nowhere to push to at all.</span></div>
         <div class="spec-row"><span class="spec-k">Action</span><span class="spec-v">One secondary button. There is nothing to sell, and re-buying a closed name is not the primary action of the screen.</span></div>
       </div>
