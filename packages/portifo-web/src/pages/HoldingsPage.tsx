@@ -23,8 +23,6 @@ import ActionSheetModal from "../components/ActionSheetModal";
 import AddPortfolioModal from "../components/AddPortfolioModal";
 import {
   ActionPlusIcon,
-  ArrowDownIcon,
-  ArrowUpIcon,
   CheckIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -239,7 +237,7 @@ function HoldingsPage() {
     .sort();
 
   // Closed positions (every share sold) are the last rows of the Holdings
-  // list, after every open one, carrying realized P&L in the value column.
+  // list, after every open one, with the close month and no figure.
   const closedHoldings = tickerAggregates
     .filter((t) => t.closed && t.realizedCostBasis > 1e-9)
     .map((t) => {
@@ -252,9 +250,6 @@ function HoldingsPage() {
         closedOn: lastSell
           ? new Date(`${lastSell}T00:00:00`).toLocaleDateString("en-US", { month: "short", year: "numeric" })
           : null,
-        realizedPL: t.realizedPL,
-        realizedPct: (t.realizedPL / t.realizedCostBasis) * 100,
-        currency: t.currency,
       };
     });
 
@@ -570,38 +565,28 @@ function HoldingsPage() {
               {/* Closed positions are rows of this same list, always after every
                   open one, at full strength. The "Closed" chip is the only mark:
                   a divider said it a second time, and dimming read as disabled
-                  on a row that pushes like the rest. */}
-              {closedHoldings.map((c) => {
-                const gain = c.realizedPL >= 0;
-                return (
-                  <IonItem
-                    key={c.symbol}
-                    className="row-hold"
-                    button
-                    detail={false}
-                    onClick={() => history.push(`${tabBase}/asset/${c.symbol}`)}
-                  >
-                    <IonLabel className="label-sym">
-                      <h2>
-                        {c.symbol} <span className="type-tag">Closed</span>
-                      </h2>
-                      {c.closedOn && <p>{c.closedOn}</p>}
-                    </IonLabel>
-                    <IonLabel slot="end">
-                      <h2>Realized</h2>
-                      <p className={gain ? "positive" : "negative"}>
-                        {gain ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                        {gain ? "+" : "−"}
-                        {fmtCcy(Math.abs(c.realizedPL), c.currency)} · {gain ? "+" : "−"}
-                        {Math.abs(c.realizedPct).toFixed(1)}%
-                      </p>
-                    </IonLabel>
-                    <span slot="end" className="row-chevron" aria-hidden="true">
-                      <ChevronRightIcon />
-                    </span>
-                  </IonItem>
-                );
-              })}
+                  on a row that pushes like the rest. No figure in the value
+                  column — a realized result under a column of market values
+                  read as one of them; it is the hero of the detail page. */}
+              {closedHoldings.map((c) => (
+                <IonItem
+                  key={c.symbol}
+                  className="row-hold"
+                  button
+                  detail={false}
+                  onClick={() => history.push(`${tabBase}/asset/${c.symbol}`)}
+                >
+                  <IonLabel className="label-sym">
+                    <h2>
+                      {c.symbol} <span className="type-tag">Closed</span>
+                    </h2>
+                    {c.closedOn && <p>{c.closedOn}</p>}
+                  </IonLabel>
+                  <span slot="end" className="row-chevron" aria-hidden="true">
+                    <ChevronRightIcon />
+                  </span>
+                </IonItem>
+              ))}
             </IonList>
           </>
         )}
