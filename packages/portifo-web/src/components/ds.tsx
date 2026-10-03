@@ -171,6 +171,15 @@ export function TrashIcon() {
   );
 }
 
+/* Removes one row from a repeating form group. */
+export function CrossIcon() {
+  return (
+    <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+      <path d="M2 2L10 10M10 2L2 10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /* DS .radio-dot check. */
 export function CheckIcon() {
   return (

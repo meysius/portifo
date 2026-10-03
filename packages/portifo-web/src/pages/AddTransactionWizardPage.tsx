@@ -28,6 +28,7 @@ import type { Quote, SymbolResult } from "../api/market";
 import type { NewTransaction, TransactionType } from "../api/portfolio";
 import { CURRENCIES } from "../lib/currencies";
 import { fmtCcy, fmtShares } from "../lib/fx";
+import { cleanDecimal, todayIso } from "../lib/forms";
 
 // What the first step picks. Deposit, Withdraw and Set balance are one choice,
 // Cash, split by a switch on its last screen — they answer the same questions.
@@ -87,19 +88,6 @@ function stepsFor(kind?: Kind): StepId[] {
   if (kind === "sell") return ["type", "position", "details"];
   if (kind) return ["type", "account", "details"];
   return ["type"];
-}
-
-// Digits and a single decimal point — the fields are text inputs with a decimal
-// keypad rather than type=number, which reports "" for a half-typed "12.".
-function cleanDecimal(raw: string) {
-  const cleaned = raw.replace(/[^\d.]/g, "");
-  const dot = cleaned.indexOf(".");
-  return dot === -1 ? cleaned : cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
-}
-
-function todayIso() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
 function AddTransactionWizardPage({ location }: RouteComponentProps) {

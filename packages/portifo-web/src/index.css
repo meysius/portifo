@@ -3232,3 +3232,97 @@ ion-toast {
 .wiz-total.wiz-current {
   margin: 0 var(--gutter) 22px;
 }
+
+/* ---------- new account sheet ---------- */
+
+/* No sheet title: the name field is the heading, set exactly as .ph-large sets
+   the account's own page title (24px/700 display, on the gutter), so the
+   account reads as named while it is typed. The cash field below is the
+   wizard's figure field, with the currency chip in its one-tap slot. */
+.acct-form {
+  padding-top: 20px;
+}
+
+.acct-name {
+  display: block;
+  width: calc(100% - 2 * var(--gutter));
+  margin: 0 var(--gutter);
+  padding: 2px 0 8px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  color: var(--fg-1);
+}
+
+.acct-name::placeholder {
+  color: var(--fg-3);
+}
+
+.acct-name:focus {
+  border-bottom-color: var(--signal);
+  box-shadow: 0 1px 0 var(--signal);
+}
+
+.acct-name.taken {
+  border-bottom-color: var(--loss);
+  box-shadow: 0 1px 0 var(--loss);
+}
+
+.acct-form .acct-name + .wiz-hint {
+  margin: 10px var(--gutter) 0;
+}
+
+/* Cash is one labelled group of figure rows, one per currency: the label is
+   said once above the stack, and each row is the wizard's field minus its own
+   label. A × appears only once there is more than one row to choose from. */
+.acct-cash {
+  margin-top: 30px;
+}
+
+.acct-cash > .wiz-field-label {
+  display: block;
+  margin: 0 var(--gutter) 2px;
+}
+
+.acct-cash-row.removable {
+  grid-template-columns: 1fr auto auto;
+}
+
+/* The figure stays the row's subject: it shares the row with the chip and
+   steps down from the wizard's 28px so the name above remains the heading. */
+.acct-cash-row input {
+  font-size: 24px;
+}
+
+.acct-cash-remove {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 34px;
+  margin-inline-end: -8px;
+  border: 0;
+  background: transparent;
+  color: var(--fg-3);
+  cursor: pointer;
+}
+
+.acct-cash-remove svg {
+  width: 11px;
+  height: 11px;
+}
+
+.acct-cash-add {
+  margin: 2px var(--gutter) 0;
+}
+
+.acct-cash + .wiz-hint {
+  margin: 12px var(--gutter) 0;
+}
