@@ -100,6 +100,10 @@ function AccountsStack() {
         <Route exact path="/tabs/accounts/account/:accountId" component={AccountDetailPage} />
         <Route exact path="/tabs/accounts/asset/:symbol" component={AssetDetailPage} />
         <Route exact path="/tabs/accounts/add-transaction" component={AddTransactionWizardPage} />
+        {/* Cash detail is a portfolio-tab concept, but older builds pushed it
+            from the accounts tab; deep links (PWA shortcuts, history) to that
+            URL would render a blank page, so send them to the real page. */}
+        <Redirect from="/tabs/accounts/cash" to="/tabs/portfolio/cash" />
       </IonRouterOutlet>
     </TabBaseProvider>
   );
