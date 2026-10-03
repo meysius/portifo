@@ -234,7 +234,7 @@ export default function HoldingChart({
       {ready && (
         <div className="hd-xlab">
           <span>{is1D ? fmtTime(t0) : fmtDay(new Date(t0))}</span>
-          <span>{is1D ? fmtTime(t1) : fmtDay(new Date(t1))}</span>
+          <span>{is1D ? fmtTime(t1) : fmtShort(new Date(t1))}</span>
         </div>
       )}
 

@@ -2645,6 +2645,36 @@ ion-toast {
    and what was realized — each further back in time. Everything is scoped to
    .hd-page; plain divs, so no ion-item specificity applies. */
 
+/* The POC's phone body: every block inherits 15px/1.35 in the body face. */
+.hd-page {
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--fg-1);
+}
+
+/* The POC's large title: 34px/41px, on the gutter, directly above the
+   subtitle. Deliberately larger than the app-wide 24px .ph-large. */
+.hd-page ion-header.header-collapse-condense ion-toolbar {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --min-height: 0;
+}
+
+.ios .hd-page ion-title.title-large {
+  font-size: 34px;
+  line-height: 41px;
+  letter-spacing: -0.02em;
+  padding-top: 2px;
+  padding-bottom: 0;
+}
+
+/* Clears the action bar by the POC's 25px. */
+.hd-end {
+  height: 25px;
+}
+
 .hd-page .num {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -2681,7 +2711,7 @@ ion-toast {
   color: var(--fg-2);
 }
 
-.hd-big {
+.hd-page .hd-big {
   font-family: var(--font-mono);
   font-size: 38px;
   font-weight: 500;
@@ -2689,7 +2719,6 @@ ion-toast {
   letter-spacing: -0.04em;
   margin-top: 4px;
   overflow: hidden;
-  color: var(--fg-1);
 }
 
 .hd-fx {
@@ -2720,6 +2749,7 @@ ion-toast {
 }
 
 .hd-pill {
+  line-height: normal;
   display: inline-flex;
   align-items: center;
   margin-top: 12px;
@@ -2768,6 +2798,7 @@ ion-toast {
 }
 
 .hd-sec-h {
+  line-height: normal;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -2809,12 +2840,11 @@ ion-toast {
   gap: 12px;
 }
 
-.hd-price {
+.hd-page .hd-price {
   font-size: 22px;
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: -0.03em;
-  color: var(--fg-1);
 }
 
 .hd-pricechg {
@@ -2880,6 +2910,7 @@ ion-toast {
 }
 
 .hd-ranges button {
+  line-height: normal;
   flex: 1;
   height: 28px;
   border: 0;
@@ -3054,6 +3085,7 @@ ion-toast {
 }
 
 .hd-tag {
+  line-height: normal;
   display: inline-block;
   margin-left: 6px;
   padding: 2px 6px;
@@ -3086,11 +3118,6 @@ ion-toast {
 
 .hd-lots .hd-row {
   padding: 10px 14px;
-}
-
-/* A lot's meta carries shares, price and age — wrap rather than lose the age. */
-.hd-lots .hd-meta {
-  white-space: normal;
 }
 
 .hd-lotdate {
@@ -3167,14 +3194,10 @@ ion-toast {
   color: var(--fg-3);
 }
 
-.hd-link > svg:last-child {
-  width: 12px;
-  height: 12px;
-}
 
 /* bottom action bar — the blur material the header uses */
 .hd-footer {
-  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
   backdrop-filter: saturate(180%) blur(20px);
   border-top: 1px solid var(--border);
@@ -3184,7 +3207,8 @@ ion-toast {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+  /* 34px is the home indicator's inset on device; never below 10px. */
+  padding: 10px var(--gutter) max(10px, env(safe-area-inset-bottom));
 }
 
 .hd-actions.one {
@@ -3192,6 +3216,7 @@ ion-toast {
 }
 
 .hd-btn {
+  line-height: normal;
   height: 50px;
   border: 0;
   border-radius: 14px;
@@ -3248,6 +3273,7 @@ ion-toast {
 }
 
 .hd-empty h2 {
+  line-height: normal;
   margin: 0 0 6px;
   font-family: var(--font-display);
   font-size: 20px;

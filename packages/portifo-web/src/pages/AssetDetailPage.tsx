@@ -15,7 +15,6 @@ import type { RouteComponentProps } from "react-router-dom";
 import type { Quote } from "../api/market";
 import HoldingChart from "../components/HoldingChart";
 import type { TradeMark } from "../components/HoldingChart";
-import { ChevronRightIcon, ExternalLinkIcon } from "../components/ds";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { useDisplayCurrency } from "../lib/displayCurrency";
@@ -268,6 +267,11 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
       <IonPage className="hd-page">
         {header}
         <IonContent fullscreen>
+          <IonHeader collapse="condense">
+            <IonToolbar>
+              <IonTitle size="large">{symbol}</IonTitle>
+            </IonToolbar>
+          </IonHeader>
           <div className="hd-empty">
             <div className="ic">
               <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -501,11 +505,6 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
         <IonHeader collapse="condense">
           <IonToolbar>
             <IonTitle size="large">{symbol}</IonTitle>
-            {agg.closed && (
-              <span slot="end" className="type-tag">
-                Closed
-              </span>
-            )}
           </IonToolbar>
         </IonHeader>
 
@@ -555,16 +554,21 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
               onClick={() => history.push(`${tabBase}/asset/${encodeURIComponent(symbol)}/transactions`)}
             >
               <span className="grow">Transactions</span>
-              <span className="cnt num">{trades.length}</span>
-              <ChevronRightIcon />
+              <span className="cnt">{trades.length}</span>
+              <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
+                <path d="m1.5 1.5 5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </button>
             {/* Leaves the app, so an outward arrow — never a chevron. */}
             <a className="hd-link" href={yahooQuoteUrl(symbol)} target="_blank" rel="noopener noreferrer">
               <span className="grow">{quote ? "More on Yahoo Finance" : "View on Yahoo Finance"}</span>
-              <ExternalLinkIcon />
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                <path d="M4.5 2.5h7v7M11.5 2.5 2.5 11.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </a>
           </div>
         </section>
+        <div className="hd-end" />
       </IonContent>
 
       {/* Buy/Sell in thumb reach, in the space the hidden tab bar leaves. Sell
