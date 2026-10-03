@@ -13,7 +13,20 @@ export type Quote = {
   volume: number;
   shortName?: string;
   exchange?: string;
+  previousClose?: number;
+  // Yahoo's session state: "REGULAR" while the market is open; "PRE"/"POST"
+  // around it; "CLOSED" (or "PREPRE"/"POSTPOST") otherwise.
+  marketState?: string;
+  // When `price` was struck, ISO 8601.
+  marketTime?: string;
 };
+
+// Yahoo returns epoch seconds without validation and a Date with it.
+function toIso(t: unknown): string | undefined {
+  if (t == null) return undefined;
+  const d = typeof t === "number" ? new Date(t * 1000) : new Date(t as string | Date);
+  return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+}
 
 export type HistoryPoint = { date: string; close: number };
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
@@ -52,6 +65,9 @@ export class MarketService {
         volume: q.regularMarketVolume ?? 0,
         shortName: q.shortName ?? q.longName,
         exchange: q.fullExchangeName,
+        previousClose: q.regularMarketPreviousClose,
+        marketState: q.marketState,
+        marketTime: toIso(q.regularMarketTime),
       }));
   }
 
@@ -78,7 +94,9 @@ export class MarketService {
     let interval: "5m" | "15m" | "1d" | "1wk" = "1d";
     switch (range) {
       case "1D":
-        period1.setDate(period1.getDate() - 1);
+        // The last SESSION, not the last 24h — on a weekend or holiday the last
+        // 24h is empty. Five days covers any closure; the cut happens below.
+        period1.setDate(period1.getDate() - 5);
         interval = "5m";
         break;
       case "1W":
@@ -114,8 +132,19 @@ export class MarketService {
         interval = "1wk";
         break;
     }
-    const result = await this.client.chart(symbol, { period1, period2, interval });
-    return result.quotes.filter((q) => q.close != null).map((q) => ({ date: q.date.toISOString(), close: q.close as number }));
+    // Regular hours only: the chart's reference lines (prev close, today's
+    // change) are regular-session figures, so extended-hours bars would end
+    // the line somewhere the readout does not.
+    const result = await this.client.chart(symbol, { period1, period2, interval, includePrePost: false });
+    const points = result.quotes.filter((q) => q.close != null).map((q) => ({ date: q.date.toISOString(), close: q.close as number }));
+    if (range !== "1D" || points.length === 0) return points;
+    // Keep the last session: everything after the last overnight gap. Bars are
+    // 5 minutes apart within a session (extended hours included, when Yahoo
+    // sends them), so any gap over 2h is a session boundary.
+    const ts = points.map((p) => new Date(p.date).getTime());
+    let start = ts.length - 1;
+    while (start > 0 && ts[start] - ts[start - 1] <= 2 * 3_600_000) start--;
+    return points.slice(start);
   }
 
   // Historical counterpart to getFxRates — same "<base><target>=X" symbol, just

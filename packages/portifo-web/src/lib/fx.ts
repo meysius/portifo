@@ -93,3 +93,31 @@ export function fmtAge(years: number): string {
 export function yahooQuoteUrl(symbol: string): string {
   return `https://finance.yahoo.com/quote/${encodeURIComponent(symbol)}`;
 }
+
+// A delta: always signed, true minus, and a zero carries no sign at all —
+// "+$0.00" claims a direction there is none of.
+export function fmtSignedCcy(n: number, currency: string): string {
+  const abs = fmtCcy(Math.abs(n), currency);
+  if (fmtCcy(0, currency) === abs) return abs;
+  return (n < 0 ? "−" : "+") + abs;
+}
+
+// A return: one decimal, and none past 1000% — the tenth of a percent is noise
+// at that magnitude and the extra glyph breaks the column.
+export function fmtSignedPct(n: number): string {
+  const a = Math.abs(n);
+  const s = a >= 1000 ? Math.round(a).toLocaleString("en-US") : a.toFixed(1);
+  if (s === "0.0") return "0.0%";
+  return (n < 0 ? "−" : "+") + s + "%";
+}
+
+// "Oct 02, 2026" — 2-digit day so a column of dates lines up.
+export function fmtDay(d: Date): string {
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });
+}
+
+// A ledger date ("2026-10-02") is a calendar day, not an instant: parse it as
+// local midnight so it never slips a day west of UTC.
+export function parseDay(iso: string): Date {
+  return new Date(`${iso.slice(0, 10)}T00:00:00`);
+}

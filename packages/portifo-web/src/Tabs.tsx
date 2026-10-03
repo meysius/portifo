@@ -7,6 +7,7 @@ import SettingsPage from "./pages/SettingsPage";
 import ManagePortfolioPage from "./pages/ManagePortfolioPage";
 import AddMemberPage from "./pages/AddMemberPage";
 import AssetDetailPage from "./pages/AssetDetailPage";
+import AssetTransactionsPage from "./pages/AssetTransactionsPage";
 import AccountDetailPage from "./pages/AccountDetailPage";
 import CashDetailPage from "./pages/CashDetailPage";
 import AddTransactionPage from "./pages/AddTransactionPage";
@@ -83,6 +84,9 @@ function PortfolioStack() {
       <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/portfolio" component={HoldingsPage} />
         <Route exact path="/tabs/portfolio/asset/:symbol" component={AssetDetailPage} />
+        <Route exact path="/tabs/portfolio/asset/:symbol/transactions" component={AssetTransactionsPage} />
+        <Route exact path="/tabs/portfolio/transaction/:transactionId" component={TransactionDetailPage} />
+        <Route exact path="/tabs/portfolio/add-transaction/:transactionId" component={AddTransactionPage} />
         <Route exact path="/tabs/portfolio/cash" component={CashDetailPage} />
         <Route exact path="/tabs/portfolio/account/:accountId" component={AccountDetailPage} />
         <Route exact path="/tabs/portfolio/add-transaction" component={AddTransactionWizardPage} />
@@ -99,6 +103,9 @@ function AccountsStack() {
         <Route exact path="/tabs/accounts" component={AccountsPage} />
         <Route exact path="/tabs/accounts/account/:accountId" component={AccountDetailPage} />
         <Route exact path="/tabs/accounts/asset/:symbol" component={AssetDetailPage} />
+        <Route exact path="/tabs/accounts/asset/:symbol/transactions" component={AssetTransactionsPage} />
+        <Route exact path="/tabs/accounts/transaction/:transactionId" component={TransactionDetailPage} />
+        <Route exact path="/tabs/accounts/add-transaction/:transactionId" component={AddTransactionPage} />
         <Route exact path="/tabs/accounts/add-transaction" component={AddTransactionWizardPage} />
         {/* Cash detail is a portfolio-tab concept, but older builds pushed it
             from the accounts tab; deep links (PWA shortcuts, history) to that

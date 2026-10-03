@@ -38,6 +38,7 @@ import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtFxAsOf, fmtShares } from "../lib/fx";
 import { useDisplayCurrency } from "../lib/displayCurrency";
+import { cashValue, positionsValue } from "../lib/positions";
 
 // Past this many movers the Today block truncates to a "+n more" tail rather
 // than scrolling, so the section has a fixed ceiling of about 130pt.
@@ -148,17 +149,8 @@ function HoldingsPage() {
     }
   };
 
-  const cashTotalDisplay = Object.entries(cashByCurrency).reduce(
-    (sum, [currency, amount]) => sum + convert(amount, currency, displayCurrency, fxRates),
-    0,
-  );
-
-  const positionsValueDisplay = openPositions.reduce((sum, t) => {
-    const q = quotes[t.symbol];
-    const price = q?.price ?? t.avgCost;
-    const currency = q?.currency ?? t.currency;
-    return sum + convert(price * t.totalShares, currency, displayCurrency, fxRates);
-  }, 0);
+  const cashTotalDisplay = cashValue(cashByCurrency, displayCurrency, fxRates);
+  const positionsValueDisplay = positionsValue(openPositions, quotes, displayCurrency, fxRates);
   const total = cashTotalDisplay + positionsValueDisplay;
 
   const sortedHoldings = openPositions

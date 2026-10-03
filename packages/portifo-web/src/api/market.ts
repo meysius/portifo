@@ -13,6 +13,11 @@ export type Quote = {
   volume: number;
   shortName?: string;
   exchange?: string;
+  previousClose?: number;
+  // "REGULAR" while the market is open; "PRE"/"POST"/"CLOSED"/… otherwise.
+  marketState?: string;
+  // When `price` was struck, ISO 8601.
+  marketTime?: string;
 };
 
 // The envelope returned by GET /market/fx — named distinctly from lib/fx.ts's

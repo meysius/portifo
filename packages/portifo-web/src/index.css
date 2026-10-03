@@ -1950,43 +1950,6 @@ a.stat-cell {
   text-align: center;
 }
 
-/* Buy/Sell at the end of a holding's scroll — STACKED, not side by side: a row
-   of two half-width buttons reads as a pair of equal choices, and these are not
-   equal. Sell is btn-secondary, never destructive red — selling is not a
-   destructive action (guidelines § Color).
-   Pushed screen with no tab bar, so the home-indicator gutter is the page's to
-   add (rule 08). env() rather than a flat 34px: 0 in a browser, the real inset
-   on device. */
-.detail-cta {
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-  margin: var(--sec-gap) var(--gutter) 0;
-  padding-bottom: calc(8px + env(safe-area-inset-bottom));
-}
-
-/* Full width, natural height. The old `flex: 1` split the pair into two equal
-   halves for the side-by-side row; in a column it makes each button flex-shrink
-   to its text height (measured 15px instead of 48). */
-.detail-cta .btn {
-  width: 100%;
-  flex: 0 0 auto;
-}
-
-/* Side by side (DS .btn-row). Two stacked full-width buttons spent 105pt
-   restating the page title; the title is the ticker, so `Buy NVDA` / `Sell
-   NVDA` need 48pt between them. Overrides the column rules above, so it must
-   restate flex:1 — .detail-cta .btn sets `flex: 0 0 auto` for the column case
-   and would otherwise shrink each button to its text height. */
-.detail-cta.row {
-  flex-direction: row;
-}
-
-.detail-cta.row .btn {
-  flex: 1 1 0;
-  width: auto;
-}
-
 /* ---------- empty state (DS .empty-state) ---------- */
 
 .empty-state {
@@ -2676,279 +2639,630 @@ ion-toast {
   z-index: -1;
 }
 
-/* A closed position's hero figure is its realized P&L, so unlike a market
-   value it carries a sign and a colour. Tints the whole .figure, cents and
-   currency symbol included, so the number reads as one object. */
-.hero-realized .figure,
-.hero-realized .figure .cur,
-.hero-realized .figure .cents {
-  color: inherit;
-}
+/* ---------- Holding detail ----------
+   One screen, read as three layers: the hero (worth, and am I up), the price
+   chart (where is it, where did I buy), then the position, where it is held,
+   and what was realized — each further back in time. Everything is scoped to
+   .hd-page; plain divs, so no ion-item specificity applies. */
 
-.hero-realized.positive {
-  color: var(--gain);
-}
-
-.hero-realized.negative {
-  color: var(--loss);
-}
-
-/* ---------- Holding detail: one screen, accounts as groups ----------
-   Ported from docs/new-design-system. There is ONE holding screen. The old
-   split (AssetDetailPage for the portfolio scope, AccountHoldingPage for the
-   account + lot scope) was a filter, not a second view: the deeper page carried
-   no security-level content and repeated its parent's block at a smaller
-   magnification. Its cost scaled with account count — NVDA in 5 accounts took
-   10 navigations to read 7 lots, and no screen could show two accounts' lots at
-   once, which hid the fact that the two largest lots were bought the same day
-   at the same price in different accounts.
-
-   So accounts are GROUPS here. The group head is the account rollup and its
-   lots hang beneath it. Head and lots share one column grid so an account's
-   total sits directly above the lot values that sum to it — that alignment is
-   the reason to group, and it is the first thing to check if this is ever
-   restyled. These are plain divs, not ion-items, so none of the .ios
-   ion-item specificity dance applies. */
-
-/* A name in a row is a name, not a figure — display face. Rule 10 keeps mono
-   for the things that line up in a column, which a proper noun never does. */
-.row-name {
-  font-family: var(--ion-font-family);
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--fg-1);
-}
-
-.row-sub {
+.hd-page .num {
   font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-3);
-  margin-top: 2px;
   font-variant-numeric: tabular-nums;
-}
-
-/* ---- The facts list ----
-   Holding Detail's security + position figures. It replaces two boxed
-   .stat-grids under two section heads: three container styles for six figures,
-   and eleven tracked-caps labels on one screen. A fact is a hairline row —
-   label left in the body face, value right in mono — so every figure on the
-   page lands in ONE right-aligned column, the same alignment the account groups
-   below are built on. No card: the hairlines are the structure. No closing
-   rule either — the Accounts section head's rule follows, and two parallel
-   hairlines --sec-gap apart read as a double border. */
-.detail-cap {
-  margin: 14px 0 3px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--fg-3);
-}
-
-.facts {
-  margin: 12px var(--gutter) 0;
-}
-
-.fact {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 9px 2px;
-  border-top: 1px solid var(--border);
-  text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.fact-k {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--fg-2);
-  flex-shrink: 0;
-}
-
-/* Secondary note under a label (Realized's share count) — mono, because it is
-   a count, and --fg-3 so it never competes with the value it qualifies. */
-.fact-sub {
-  display: block;
-  margin-top: 2px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-}
-
-.fact-v {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 14.5px;
-  line-height: 20px;
-  color: var(--fg-1);
-  font-variant-numeric: tabular-nums;
-  text-align: right;
   white-space: nowrap;
+  letter-spacing: -0.02em;
 }
 
-/* Realized P&L: the colour budget (see .gain-stack.ranked) — the dollar delta
-   is a supporting figure in --fg-2, only the percentage is tinted. */
-.fact-v.rz {
-  color: var(--fg-2);
-}
-
-.fact-v.rz .pc {
+.hd-page .gain {
   color: var(--gain);
 }
 
-.fact-v.rz.loss .pc {
+.hd-page .loss {
   color: var(--loss);
 }
 
-/* The one row that LEAVES THE APP: display face + --signal so it reads as an
-   action, not a figure (rule 10: mono is for what lines up in a column).
-   Outward arrow, never a chevron — rule 09 reserves that for a push. */
-.fact-link {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 14.5px;
-  line-height: 20px;
-  color: var(--signal);
-}
-
-.fact-link svg {
-  width: 11px;
-  height: 11px;
-  flex-shrink: 0;
-}
-
-/* .field-link is GONE — a link inside a .field-card put an action into the form
-   vocabulary. Leaving the app is .fact-link now, the facts list's last row. */
-
-/* ---- Accounts ----
-   One row shape for accounts and lots alike: two lines of two columns — what
-   it is | what it is worth, then shares and cost | P&L and return. It replaced
-   a three-column grid with a rail and a second, indented row vocabulary for
-   lots. Like the facts list above, hairlines are the only structure. */
-.accts {
+.hd-subtitle {
   margin: 0 var(--gutter);
-  border-bottom: 1px solid var(--border);
-}
-
-.acct-group {
-  border-top: 1px solid var(--border);
-}
-
-/* The section head's own rule is the line above the first account — a second
-   hairline 9px under it read as a double border. */
-.acct-group:first-child {
-  border-top: 0;
-}
-
-.acct {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 12px 2px;
-}
-
-.acct-line {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.acct-title {
-  font-family: var(--font-display);
-  font-weight: 600;
+  color: var(--fg-2);
   font-size: 15px;
-  color: var(--fg-1);
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.acct-value {
+/* hero */
+.hd-hero {
+  margin: 18px var(--gutter) 0;
+}
+
+.hd-lbl {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--fg-2);
+}
+
+.hd-big {
   font-family: var(--font-mono);
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--fg-1);
+}
+
+.hd-fx {
+  color: var(--fg-2);
+  font-size: 14px;
+  margin-top: 2px;
+}
+
+/* Amount | percent | what it is — two rows sharing columns, so all-time and
+   today line up figure for figure. */
+.hd-deltas {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  column-gap: 12px;
+  row-gap: 3px;
+  margin-top: 10px;
+  font-size: 15px;
+  align-items: baseline;
+}
+
+.hd-deltas.two {
+  grid-template-columns: auto 1fr;
+}
+
+.hd-deltas .dl {
+  color: var(--fg-3);
+  font-size: 14px;
+}
+
+.hd-pill {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fg-2);
+  background: var(--surface-2);
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.hd-unavail {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--fg-2);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hd-unavail b {
+  display: block;
+  color: var(--fg-1);
+  font-weight: 600;
+}
+
+.hd-retry {
+  flex: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--signal);
   font-weight: 600;
   font-size: 15px;
-  color: var(--fg-1);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
+  cursor: pointer;
 }
 
-.acct-sub {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
+/* sections */
+.hd-sec {
+  margin: var(--sec-gap) var(--gutter) 0;
 }
 
-/* The colour budget (see .gain-stack.ranked): the dollar P&L is --fg-2, only
-   the return is tinted. The return has a fixed minimum width so the P&L
-   figures above and below it share a right edge too. */
-.acct-ret {
-  color: var(--fg-2);
-  white-space: nowrap;
-}
-
-.acct-pc {
-  display: inline-block;
-  min-width: 7.5ch;
-  text-align: right;
+.hd-sec-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0 2px 8px;
+  font-family: var(--font-display);
+  font-size: 13px;
   font-weight: 600;
+  color: var(--fg-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.acct-pc.gain {
-  color: var(--gain);
-}
-
-.acct-pc.loss {
-  color: var(--loss);
-}
-
-/* Line three states how many lots the account holds — listed beneath it. */
-.acct-note {
-  font-size: 12.5px;
+.hd-sec-h .aside {
+  text-transform: none;
+  letter-spacing: 0;
   font-weight: 500;
   color: var(--fg-3);
 }
 
-/* Lots sit on the page background like everything else; the indent alone says
-   "inside this account", and the hairlines between lots match the rest of the
-   screen. */
-.lots {
-  margin: -4px 0 8px 14px;
+.hd-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
 }
 
-.lot {
+.hd-foot {
+  margin: 8px 2px 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--fg-3);
+}
+
+/* chart */
+.hd-pricehead {
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-  padding: 10px 0;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
 }
 
-.lot + .lot {
+.hd-price {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: var(--fg-1);
+}
+
+.hd-pricechg {
+  font-size: 13.5px;
+  margin-top: 2px;
+}
+
+.hd-dim {
+  color: var(--fg-3);
+}
+
+.hd-asof {
+  font-size: 12.5px;
+  color: var(--fg-3);
+  text-align: right;
+}
+
+/* Scrubbing owns the gesture inside the plot, as in Stocks. */
+.hd-chart {
+  position: relative;
+  height: 170px;
+  margin-top: 10px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hd-chart svg {
+  display: block;
+  overflow: visible;
+}
+
+.hd-chart-empty {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--fg-3);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+}
+
+.hd-reftext {
+  font-family: var(--font-body);
+  font-size: 10.5px;
+  fill: var(--fg-2);
+}
+
+.hd-xlab {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--fg-3);
+}
+
+.hd-ranges {
+  display: flex;
+  margin-top: 10px;
+  padding: 2px;
+  border-radius: 9px;
+  background: var(--surface-2);
+}
+
+.hd-ranges button {
+  flex: 1;
+  height: 28px;
+  border: 0;
+  border-radius: 7px;
+  background: none;
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--fg-2);
+  cursor: pointer;
+}
+
+.hd-ranges button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--fg-1);
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.hd-legend {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--fg-3);
+}
+
+.hd-legend i {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.hd-lg-buy {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--signal);
+}
+
+.hd-lg-sell {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.6px solid var(--fg-1);
+}
+
+.hd-lg-ref {
+  width: 14px;
+  border-top: 1px dashed var(--fg-3);
+}
+
+.hd-daystats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.hd-daystats .k {
+  font-size: 12px;
+  color: var(--fg-3);
+}
+
+.hd-daystats .v {
+  font-size: 13.5px;
+  margin-top: 1px;
+  color: var(--fg-1);
+}
+
+/* position grid */
+.hd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.hd-cell {
+  min-width: 0;
+  padding: 12px 14px;
   border-top: 1px solid var(--border);
 }
 
-.lot-date {
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-size: 13px;
-  color: var(--fg-1);
-  font-variant-numeric: tabular-nums;
+.hd-cell:nth-child(-n + 2) {
+  border-top: 0;
 }
 
-.lot-value {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 13.5px;
+.hd-cell:nth-child(odd) {
+  border-right: 1px solid var(--border);
+}
+
+.hd-cell.wide {
+  grid-column: 1 / -1;
+  border-right: 0;
+}
+
+.hd-cell .k {
+  font-size: 12.5px;
+  color: var(--fg-2);
+}
+
+.hd-cell .v {
+  font-size: 16px;
+  margin-top: 3px;
   color: var(--fg-1);
-  font-variant-numeric: tabular-nums;
+}
+
+.hd-cell .t {
+  font-size: 15px;
+  font-weight: 500;
+  margin-top: 3px;
+  color: var(--fg-1);
+  overflow-wrap: anywhere;
+}
+
+/* rows: accounts, lots, realized-by-account */
+.hd-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+}
+
+.hd-row + .hd-row,
+.hd-row + .hd-lots,
+.hd-lots .hd-row {
+  border-top: 1px solid var(--border);
+}
+
+.hd-row .l {
+  flex: 1;
+  min-width: 0;
+}
+
+.hd-row .r {
+  flex: none;
+  text-align: right;
+}
+
+.hd-name {
+  font-weight: 600;
+  font-size: 15.5px;
+  color: var(--fg-1);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.hd-meta {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--fg-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.hd-row .r .v {
+  font-size: 15.5px;
+  color: var(--fg-1);
+}
+
+.hd-row .r .g {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--fg-2);
+}
+
+.hd-row .r .g .num + .num {
+  margin-left: 6px;
+}
+
+.hd-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  vertical-align: 2px;
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-2);
+  background: var(--surface-2);
+}
+
+.hd-acct + .hd-acct {
+  margin-top: 10px;
+}
+
+.hd-acct.closed > .hd-row:first-child {
+  opacity: 0.55;
+}
+
+.hd-lots {
+  background: var(--surface-2);
+}
+
+.ion-palette-dark .hd-lots {
+  background: rgba(0, 0, 0, 0.14);
+}
+
+.hd-lots .hd-row {
+  padding: 10px 14px;
+}
+
+/* A lot's meta carries shares, price and age — wrap rather than lose the age. */
+.hd-lots .hd-meta {
+  white-space: normal;
+}
+
+.hd-lotdate {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+
+/* key/value rows (Realized) */
+.hd-kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 14px;
+}
+
+.hd-kv + .hd-kv {
+  border-top: 1px solid var(--border);
+}
+
+.hd-kv .k {
+  color: var(--fg-2);
+  font-size: 14.5px;
+}
+
+.hd-kv .v {
+  font-size: 15px;
+  color: var(--fg-1);
+}
+
+.hd-kv.total {
+  background: var(--surface-2);
+}
+
+.hd-kv.total .k {
+  color: var(--fg-1);
+  font-weight: 600;
+}
+
+/* links */
+.hd-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 14px;
+  border: 0;
+  background: none;
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  font-size: 15.5px;
+  color: var(--fg-1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hd-link + .hd-link {
+  border-top: 1px solid var(--border);
+}
+
+.hd-link .grow {
+  flex: 1;
+}
+
+.hd-link .cnt {
+  color: var(--fg-3);
+  font-size: 14.5px;
+}
+
+.hd-link svg {
+  flex: none;
+  color: var(--fg-3);
+}
+
+.hd-link > svg:last-child {
+  width: 12px;
+  height: 12px;
+}
+
+/* bottom action bar — the blur material the header uses */
+.hd-footer {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border-top: 1px solid var(--border);
+}
+
+.hd-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 10px var(--gutter) calc(10px + env(safe-area-inset-bottom));
+}
+
+.hd-actions.one {
+  grid-template-columns: 1fr;
+}
+
+.hd-btn {
+  height: 50px;
+  border: 0;
+  border-radius: 14px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.08s ease;
+}
+
+.hd-btn:active {
+  transform: scale(0.98);
+}
+
+.hd-btn.primary {
+  background: var(--signal);
+  color: var(--signal-ink);
+}
+
+/* Tinted, never red: selling is not destructive. */
+.hd-btn.secondary {
+  background: var(--signal-tint);
+  color: var(--signal);
+}
+
+/* skeleton */
+.hd-sk {
+  background: var(--surface-2);
+  border-radius: 6px;
+  animation: hd-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes hd-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* unknown symbol */
+.hd-empty {
+  margin: 70px 32px 0;
+  text-align: center;
+}
+
+.hd-empty .ic {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--fg-2);
+}
+
+.hd-empty h2 {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--fg-1);
+}
+
+.hd-empty p {
+  margin: 0 0 20px;
+  font-size: 15px;
+  color: var(--fg-2);
+}
+
+.hd-empty .hd-btn {
+  width: 100%;
 }
 
 

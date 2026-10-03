@@ -1,4 +1,7 @@
+import type { Quote } from "../api/market";
 import type { Transaction } from "../api/portfolio";
+import { convert } from "./fx";
+import type { FxRates } from "./fx";
 
 export type OpenPosition = {
   symbol: string;
@@ -89,9 +92,11 @@ export type TickerAgg = {
 // to the position's ACB cost basis, because removing the same fraction from
 // every lot removes exactly that fraction of total basis. `pricePerShare` is
 // the original purchase price and never moves; only `shares` shrinks.
+// `origShares` is what the purchase bought, so a shrunk lot can say so.
 export type Lot = {
   date: string;
   shares: number;
+  origShares: number;
   pricePerShare: number;
   costBasis: number;
   ageYears: number;
@@ -140,7 +145,7 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
     // Open purchases, oldest first. Carried alongside the aggregate figures
     // rather than replacing them: the aggregates stay the single source of
     // truth and the lots are a pro-rata decomposition of them.
-    lots: { date: string; shares: number; pricePerShare: number }[];
+    lots: { date: string; shares: number; origShares: number; pricePerShare: number }[];
   };
   const ledgers = new Map<string, Ledger>();
 
@@ -157,7 +162,7 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
       ledger.costBasis += shares * price;
       ledger.dateBasis += shares * day;
       ledger.shares += shares;
-      ledger.lots.push({ date: tx.date, shares, pricePerShare: price });
+      ledger.lots.push({ date: tx.date, shares, origShares: shares, pricePerShare: price });
     } else {
       const avgCost = ledger.shares > 0 ? ledger.costBasis / ledger.shares : 0;
       const avgDay = ledger.shares > 0 ? ledger.dateBasis / ledger.shares : day;
@@ -252,6 +257,7 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
               .map((l) => ({
                 date: l.date,
                 shares: l.shares,
+                origShares: l.origShares,
                 pricePerShare: l.pricePerShare,
                 costBasis: l.shares * l.pricePerShare,
                 ageYears: (today - daysSinceEpoch(l.date)) / 365.25,
@@ -298,4 +304,28 @@ export function computeRealizedPLByTransaction(transactions: Transaction[]): Map
   }
 
   return pl;
+}
+
+// The two halves of the portfolio's total, in the display currency — shared by
+// Portfolio's hero and Holding Detail's weight, so the two cannot disagree. A
+// position with no quote is valued at its avg cost, as the Holdings row is.
+export function cashValue(cashByCurrency: Record<string, number>, displayCurrency: string, fxRates: FxRates): number {
+  return Object.entries(cashByCurrency).reduce(
+    (sum, [currency, amount]) => sum + convert(amount, currency, displayCurrency, fxRates),
+    0,
+  );
+}
+
+export function positionsValue(
+  aggs: TickerAgg[],
+  quotes: Record<string, Quote>,
+  displayCurrency: string,
+  fxRates: FxRates,
+): number {
+  return aggs
+    .filter((t) => !t.closed)
+    .reduce((sum, t) => {
+      const q = quotes[t.symbol];
+      return sum + convert((q?.price ?? t.avgCost) * t.totalShares, q?.currency ?? t.currency, displayCurrency, fxRates);
+    }, 0);
 }
