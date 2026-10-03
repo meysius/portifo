@@ -45,42 +45,55 @@ export class PortfolioService {
     return this.portfolioRepo.listAccountsByPortfolio(portfolioId);
   }
 
-  // Add Transaction lets the user type an existing or brand-new investment
-  // account name in the same field, so the caller doesn't need to know which.
-  async findOrCreateInvestmentAccount(portfolioId: string, name: string): Promise<AccountsSelect> {
+  // Add Transaction lets the user type an existing or brand-new account name
+  // in the same field, so the caller doesn't need to know which.
+  async findOrCreateAccount(portfolioId: string, name: string): Promise<AccountsSelect> {
     const existing = await this.portfolioRepo.listAccountsByPortfolio(portfolioId);
-    const found = existing.find((account) => account.type === "investment" && account.name === name);
+    const found = existing.find((account) => account.name.toLowerCase() === name.toLowerCase());
     if (found) return found;
-    return this.portfolioRepo.createAccount({ portfolioId, name, type: "investment" });
+    return this.portfolioRepo.createAccount({ portfolioId, name });
   }
 
   async listCurrencyBalancesByAccount(accountId: string): Promise<CurrencyBalancesSelect[]> {
     return this.portfolioRepo.listCurrencyBalancesByAccount(accountId);
   }
 
-  // The user only ever sees/edits the current balance, but under the hood each
-  // edit is recorded as a deposit/withdraw transaction so total-value-over-time
-  // can be reconstructed by replaying transactions across all accounts. These
-  // transactions are filtered out of PortfolioController.listTransactions.
-  async setCashAccountBalance(accountId: string, currency: string, balance: string): Promise<CurrencyBalancesSelect> {
-    const account = await this.portfolioRepo.getAccountById(accountId);
-    if (!account || account.type !== "cash") {
-      throw new Error("setCashAccountBalance can only be used on a cash account");
+  // "Set balance": the user types what the balance IS, and the difference is
+  // saved as a plain deposit/withdraw dated `date` (the client's today), so
+  // the ledger still explains every balance and the value chart can replay
+  // it. The row is marked fromBalanceUpdate and noted with the balance it set.
+  //
+  // A second update on the same account, currency and day rewrites that day's
+  // row rather than stacking another one — typing 1,000 then correcting it to
+  // 1,050 is one change of mind, not two transfers.
+  async setBalance(accountId: string, currency: string, balance: number, date: string): Promise<void> {
+    const sameDay = (await this.portfolioRepo.listTransactionsByAccount(accountId)).find(
+      (t) => t.fromBalanceUpdate && t.currency === currency && t.date === date,
+    );
+    const current = await this.portfolioRepo.getCurrencyBalance(accountId, currency);
+    // The balance as it would stand without today's earlier update.
+    const before = (current ? Number(current.balance) : 0) - (sameDay ? this.computeCashDelta(sameDay) : 0);
+    const delta = Number((balance - before).toFixed(8));
+
+    if (delta === 0) {
+      if (sameDay) await this.deleteTransaction(sameDay.id);
+      return;
     }
 
-    const existing = await this.portfolioRepo.getCurrencyBalance(accountId, currency);
-    const delta = Number(balance) - (existing ? Number(existing.balance) : 0);
-    if (delta !== 0) {
-      await this.portfolioRepo.createTransaction({
-        accountId,
-        type: delta > 0 ? "deposit" : "withdraw",
-        date: new Date().toISOString().slice(0, 10),
-        currency,
-        amount: Math.abs(delta).toFixed(8),
-      });
-    }
-
-    return this.portfolioRepo.upsertCurrencyBalance(accountId, currency, balance);
+    const row: TransactionsInsert = {
+      accountId,
+      type: delta > 0 ? "deposit" : "withdraw",
+      date,
+      currency,
+      amount: Math.abs(delta).toFixed(8),
+      ticker: null,
+      shares: null,
+      pricePerShare: null,
+      notes: `Balance updated to ${balance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`,
+      fromBalanceUpdate: true,
+    };
+    if (sameDay) await this.updateTransaction(sameDay.id, row);
+    else await this.createTransaction(row);
   }
 
   async getTransactionById(id: string): Promise<TransactionsSelect | undefined> {
@@ -91,14 +104,9 @@ export class PortfolioService {
     return this.portfolioRepo.listTransactionsByAccount(accountId);
   }
 
-  // Investment accounts only. Buy/Sell/Deposit/Withdraw all move the account's
-  // cash currency_balance for the transaction's currency.
+  // Buy/Sell/Deposit/Withdraw all move the account's cash currency_balance for
+  // the transaction's currency.
   async createTransaction(transactionData: TransactionsInsert): Promise<TransactionsSelect> {
-    const account = await this.portfolioRepo.getAccountById(transactionData.accountId);
-    if (!account || account.type !== "investment") {
-      throw new Error("Transactions can only be created on an investment account");
-    }
-
     const transaction = await this.portfolioRepo.createTransaction(transactionData);
     await this.applyCashDelta(transaction.accountId, transaction.currency, this.computeCashDelta(transaction));
     return transaction;
@@ -110,11 +118,6 @@ export class PortfolioService {
     const existing = await this.portfolioRepo.getTransactionById(id);
     if (!existing) {
       throw new Error("Transaction not found");
-    }
-
-    const account = await this.portfolioRepo.getAccountById(transactionData.accountId);
-    if (!account || account.type !== "investment") {
-      throw new Error("Transactions can only be created on an investment account");
     }
 
     await this.applyCashDelta(existing.accountId, existing.currency, -this.computeCashDelta(existing));
@@ -153,10 +156,9 @@ export class PortfolioService {
 
   // Reconstructs total portfolio value (cash + holdings, converted to
   // displayCurrency) at each point across `range` by replaying every deposit/
-  // withdraw/buy/sell transaction — including the hidden ones cash balance
-  // edits generate — against historical prices/fx. Cash accounts have no
-  // ledger UI, but they do have a ledger now (see setCashAccountBalance),
-  // which is exactly what makes this reconstruction possible.
+  // withdraw/buy/sell transaction — including the ones "Set balance" writes
+  // (see setBalance), which is exactly what makes this reconstruction possible
+  // for balances the user never entered as transfers.
   //
   // This is a SECOND, independent computation of the figure the Portfolio hero
   // shows (which is stored balances + live quotes, computed client-side), so
@@ -181,7 +183,7 @@ export class PortfolioService {
     // THE OPENING BALANCE. The hero on the Portfolio screen totals the stored
     // currency_balances; this method only ever knew transactions, so any
     // balance that never came from one was invisible to it — a balance seeded
-    // straight into the database, or set before setCashAccountBalance began
+    // straight into the database, or set before balance edits began
     // writing its balancing deposit/withdraw. The result was a curve sitting
     // permanently below the hero at every range, by a constant nobody could
     // account for (15,938.12 in the report that led here).

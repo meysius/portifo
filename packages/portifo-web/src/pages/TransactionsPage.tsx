@@ -60,8 +60,7 @@ function FilterChip({ label, value, onClick }: { label: string; value: string; o
 function TransactionsPage() {
   const history = useHistory();
   const { tabBase } = useTabBase();
-  const { accounts, transactions, realizedPLByTx, loading, refreshTransactions } = usePortfolioData();
-  const firstInvestmentAccount = accounts.find((a) => a.type === "investment")?.name;
+  const { transactions, realizedPLByTx, loading, refreshTransactions } = usePortfolioData();
 
   const [symbolFilter, setSymbolFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -183,7 +182,7 @@ function TransactionsPage() {
             title="No transactions yet"
             body="This portfolio is empty. Add your first buy, sell, deposit, or withdrawal to start tracking it."
             ctaLabel="Add Your First Transaction"
-            onCta={() => history.push(`${tabBase}/add-transaction`, { account: firstInvestmentAccount })}
+            onCta={() => history.push(`${tabBase}/add-transaction`)}
           />
         )}
 

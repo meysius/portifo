@@ -170,9 +170,7 @@ function AddTransactionPage({ match, location }: RouteComponentProps<{ transacti
     sublabel: [r.name, r.exchange].filter(Boolean).join(" · ") || undefined,
   }));
 
-  const accountOptions: PickerOption[] = accounts
-    .filter((a) => a.type === "investment")
-    .map((a) => ({ value: a.name, label: a.name }));
+  const accountOptions: PickerOption[] = accounts.map((a) => ({ value: a.name, label: a.name }));
 
   const currencyOptions: PickerOption[] = CURRENCIES.map((c) => ({ value: c.code, label: c.code, sublabel: c.name }));
 

@@ -8,12 +8,10 @@ import ManagePortfolioPage from "./pages/ManagePortfolioPage";
 import AddMemberPage from "./pages/AddMemberPage";
 import AssetDetailPage from "./pages/AssetDetailPage";
 import AccountDetailPage from "./pages/AccountDetailPage";
-import CashAccountDetailPage from "./pages/CashAccountDetailPage";
 import CashDetailPage from "./pages/CashDetailPage";
 import AddTransactionPage from "./pages/AddTransactionPage";
 import AddTransactionWizardPage from "./pages/AddTransactionWizardPage";
 import TransactionDetailPage from "./pages/TransactionDetailPage";
-import UpdateBalancePage from "./pages/UpdateBalancePage";
 import { TabBaseProvider } from "./context/TabBaseContext";
 import { useOutletAnimated } from "./lib/swipeBack";
 
@@ -70,8 +68,8 @@ const ICONS = {
 // own outlet stays hidden for the whole interactive swipe-back gesture and
 // only pops visible once the gesture completes and the URL lands, which
 // looked like the page "reloading" mid-swipe. See TabBaseContext for why
-// some of these routes (asset, account, cash-account, update-balance,
-// add-transaction) are registered under more than one tab prefix.
+// some of these routes (asset, account, add-transaction) are registered
+// under more than one tab prefix.
 //
 // `animated` is what hands backwards navigation to WKWebView's own native
 // edge-swipe animation instead of running Ionic's on top of it — these leaf
@@ -87,9 +85,6 @@ function PortfolioStack() {
         <Route exact path="/tabs/portfolio/asset/:symbol" component={AssetDetailPage} />
         <Route exact path="/tabs/portfolio/cash" component={CashDetailPage} />
         <Route exact path="/tabs/portfolio/account/:accountId" component={AccountDetailPage} />
-        <Route exact path="/tabs/portfolio/cash-account/:accountId" component={CashAccountDetailPage} />
-        <Route exact path="/tabs/portfolio/update-balance/:accountId" component={UpdateBalancePage} />
-        <Route exact path="/tabs/portfolio/update-balance/:accountId/:currency" component={UpdateBalancePage} />
         <Route exact path="/tabs/portfolio/add-transaction" component={AddTransactionWizardPage} />
       </IonRouterOutlet>
     </TabBaseProvider>
@@ -103,10 +98,7 @@ function AccountsStack() {
       <IonRouterOutlet animated={animated}>
         <Route exact path="/tabs/accounts" component={AccountsPage} />
         <Route exact path="/tabs/accounts/account/:accountId" component={AccountDetailPage} />
-        <Route exact path="/tabs/accounts/cash-account/:accountId" component={CashAccountDetailPage} />
         <Route exact path="/tabs/accounts/asset/:symbol" component={AssetDetailPage} />
-        <Route exact path="/tabs/accounts/update-balance/:accountId" component={UpdateBalancePage} />
-        <Route exact path="/tabs/accounts/update-balance/:accountId/:currency" component={UpdateBalancePage} />
         <Route exact path="/tabs/accounts/add-transaction" component={AddTransactionWizardPage} />
       </IonRouterOutlet>
     </TabBaseProvider>

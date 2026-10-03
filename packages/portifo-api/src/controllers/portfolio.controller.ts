@@ -20,13 +20,6 @@ function isHistoryRange(value: unknown): value is HistoryRange {
   return HISTORY_RANGES.includes(value as HistoryRange);
 }
 
-const ACCOUNT_TYPES = ["investment", "cash"] as const;
-type AccountType = (typeof ACCOUNT_TYPES)[number];
-
-function isAccountType(value: unknown): value is AccountType {
-  return ACCOUNT_TYPES.includes(value as AccountType);
-}
-
 async function toAccountDto(account: AccountsSelect, portfolioService: PortfolioService) {
   const balances = await portfolioService.listCurrencyBalancesByAccount(account.id);
   return {
@@ -38,6 +31,7 @@ async function toAccountDto(account: AccountsSelect, portfolioService: Portfolio
 }
 
 const CURRENCY_RE = /^[A-Z]{3}$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Guards the X-Portfolio-Id header before it reaches a uuid column — Postgres
 // errors on invalid uuid input rather than returning no rows.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -73,6 +67,7 @@ function toTransactionDto(transaction: TransactionsSelect, accountName: string) 
     shares: transaction.shares != null ? Number(transaction.shares) : undefined,
     pricePerShare: transaction.pricePerShare != null ? Number(transaction.pricePerShare) : undefined,
     notes: transaction.notes ?? undefined,
+    fromBalanceUpdate: transaction.fromBalanceUpdate,
   };
 }
 
@@ -97,7 +92,7 @@ export class PortfolioController implements SWController {
     router.post("/portfolio/leave", this.leavePortfolio);
     router.get("/accounts", this.listAccounts);
     router.post("/accounts", this.createAccount);
-    router.patch("/accounts/:id/balances/:currency", this.setCashBalance);
+    router.patch("/accounts/:id/balances/:currency", this.setBalance);
     router.get("/portfolio/history", this.getPortfolioHistory);
     router.get("/transactions", this.listTransactions);
     router.post("/transactions", this.createTransaction);
@@ -432,24 +427,26 @@ export class PortfolioController implements SWController {
 
     const body = req.body ?? {};
     const name = typeof body.name === "string" ? body.name.trim() : "";
-    const type = body.type;
 
-    if (!name || !isAccountType(type)) {
+    if (!name) {
       res.status(400).json({ error: "Invalid account payload" });
       return;
     }
 
     const existing = await this.portfolioService.listAccountsByPortfolio(portfolioId);
-    if (existing.some((account) => account.type === type && account.name.toLowerCase() === name.toLowerCase())) {
+    if (existing.some((account) => account.name.toLowerCase() === name.toLowerCase())) {
       res.status(400).json({ error: `An account named "${name}" already exists` });
       return;
     }
 
-    const account = await this.portfolioService.createAccount({ portfolioId, name, type });
+    const account = await this.portfolioService.createAccount({ portfolioId, name });
     res.status(201).json(await toAccountDto(account, this.portfolioService));
   };
 
-  private setCashBalance = async (req: Request, res: Response): Promise<void> => {
+  // Body: { balance, date } — `date` is the client's today, so the balancing
+  // deposit/withdraw lands on the user's calendar day rather than the server's
+  // UTC one. A negative balance is allowed: a margin account can owe cash.
+  private setBalance = async (req: Request, res: Response): Promise<void> => {
     const user = await this.authenticate(req);
     if (!user) {
       res.status(401).json({ error: "Not authenticated" });
@@ -464,23 +461,24 @@ export class PortfolioController implements SWController {
 
     const accountId = String(req.params.id);
     const account = await this.portfolioService.getAccountById(accountId);
-    if (!account || account.portfolioId !== portfolioId || account.type !== "cash") {
-      res.status(404).json({ error: "Cash account not found" });
+    if (!account || account.portfolioId !== portfolioId) {
+      res.status(404).json({ error: "Account not found" });
       return;
     }
 
     const currency = String(req.params.currency).toUpperCase();
     const balance = Number(req.body?.balance);
-    if (!CURRENCY_RE.test(currency) || !(balance >= 0)) {
+    const date = req.body?.date;
+    if (!CURRENCY_RE.test(currency) || !Number.isFinite(balance) || typeof date !== "string" || !DATE_RE.test(date)) {
       res.status(400).json({ error: "Invalid balance payload" });
       return;
     }
 
     try {
-      await this.portfolioService.setCashAccountBalance(accountId, currency, balance.toFixed(8));
+      await this.portfolioService.setBalance(accountId, currency, balance, date);
       res.json(await toAccountDto(account, this.portfolioService));
     } catch (err) {
-      this.logger.error("PortfolioController.setCashBalance failed");
+      this.logger.error("PortfolioController.setBalance failed");
       res.status(400).json({ error: err instanceof Error ? err.message : "Failed to update balance" });
     }
   };
@@ -527,12 +525,8 @@ export class PortfolioController implements SWController {
     }
 
     const accounts = await this.portfolioService.listAccountsByPortfolio(portfolioId);
-    // Cash accounts carry system-generated deposit/withdraw transactions from
-    // balance edits (see PortfolioService.setCashAccountBalance) that must stay
-    // out of the user-facing ledger — only investment accounts are listed here.
-    const investmentAccounts = accounts.filter((account) => account.type === "investment");
     const transactionsByAccount = await Promise.all(
-      investmentAccounts.map((account) => this.portfolioService.listTransactionsByAccount(account.id)),
+      accounts.map((account) => this.portfolioService.listTransactionsByAccount(account.id)),
     );
 
     const accountNameById = new Map(accounts.map((account) => [account.id, account.name]));
@@ -628,7 +622,7 @@ export class PortfolioController implements SWController {
 
     let account: AccountsSelect;
     try {
-      account = await this.portfolioService.findOrCreateInvestmentAccount(portfolioId, parsed.data.accountName);
+      account = await this.portfolioService.findOrCreateAccount(portfolioId, parsed.data.accountName);
       const transaction = await this.portfolioService.createTransaction({
         accountId: account.id,
         type: parsed.data.type,
@@ -687,7 +681,7 @@ export class PortfolioController implements SWController {
     }
 
     try {
-      const account = await this.portfolioService.findOrCreateInvestmentAccount(portfolioId, parsed.data.accountName);
+      const account = await this.portfolioService.findOrCreateAccount(portfolioId, parsed.data.accountName);
       const transaction = await this.portfolioService.updateTransaction(id, {
         accountId: account.id,
         type: parsed.data.type,

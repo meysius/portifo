@@ -25,22 +25,21 @@ export async function createPortfolio(name: string): Promise<PortfolioDto> {
   return res.json();
 }
 
+// One kind of account: any account can hold shares and cash in any currency.
 export interface AccountDto {
   id: string;
   name: string;
-  type: "investment" | "cash";
   balances: { currency: string; balance: number; asOf: string }[];
 }
 
 export type NewAccount = {
   name: string;
-  type: "investment" | "cash";
 };
 
 export type TransactionType = "buy" | "sell" | "deposit" | "withdraw";
 
 // Accounts are referenced by NAME, not id — the backend auto-creates a new
-// investment account if the name doesn't exist yet (findOrCreateInvestmentAccount).
+// account if the name doesn't exist yet (findOrCreateAccount).
 export type NewTransaction = {
   type: TransactionType;
   account: string;
@@ -53,7 +52,9 @@ export type NewTransaction = {
   notes?: string;
 };
 
-export type Transaction = NewTransaction & { id: string };
+// fromBalanceUpdate marks the deposit/withdraw a "Set balance" wrote for the
+// difference — an ordinary ledger row, told apart from the user's own transfers.
+export type Transaction = NewTransaction & { id: string; fromBalanceUpdate?: boolean };
 
 export async function listAccounts(): Promise<AccountDto[]> {
   const res = await apiFetch("/accounts");
@@ -71,11 +72,13 @@ export async function createAccount(input: NewAccount): Promise<AccountDto> {
   return res.json();
 }
 
-export async function updateCashBalance(accountId: string, currency: string, balance: number): Promise<AccountDto> {
+// Saves the difference as a deposit/withdraw dated `date` (the user's today);
+// a second update the same day rewrites that row instead of adding another.
+export async function setBalance(accountId: string, currency: string, balance: number, date: string): Promise<AccountDto> {
   const res = await apiFetch(`/accounts/${accountId}/balances/${currency}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ balance }),
+    body: JSON.stringify({ balance, date }),
   });
   if (!res.ok) throw new Error("Failed to update balance");
   return res.json();

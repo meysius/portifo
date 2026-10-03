@@ -24,7 +24,6 @@ import {
   EmptyState,
   FolderGlyphIcon,
   LedgerIcon,
-  ListDivider,
   PlusIcon,
 } from "../components/ds";
 import { convert, fmtCcy } from "../lib/fx";
@@ -32,8 +31,9 @@ import { convert, fmtCcy } from "../lib/fx";
 const DISPLAY_CCY = "USD";
 
 // Accounts tab (design-system Lists section): same .row anatomy as Holdings —
-// glyph, name + "Type · count" pairing, one converted total on the right, and
-// the Fields chevron since each row opens an Account Detail page.
+// glyph, name + what it holds, one converted total on the right, and the
+// Fields chevron since each row opens an Account Detail page. One list: every
+// account can hold both shares and cash, so there are no type sections.
 function AccountsPage() {
   const history = useHistory();
   const { tabBase } = useTabBase();
@@ -49,9 +49,6 @@ function AccountsPage() {
     hasActivity,
   } = usePortfolioData();
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-
-  const investmentAccounts = accounts.filter((a) => a.type === "investment");
-  const cashAccounts = accounts.filter((a) => a.type === "cash");
 
   // Account totals are mark-to-market — make sure quotes for every open
   // symbol are loaded even when this tab is visited before Holdings.
@@ -73,7 +70,7 @@ function AccountsPage() {
   // Total account value: holdings at market (falling back to cost basis when
   // no quote is loaded) plus the account's own cash, converted for display —
   // the same number its Account Detail hero shows.
-  const investmentTotal = (accountName: string, balances: { currency: string; balance: number }[]) => {
+  const accountTotal = (accountName: string, balances: { currency: string; balance: number }[]) => {
     const positions = openPositionsFor(accountName);
     let total = balances.reduce((sum, b) => sum + convert(b.balance, b.currency, DISPLAY_CCY, fxRates), 0);
     for (const position of positions) {
@@ -123,84 +120,45 @@ function AccountsPage() {
           <EmptyState
             icon={<LedgerIcon />}
             title="No activity yet"
-            body="Your investment and cash accounts are ready. Record a transaction or set a cash balance to see them here."
+            body="Your account is ready. Record a transaction or set a cash balance to see it here."
             ctaLabel="Add Your First Transaction"
-            onCta={() => history.push(`${tabBase}/add-transaction`, { account: investmentAccounts[0]?.name })}
+            onCta={() => history.push(`${tabBase}/add-transaction`)}
           />
         )}
 
-        {hasActivity && investmentAccounts.length > 0 && (
-          <>
-            <ListDivider
-              label="Investment"
-              meta={`${investmentAccounts.length} account${investmentAccounts.length === 1 ? "" : "s"}`}
-            />
-            <IonList inset>
-              {investmentAccounts.map((account) => {
-                const holdingCount = openPositionsFor(account.name).length;
-                return (
-                  <IonItem key={account.id} button detail={false} onClick={() => history.push(`${tabBase}/account/${account.id}`)}>
-                    <IonAvatar slot="start" className="glyph glyph-stock">
-                      <FolderGlyphIcon />
-                    </IonAvatar>
-                    {/* The account NAME is a name, so it takes the display face;
-                        the type is its subtitle and what the total is made of is
-                        the value column's meta (screens.html -> Accounts). */}
-                    <IonLabel>
-                      <h2>{account.name}</h2>
-                      <p>Investment Account</p>
-                    </IonLabel>
-                    <IonLabel slot="end">
-                      <h2>{fmtCcy(investmentTotal(account.name, account.balances), DISPLAY_CCY)}</h2>
-                      <p>
-                        {holdingCount} holding{holdingCount === 1 ? "" : "s"}
-                      </p>
-                    </IonLabel>
-                    <span slot="end" className="row-chevron" aria-hidden="true">
-                      <ChevronRightIcon />
-                    </span>
-                  </IonItem>
-                );
-              })}
-            </IonList>
-          </>
-        )}
-
-        {hasActivity && cashAccounts.length > 0 && (
-          <>
-            <ListDivider
-              label="Cash"
-              meta={`${cashAccounts.length} account${cashAccounts.length === 1 ? "" : "s"}`}
-            />
-            <IonList inset>
-              {cashAccounts.map((account) => {
-                const total = account.balances.reduce(
-                  (sum, b) => sum + convert(b.balance, b.currency, DISPLAY_CCY, fxRates),
-                  0,
-                );
-                return (
-                  <IonItem key={account.id} button detail={false} onClick={() => history.push(`${tabBase}/cash-account/${account.id}`)}>
-                    <IonAvatar slot="start" className="glyph glyph-cash">
-                      <CashGlyphIcon />
-                    </IonAvatar>
-                    <IonLabel>
-                      <h2>{account.name}</h2>
-                      <p>Cash Account</p>
-                    </IonLabel>
-                    <IonLabel slot="end">
-                      <h2>{fmtCcy(total, DISPLAY_CCY)}</h2>
-                      <p>
-                        {account.balances.length} currenc{account.balances.length === 1 ? "y" : "ies"}
-                      </p>
-                    </IonLabel>
-                    <span slot="end" className="row-chevron" aria-hidden="true">
-                      <ChevronRightIcon />
-                    </span>
-                  </IonItem>
-                );
-              })}
-            </IonList>
-          </>
+        {hasActivity && accounts.length > 0 && (
+          <IonList inset>
+            {accounts.map((account) => {
+              const holdingCount = openPositionsFor(account.name).length;
+              const currencies = account.balances.map((b) => b.currency);
+              return (
+                <IonItem key={account.id} button detail={false} onClick={() => history.push(`${tabBase}/account/${account.id}`)}>
+                  {/* The glyph says what the account mostly holds — there is
+                      no account type behind it any more. */}
+                  <IonAvatar slot="start" className={holdingCount > 0 ? "glyph glyph-stock" : "glyph glyph-cash"}>
+                    {holdingCount > 0 ? <FolderGlyphIcon /> : <CashGlyphIcon />}
+                  </IonAvatar>
+                  <IonLabel>
+                    <h2>{account.name}</h2>
+                    <p>
+                      {holdingCount > 0
+                        ? `${holdingCount} holding${holdingCount === 1 ? "" : "s"}`
+                        : currencies.length > 0
+                          ? "Cash only"
+                          : "Empty"}
+                    </p>
+                  </IonLabel>
+                  <IonLabel slot="end">
+                    <h2>{fmtCcy(accountTotal(account.name, account.balances), DISPLAY_CCY)}</h2>
+                    {currencies.length > 0 && <p>{currencies.join(" · ")} cash</p>}
+                  </IonLabel>
+                  <span slot="end" className="row-chevron" aria-hidden="true">
+                    <ChevronRightIcon />
+                  </span>
+                </IonItem>
+              );
+            })}
+          </IonList>
         )}
 
         <AddAccountModal isOpen={addAccountOpen} onClose={() => setAddAccountOpen(false)} />

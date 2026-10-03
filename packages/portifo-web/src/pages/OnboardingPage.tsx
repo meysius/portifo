@@ -1,55 +1,26 @@
 import { IonContent, IonInput, IonItem, IonLabel, IonList, IonPage, IonSpinner } from "@ionic/react";
 import { useState } from "react";
-import { CashGlyphIcon, FolderGlyphIcon } from "../components/ds";
+import { FolderGlyphIcon } from "../components/ds";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useToast } from "../context/ToastContext";
 
-const STEPS = {
-  investment: {
-    icon: <FolderGlyphIcon />,
-    title: "Set up your investment account",
-    body: "This is where you'll buy and sell investments. Its balance and holdings stay in sync automatically from the transactions you record — so it always shows exactly how much you've deposited, which matters for accounts like a TFSA.",
-    placeholder: "e.g. Wealthsimple TFSA",
-  },
-  cash: {
-    icon: <CashGlyphIcon />,
-    title: "Set up your cash account",
-    body: "Portifo also tracks cash you're holding outside your investments. To keep you from logging every small transfer, a cash account's balances are set directly rather than built from transactions — and it can hold a separate balance for each currency.",
-    placeholder: "e.g. Household Checking",
-  },
-} as const;
-
 // Runs instead of the tab bar whenever the active portfolio has zero
-// accounts (see AuthGate) — walks the user through creating their first
-// Investment and Cash account before the usual navigation appears.
-// docs/new-design-system/screens.html -> Onboarding, step 1 of 2.
+// accounts (see AuthGate) — one step: name the first account. Creating it
+// takes the portfolio to one account, and AuthGate's own accounts check is
+// what swaps this screen for the tab bar once that refetch lands.
 function OnboardingPage() {
-  const { accounts, createAccount } = usePortfolioData();
+  const { createAccount } = usePortfolioData();
   const { showToast } = useToast();
-  // Resumes at step 2 on reload if the Investment account already exists
-  // (e.g. the request landed but a refresh interrupted the step 1→2
-  // transition) instead of prompting to create a second one.
-  const [step, setStep] = useState<"investment" | "cash">(
-    accounts.some((a) => a.type === "investment") ? "cash" : "investment",
-  );
-  const [investmentName, setInvestmentName] = useState("");
-  const [cashName, setCashName] = useState("");
+  const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const name = step === "investment" ? investmentName : cashName;
-  const setName = step === "investment" ? setInvestmentName : setCashName;
   const isValid = name.trim().length > 0;
-  const copy = STEPS[step];
 
   const handleContinue = async () => {
     if (!isValid || saving) return;
     setSaving(true);
     try {
-      await createAccount({ name: name.trim(), type: step });
-      if (step === "investment") setStep("cash");
-      // Finishing the cash step takes the portfolio from zero accounts to
-      // two — AuthGate's own accounts.length check is what actually swaps
-      // this screen for the tab bar once that refetch lands.
+      await createAccount({ name: name.trim() });
     } catch (err) {
       showToast(err instanceof Error ? err.message : "Failed to create account", { color: "danger" });
     } finally {
@@ -61,16 +32,14 @@ function OnboardingPage() {
     <IonPage>
       <IonContent fullscreen className="onboard-content">
         <div className="onboard-screen">
-          <div className="onboard-steps">
-            <span className="onboard-step on" />
-            <span className={step === "cash" ? "onboard-step on" : "onboard-step"} />
-          </div>
-
           <div className="empty-state" style={{ paddingTop: 4 }}>
-            <div className="empty-badge">{copy.icon}</div>
-            <div className="empty-title">{copy.title}</div>
+            <div className="empty-badge">
+              <FolderGlyphIcon />
+            </div>
+            <div className="empty-title">Name your first account</div>
             <div className="empty-body" style={{ maxWidth: "34ch" }}>
-              {copy.body}
+              An account is wherever your money sits — a brokerage, a TFSA, a chequing account. Each one can hold
+              shares and cash in any currency, and you can add more later.
             </div>
           </div>
 
@@ -81,7 +50,7 @@ function OnboardingPage() {
                 slot="end"
                 className="ion-text-end"
                 value={name}
-                placeholder={copy.placeholder}
+                placeholder="e.g. Wealthsimple TFSA"
                 onIonInput={(e) => setName(e.detail.value ?? "")}
               />
             </IonItem>

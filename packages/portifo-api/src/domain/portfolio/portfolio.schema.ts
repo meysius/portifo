@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { date, numeric, pgEnum, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
+import { boolean, date, numeric, pgEnum, pgTable, text, timestamp, unique, uuid, varchar } from "drizzle-orm/pg-core";
 import { createSelectSchema, createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { portfolios } from "@/domain/identity/identity.schema";
 
-export const accountTypeEnum = pgEnum("account_type", ["investment", "cash"]);
 export const transactionTypeEnum = pgEnum("transaction_type", ["buy", "sell", "deposit", "withdraw"]);
 
 export const accounts = pgTable("accounts", {
@@ -12,7 +11,6 @@ export const accounts = pgTable("accounts", {
     .notNull()
     .references(() => portfolios.id, { onDelete: "cascade" }),
   name: varchar({ length: 255 }).notNull(),
-  type: accountTypeEnum().notNull(),
   createdAt: timestamp().notNull().defaultNow(),
 });
 
@@ -45,6 +43,11 @@ export const transactions = pgTable("transactions", {
   shares: numeric({ precision: 20, scale: 8 }),
   pricePerShare: numeric({ precision: 20, scale: 8 }),
   notes: text(),
+  // Written by "Set balance" (PortfolioService.setBalance) for the difference
+  // between the old and new balance. Still an ordinary deposit/withdraw — it
+  // shows in the ledger and replays into the value chart — but marked, so a
+  // "total contributed" figure can tell it apart from money the user moved in.
+  fromBalanceUpdate: boolean().notNull().default(false),
   createdAt: timestamp().notNull().defaultNow(),
 });
 

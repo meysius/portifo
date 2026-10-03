@@ -8,30 +8,22 @@ import {
   IonLabel,
   IonList,
   IonModal,
-  IonSegment,
-  IonSegmentButton,
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
 import { useState } from "react";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useToast } from "../context/ToastContext";
-import type { NewAccount } from "../api/portfolio";
 
 function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { createAccount } = usePortfolioData();
   const { showToast } = useToast();
   const [name, setName] = useState("");
-  const [type, setType] = useState<NewAccount["type"]>("investment");
   const [saving, setSaving] = useState(false);
 
   const isValid = name.trim().length > 0;
-  const isDirty = name.trim().length > 0 || type !== "investment";
 
-  const reset = () => {
-    setName("");
-    setType("investment");
-  };
+  const reset = () => setName("");
 
   const handleClose = () => {
     reset();
@@ -42,7 +34,7 @@ function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
     if (!isValid) return;
     setSaving(true);
     try {
-      await createAccount({ name: name.trim(), type });
+      await createAccount({ name: name.trim() });
       showToast("Account created");
       reset();
       onClose();
@@ -62,26 +54,13 @@ function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
           </IonButtons>
           <IonTitle>Add Account</IonTitle>
           <IonButtons slot="end">
-            <IonButton strong disabled={!isValid || !isDirty || saving} onClick={handleSave}>
+            <IonButton strong disabled={!isValid || saving} onClick={handleSave}>
               Save
             </IonButton>
           </IonButtons>
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        <IonSegment
-          value={type}
-          onIonChange={(e) => setType(e.detail.value as NewAccount["type"])}
-          className="seg-card"
-        >
-          <IonSegmentButton value="investment">
-            <IonLabel>Investment</IonLabel>
-          </IonSegmentButton>
-          <IonSegmentButton value="cash">
-            <IonLabel>Cash</IonLabel>
-          </IonSegmentButton>
-        </IonSegment>
-
         <IonList inset className="fieldcard-list form-list">
           <IonItem>
             <IonLabel>Name</IonLabel>

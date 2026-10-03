@@ -22,6 +22,7 @@ import {
   ArrowUpIcon,
   CashGlyphIcon,
   ChevronDownIcon,
+  ChevronRightIcon,
   EmptyState,
   ListDivider,
   MoneyHero,
@@ -38,14 +39,13 @@ function currencyName(code: string) {
   return CURRENCIES.find((c) => c.code === code)?.name ?? code;
 }
 
-// Investment Account Detail (design-system Screens section): Total Value hero
-// (holdings market value + the account's own cash, converted), a stat pair
-// breaking that total into Stock Holdings and Cash Holdings, the account's
-// stock holdings (bare rows — they open Holding Detail, "the thing itself"),
-// and its per-currency cash balances. Cash rows
-// are inert (no chevron, not tappable, no divider + button) — that balance is
-// a running total built from this account's own Deposit/Withdraw
-// transactions, not a value set directly here.
+// Account Detail (design-system Screens section): Total Value hero (holdings
+// market value + the account's own cash, converted), a stat pair breaking that
+// total into Stock Holdings and Cash Holdings, the account's stock holdings
+// (bare rows — they open Holding Detail, "the thing itself"), and its
+// per-currency cash balances. A cash row opens the Add Transaction wizard's
+// Cash screen with Set balance preselected for that currency; the divider's
+// + does the same for a currency the account doesn't hold yet.
 function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>) {
   const history = useHistory();
   const { tabBase, tabLabel } = useTabBase();
@@ -105,6 +105,9 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
       color: CAT_COLORS[i % CAT_COLORS.length],
     };
   });
+
+  const openSetBalance = (currency?: string) =>
+    history.push(`${tabBase}/add-transaction`, { type: "cash", cashMode: "set", account: account.name, currency });
 
   const cashDisplay = account.balances.reduce(
     (sum, b) => sum + convert(b.balance, b.currency, displayCurrency, fxRates),
@@ -186,11 +189,11 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
           </IonList>
         )}
 
-        <ListDivider label="Cash" />
+        <ListDivider label="Cash" addLabel="Set a cash balance" onAdd={() => openSetBalance()} />
         {account.balances.length > 0 && (
           <IonList inset>
             {account.balances.map((balance) => (
-              <IonItem key={balance.currency} detail={false}>
+              <IonItem key={balance.currency} button detail={false} onClick={() => openSetBalance(balance.currency)}>
                 <IonAvatar slot="start" className="glyph glyph-cash">
                   <CashGlyphIcon />
                 </IonAvatar>
@@ -201,6 +204,9 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
                 <IonLabel slot="end">
                   <h2>{fmtCcy(balance.balance, balance.currency)}</h2>
                 </IonLabel>
+                <span slot="end" className="row-chevron" aria-hidden="true">
+                  <ChevronRightIcon />
+                </span>
               </IonItem>
             ))}
           </IonList>

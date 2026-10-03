@@ -7,8 +7,7 @@ import type { ReactNode } from "react";
 // display:none the whole time you're swiping back into the tab, only
 // popping visible once the URL actually lands. Nesting every tab-reachable
 // detail route inside that tab's own outlet (Tabs.tsx) fixes it, but several
-// of those routes (asset, account, cash-account, update-balance,
-// add-transaction) are reachable from more than one tab, so the same page
+// of those routes (asset, account, add-transaction) are reachable from more than one tab, so the same page
 // component is registered at more than one URL prefix. This context tells a
 // shared page component which prefix it's currently mounted under, so it can
 // build further pushes/back-button hrefs without hardcoding a single tab.

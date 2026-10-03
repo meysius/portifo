@@ -11,8 +11,8 @@ import Tabs from "./Tabs";
 // The whole app's route guard: while resolving the session, render nothing
 // but a spinner; unauthenticated renders LoginPage directly (no router
 // needed for a single screen); authenticated mounts the data layer and the
-// real route table. Pushed detail screens (asset/account/cash-account/
-// update-balance/add-transaction/transaction/cash) live inside whichever
+// real route table. Pushed detail screens (asset/account/add-transaction/
+// transaction/cash) live inside whichever
 // tab's own nested outlet pushed them (see Tabs.tsx) rather than at this top
 // level — Ionic keeps a nested outlet's visibility in sync with the current
 // URL, not with an ancestor outlet's in-progress swipe transition, so a
@@ -41,13 +41,9 @@ function AuthGate() {
 }
 
 // Gates the whole route table behind Onboarding (docs/use-cases.md): whenever
-// the active portfolio doesn't yet have both an Investment and a Cash
-// account, no route below — including the tab bar — is reachable, so this
-// checks accounts before the router mounts at all rather than redirecting
-// from within it. Checking both types (not just accounts.length > 0) is what
-// keeps Onboarding mounted through its own step 1→2 transition — its own
-// refetch after creating the Investment account would otherwise already
-// satisfy a bare "has an account" gate and skip the Cash step entirely.
+// the active portfolio doesn't yet have an account, no route below —
+// including the tab bar — is reachable, so this checks accounts before the
+// router mounts at all rather than redirecting from within it.
 //
 // Once <Tabs/> has mounted at least once (`tabsEverMounted`), it stays
 // mounted through every later portfolio switch instead of being swapped for
@@ -80,12 +76,11 @@ function AuthenticatedRoutes() {
     wasSwitchingRef.current = switching;
   }, [switching, history]);
 
-  const hasBothAccountTypes =
-    accounts.some((a) => a.type === "investment") && accounts.some((a) => a.type === "cash");
+  const hasAccount = accounts.length > 0;
 
   useEffect(() => {
-    if (!switching && hasBothAccountTypes) setTabsEverMounted(true);
-  }, [switching, hasBothAccountTypes]);
+    if (!switching && hasAccount) setTabsEverMounted(true);
+  }, [switching, hasAccount]);
 
   if (!tabsEverMounted && (switching || (loading.accounts && accounts.length === 0))) {
     return (
@@ -95,7 +90,7 @@ function AuthenticatedRoutes() {
     );
   }
 
-  if (!switching && !hasBothAccountTypes) {
+  if (!switching && !hasAccount) {
     return <OnboardingPage />;
   }
 

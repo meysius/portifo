@@ -57,7 +57,6 @@ function HoldingsPage() {
     portfolios,
     activePortfolio,
     switchPortfolio,
-    accounts,
     transactions,
     tickerAggregates,
     cashByCurrency,
@@ -284,9 +283,6 @@ function HoldingsPage() {
 
   const quotesLoading = loading.market && openSymbols.length > 0 && Object.keys(quotes).length === 0;
   const isEmpty = !hasActivity && !loading.accounts;
-  // Pre-fills Add Transaction's Account field with Onboarding's Investment
-  // Account, since it's the only one that exists at this point.
-  const firstInvestmentAccount = accounts.find((a) => a.type === "investment")?.name;
 
   return (
     <IonPage className="tab-root-page">
@@ -319,7 +315,7 @@ function HoldingsPage() {
               slot="end"
               className="add-fab"
               aria-label="Add transaction"
-              onClick={() => history.push(`${tabBase}/add-transaction`, { account: firstInvestmentAccount })}
+              onClick={() => history.push(`${tabBase}/add-transaction`)}
             >
               <PlusIcon />
             </button>
@@ -332,7 +328,7 @@ function HoldingsPage() {
             title="Nothing tracked yet"
             body="This portfolio is empty. Add your first buy, sell, deposit, or withdrawal to start tracking it."
             ctaLabel="Add Your First Transaction"
-            onCta={() => history.push(`${tabBase}/add-transaction`, { account: firstInvestmentAccount })}
+            onCta={() => history.push(`${tabBase}/add-transaction`)}
           />
         ) : (
           <>

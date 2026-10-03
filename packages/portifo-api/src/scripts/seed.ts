@@ -17,8 +17,8 @@ import { MarketService } from "@/domain/market/market.service";
 // Each config entry becomes exactly one account. Safe to re-run: every
 // transaction is matched against existing transactions on the account by
 // (type, ticker, date) and updated in place if currency/amount/notes
-// drifted, or inserted if missing. Cash account balances are similarly
-// idempotent (setCashAccountBalance only records a delta when it changes).
+// drifted, or inserted if missing. Cash balances are similarly idempotent
+// (setBalance only records a delta when it changes).
 //
 // Reads its (personal, git-ignored) data from seed.data.json next to this
 // file — copy seed.data.example.json to get started.
@@ -109,21 +109,15 @@ async function main() {
   }
   console.log(`Seeding into portfolio "${portfolio.name}" (${portfolio.id}) for ${TARGET_EMAIL}`);
 
-  const existingAccounts = await portfolioService.listAccountsByPortfolio(portfolio.id);
-
   for (const cfgEntry of ACCOUNTS) {
     if (cfgEntry.type === "cash") {
-      let account = existingAccounts.find((a) => a.type === "cash" && a.name === cfgEntry.name);
-      if (!account) {
-        account = await portfolioService.createAccount({ portfolioId: portfolio.id, name: cfgEntry.name, type: "cash" });
-        existingAccounts.push(account);
-      }
-      await portfolioService.setCashAccountBalance(account.id, cfgEntry.currency, cfgEntry.balance);
+      const account = await portfolioService.findOrCreateAccount(portfolio.id, cfgEntry.name);
+      await portfolioService.setBalance(account.id, cfgEntry.currency, Number(cfgEntry.balance), new Date().toISOString().slice(0, 10));
       console.log(`  [cash] ${cfgEntry.name}: ${cfgEntry.currency} ${cfgEntry.balance}`);
       continue;
     }
 
-    const account = await portfolioService.findOrCreateInvestmentAccount(portfolio.id, cfgEntry.name);
+    const account = await portfolioService.findOrCreateAccount(portfolio.id, cfgEntry.name);
     const existingTxs = await portfolioService.listTransactionsByAccount(account.id);
 
     let inserted = 0;

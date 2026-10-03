@@ -2980,6 +2980,19 @@ ion-toast {
   border-color: transparent;
 }
 
+/* Cash covers deposit, withdraw and set balance — it takes the deposit hue. */
+.wiz-crumb.cash {
+  color: var(--tx-deposit);
+  background: var(--tx-deposit-tint);
+  border-color: transparent;
+}
+
+/* The Cash screen's Deposit / Withdraw / Set balance switch sits at the top of
+   the step, so it trades .seg-card's section-gap top margin for a bottom one. */
+.wiz-step .seg-card {
+  margin: 0 var(--gutter) 18px;
+}
+
 .wiz-step {
   animation: wiz-in 0.22s ease both;
 }
@@ -3171,4 +3184,10 @@ ion-toast {
 
 .wiz-total .wiz-field-label {
   grid-column: auto;
+}
+
+/* Set balance: the current balance reads as the starting point the field
+   below replaces, so it sits above it with the field's own bottom spacing. */
+.wiz-total.wiz-current {
+  margin: 0 var(--gutter) 22px;
 }

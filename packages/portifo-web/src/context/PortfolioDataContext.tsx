@@ -13,7 +13,7 @@ import {
   removeMember as apiRemoveMember,
   listAccounts,
   createAccount as apiCreateAccount,
-  updateCashBalance as apiUpdateCashBalance,
+  setBalance as apiSetBalance,
   listTransactions,
   createTransaction as apiCreateTransaction,
   updateTransaction as apiUpdateTransaction,
@@ -81,19 +81,18 @@ interface PortfolioDataContextValue {
   updateTransaction(id: string, input: NewTransaction): Promise<Transaction>;
   deleteTransaction(id: string): Promise<void>;
   createAccount(input: NewAccount): Promise<AccountDto>;
-  updateCashBalance(accountId: string, currency: string, balance: number): Promise<AccountDto>;
+  setBalance(accountId: string, currency: string, balance: number, date: string): Promise<AccountDto>;
   // Derived, memoized off accounts/transactions.
   tickerAggregates: TickerAgg[];
   realizedPLByTx: Map<string, number>;
   openPositionsFor(accountName: string): OpenPosition[];
-  // Sum of every account's own currency balances (investment accounts carry
-  // leftover cash too) — single source shared by HoldingsPage's Cash row and
+  // Sum of every account's own currency balances — single source shared by HoldingsPage's Cash row and
   // CashDetailPage so the two totals can never diverge.
   cashByCurrency: Record<string, number>;
-  // True once the portfolio has a transaction on an Investment Account or a
-  // currency balance on a Cash Account — the Portfolio/Transactions/Accounts
-  // tabs stay in their empty state until this flips, even though Onboarding
-  // has already created the first two accounts by then (see use-cases.md).
+  // True once the portfolio has a transaction or a currency balance — the
+  // Portfolio/Transactions/Accounts tabs stay in their empty state until this
+  // flips, even though Onboarding has already created the first account by
+  // then (see use-cases.md).
   hasActivity: boolean;
 }
 
@@ -339,13 +338,14 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
     [refreshAccounts],
   );
 
-  const updateCashBalanceFn = useCallback(
-    async (accountId: string, currency: string, balance: number) => {
-      const account = await apiUpdateCashBalance(accountId, currency, balance);
-      await refreshAccounts({ silent: true });
+  // A balance update writes (or rewrites) a ledger row, so both lists move.
+  const setBalanceFn = useCallback(
+    async (accountId: string, currency: string, balance: number, date: string) => {
+      const account = await apiSetBalance(accountId, currency, balance, date);
+      await Promise.all([refreshTransactions({ silent: true }), refreshAccounts({ silent: true })]);
       return account;
     },
-    [refreshAccounts],
+    [refreshTransactions, refreshAccounts],
   );
 
   const tickerAggregates = useMemo(() => aggregateTickers(transactions), [transactions]);
@@ -396,7 +396,7 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
     updateTransaction: updateTransactionFn,
     deleteTransaction: deleteTransactionFn,
     createAccount: createAccountFn,
-    updateCashBalance: updateCashBalanceFn,
+    setBalance: setBalanceFn,
     tickerAggregates,
     realizedPLByTx,
     openPositionsFor,
