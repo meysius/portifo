@@ -9,7 +9,7 @@ Portifo — a portfolio tracker mobile app (multi-currency investments + cash, u
 - `packages/portifo-web` — Vite + React + Ionic SPA (the mobile frontend, styled as an iOS-mode PWA)
 - `packages/portifo-api` — backend on `simple-wire`, a thin opinionated framework over Express (see `packages/portifo-api/CLAUDE.md` for the framework's architecture rules — domain slices, DI, controllers)
 - `docs/use-cases.md` holds the product specs and user flows and use cases.
-- `docs/new-design-system/` is the source of truth for the design language: **`guidelines.html` holds the rules** (colour, typography, layout constants, the page header's four states, the tab bar, and the numbered implementation rules) and **`screens.html` shows every screen composed from them** at true iPhone 16 scale. Every time a user wants you to change the design or a screen, first make the change in `guidelines.html` / `screens.html` / `foundations/`, get it approved, and only then implement it in the frontend. (`docs/design-language/` and `docs/design-system-old.html` are earlier, superseded versions.)
+- `docs/new-design-system/` is the source of truth for the design language.
 
 ## Commands
 
