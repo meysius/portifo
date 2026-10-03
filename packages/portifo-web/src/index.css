@@ -2727,217 +2727,230 @@ ion-toast {
   font-variant-numeric: tabular-nums;
 }
 
-/* Realized P&L is closed money, but it is still a fact about the POSITION, so
-   it is the Position grid's full-width footer cell. As a floating line it was
-   the only block on the screen with neither a divider nor a box, sitting 11pt
-   under the grid and reading as a fifth grid row that had lost its border.
-   (The old .realized / -k / -v / -n line is gone.) */
-.stat-grid .stat-cell.wide {
-  grid-column: 1 / -1;
-  flex-direction: row;
-  align-items: baseline;
-  gap: 8px;
+/* ---- The facts list ----
+   Holding Detail's security + position figures. It replaces two boxed
+   .stat-grids under two section heads: three container styles for six figures,
+   and eleven tracked-caps labels on one screen. A fact is a hairline row —
+   label left in the body face, value right in mono — so every figure on the
+   page lands in ONE right-aligned column, the same alignment the account groups
+   below are built on. No card: the hairlines are the structure. No closing
+   rule either — the Accounts section head's rule follows, and two parallel
+   hairlines --sec-gap apart read as a double border. */
+.detail-cap {
+  margin: 14px 0 3px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fg-3);
 }
 
-.stat-cell.wide .stat-label {
+.facts {
+  margin: 12px var(--gutter) 0;
+}
+
+.fact {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 2px;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fact-k {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--fg-2);
   flex-shrink: 0;
 }
 
-.stat-cell.wide .rz {
+/* Secondary note under a label (Realized's share count) — mono, because it is
+   a count, and --fg-3 so it never competes with the value it qualifies. */
+.fact-sub {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.fact-v {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 14px;
+  font-size: 14.5px;
   line-height: 20px;
+  color: var(--fg-1);
   font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Realized P&L: the colour budget (see .gain-stack.ranked) — the dollar delta
+   is a supporting figure in --fg-2, only the percentage is tinted. */
+.fact-v.rz {
   color: var(--fg-2);
 }
 
-.stat-cell.wide .rz .pc {
+.fact-v.rz .pc {
   color: var(--gain);
 }
 
-.stat-cell.wide .rz.loss .pc {
+.fact-v.rz.loss .pc {
   color: var(--loss);
 }
 
-.stat-cell.wide .rz-n {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-3);
-  margin-left: auto;
+/* The one row that LEAVES THE APP: display face + --signal so it reads as an
+   action, not a figure (rule 10: mono is for what lines up in a column).
+   Outward arrow, never a chevron — rule 09 reserves that for a push. */
+.fact-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14.5px;
+  line-height: 20px;
+  color: var(--signal);
+}
+
+.fact-link svg {
+  width: 11px;
+  height: 11px;
   flex-shrink: 0;
 }
 
 /* .field-link is GONE — a link inside a .field-card put an action into the form
-   vocabulary. Leaving the app is .stat-link now, up with the stat grid. */
+   vocabulary. Leaving the app is .fact-link now, the facts list's last row. */
 
-/* ---- The account group ----
-   A rule separates ACCOUNTS from each other and nothing else. Uniform hairlines
-   between every row made five groups read as one long list with occasional bold
-   lines; an account's lots are bound together by a rail instead. Every group
-   carries the top rule — on the first one it doubles as the section head's
-   baseline. */
-.agrp {
+/* ---- Accounts ----
+   One row shape for accounts and lots alike: two lines of two columns — what
+   it is | what it is worth, then shares and cost | P&L and return. It replaced
+   a three-column grid with a rail and a second, indented row vocabulary for
+   lots. Like the facts list above, hairlines are the only structure. */
+.accts {
   margin: 0 var(--gutter);
+  border-bottom: 1px solid var(--border);
+}
+
+.acct-group {
   border-top: 1px solid var(--border);
 }
 
-/* The head outranks its lots on every axis at once — display face against mono,
-   700 against 600, --fg-1 against --fg-2, no indent against 16pt of it. Getting
-   any one of these backwards makes the child read as the parent.
+/* The section head's own rule is the line above the first account — a second
+   hairline 9px under it read as a double border. */
+.acct-group:first-child {
+  border-top: 0;
+}
 
-   Fixed columns are sized to the WORST case, not to a sample holding: a holding
-   kept in one account puts the whole position on an account line, so the value
-   column holds `$173,972.25` (96pt) and 98pt is the floor. The return column
-   holds `+999.9%` at 60pt; past 1000% the decimal is dropped by fmtPct and it
-   still fits. */
-.ah {
-  display: grid;
-  grid-template-columns: 1fr 98px 60px;
-  align-items: baseline;
-  column-gap: 10px;
-  row-gap: 3px;
+.acct {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   padding: 12px 2px;
 }
 
-.ah-n {
-  font-family: var(--ion-font-family);
-  font-weight: 700;
-  font-size: 14px;
+.acct-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.acct-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 15px;
   color: var(--fg-1);
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.ah-v {
+.acct-value {
   font-family: var(--font-mono);
   font-weight: 600;
-  font-size: 14.5px;
+  font-size: 15px;
   color: var(--fg-1);
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  white-space: nowrap;
 }
 
-.ah-p {
+.acct-sub {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The colour budget (see .gain-stack.ranked): the dollar P&L is --fg-2, only
+   the return is tinted. The return has a fixed minimum width so the P&L
+   figures above and below it share a right edge too. */
+.acct-ret {
+  color: var(--fg-2);
+  white-space: nowrap;
+}
+
+.acct-pc {
+  display: inline-block;
+  min-width: 7.5ch;
+  text-align: right;
+  font-weight: 600;
+}
+
+.acct-pc.gain {
+  color: var(--gain);
+}
+
+.acct-pc.loss {
+  color: var(--loss);
+}
+
+/* Line three states how many lots the account holds — listed beneath it. */
+.acct-note {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--fg-3);
+}
+
+/* Lots sit on the page background like everything else; the indent alone says
+   "inside this account", and the hairlines between lots match the rest of the
+   screen. */
+.lots {
+  margin: -4px 0 8px 14px;
+}
+
+.lot {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 0;
+}
+
+.lot + .lot {
+  border-top: 1px solid var(--border);
+}
+
+.lot-date {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--fg-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.lot-value {
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: 13.5px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.ah-p.gain {
-  color: var(--gain);
-}
-
-.ah-p.loss {
-  color: var(--loss);
-}
-
-/* Line 2 spans all three columns. The return column's second row is empty, and
-   at `1 / 3` the meta had 275pt against the 310pt it needs and wrapped on every
-   row, pulling itself out of line with the return above it. */
-.ah-m {
-  grid-column: 1 / -1;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-/* The rail is absolutely positioned on purpose: indenting the row itself would
-   shift the value and return columns and destroy the alignment with the head,
-   which is the one thing this layout exists to provide. Only the first cell's
-   CONTENT is indented. */
-.glots {
-  position: relative;
-  padding-bottom: 6px;
-}
-
-.glots::before {
-  content: "";
-  position: absolute;
-  left: 3px;
-  top: 0;
-  bottom: 12px;
-  width: 2px;
-  border-radius: 1px;
-  background: var(--border);
-}
-
-.glot {
-  display: grid;
-  grid-template-columns: 1fr 98px 60px;
-  align-items: baseline;
-  column-gap: 10px;
-  row-gap: 2px;
-  padding: 7px 2px 7px 0;
-}
-
-/* A lot's purchase price is a caption on a past event, not a peer of the market
-   value beside it — so it takes --fg-2 and only the share count stays --fg-1.
-   Rule 10 is intact: every figure is still mono and tabular; what changed is
-   which one is allowed to be the darkest thing in the row. */
-.glot-px {
-  padding-left: 16px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--fg-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.glot-px b {
   color: var(--fg-1);
-  font-weight: 600;
-}
-
-.glot-v {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--fg-2);
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  white-space: nowrap;
 }
 
-.glot-p {
-  font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 12.5px;
-  font-variant-numeric: tabular-nums;
-  text-align: right;
-}
-
-.glot-p.gain {
-  color: var(--gain);
-}
-
-.glot-p.loss {
-  color: var(--loss);
-}
-
-.glot-m {
-  grid-column: 1 / -1;
-  padding-left: 16px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    animation: none !important;
-  }
-}
 
 /* ---------- add-transaction wizard (POC) ---------- */
 

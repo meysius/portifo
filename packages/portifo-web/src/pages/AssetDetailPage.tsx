@@ -41,6 +41,24 @@ const fmtLotDate = (iso: string) =>
     timeZone: "UTC",
   });
 
+// One row shape for every account and every lot: what it is on the left, what it
+// is worth on the right, and under them how it got there — shares and cost on
+// the left, P&L and return on the right. Two columns, not the old three, so the
+// only figures that line up are the ones worth comparing: values with values,
+// returns with returns.
+function Ret({ pl, pc, currency }: { pl: number; pc: number; currency: string }) {
+  return (
+    <span className="acct-ret">
+      {sign(pl)}
+      {fmtCcy(Math.abs(pl), currency)}
+      <span className={pl >= 0 ? "acct-pc gain" : "acct-pc loss"}>
+        {sign(pl)}
+        {pct(pc)}%
+      </span>
+    </span>
+  );
+}
+
 function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const history = useHistory();
   const { tabBase, tabLabel } = useTabBase();
@@ -48,7 +66,6 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const { tickerAggregates, quotes, refreshMarket } = usePortfolioData();
   const agg = tickerAggregates.find((t) => t.symbol === symbol);
   const quote = quotes[symbol];
-
   useEffect(() => {
     if (!quotes[symbol]) refreshMarket([symbol]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -128,7 +145,9 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
           {quote?.shortName && <div className="detail-name">{quote.shortName}</div>}
           {agg.closed ? (
             <>
-              <p className="eyebrow">Realized {realizedGain ? "gain" : "loss"}</p>
+              <p className="detail-cap">
+                Realized {realizedGain ? "gain" : "loss"} in {currency}
+              </p>
               <div className={realizedGain ? "hero-realized positive" : "hero-realized negative"}>
                 <MoneyHero value={agg.realizedPL} currency={currency} small />
               </div>
@@ -147,8 +166,9 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
             <>
               {/* Market value, not price — this is a portfolio tracker, and it is
                   the same figure the Holdings row shows, so the push reads as a
-                  zoom. Price/share lives in the Market block below. */}
-              <p className="eyebrow">Market value</p>
+                  zoom. Price/share heads the facts list below. The caption names the
+                  currency, so no section head has to. */}
+              <p className="detail-cap">Market value in {currency}</p>
               <MoneyHero value={marketValue} currency={currency} small />
               {/* Total above Today: the hero figure is market value and the
                   total return is how it got there, so they are one thought.
@@ -179,71 +199,51 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
           )}
         </div>
 
-        {/* The security, not the position. Portifo does not compete with a
-            charting product: it carries the live price and hands the chart to
-            Yahoo Finance, which is also where the app's own prices come from,
-            so the stored symbol is guaranteed to resolve there. It stays on
-            a closed position: the price is what "Buy again" is weighed
-            against. */}
-        <ListDivider label="Market" meta={currency} />
-        <div className="stat-grid">
-          <div className="stat-cell">
-            <span className="stat-label">Price / Share</span>
-            {/* A closed position has no stake in the price, so with no quote
-                the cell is a dash: the avg-cost fallback the open screen uses
-                would pass a historical figure off as a live one. */}
-            <span className="stat-value">{agg.closed && !quote ? "—" : fmtCcy(price, currency)}</span>
+        {/* ONE facts list for the security and the position. It used to be two
+            boxed stat grids under two section heads (Market / Position) — three
+            container styles on one screen for six figures. Now every figure is
+            a hairline row, label left, value right, so the values form a single
+            column like the account groups below. The price comes first: it is
+            about the security, and on a closed position it is what "Buy again"
+            is weighed against. */}
+        <div className="facts">
+          <div className="fact">
+            <span className="fact-k">Price per share</span>
+            {/* A closed position has no stake in the price, so with no quote the
+                row is a dash: the avg-cost fallback the open screen uses would
+                pass a historical figure off as a live one. */}
+            <span className="fact-v">{agg.closed && !quote ? "—" : fmtCcy(price, currency)}</span>
           </div>
-          {/* Leaves the app, so an outward arrow — never a chevron. The whole
-              cell is the anchor. */}
-          <a
-            className="stat-cell"
-            href={yahooQuoteUrl(symbol)}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <span className="stat-label">Chart</span>
-            <span className="stat-link">
-              Yahoo Finance
-              <ExternalLinkIcon />
-            </span>
-          </a>
-        </div>
-
-        {/* The cost side. The hero says what it is worth; this says what it cost.
-            Realized is the grid's full-width footer cell — outside it, it was the
-            only block on the screen with neither a divider nor a box. */}
-        <ListDivider label="Position" meta="all accounts" />
-        <div className="stat-grid">
-          <div className="stat-cell">
-            <span className="stat-label">{agg.closed ? "Shares sold" : "Shares"}</span>
-            <span className="stat-value">
-              {fmtShares(agg.closed ? agg.realizedShares : agg.totalShares)}
-            </span>
+          <div className="fact">
+            <span className="fact-k">{agg.closed ? "Shares sold" : "Shares"}</span>
+            <span className="fact-v">{fmtShares(agg.closed ? agg.realizedShares : agg.totalShares)}</span>
           </div>
-          <div className="stat-cell">
-            <span className="stat-label">Avg Cost / Share</span>
-            <span className="stat-value">
+          <div className="fact">
+            <span className="fact-k">Avg cost per share</span>
+            <span className="fact-v">
               {fmtCcy(
                 agg.closed && agg.realizedShares > 1e-9 ? agg.realizedCostBasis / agg.realizedShares : agg.avgCost,
                 currency,
               )}
             </span>
           </div>
-          <div className="stat-cell">
-            <span className="stat-label">Cost Basis</span>
-            <span className="stat-value">{fmtCcy(agg.closed ? agg.realizedCostBasis : agg.costBasis, currency)}</span>
+          <div className="fact">
+            <span className="fact-k">Cost basis</span>
+            <span className="fact-v">{fmtCcy(agg.closed ? agg.realizedCostBasis : agg.costBasis, currency)}</span>
           </div>
-          <div className="stat-cell">
-            {/* A closed position has no open shares to age, so the cell becomes
+          <div className="fact">
+            {/* A closed position has no open shares to age, so the row becomes
                 how long the sold shares were actually held. */}
-            <span className="stat-label">{agg.closed ? "Avg Hold" : "Avg Age"}</span>
-            <span className="stat-value">{fmtAge(agg.closed ? agg.realizedAgeYears : agg.avgAgeYears)}</span>
+            <span className="fact-k">{agg.closed ? "Avg hold" : "Avg age"}</span>
+            <span className="fact-v">{fmtAge(agg.closed ? agg.realizedAgeYears : agg.avgAgeYears)}</span>
           </div>
           {!agg.closed && agg.realizedCostBasis > 1e-9 && (
-            <div className="stat-cell wide">
-              <span className="stat-label">Realized</span>
-              <span className={realizedGain ? "rz" : "rz loss"}>
+            <div className="fact">
+              <span className="fact-k">
+                Realized
+                <span className="fact-sub">{fmtShares(agg.realizedShares)} sh sold</span>
+              </span>
+              <span className={realizedGain ? "fact-v rz" : "fact-v rz loss"}>
                 {sign(agg.realizedPL)}
                 {fmtCcy(Math.abs(agg.realizedPL), currency)}{" "}
                 <span className="pc">
@@ -251,117 +251,118 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
                   {pct(realizedPct)}%
                 </span>
               </span>
-              <span className="rz-n">{fmtShares(agg.realizedShares)} sh sold</span>
             </div>
           )}
+          {/* Leaves the app, so an outward arrow — never a chevron. The whole
+              row is the anchor. Portifo does not compete with a charting
+              product: it hands the chart to Yahoo Finance, which is also where
+              the app's own prices come from. */}
+          <a className="fact" href={yahooQuoteUrl(symbol)} target="_blank" rel="noopener noreferrer">
+            <span className="fact-k">Chart</span>
+            <span className="fact-link">
+              Yahoo Finance
+              <ExternalLinkIcon />
+            </span>
+          </a>
         </div>
 
-        {/* ACCOUNTS AS GROUPS. The head is the rollup and its lots hang beneath
-            it, sharing one column grid so an account's total sits directly above
-            the lot values that sum to it. Nothing pushes any more, so no
-            chevrons (rule 09). */}
+        {/* ACCOUNTS. Each account is one row in the same shape as the facts
+            above it, hairline-ruled, no rail and no three-column grid. Its
+            third line states how many lots it holds, and they are listed
+            indented beneath it — always shown, so every lot on the screen is
+            readable without a tap. A one-lot account takes the same shape: its
+            lot row restates the account's figures, and that is the right trade,
+            because every account reads the same way down the column. */}
         {!agg.closed && openAccounts.length > 0 && (
           <>
             <ListDivider
               label="Accounts"
-              meta={`${openAccounts.length} · ${lotCount} ${lotCount === 1 ? "lot" : "lots"}`}
+              meta={`${openAccounts.length} ${openAccounts.length === 1 ? "account" : "accounts"} · ${lotCount} ${lotCount === 1 ? "lot" : "lots"}`}
             />
-            {openAccounts.map((pa) => {
-              const paPL = pa.value - pa.costBasis;
-              const paPct = pa.costBasis > 1e-9 ? (paPL / pa.costBasis) * 100 : 0;
-              return (
-                <div className="agrp" key={pa.account}>
-                  <div className="ah">
-                    <span className="ah-n">{pa.account}</span>
-                    <span className="ah-v">{fmtCcy(pa.value, currency)}</span>
-                    <span className={paPL >= 0 ? "ah-p gain" : "ah-p loss"}>
-                      {sign(paPL)}
-                      {pct(paPct)}%
-                    </span>
-                    {/* The lot count is STATED, never inferred by counting rows.
-                        Every head reads the same way — shares, lots, avg cost —
-                        so the meta slot means one thing all the way down the
-                        column. An earlier pass collapsed a one-lot account into
-                        its head and swapped this line for the lot's receipt;
-                        that made the slot mean two different things depending on
-                        the group, and left the lot count of the collapsed ones
-                        undiscoverable. */}
-                    <span className="ah-m">
-                      <span>
-                        {fmtShares(pa.shares)} sh · {pa.lots.length}{" "}
-                        {pa.lots.length === 1 ? "lot" : "lots"} · avg {fmtCcy(pa.avgCost, currency)}
+            <div className="accts">
+              {openAccounts.map((pa) => {
+                const paPL = pa.value - pa.costBasis;
+                const paPct = pa.costBasis > 1e-9 ? (paPL / pa.costBasis) * 100 : 0;
+                return (
+                  <div className="acct-group" key={pa.account}>
+                    <div className="acct">
+                      <span className="acct-line">
+                        <span className="acct-title">{pa.account}</span>
+                        <span className="acct-value">{fmtCcy(pa.value, currency)}</span>
                       </span>
-                      <span>
-                        {sign(paPL)}
-                        {fmtCcy(Math.abs(paPL), currency)}
+                      <span className="acct-line acct-sub">
+                        <span>
+                          {fmtShares(pa.shares)} sh · avg {fmtCcy(pa.avgCost, currency)}
+                        </span>
+                        <Ret pl={paPL} pc={paPct} currency={currency} />
                       </span>
-                    </span>
-                  </div>
-                  {/* Always rendered, at any lot count. A one-lot account repeats
-                      its head's value and return, and that is the right trade:
-                      a subtotal equal to its single member is how every grouped
-                      table behaves, and the lot row still adds the purchase date
-                      and age that the head does not carry. */}
-                  <div className="glots">
-                    {pa.lots.map((lot, i) => {
+                      <span className="acct-note">
+                        {pa.lots.length} {pa.lots.length === 1 ? "lot" : "lots"}
+                      </span>
+                    </div>
+                    <div className="lots">
+                      {pa.lots.map((lot, i) => {
                         const lotValue = price * lot.shares;
                         const lotPL = lotValue - lot.costBasis;
                         const lotPct = lot.costBasis > 1e-9 ? (lotPL / lot.costBasis) * 100 : 0;
                         return (
-                          <div className="glot" key={`${lot.date}-${i}`}>
-                            <span className="glot-px">
-                              <b>{fmtShares(lot.shares)}</b> at {fmtCcy(lot.pricePerShare, currency)}
+                          // A lot is a purchase, so it is named by its date.
+                          <div className="lot" key={`${lot.date}-${i}`}>
+                            <span className="acct-line">
+                              <span className="lot-date">{fmtLotDate(lot.date)}</span>
+                              <span className="lot-value">{fmtCcy(lotValue, currency)}</span>
                             </span>
-                            <span className="glot-v">{fmtCcy(lotValue, currency)}</span>
-                            <span className={lotPL >= 0 ? "glot-p gain" : "glot-p loss"}>
-                              {sign(lotPL)}
-                              {pct(lotPct)}%
-                            </span>
-                            <span className="glot-m">
+                            <span className="acct-line acct-sub">
                               <span>
-                                {fmtLotDate(lot.date)} · {fmtAge(lot.ageYears)}
+                                {fmtShares(lot.shares)} sh at {fmtCcy(lot.pricePerShare, currency)} ·{" "}
+                                {fmtAge(lot.ageYears)}
                               </span>
-                              <span>
-                                {sign(lotPL)}
-                                {fmtCcy(Math.abs(lotPL), currency)}
-                              </span>
+                              <Ret pl={lotPL} pc={lotPct} currency={currency} />
                             </span>
                           </div>
                         );
                       })}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </>
         )}
 
-        {/* A closed position has no lots behind an account, so the group head is
-            the whole row and it carries realized figures. */}
+        {/* A closed position has no lots behind an account, so the row is the
+            whole account and it carries realized figures. */}
         {agg.closed && realizedAccounts.length > 0 && (
           <>
-            <ListDivider label="Accounts" meta={String(realizedAccounts.length)} />
-            {realizedAccounts.map((pa) => {
-              const paRealPct = pa.realizedCostBasis > 1e-9 ? (pa.realizedPL / pa.realizedCostBasis) * 100 : 0;
-              return (
-                <div className="agrp" key={pa.account}>
-                  <div className="ah">
-                    <span className="ah-n">{pa.account}</span>
-                    <span className="ah-v">
-                      {sign(pa.realizedPL)}
-                      {fmtCcy(Math.abs(pa.realizedPL), currency)}
-                    </span>
-                    <span className={pa.realizedPL >= 0 ? "ah-p gain" : "ah-p loss"}>
-                      {sign(pa.realizedPL)}
-                      {pct(paRealPct)}%
-                    </span>
-                    <span className="ah-m">
-                      <span>{fmtShares(pa.realizedShares)} sh sold</span>
-                    </span>
+            <ListDivider
+              label="Accounts"
+              meta={`${realizedAccounts.length} ${realizedAccounts.length === 1 ? "account" : "accounts"}`}
+            />
+            <div className="accts">
+              {realizedAccounts.map((pa) => {
+                const paRealPct = pa.realizedCostBasis > 1e-9 ? (pa.realizedPL / pa.realizedCostBasis) * 100 : 0;
+                return (
+                  <div className="acct-group" key={pa.account}>
+                    <div className="acct">
+                      <span className="acct-line">
+                        <span className="acct-title">{pa.account}</span>
+                        <span className="acct-value">
+                          {sign(pa.realizedPL)}
+                          {fmtCcy(Math.abs(pa.realizedPL), currency)}
+                        </span>
+                      </span>
+                      <span className="acct-line acct-sub">
+                        <span>{fmtShares(pa.realizedShares)} sh sold</span>
+                        <span className={pa.realizedPL >= 0 ? "acct-pc gain" : "acct-pc loss"}>
+                          {sign(pa.realizedPL)}
+                          {pct(paRealPct)}%
+                        </span>
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </>
         )}
 
