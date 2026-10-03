@@ -32,6 +32,7 @@ function ManagePortfolioPage() {
   const history = useHistory();
   const { tabBase, tabLabel } = useTabBase();
   const {
+    portfolios,
     portfolioDetail,
     renamePortfolio,
     deletePortfolio,
@@ -224,9 +225,21 @@ function ManagePortfolioPage() {
 
         <div className="btn-stack">
           {isOwner ? (
-            <button type="button" className="btn btn-destructive" onClick={() => setDeleteConfirmOpen(true)}>
-              Delete Portfolio
-            </button>
+            <>
+              {/* The server refuses to delete a user's last portfolio, so the
+                  button says so up front rather than after a confirmation. */}
+              <button
+                type="button"
+                className="btn btn-destructive"
+                disabled={portfolios.length <= 1}
+                onClick={() => setDeleteConfirmOpen(true)}
+              >
+                Delete Portfolio
+              </button>
+              {portfolios.length <= 1 && (
+                <p className="btn-stack-note">This is your only portfolio, so it can't be deleted.</p>
+              )}
+            </>
           ) : (
             <button type="button" className="btn btn-secondary" onClick={() => setLeaveConfirmOpen(true)}>
               Leave Portfolio

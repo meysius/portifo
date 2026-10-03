@@ -36,7 +36,8 @@ import { getPortfolioHistory } from "../api/portfolio";
 import type { HistoryPoint, HistoryRange } from "../api/market";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
-import { convert, fmtCcy, fmtShares } from "../lib/fx";
+import { convert, fmtCcy, fmtFxAsOf, fmtShares } from "../lib/fx";
+import { useDisplayCurrency } from "../lib/displayCurrency";
 
 // Past this many movers the Today block truncates to a "+n more" tail rather
 // than scrolling, so the section has a fixed ceiling of about 130pt.
@@ -70,7 +71,7 @@ function HoldingsPage() {
     hasActivity,
   } = usePortfolioData();
 
-  const [displayCurrency, setDisplayCurrency] = useState("USD");
+  const [displayCurrency, setDisplayCurrency] = useDisplayCurrency();
   const [currencySheetOpen, setCurrencySheetOpen] = useState(false);
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
   const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
@@ -233,6 +234,13 @@ function HoldingsPage() {
 
   const cashCodes = Object.keys(cashByCurrency)
     .filter((c) => Math.abs(cashByCurrency[c]) > 1e-9)
+    .sort();
+
+  // Every currency a figure on this screen is converted FROM. "No conversion
+  // needed" is only true when this is empty — a USD display over CAD cash is
+  // still a conversion, and the rate behind it belongs on screen.
+  const foreignCurrencies = [...new Set([...cashCodes, ...sortedHoldings.map((h) => h.currency)])]
+    .filter((c) => c !== displayCurrency)
     .sort();
 
   // Closed positions (every share sold) are the last rows of the Holdings
@@ -445,14 +453,16 @@ function HoldingsPage() {
               </>
             )}
 
-            <div className={`fx-note${fxAsOf ? "" : " fx-note--fallback"}`}>
+            <div className={`fx-note${fxAsOf || foreignCurrencies.length === 0 ? "" : " fx-note--fallback"}`}>
               <span className="fx-dot" />
-              {displayCurrency === "USD" ? (
-                "Displaying in USD · no conversion needed"
+              {foreignCurrencies.length === 0 ? (
+                `Displaying in ${displayCurrency} · no conversion needed`
               ) : (
                 <>
-                  1 USD = {(fxRates[displayCurrency] ?? 1).toFixed(4)} {displayCurrency} ·{" "}
-                  {fxAsOf ? `live · ${fxAsOf}` : "fallback rate (live rate unavailable)"}
+                  {foreignCurrencies
+                    .map((c) => `1 ${c} = ${convert(1, c, displayCurrency, fxRates).toFixed(4)} ${displayCurrency}`)
+                    .join(" · ")}{" "}
+                  · {fxAsOf ? `live · ${fmtFxAsOf(fxAsOf)}` : "fallback rate (live rate unavailable)"}
                   <button
                     type="button"
                     className="fx-refresh"
@@ -535,7 +545,7 @@ function HoldingsPage() {
                       <p>{h.name ?? `${fmtShares(h.shares)} sh`}</p>
                     </IonLabel>
                     <IonLabel slot="end">
-                      <h2>{fmtCcy(h.price * h.shares, h.currency)}</h2>
+                      <h2>{fmtCcy(convert(h.price * h.shares, h.currency, displayCurrency, fxRates), displayCurrency)}</h2>
                       {/* Total only — Today moved out of the rows and into the
                           movers block above, where it is ranked and scaled.
                           Keeping both would print every figure twice, and it is

@@ -18,8 +18,6 @@ import { useHistory } from "react-router-dom";
 import type { RouteComponentProps } from "react-router-dom";
 import CurrencyPickerSheet from "../CurrencyPickerSheet";
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
   CashGlyphIcon,
   ChevronDownIcon,
   ChevronRightIcon,
@@ -32,8 +30,7 @@ import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { CURRENCIES } from "../lib/currencies";
 import { convert, fmtCcy } from "../lib/fx";
-
-const CAT_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)"];
+import { useDisplayCurrency } from "../lib/displayCurrency";
 
 function currencyName(code: string) {
   return CURRENCIES.find((c) => c.code === code)?.name ?? code;
@@ -51,7 +48,7 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
   const { tabBase, tabLabel } = useTabBase();
   const { accounts, loading, openPositionsFor, quotes, fxRates, refreshMarket } = usePortfolioData();
   const account = accounts.find((a) => a.id === match.params.accountId);
-  const [displayCurrency, setDisplayCurrency] = useState("USD");
+  const [displayCurrency, setDisplayCurrency] = useDisplayCurrency();
   const [currencySheetOpen, setCurrencySheetOpen] = useState(false);
 
   const positions = account ? openPositionsFor(account.name) : [];
@@ -85,7 +82,7 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
     );
   }
 
-  const holdings = positions.map((position, i) => {
+  const holdings = positions.map((position) => {
     const quote = quotes[position.symbol];
     const costDisplay = position.costByCurrency.reduce(
       (sum, [currency, amount]) => sum + convert(amount, currency, displayCurrency, fxRates),
@@ -102,9 +99,11 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
       valueDisplay,
       pl,
       plPct,
-      color: CAT_COLORS[i % CAT_COLORS.length],
     };
   });
+  // Largest first, as on Portfolio.
+  holdings.sort((a, b) => b.valueDisplay - a.valueDisplay);
+  const isEmpty = holdings.length === 0 && account.balances.length === 0;
 
   const openSetBalance = (currency?: string) =>
     history.push(`${tabBase}/add-transaction`, { type: "cash", cashMode: "set", account: account.name, currency });
@@ -145,48 +144,67 @@ function AccountDetailPage({ match }: RouteComponentProps<{ accountId: string }>
           </div>
         </div>
 
-        <div className="stat-grid">
-          <div className="stat-cell">
-            <span className="stat-label">Stock Holdings</span>
-            <span className="stat-value">{fmtCcy(stockDisplay, displayCurrency)}</span>
+        {/* The split only says something when there is both: a cash-only
+            account (a chequing account) would print "Stock $0.00" beside its
+            own total, and a Holdings section that can only ever be empty. */}
+        {holdings.length > 0 && account.balances.length > 0 && (
+          <div className="stat-grid">
+            <div className="stat-cell">
+              <span className="stat-label">Stock Holdings</span>
+              <span className="stat-value">{fmtCcy(stockDisplay, displayCurrency)}</span>
+            </div>
+            <div className="stat-cell">
+              <span className="stat-label">Cash Holdings</span>
+              <span className="stat-value">{fmtCcy(cashDisplay, displayCurrency)}</span>
+            </div>
           </div>
-          <div className="stat-cell">
-            <span className="stat-label">Cash Holdings</span>
-            <span className="stat-value">{fmtCcy(cashDisplay, displayCurrency)}</span>
-          </div>
-        </div>
+        )}
 
-        <ListDivider label="Holdings" />
-        {holdings.length === 0 ? (
+        {isEmpty && (
           <EmptyState
             icon={<StackIcon />}
-            title="No holdings yet"
-            body="Buys recorded against this account will show up here."
+            title="Nothing in this account yet"
+            body="Buys recorded against it show up as holdings; set a cash balance with the + below."
           />
-        ) : (
-          <IonList inset>
-            {holdings.map((h) => (
-              <IonItem key={h.symbol} button detail={false} onClick={() => history.push(`${tabBase}/asset/${h.symbol}`)}>
-                <IonAvatar slot="start" className="glyph glyph-stock">
-                  <span className="glyph-dot" style={{ background: h.color }} />
-                </IonAvatar>
-                <IonLabel className="label-sym">
-                  <h2>{h.symbol}</h2>
-                  {h.name && <p>{h.name}</p>}
-                </IonLabel>
-                <IonLabel slot="end">
-                  <h2>{fmtCcy(h.valueDisplay, displayCurrency)}</h2>
-                  {h.pl != null && h.plPct != null && (
-                    <p className={h.pl >= 0 ? "positive" : "negative"}>
-                      {h.pl >= 0 ? <ArrowUpIcon /> : <ArrowDownIcon />}
-                      {h.pl >= 0 ? "+" : "−"}
-                      {fmtCcy(Math.abs(h.pl), displayCurrency)} · {Math.abs(h.plPct).toFixed(1)}%
-                    </p>
-                  )}
-                </IonLabel>
-              </IonItem>
-            ))}
-          </IonList>
+        )}
+
+        {holdings.length > 0 && (
+          <>
+            <ListDivider label="Holdings" />
+            {/* Same row as Portfolio's Holdings list: ticker at the gutter, no
+                weight colour (--cat-* belongs to the allocation bar alone), and
+                a chevron because it pushes the holding (rule 09). */}
+            <IonList inset>
+              {holdings.map((h) => (
+                <IonItem
+                  key={h.symbol}
+                  className="row-hold"
+                  button
+                  detail={false}
+                  onClick={() => history.push(`${tabBase}/asset/${h.symbol}`)}
+                >
+                  <IonLabel className="label-sym">
+                    <h2>{h.symbol}</h2>
+                    {h.name && <p>{h.name}</p>}
+                  </IonLabel>
+                  <IonLabel slot="end">
+                    <h2>{fmtCcy(h.valueDisplay, displayCurrency)}</h2>
+                    {h.pl != null && h.plPct != null && (
+                      <p className={h.pl >= 0 ? "positive" : "negative"}>
+                        <span className="pnl-label">Total:</span>
+                        {h.pl >= 0 ? "+" : "−"}
+                        {fmtCcy(Math.abs(h.pl), displayCurrency)} · {h.pl >= 0 ? "+" : "−"}
+                        {Math.abs(h.plPct).toFixed(1)}%
+                      </p>
+                    )}
+                  </IonLabel>
+                  <span slot="end" className="row-chevron" aria-hidden="true">
+                    <ChevronRightIcon />
+                  </span>
+                </IonItem>
+              ))}
+            </IonList>
+          </>
         )}
 
         <ListDivider label="Cash" addLabel="Set a cash balance" onAdd={() => openSetBalance()} />

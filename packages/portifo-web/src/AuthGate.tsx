@@ -60,8 +60,11 @@ function AuthGate() {
 // pushed detail route referencing the outgoing portfolio's account/asset
 // ids doesn't linger once the incoming portfolio's data lands. Switching
 // *into* a portfolio that itself needs onboarding (e.g. a brand new one)
-// still fully swaps Tabs out for OnboardingPage — that's a legitimate mode
-// change, not a same-shape round trip, so there's no view-stack to lose.
+// covers the still-mounted Tabs with OnboardingPage rather than swapping them
+// out: swapping them back in once the first account landed remounted the
+// outlet at /tabs/portfolio and left its page stuck at ion-page-invisible —
+// a blank screen right after onboarding. Only the very first onboarding, before
+// Tabs has ever mounted, renders OnboardingPage on its own.
 function AuthenticatedRoutes() {
   const { accounts, loading, switching } = usePortfolioData();
   const history = useHistory();
@@ -90,7 +93,9 @@ function AuthenticatedRoutes() {
     );
   }
 
-  if (!switching && !hasAccount) {
+  const needsOnboarding = !switching && !hasAccount;
+
+  if (needsOnboarding && !tabsEverMounted) {
     return <OnboardingPage />;
   }
 
@@ -105,6 +110,11 @@ function AuthenticatedRoutes() {
       {switching && (
         <div className="auth-loading auth-loading-overlay">
           <IonSpinner name="crescent" />
+        </div>
+      )}
+      {needsOnboarding && (
+        <div className="onboard-overlay">
+          <OnboardingPage />
         </div>
       )}
     </>

@@ -1,6 +1,6 @@
 import { IonItem, IonLabel } from "@ionic/react";
 import type { Transaction } from "../api/portfolio";
-import { fmtCcy } from "../lib/fx";
+import { fmtCcy, fmtShares } from "../lib/fx";
 
 const TYPE_LABEL: Record<Transaction["type"], string> = {
   buy: "Buy",
@@ -8,13 +8,6 @@ const TYPE_LABEL: Record<Transaction["type"], string> = {
   deposit: "Deposit",
   withdraw: "Withdraw",
 };
-
-/* Shares carry up to 4 decimals and trailing zeros are trimmed — "12 sh", not
-   "12.0000 sh". The line is the widest thing in the right column and must never
-   wrap, so it is the account beside it that clips. */
-function fmtShares(shares: number) {
-  return shares.toLocaleString("en-US", { maximumFractionDigits: 4 });
-}
 
 /*
  * A ledger row reads WHEN · WHAT MOVED · WHAT HAPPENED · HOW MUCH, AND HOW IT

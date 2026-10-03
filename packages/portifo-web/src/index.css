@@ -1584,6 +1584,16 @@ ion-list.list-inset.fieldcard-list ion-item {
    `color="medium"` can't do this job: it lands at (0,1,0) as `.ion-color-medium`
    and the rules above are (0,2,3), so the value colour wins and the prompt
    renders at full strength (rule 04 again — specificity when scoping). */
+/* A read-only figure that is money gained or lost (Transaction Detail's
+   Realized row) keeps its gain/loss ink over the field value's --fg-1. */
+.fieldcard-list ion-item ion-label[slot="end"].positive {
+  color: var(--gain);
+}
+
+.fieldcard-list ion-item ion-label[slot="end"].negative {
+  color: var(--loss);
+}
+
 .fieldcard-list ion-item ion-label[slot="end"].field-empty,
 .fieldcard-list ion-item ion-label[slot="end"].field-empty h2 {
   color: var(--fg-3);
@@ -1931,6 +1941,15 @@ a.stat-cell {
   margin: var(--sec-gap) var(--gutter) 0;
 }
 
+/* Why the button above it is disabled, in the button's own column. */
+.btn-stack-note {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--fg-3);
+  text-align: center;
+}
+
 /* Buy/Sell at the end of a holding's scroll — STACKED, not side by side: a row
    of two half-width buttons reads as a pair of equal choices, and these are not
    equal. Sell is btn-secondary, never destructive red — selling is not a
@@ -2021,6 +2040,28 @@ a.stat-cell {
 
 .onboard-content {
   --background: var(--bg);
+}
+
+/* Onboarding for a portfolio created after the shell has mounted sits over
+   the still-mounted tabs (see AuthGate) — above the tab bar, below modals. */
+.onboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: var(--bg);
+}
+
+/* The way out of onboarding when other portfolios exist: a plain text action
+   under Continue, so it never competes with it. */
+.onboard-switch {
+  align-self: center;
+  border: 0;
+  background: none;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--signal);
 }
 
 .onboard-screen {

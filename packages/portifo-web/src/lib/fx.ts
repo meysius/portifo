@@ -1,13 +1,27 @@
+import { CURRENCIES } from "./currencies";
+
 // Rates are always expressed as "1 unit of USD equals N units of this currency" —
 // USD is the pivot even when the display currency isn't USD, so any two currencies
 // can be converted through it with a single rates map.
 export type FxRates = Record<string, number>;
 
-export const DISPLAY_CURRENCIES = ["USD", "EUR", "GBP", "CAD", "JPY", "AUD"];
+// Every currency the pickers offer must have a rate fetched for it — a code
+// with no rate would fall through convert()'s `?? 1` and print dollar figures
+// under a krona symbol.
+export const DISPLAY_CURRENCIES = CURRENCIES.map((c) => c.code);
 
 // Used only if the live /market/fx call fails, so a rate (and a "stale"
 // indicator) is always available.
-export const FX_FALLBACK: FxRates = { USD: 1, EUR: 0.92, GBP: 0.78, CAD: 1.36, JPY: 151.2, AUD: 1.52 };
+export const FX_FALLBACK: FxRates = {
+  USD: 1,
+  EUR: 0.92,
+  GBP: 0.78,
+  CAD: 1.36,
+  JPY: 151.2,
+  AUD: 1.52,
+  CHF: 0.88,
+  SEK: 10.5,
+};
 
 export function convert(amount: number, fromCcy: string, toCcy: string, rates: FxRates): number {
   if (fromCcy === toCcy) return amount;
@@ -34,14 +48,25 @@ export function fmtCcy(n: number, currency: string): string {
   }
 }
 
+// When the live fx rates were fetched: a time today, a date before that.
+export function fmtFxAsOf(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const sameDay = d.toDateString() === new Date().toDateString();
+  return sameDay
+    ? d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+    : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 export function fmtPct(n: number) {
   return (n >= 0 ? "+" : "") + n.toFixed(1) + "%";
 }
 
-// Whole share counts render bare ("46"), fractional ones keep precision.
+// Whole share counts render bare ("46"); fractional ones keep up to 4
+// decimals with trailing zeros trimmed, as the ledger stores them — rounding
+// 3.4521 sh to "3.45" made a holding disagree with its own transactions.
 export function fmtShares(n: number) {
-  if (Number.isInteger(n)) return n.toFixed(0);
-  return Math.abs(n) < 1 ? n.toFixed(3) : n.toFixed(2);
+  return n.toLocaleString("en-US", { maximumFractionDigits: 4 });
 }
 
 // Compact age for a position or a lot: "3y 4m", "8m", "12d". The design uses

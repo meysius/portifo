@@ -40,7 +40,7 @@ function formatDate(iso: string) {
 function TransactionDetailPage({ match }: RouteComponentProps<{ transactionId: string }>) {
   const history = useHistory();
   const { tabBase, tabLabel } = useTabBase();
-  const { transactions, loading } = usePortfolioData();
+  const { transactions, realizedPLByTx, loading } = usePortfolioData();
   const tx = transactions.find((t) => t.id === match.params.transactionId);
 
   if (!tx) {
@@ -68,6 +68,11 @@ function TransactionDetailPage({ match }: RouteComponentProps<{ transactionId: s
 
   const isCashType = tx.type === "deposit" || tx.type === "withdraw";
   const dateStr = formatDate(tx.date);
+  const tradeTotal = (tx.shares ?? 0) * (tx.pricePerShare ?? 0);
+  // The list row shows a Sell's realized result; opening it must not lose it.
+  const realized = tx.type === "sell" ? realizedPLByTx.get(tx.id) : undefined;
+  const realizedCost = realized != null ? tradeTotal - realized : 0;
+  const realizedPct = realized != null && realizedCost > 1e-9 ? (realized / realizedCost) * 100 : null;
 
   return (
     <IonPage>
@@ -90,7 +95,7 @@ function TransactionDetailPage({ match }: RouteComponentProps<{ transactionId: s
         <div className="detail-hero">
           {/* Symbol is the page title; the type badge rides the subtitle. */}
           <div className="detail-name">
-            <span className="type-tag">{TYPE_LABEL[tx.type]}</span> {tx.account} · {dateStr}
+            <span className={`tx-tag ${tx.type}`}>{TYPE_LABEL[tx.type]}</span> {tx.account} · {dateStr}
           </div>
         </div>
 
@@ -126,8 +131,18 @@ function TransactionDetailPage({ match }: RouteComponentProps<{ transactionId: s
               </IonItem>
               <IonItem>
                 <IonLabel>Total</IonLabel>
-                <IonLabel slot="end">{fmtCcy((tx.shares ?? 0) * (tx.pricePerShare ?? 0), tx.currency)}</IonLabel>
+                <IonLabel slot="end">{fmtCcy(tradeTotal, tx.currency)}</IonLabel>
               </IonItem>
+              {realized != null && (
+                <IonItem>
+                  <IonLabel>Realized</IonLabel>
+                  <IonLabel slot="end" className={realized >= 0 ? "positive" : "negative"}>
+                    {realized >= 0 ? "+" : "−"}
+                    {fmtCcy(Math.abs(realized), tx.currency)}
+                    {realizedPct != null && ` · ${realized >= 0 ? "+" : "−"}${Math.abs(realizedPct).toFixed(1)}%`}
+                  </IonLabel>
+                </IonItem>
+              )}
             </>
           )}
         </IonList>

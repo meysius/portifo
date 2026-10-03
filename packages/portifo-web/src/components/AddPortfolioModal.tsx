@@ -11,7 +11,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useToast } from "../context/ToastContext";
 
@@ -22,6 +22,7 @@ function AddPortfolioModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const { showToast } = useToast();
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLIonInputElement>(null);
 
   const isValid = name.trim().length > 0;
 
@@ -31,7 +32,7 @@ function AddPortfolioModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   };
 
   const handleSave = async () => {
-    if (!isValid) return;
+    if (!isValid || saving) return;
     setSaving(true);
     try {
       await createPortfolio(name.trim());
@@ -45,7 +46,7 @@ function AddPortfolioModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={handleClose}>
+    <IonModal isOpen={isOpen} onDidDismiss={handleClose} onDidPresent={() => inputRef.current?.setFocus()}>
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
@@ -64,11 +65,16 @@ function AddPortfolioModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           <IonItem>
             <IonLabel>Name</IonLabel>
             <IonInput
+              ref={inputRef}
               slot="end"
               className="ion-text-end"
               value={name}
               placeholder="e.g. Retirement"
+              enterkeyhint="done"
               onIonInput={(e) => setName(e.detail.value ?? "")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSave();
+              }}
             />
           </IonItem>
         </IonList>

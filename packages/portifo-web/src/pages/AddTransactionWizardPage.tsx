@@ -27,7 +27,7 @@ import { getQuotes, searchSymbols } from "../api/market";
 import type { Quote, SymbolResult } from "../api/market";
 import type { NewTransaction, TransactionType } from "../api/portfolio";
 import { CURRENCIES } from "../lib/currencies";
-import { fmtCcy } from "../lib/fx";
+import { fmtCcy, fmtShares } from "../lib/fx";
 
 // What the first step picks. Deposit, Withdraw and Set balance are one choice,
 // Cash, split by a switch on its last screen — they answer the same questions.
@@ -95,12 +95,6 @@ function cleanDecimal(raw: string) {
   const cleaned = raw.replace(/[^\d.]/g, "");
   const dot = cleaned.indexOf(".");
   return dot === -1 ? cleaned : cleaned.slice(0, dot + 1) + cleaned.slice(dot + 1).replace(/\./g, "");
-}
-
-// Holdings to 4 decimals, as the ledger rows show them — "All 3.4521" has to
-// name the figure it fills in.
-function fmtShares(shares: number) {
-  return shares.toLocaleString("en-US", { maximumFractionDigits: 4 });
 }
 
 function todayIso() {

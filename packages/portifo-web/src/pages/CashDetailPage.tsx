@@ -25,6 +25,7 @@ import {
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy } from "../lib/fx";
+import { useDisplayCurrency } from "../lib/displayCurrency";
 
 // Aggregate cash view: every account holding cash. Total is derived from the same `cashByCurrency` value
 // HoldingsPage's Cash row uses, so the two totals can never diverge. One row
@@ -34,7 +35,7 @@ function CashDetailPage() {
   const history = useHistory();
   const { tabBase, tabLabel } = useTabBase();
   const { accounts, cashByCurrency, fxRates } = usePortfolioData();
-  const [displayCurrency, setDisplayCurrency] = useState("USD");
+  const [displayCurrency, setDisplayCurrency] = useDisplayCurrency();
   const [currencySheetOpen, setCurrencySheetOpen] = useState(false);
 
   const total = Object.entries(cashByCurrency).reduce(
@@ -99,7 +100,11 @@ function CashDetailPage() {
                   <IonLabel className="sub-mono">
                     <h2>{account.name}</h2>
                     <p>
-                      {account.balances.length} currenc{account.balances.length === 1 ? "y" : "ies"}
+                      {account.balances.length} currenc{account.balances.length === 1 ? "y" : "ies"} ·{" "}
+                      {account.balances
+                        .map((b) => b.currency)
+                        .sort()
+                        .join(", ")}
                     </p>
                   </IonLabel>
                   <IonLabel slot="end">

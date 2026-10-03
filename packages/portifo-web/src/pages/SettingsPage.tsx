@@ -17,7 +17,9 @@ import { useAuth } from "../context/AuthContext";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { useToast } from "../context/ToastContext";
-import { ChevronRightIcon, ListDivider, MemberInitial, StackIcon, roleLabel } from "../components/ds";
+import { ChevronRightIcon, ListDivider, MemberInitial, PlusIcon, StackIcon, roleLabel } from "../components/ds";
+import ActionSheetModal from "../components/ActionSheetModal";
+import AddPortfolioModal from "../components/AddPortfolioModal";
 import { setThemePreference, useThemePreference, type ThemePreference } from "../lib/theme";
 import { enablePushNotifications, isPushSupported } from "../lib/push";
 import { sendTestPush } from "../api/push";
@@ -33,9 +35,12 @@ function SettingsPage() {
   const history = useHistory();
   const { tabBase } = useTabBase();
   const { user, logout } = useAuth();
-  const { portfolioDetail } = usePortfolioData();
+  const { portfolios, activePortfolio, switchPortfolio, portfolioDetail } = usePortfolioData();
   const { showToast } = useToast();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
+  const otherPortfolios = portfolios.filter((p) => p.id !== activePortfolio?.id);
   const theme = useThemePreference();
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
     isPushSupported() ? Notification.permission : "unsupported",
@@ -110,7 +115,10 @@ function SettingsPage() {
           </div>
         </div>
 
-        <ListDivider label="Portfolio" />
+        <ListDivider
+          label="Portfolio"
+          meta={portfolios.length > 1 ? `${portfolios.length} portfolios` : undefined}
+        />
         {portfolioDetail && (
           <IonList inset>
             <IonItem button detail={false} onClick={() => history.push(`${tabBase}/portfolio`)}>
@@ -120,6 +128,7 @@ function SettingsPage() {
               <IonLabel className="sub-mono">
                 <h2>{portfolioDetail.name}</h2>
                 <p>
+                  {otherPortfolios.length > 0 && "Active · "}
                   {portfolioDetail.memberCount} member{portfolioDetail.memberCount === 1 ? "" : "s"}
                 </p>
               </IonLabel>
@@ -129,6 +138,28 @@ function SettingsPage() {
               <span slot="end" className="row-chevron" aria-hidden="true">
                 <ChevronRightIcon />
               </span>
+            </IonItem>
+            {/* The other portfolios switch in place — no chevron, nothing is
+                pushed (rule 09); the switch lands on the Portfolio tab. */}
+            {otherPortfolios.map((p) => (
+              <IonItem key={p.id} button detail={false} onClick={() => switchPortfolio(p.id)}>
+                <IonAvatar slot="start" className="glyph glyph-stock">
+                  <StackIcon />
+                </IonAvatar>
+                <IonLabel>
+                  <h2>{p.name}</h2>
+                  <p>Tap to switch</p>
+                </IonLabel>
+              </IonItem>
+            ))}
+            <IonItem button detail={false} onClick={() => setAddPortfolioOpen(true)}>
+              <IonAvatar slot="start" className="glyph glyph-cash">
+                <PlusIcon />
+              </IonAvatar>
+              <IonLabel>
+                <h2>New Portfolio</h2>
+                <p>Its own accounts, members and onboarding</p>
+              </IonLabel>
             </IonItem>
           </IonList>
         )}
@@ -173,10 +204,24 @@ function SettingsPage() {
         </div>
 
         <div className="btn-stack">
-          <button type="button" className="btn btn-secondary" onClick={handleLogout} disabled={loggingOut}>
-            Log Out
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setLogoutConfirmOpen(true)}
+            disabled={loggingOut}
+          >
+            {loggingOut ? "Logging Out…" : "Log Out"}
           </button>
         </div>
+
+        <ActionSheetModal
+          isOpen={logoutConfirmOpen}
+          onClose={() => setLogoutConfirmOpen(false)}
+          title="Log Out"
+          subtitle="Sign back in with Google any time"
+          actions={[{ label: "Log Out", onClick: handleLogout }]}
+        />
+        <AddPortfolioModal isOpen={addPortfolioOpen} onClose={() => setAddPortfolioOpen(false)} />
       </IonContent>
     </IonPage>
   );

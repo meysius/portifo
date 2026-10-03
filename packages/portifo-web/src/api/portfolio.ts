@@ -68,7 +68,10 @@ export async function createAccount(input: NewAccount): Promise<AccountDto> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!res.ok) throw new Error("Failed to create account");
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to create account");
+  }
   return res.json();
 }
 

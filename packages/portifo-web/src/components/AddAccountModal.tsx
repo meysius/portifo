@@ -11,7 +11,7 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useToast } from "../context/ToastContext";
 
@@ -20,6 +20,7 @@ function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   const { showToast } = useToast();
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLIonInputElement>(null);
 
   const isValid = name.trim().length > 0;
 
@@ -31,22 +32,22 @@ function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   };
 
   const handleSave = async () => {
-    if (!isValid) return;
+    if (!isValid || saving) return;
     setSaving(true);
     try {
       await createAccount({ name: name.trim() });
       showToast("Account created");
       reset();
       onClose();
-    } catch {
-      showToast("Failed to create account", { color: "danger" });
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : "Failed to create account", { color: "danger" });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={handleClose}>
+    <IonModal isOpen={isOpen} onDidDismiss={handleClose} onDidPresent={() => inputRef.current?.setFocus()}>
       <IonHeader>
         <IonToolbar>
           <IonButtons slot="start">
@@ -65,11 +66,16 @@ function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
           <IonItem>
             <IonLabel>Name</IonLabel>
             <IonInput
+              ref={inputRef}
               slot="end"
               className="ion-text-end"
               value={name}
               placeholder="e.g. Interactive Brokers"
+              enterkeyhint="done"
               onIonInput={(e) => setName(e.detail.value ?? "")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSave();
+              }}
             />
           </IonItem>
         </IonList>

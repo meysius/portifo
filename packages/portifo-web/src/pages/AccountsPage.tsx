@@ -27,8 +27,7 @@ import {
   PlusIcon,
 } from "../components/ds";
 import { convert, fmtCcy } from "../lib/fx";
-
-const DISPLAY_CCY = "USD";
+import { useDisplayCurrency } from "../lib/displayCurrency";
 
 // Accounts tab (design-system Lists section): same .row anatomy as Holdings —
 // glyph, name + what it holds, one converted total on the right, and the
@@ -41,6 +40,7 @@ function AccountsPage() {
     accounts,
     loading,
     refreshAccounts,
+    refreshTransactions,
     refreshMarket,
     openPositionsFor,
     quotes,
@@ -49,6 +49,7 @@ function AccountsPage() {
     hasActivity,
   } = usePortfolioData();
   const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [displayCurrency] = useDisplayCurrency();
 
   // Account totals are mark-to-market — make sure quotes for every open
   // symbol are loaded even when this tab is visited before Holdings.
@@ -62,9 +63,18 @@ function AccountsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbolsKey]);
 
+  // Each total is holdings at market plus cash, so a pull refetches all three
+  // inputs — the ledger, the balances and the quotes — not just the accounts.
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
-    await refreshAccounts();
-    e.detail.complete();
+    try {
+      await Promise.all([
+        refreshAccounts({ silent: true }),
+        refreshTransactions({ silent: true }),
+        symbolsKey ? refreshMarket(symbolsKey.split(",")) : Promise.resolve(),
+      ]);
+    } finally {
+      e.detail.complete();
+    }
   };
 
   // Total account value: holdings at market (falling back to cost basis when
@@ -72,12 +82,12 @@ function AccountsPage() {
   // the same number its Account Detail hero shows.
   const accountTotal = (accountName: string, balances: { currency: string; balance: number }[]) => {
     const positions = openPositionsFor(accountName);
-    let total = balances.reduce((sum, b) => sum + convert(b.balance, b.currency, DISPLAY_CCY, fxRates), 0);
+    let total = balances.reduce((sum, b) => sum + convert(b.balance, b.currency, displayCurrency, fxRates), 0);
     for (const position of positions) {
       const quote = quotes[position.symbol];
       total += quote
-        ? convert(quote.price * position.shares, quote.currency, DISPLAY_CCY, fxRates)
-        : position.costByCurrency.reduce((sum, [ccy, amt]) => sum + convert(amt, ccy, DISPLAY_CCY, fxRates), 0);
+        ? convert(quote.price * position.shares, quote.currency, displayCurrency, fxRates)
+        : position.costByCurrency.reduce((sum, [ccy, amt]) => sum + convert(amt, ccy, displayCurrency, fxRates), 0);
     }
     return total;
   };
@@ -149,7 +159,7 @@ function AccountsPage() {
                     </p>
                   </IonLabel>
                   <IonLabel slot="end">
-                    <h2>{fmtCcy(accountTotal(account.name, account.balances), DISPLAY_CCY)}</h2>
+                    <h2>{fmtCcy(accountTotal(account.name, account.balances), displayCurrency)}</h2>
                     {currencies.length > 0 && <p>{currencies.join(" · ")} cash</p>}
                   </IonLabel>
                   <span slot="end" className="row-chevron" aria-hidden="true">
