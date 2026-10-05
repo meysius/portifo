@@ -1445,48 +1445,6 @@ ion-list.list-inset.fieldcard-list ion-item {
 
 /* ---------- filter chips (DS token language: recessed fill, mono data) ---------- */
 
-/* ---------- filter row (DS .f-row / .f-chip — guidelines → Filter row) ----------
-
-   Chips size to their CONTENT. Three flex:1 chips split 353pt into 113pt each
-   and then spent a 10.5pt uppercase label on top of each value, so
-   "Wealthsimple TFSA" arrived as "Wealthsim…" in a control whose whole job is
-   to show what you filtered by. A chip states its DIMENSION when unset and its
-   VALUE when set — the label was saying what the value already says.
-   One line at 34pt, scrolling rather than truncating. On is --surface-2 +
-   --fg-1, off is transparent + --fg-3: the separation .seg-item.active already
-   uses, and no new colour. */
-.filter-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0;
-  padding: 6px var(--gutter) 14px;
-}
-
-/* Only the DIMENSIONS scroll. Clear is an action on the whole row, not a fourth
-   dimension, and inside the scroller it was pushed past the gutter by a long
-   account name — measured 41px off a 390pt viewport with Symbol + Account set,
-   which hid the reset exactly when the most filters were on. */
-.filter-scroll {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  /* A chip cut dead at the scroller's edge — fill and text stopping at a
-     vertical line with no border — reads as a rendering fault, not as "there
-     is more". A 16px fade makes it an affordance. Harmless when the chips fit:
-     the scroller is flex:1, so those last 16px are empty and nothing fades. */
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent 100%);
-  mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent 100%);
-}
-
-.filter-scroll::-webkit-scrollbar {
-  display: none;
-}
-
 .filter-chip {
   display: inline-flex;
   align-items: center;
@@ -1520,24 +1478,6 @@ ion-list.list-inset.fieldcard-list ion-item {
 
 .filter-chip.on svg {
   color: var(--fg-2);
-}
-
-/* The filter row already spends 14px below itself, so the first section head
-   under it does not also pay --sec-gap — that stacked to ~38px and pushed the
-   first transaction down for nothing. Each month is wrapped in its own div, so
-   this reaches through that wrapper rather than being an adjacent sibling. */
-.filter-row + div > .list-divider {
-  margin-top: 0;
-}
-
-/* Clear exists only while something is set, and takes no accent — the header
-   action is this screen's one --signal. */
-.filter-clear {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 12.5px;
-  color: var(--fg-2);
-  border-color: transparent;
 }
 
 /* ---------- detail head (DS .detail-head / .stat-grid) ---------- */
@@ -3221,27 +3161,25 @@ ion-toast {
   }
 }
 
-/* ---------- Portfolio overview ----------
-   design-poc/portfolio-overview.html, in the second design system
-   (theme/ds.css), on the same footing as the holding-detail rules above: every
-   rule is scoped to .po-page (or .po-sheet, which Ionic portals out of the
-   page) and reads only --ds-* tokens. Type is at --ds-font-scale; gutters,
-   radii and the chart and movers geometry stay at their specified px. */
+/* ---------- Second design system: shared screen chrome ----------
+   What every screen ported from design-poc/*.html shares: the base reset and
+   type (.ds-screen, also on their sheets, which Ionic portals out of the
+   page), the tab roots' account/currency bar, and the bottom-sheet chrome.
+   Reads only --ds-* tokens (theme/ds.css); type is at --ds-font-scale. */
 
-.po-page,
-.po-sheet {
+.ds-screen {
   font-family: var(--font-body);
   font-size: 16px;
   line-height: normal;
   color: var(--ds-text);
 }
 
-.po-page ion-content {
+.ds-screen ion-content {
   --background: var(--ds-bg);
   --color: var(--ds-text);
 }
 
-:where(.po-page, .po-sheet) button {
+:where(.ds-screen) button {
   font: inherit;
   color: inherit;
   background: none;
@@ -3252,43 +3190,43 @@ ion-toast {
   -webkit-tap-highlight-color: transparent;
 }
 
-:where(.po-page, .po-sheet) :is(button, select, [tabindex]):focus-visible {
+:where(.ds-screen) :is(button, select, input, [tabindex]):focus-visible {
   outline: 3px solid var(--ds-focus);
   outline-offset: 3px;
 }
 
-:is(.po-page, .po-sheet) .money {
+.ds-screen .money {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   letter-spacing: -0.5px;
 }
 
-:is(.po-page, .po-sheet) .positive {
+.ds-screen .positive {
   color: var(--ds-positive);
 }
 
-:is(.po-page, .po-sheet) .negative {
+.ds-screen .negative {
   color: var(--ds-negative);
 }
 
-:is(.po-page, .po-sheet) :is(h1, h2, h3) {
+.ds-screen :is(h1, h2, h3) {
   margin: 0;
   line-height: normal;
 }
 
 /* ── navigation: the account picker and the display currency ──────────────
-   A plain opaque bar on the page ground: no material, no hairline, no title.
-   The page heading below scrolls under it. */
-.po-page ion-header.po-header::before {
+   The tab roots' bar: a plain opaque bar on the page ground — no material, no
+   hairline, no title. The page heading below scrolls under it. */
+.ds-screen ion-header.ds-nav-header::before {
   background: var(--ds-bg);
 }
 
-.po-page ion-header.po-header::after {
+.ds-screen ion-header.ds-nav-header::after {
   display: none;
 }
 
-.po-navigation {
+.ds-navigation {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3298,7 +3236,7 @@ ion-toast {
   background: var(--ds-bg);
 }
 
-.po-scope {
+.ds-scope {
   min-width: 0;
   max-width: 260px;
   padding: 8px 16px 8px 0;
@@ -3310,7 +3248,7 @@ ion-toast {
   cursor: pointer;
 }
 
-.po-page .po-currency {
+.ds-screen .ds-currency {
   padding: 4px 7px;
   border: 1px solid var(--ds-line);
   border-radius: 5px;
@@ -3319,6 +3257,75 @@ ion-toast {
   letter-spacing: 0.4px;
   color: var(--ds-secondary);
 }
+
+/* Content settling in on first paint. */
+@keyframes ds-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+/* ── bottom sheets ───────────────────────────────────────────────────────── */
+ion-modal.ds-sheet {
+  --background: var(--ds-bg);
+  --border-radius: 22px;
+  --box-shadow: none;
+  --backdrop-opacity: 0.4;
+}
+
+.ds-sheet-body {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 12px var(--ds-gutter) max(31px, env(safe-area-inset-bottom));
+  background: var(--ds-bg);
+}
+
+.ds-sheet-grabber {
+  width: 34px;
+  height: 4px;
+  margin: 0 auto 19px;
+  border-radius: 5px;
+  background: var(--ds-line);
+}
+
+.ds-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.ds-sheet .ds-sheet-header h2 {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-21);
+  font-weight: 700;
+  letter-spacing: -0.7px;
+}
+
+.ds-sheet .ds-close-sheet {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--ds-secondary);
+  background: var(--ds-subtle);
+}
+
+.ds-sheet-notice {
+  margin: 16px 0;
+  font-size: var(--ds-fs-11);
+  line-height: 1.8;
+  color: var(--ds-secondary);
+}
+
+/* ---------- Portfolio overview ----------
+   design-poc/portfolio-overview.html. Every rule is scoped to .po-page (or the
+   growth sheet) and reads only --ds-* tokens. Type is at --ds-font-scale;
+   gutters, radii and the chart and movers geometry stay at their specified px. */
 
 /* ── heading: the portfolio's name (it switches portfolios) and Add ──────── */
 .po-heading {
@@ -3970,59 +3977,6 @@ ion-toast {
 }
 
 /* ── behind the growth (sheet) ───────────────────────────────────────────── */
-ion-modal.po-sheet {
-  --background: var(--ds-bg);
-  --border-radius: 22px;
-  --box-shadow: none;
-  --backdrop-opacity: 0.4;
-}
-
-.po-sheet-body {
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 12px var(--ds-gutter) max(31px, env(safe-area-inset-bottom));
-  background: var(--ds-bg);
-}
-
-.po-sheet-grabber {
-  width: 34px;
-  height: 4px;
-  margin: 0 auto 19px;
-  border-radius: 5px;
-  background: var(--ds-line);
-}
-
-.po-sheet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 18px;
-}
-
-.po-sheet .po-sheet-header h2 {
-  font-family: var(--font-display);
-  font-size: var(--ds-fs-21);
-  font-weight: 700;
-  letter-spacing: -0.7px;
-}
-
-.po-sheet .po-close-sheet {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  color: var(--ds-secondary);
-  background: var(--ds-subtle);
-}
-
-.po-sheet-notice {
-  margin: 16px 0;
-  font-size: var(--ds-fs-11);
-  line-height: 1.8;
-  color: var(--ds-secondary);
-}
-
 .po-detail-pair {
   display: flex;
   justify-content: space-between;
@@ -4056,7 +4010,7 @@ ion-modal.po-sheet {
   .po-hero,
   .po-growth,
   .po-allocation {
-    animation: po-arrive 0.4s ease both;
+    animation: ds-arrive 0.4s ease both;
   }
 
   .po-growth {
@@ -4068,16 +4022,526 @@ ion-modal.po-sheet {
   }
 }
 
-@keyframes po-arrive {
-  from {
-    opacity: 0;
-    transform: translateY(5px);
-  }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .po-spinner {
     animation: none;
+  }
+}
+
+/* ---------- Transactions ----------
+   design-poc/transactions.html. Scoped to .tl-page and its sheets (.tl-sheet)
+   and read only --ds-* tokens. (.tx-* belongs to the older TransactionRow,
+   still used by a holding's own transaction list.) */
+
+.tl-page .tl-scope {
+  max-width: 275px;
+}
+
+/* ── heading ─────────────────────────────────────────────────────────────── */
+.tl-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px var(--ds-gutter) 0;
+}
+
+/* Never wider than the screen allows, at any font scale. */
+.tl-page .tl-heading h1 {
+  font-family: var(--font-display);
+  font-size: min(var(--ds-fs-31), 11vw);
+  font-weight: 650;
+  letter-spacing: -1.5px;
+  line-height: 1.2;
+}
+
+.tl-page .tl-icon-button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+/* ── filters ─────────────────────────────────────────────────────────────── */
+.tl-filters {
+  margin: 12px var(--ds-gutter) 0;
+}
+
+.tl-filter-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 24px;
+  margin-bottom: 5px;
+}
+
+.tl-filter-heading span {
+  font-size: var(--ds-fs-9);
+  font-weight: 550;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ds-muted);
+}
+
+.tl-page .tl-clear-filters {
+  padding: 6px 0 6px 10px;
+  font-size: var(--ds-fs-10);
+  color: var(--ds-accent);
+}
+
+.tl-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.tl-page .tl-filter-chip {
+  position: relative;
+  min-width: 0;
+  min-height: 52px;
+  padding: 8px 10px;
+  border: 1px solid var(--ds-line);
+  border-radius: 10px;
+  text-align: left;
+  color: var(--ds-text);
+  background: var(--ds-subtle);
+}
+
+.tl-page .tl-filter-chip.is-active {
+  border-color: var(--ds-accent);
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.tl-filter-chip-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: var(--ds-fs-9);
+  color: var(--ds-secondary);
+}
+
+.tl-filter-chip.is-active .tl-filter-chip-label {
+  color: var(--ds-accent);
+}
+
+.tl-filter-chip-value {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--ds-fs-10);
+  font-weight: 550;
+}
+
+.tl-filter-chip-value span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tl-filter-chip-value svg {
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+}
+
+/* ── the ledger ──────────────────────────────────────────────────────────── */
+.tl-ledger-heading {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 10px var(--ds-gutter);
+  border-bottom: 4px solid var(--ds-subtle);
+}
+
+.tl-result-count {
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+.tl-date-group {
+  padding: 0 var(--ds-gutter);
+}
+
+.tl-page .tl-date-heading {
+  padding: 12px 0 3px;
+  font-size: var(--ds-fs-10);
+  font-weight: 500;
+  color: var(--ds-secondary);
+}
+
+/* A row's highlight bleeds 10px into the gutter; its content stays on the
+   text edge. */
+.tl-page .tl-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% + 20px);
+  min-height: 60px;
+  margin-inline: -10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--ds-line);
+  border-radius: 0;
+  text-align: left;
+  color: var(--ds-text);
+}
+
+.tl-page .tl-row:last-child {
+  border-bottom: 0;
+}
+
+.tl-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+}
+
+.tl-icon.buy {
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.tl-icon.sell {
+  color: var(--ds-sell);
+  background: var(--ds-sell-bg);
+}
+
+.tl-icon.deposit {
+  color: var(--ds-positive);
+  background: var(--ds-positive-bg);
+}
+
+.tl-icon.withdraw {
+  color: var(--ds-withdraw);
+  background: var(--ds-withdraw-bg);
+}
+
+.tl-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.tl-title {
+  display: block;
+  font-size: var(--ds-fs-12);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.tl-meta {
+  display: block;
+  margin-top: 3px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.6;
+  color: var(--ds-secondary);
+}
+
+.tl-end {
+  flex-shrink: 0;
+  max-width: 50%;
+  text-align: right;
+}
+
+.tl-page .tl-end .money {
+  display: block;
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+}
+
+/* The account is the one thing on a row allowed to clip. */
+.tl-account {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ds-fs-8);
+  line-height: 1.6;
+  color: var(--ds-muted);
+}
+
+.tl-ledger-footer {
+  padding: 14px var(--ds-gutter) 20px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.7;
+  text-align: center;
+  color: var(--ds-muted);
+}
+
+/* ── no records ──────────────────────────────────────────────────────────── */
+.tl-empty {
+  padding: 44px var(--ds-gutter);
+  text-align: center;
+}
+
+.tl-empty-symbol {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 23px;
+  border-radius: 18px;
+  color: var(--ds-muted);
+  background: var(--ds-subtle);
+}
+
+.tl-page .tl-empty h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-22);
+  font-weight: 550;
+  letter-spacing: -0.8px;
+}
+
+.tl-empty p {
+  margin: 0;
+  font-size: var(--ds-fs-11);
+  line-height: 1.8;
+  color: var(--ds-secondary);
+}
+
+.ds-screen .tl-action {
+  width: 100%;
+  min-height: 45px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: var(--ds-fs-13);
+  font-weight: 600;
+  color: var(--ds-action-ink);
+  background: var(--ds-action);
+}
+
+.ds-screen .tl-action.secondary {
+  margin-top: 8px;
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+/* ── filter sheet ────────────────────────────────────────────────────────── */
+.tl-filter-intro {
+  margin: -6px 0 16px;
+  font-size: var(--ds-fs-11);
+  line-height: 1.7;
+  color: var(--ds-secondary);
+}
+
+.tl-search-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0 11px;
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  color: var(--ds-muted);
+  background: var(--ds-subtle);
+}
+
+.tl-search-field svg {
+  flex-shrink: 0;
+}
+
+.tl-search-field:focus-within {
+  border-color: var(--ds-accent);
+}
+
+.tl-search-field input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  padding: 11px 0;
+  border: 0;
+  border-radius: 8px;
+  outline-offset: 0;
+  font: inherit;
+  font-size: var(--ds-fs-12);
+  color: var(--ds-text);
+  background: none;
+}
+
+.tl-search-field input::placeholder {
+  color: var(--ds-secondary);
+}
+
+.tl-filter-options {
+  max-height: min(360px, 43dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tl-filter-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-height: 55px;
+  margin: 0 0 5px;
+  padding: 13px 11px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: var(--ds-fs-10);
+  color: var(--ds-text);
+  cursor: pointer;
+}
+
+.tl-filter-option:has(input:checked) {
+  border-color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.tl-filter-option input {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--ds-accent);
+}
+
+.tl-filter-option-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.tl-filter-option-title {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: var(--ds-fs-12);
+  font-weight: 550;
+}
+
+.tl-filter-option-detail {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.5;
+  color: var(--ds-secondary);
+}
+
+.tl-filter-option-count {
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-10);
+  color: var(--ds-muted);
+}
+
+.tl-filter-search-empty {
+  margin: 1em 0;
+  padding: 22px 10px;
+  font-size: var(--ds-fs-11);
+  line-height: 1.7;
+  text-align: center;
+  color: var(--ds-secondary);
+}
+
+.tl-filter-apply {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--ds-line);
+}
+
+.ds-screen .tl-filter-apply .tl-action {
+  margin: 0;
+}
+
+/* ── detail sheet ────────────────────────────────────────────────────────── */
+.tl-detail-hero {
+  padding: 3px 0 18px;
+}
+
+.tl-detail-hero .tl-icon {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 13px;
+  border-radius: 12px;
+}
+
+.tl-sheet .tl-detail-hero .money {
+  font-size: var(--ds-fs-29);
+  font-weight: 500;
+  letter-spacing: -1px;
+}
+
+.tl-detail-caption {
+  margin-top: 7px;
+  font-size: var(--ds-fs-10);
+  line-height: 1.7;
+  color: var(--ds-secondary);
+}
+
+.tl-detail-pair {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--ds-line);
+  font-size: var(--ds-fs-11);
+}
+
+.tl-detail-pair span:first-child {
+  color: var(--ds-secondary);
+}
+
+.tl-detail-pair span:last-child {
+  max-width: 65%;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+/* ── feedback ────────────────────────────────────────────────────────────── */
+.tl-page .tl-row:is(:active, :focus-visible) {
+  background: var(--ds-subtle);
+}
+
+@media (hover: hover) {
+  .tl-page .tl-row:hover,
+  .tl-filter-option:hover {
+    background: var(--ds-subtle);
+  }
+
+  .tl-page .tl-filter-chip:hover {
+    border-color: var(--ds-muted);
+  }
+
+  .tl-page .tl-filter-chip.is-active:hover {
+    border-color: var(--ds-accent);
+  }
+}
+
+@media (max-width: 370px) {
+  .tl-heading,
+  .tl-date-group {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .tl-page .tl-row {
+    gap: 8px;
+  }
+
+  .tl-icon {
+    width: 29px;
+  }
+
+  .tl-page .tl-end .money {
+    font-size: var(--ds-fs-10);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tl-heading {
+    animation: ds-arrive 0.35s ease both;
   }
 }
 

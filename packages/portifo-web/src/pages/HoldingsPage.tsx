@@ -326,11 +326,11 @@ function HoldingsPage() {
   const firstDay = pts[0]?.date;
 
   return (
-    <IonPage className="tab-root-page po-page">
-      <IonHeader className="po-header">
-        <div className="po-navigation">
+    <IonPage className="tab-root-page ds-screen po-page">
+      <IonHeader className="ds-nav-header">
+        <div className="ds-navigation">
           <select
-            className="po-scope"
+            className="ds-scope"
             aria-label="Portfolio account"
             value={account ? account.id : "all"}
             onChange={(e) => {
@@ -347,7 +347,7 @@ function HoldingsPage() {
           </select>
           <button
             type="button"
-            className="po-currency"
+            className="ds-currency"
             aria-label={`Display currency, ${ccy}`}
             onClick={() => setCurrencySheetOpen(true)}
           >
@@ -691,18 +691,18 @@ function HoldingsPage() {
           initialBreakpoint={1}
           breakpoints={[0, 1]}
           handle={false}
-          className="auto-sheet po-sheet"
+          className="auto-sheet ds-sheet ds-screen"
           aria-labelledby="po-growth-title"
         >
-          <div className="po-sheet-body">
-            <div className="po-sheet-grabber" aria-hidden="true" />
-            <div className="po-sheet-header">
+          <div className="ds-sheet-body">
+            <div className="ds-sheet-grabber" aria-hidden="true" />
+            <div className="ds-sheet-header">
               <h2 id="po-growth-title">Behind the growth</h2>
-              <button type="button" className="po-close-sheet" aria-label="Close dialog" onClick={() => setGrowthOpen(false)}>
+              <button type="button" className="ds-close-sheet" aria-label="Close dialog" onClick={() => setGrowthOpen(false)}>
                 {CLOSE}
               </button>
             </div>
-            <p className="po-sheet-notice">
+            <p className="ds-sheet-notice">
               {range === "All" && firstDay ? `Since ${fmtDay(new Date(firstDay))}` : `${range} period`} · {scopeLabel}
               <br />
               Value growth includes money added to your portfolio. It isn’t an investment return percentage.
@@ -716,7 +716,7 @@ function HoldingsPage() {
                 <Pair label="Total value change" value={fmtSignedCcy(change, ccy)} className={tone(change)} />
               </>
             )}
-            <p className="po-sheet-notice">
+            <p className="ds-sheet-notice">
               Current unrealized gain on your stock holdings:{" "}
               <span className={`money ${tone(unrealized)}`}>{fmtSignedCcy(unrealized, ccy)}</span>.
               {growth.estimated.length > 0 && ` History for ${growth.estimated.join(", ")} is estimated.`}
