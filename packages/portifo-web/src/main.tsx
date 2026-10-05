@@ -31,6 +31,9 @@ import "./theme/fonts.css";
    :root vars. */
 import "./theme/variables.css";
 
+/* The second design system's tokens (design-poc/*.html), --ds-* prefixed. */
+import "./theme/ds.css";
+
 import "./index.css";
 import App from "./App.tsx";
 import { initTheme } from "./lib/theme";

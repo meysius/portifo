@@ -1,60 +1,50 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { getHistory } from "../api/market";
-import type { HistoryPoint, HistoryRange, Quote } from "../api/market";
-import { fmtCcy, fmtDay, fmtSignedCcy, fmtSignedPct } from "../lib/fx";
+import type { HistoryPoint, HistoryRange } from "../api/market";
+import { fmtCcy, fmtDay, yahooQuoteUrl } from "../lib/fx";
 
-// Holding Detail's price chart. It is not the Portfolio chart (PriceChart): that
-// one plots a total, this one plots a share price against the user's own
-// trades — buy/sell dots at the price paid, and a dashed avg-cost line — so
-// "where did I buy versus where is it now" reads without leaving the screen.
-// Hand-drawn SVG: the markers and the labelled reference line are the point,
-// and both are a few lines here.
+// Holding Detail's share-price history. Deliberately quiet: the position's
+// value and today's return above it are the story, and this only gives them
+// context — one line, no markers, no reference lines, a scrub readout on
+// demand. The full chart is one tap away at Yahoo (the outward arrow), which
+// already supplies our prices.
 
-const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "1Y", "5Y", "All"];
+const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "1Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
   "1D": "today",
   "1W": "past week",
   "1M": "past month",
   "3M": "past 3 months",
   "1Y": "past year",
-  "5Y": "past 5 years",
   All: "all time",
 };
 
-const H = 170;
-const PT = 12;
-const PB = 12;
-
-export type TradeMark = { date: Date; type: "buy" | "sell"; price: number };
+// The study's geometry: a 94px plot whose line spans y 15–82, with two dashed
+// guides at 28 and 61.
+const H = 94;
+const TOP = 15;
+const BOTTOM = 82;
 
 type Pt = { t: number; p: number };
 
-const tone = (n: number) => (n > 1e-9 ? "gain" : n < -1e-9 ? "loss" : "");
 const fmtTime = (t: number) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-const fmtShort = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
-const compact = (n: number) => new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
+
+function axisLabel(t: number, range: HistoryRange) {
+  const d = new Date(t);
+  if (range === "1D") return fmtTime(t);
+  if (range === "All") return String(d.getFullYear());
+  if (range === "1Y") return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "2-digit" });
+}
 
 // Last-fetched series per symbol+range, so flipping back to a range (or pushing
-// the same holding again) redraws at once instead of flashing a skeleton.
+// the same holding again) redraws at once.
 const cache = new Map<string, Pt[]>();
 
-export default function HoldingChart({
-  symbol,
-  quote,
-  avgCost,
-  marks,
-}: {
-  symbol: string;
-  quote: Quote;
-  // null hides the line: a closed position has no cost, and a ledger in a
-  // different currency than the quote would put it on the wrong scale.
-  avgCost: number | null;
-  marks: TradeMark[];
-}) {
-  const ccy = quote.currency;
-  const [range, setRange] = useState<HistoryRange>("1Y");
-  const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1Y`) ?? null);
+export default function HoldingChart({ symbol, ccy }: { symbol: string; ccy: string }) {
+  const [range, setRange] = useState<HistoryRange>("1M");
+  const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1M`) ?? null);
   const [failed, setFailed] = useState(false);
   const [scrub, setScrub] = useState<number | null>(null);
   const [width, setWidth] = useState(0);
@@ -90,203 +80,145 @@ export default function HoldingChart({
     };
   }, [symbol, range]);
 
-  const is1D = range === "1D";
-  const prevClose = quote.previousClose ?? quote.price - quote.change;
   const s = pts ?? [];
   const ready = s.length > 1 && width > 0;
 
-  // ── geometry ─────────────────────────────────────────────────────────────
   let path = "";
-  let x = (_t: number) => 0;
-  let y = (_p: number) => 0;
-  let t0 = 0;
-  let t1 = 0;
-  let lo = 0;
-  let hi = 0;
-  const ref = is1D ? { v: prevClose, label: "Prev close" } : avgCost != null ? { v: avgCost, label: "Avg cost" } : null;
-  let refOnChart = false;
-  let shownMarks: TradeMark[] = [];
+  let xs: number[] = [];
+  let ys: number[] = [];
   if (ready) {
-    t0 = s[0].t;
-    t1 = s[s.length - 1].t;
-    lo = Math.min(...s.map((p) => p.p));
-    hi = Math.max(...s.map((p) => p.p));
-    const span = hi - lo || hi * 0.02;
-    // Stretch the scale to take the reference line in when it is near; when it
-    // is far off, the curve keeps its own scale and the line becomes an arrow.
-    if (ref && ref.v > lo - span * 0.6 && ref.v < hi + span * 0.6) {
-      lo = Math.min(lo, ref.v);
-      hi = Math.max(hi, ref.v);
-    }
-    const pad = (hi - lo) * 0.06;
-    lo -= pad;
-    hi += pad;
-    x = (t) => ((t - t0) / (t1 - t0 || 1)) * width;
-    y = (p) => PT + (1 - (p - lo) / (hi - lo)) * (H - PT - PB);
-    path = s.map((p, i) => `${i ? "L" : "M"}${x(p.t).toFixed(1)},${y(p.p).toFixed(1)}`).join("");
-    refOnChart = !!ref && ref.v >= lo && ref.v <= hi;
-    // A ledger date is a day; its mark belongs at that day's bar.
-    shownMarks = is1D ? [] : marks.filter((m) => +m.date >= t0 - 864e5 && +m.date <= t1);
+    const t0 = s[0].t;
+    const span = s[s.length - 1].t - t0 || 1;
+    const lo = Math.min(...s.map((p) => p.p));
+    const hi = Math.max(...s.map((p) => p.p));
+    xs = s.map((p) => ((p.t - t0) / span) * width);
+    ys = s.map((p) => (hi > lo ? BOTTOM - ((p.p - lo) / (hi - lo)) * (BOTTOM - TOP) : (TOP + BOTTOM) / 2));
+    path = xs.map((x, i) => `${i ? "L" : "M"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
   }
-
-  // ── readout ──────────────────────────────────────────────────────────────
-  const base = is1D ? prevClose : ready ? s[0].p : prevClose;
-  const sp = scrub != null && ready ? s[scrub] : null;
-  const shownPrice = sp ? sp.p : quote.price;
-  const ch = shownPrice - base;
-  const chPct = base ? (ch / base) * 100 : 0;
-  const word = sp ? `since ${is1D ? "prev close" : fmtDay(new Date(t0))}` : ready || is1D ? RANGE_WORD[range] : "today";
-
-  let asof: [string, string] | null = null;
-  if (sp) asof = [is1D ? fmtTime(sp.t) : fmtDay(new Date(sp.t)), ""];
-  else if (quote.marketState === "REGULAR") asof = ["Market open", quote.marketTime ? `as of ${fmtTime(+new Date(quote.marketTime))}` : ""];
-  else if (quote.marketState) asof = ["Market closed", quote.marketTime ? `${fmtShort(new Date(quote.marketTime))} close` : ""];
 
   const pick = (e: ReactPointerEvent) => {
     if (!ready || !wrapRef.current) return;
-    const bx = wrapRef.current.getBoundingClientRect();
-    const px = Math.max(0, Math.min(width, e.clientX - bx.left));
-    const t = t0 + (px / width) * (t1 - t0);
+    const px = Math.max(0, Math.min(width, e.clientX - wrapRef.current.getBoundingClientRect().left));
     let i = 0;
-    while (i < s.length - 1 && s[i + 1].t <= t) i++;
-    if (i < s.length - 1 && t - s[i].t > s[i + 1].t - t) i++;
+    while (i < xs.length - 1 && xs[i + 1] <= px) i++;
+    if (i < xs.length - 1 && px - xs[i] > xs[i + 1] - px) i++;
     setScrub(i);
   };
   const release = () => setScrub(null);
+  const last = s.length - 1;
 
   return (
-    <section className="hd-sec">
-      <div className="hd-pricehead">
-        <div>
-          <div className="hd-lbl">Share price</div>
-          <div className="hd-price num">{fmtCcy(shownPrice, ccy)}</div>
-          <div className="hd-pricechg">
-            <span className={`num ${tone(ch)}`}>{fmtSignedCcy(ch, ccy)}</span>{" "}
-            <span className={`num ${tone(ch)}`}>{fmtSignedPct(chPct)}</span> <span className="hd-dim">{word}</span>
-          </div>
-        </div>
-        {asof && (
-          <div className="hd-asof">
-            {asof[0]}
-            {asof[1] && <br />}
-            {asof[1]}
+    <>
+      <div ref={wrapRef} className="hd-chart">
+        {/* Slides with the cursor but never leaves the plot: at the left edge it
+            hangs right of the cursor, at the right edge left of it. */}
+        {ready && scrub != null && (
+          <div
+            className="hd-chart-tip"
+            style={{ left: xs[scrub], transform: `translateX(-${(xs[scrub] / width) * 100}%)` }}
+          >
+            {fmtCcy(s[scrub].p, ccy)} · {ccy} · {range === "1D" ? fmtTime(s[scrub].t) : fmtDay(new Date(s[scrub].t))}
           </div>
         )}
-      </div>
-
-      <div
-        ref={wrapRef}
-        className="hd-chart"
-        onPointerDown={(e) => {
-          e.currentTarget.setPointerCapture(e.pointerId);
-          pick(e);
-        }}
-        onPointerMove={(e) => {
-          // Mouse hover scrubs too; a touch only scrubs while down (captured).
-          if (e.pointerType === "mouse" || e.currentTarget.hasPointerCapture(e.pointerId)) pick(e);
-        }}
-        onPointerUp={release}
-        onPointerCancel={release}
-        onPointerLeave={release}
-      >
-        {!ready && !failed && <div className="hd-sk" style={{ height: H, borderRadius: 10 }} />}
         {!ready && failed && <div className="hd-chart-empty">Price history unavailable</div>}
-        {ready && (
-          <svg width={width} height={H} aria-label={`${symbol} price, ${RANGE_WORD[range]}`}>
+        {width > 0 && (
+          <svg
+            width={width}
+            height={H}
+            role="img"
+            aria-label={`${symbol} share price, ${RANGE_WORD[range]}`}
+            onPointerDown={pick}
+            onPointerMove={pick}
+            onPointerUp={(e) => e.pointerType !== "mouse" && release()}
+            onPointerCancel={release}
+            onPointerLeave={release}
+          >
             <defs>
-              <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0" stopColor="var(--signal)" stopOpacity=".16" />
-                <stop offset="1" stopColor="var(--signal)" stopOpacity="0" />
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--ds-accent)" stopOpacity=".1" />
+                <stop offset="100%" stopColor="var(--ds-accent)" stopOpacity="0" />
               </linearGradient>
             </defs>
-            <path d={`${path}L${width},${H}L0,${H}Z`} fill={`url(#${gradId})`} />
-            {ref && refOnChart && (
+            <path
+              d={`M0 28H${width}M0 61H${width}`}
+              fill="none"
+              stroke="var(--ds-line)"
+              strokeWidth={0.7}
+              strokeDasharray="2 4"
+            />
+            {ready && (
               <>
-                <line x1={0} x2={width} y1={y(ref.v)} y2={y(ref.v)} stroke="var(--fg-3)" strokeDasharray="3 4" strokeWidth={1} />
-                <text x={width} y={y(ref.v) - 5} textAnchor="end" className="hd-reftext">
-                  {ref.label} {fmtCcy(ref.v, ccy)}
-                </text>
+                <path d={`${path} L${width},${H} L0,${H} Z`} fill={`url(#${gradId})`} />
+                <path
+                  d={path}
+                  fill="none"
+                  stroke="var(--ds-accent)"
+                  strokeWidth={1.7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx={xs[last]} cy={ys[last]} r={3} fill="var(--ds-accent)" />
+                {scrub != null && (
+                  <g>
+                    <line
+                      x1={xs[scrub]}
+                      x2={xs[scrub]}
+                      y1={0}
+                      y2={H}
+                      stroke="var(--ds-muted)"
+                      strokeDasharray="2 3"
+                    />
+                    <circle
+                      cx={xs[scrub]}
+                      cy={ys[scrub]}
+                      r={3.5}
+                      fill="var(--ds-accent)"
+                      stroke="var(--ds-bg)"
+                      strokeWidth={2}
+                    />
+                  </g>
+                )}
               </>
-            )}
-            {ref && !refOnChart && (
-              <text x={width} y={ref.v > hi ? 9 : H - 1} textAnchor="end" className="hd-reftext">
-                {ref.label} {fmtCcy(ref.v, ccy)} {ref.v > hi ? "↑" : "↓"}
-              </text>
-            )}
-            <path d={path} fill="none" stroke="var(--signal)" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" />
-            {shownMarks.map((m, i) =>
-              m.type === "buy" ? (
-                <circle key={i} cx={x(Math.max(+m.date, t0))} cy={y(m.price)} r={4} fill="var(--signal)" stroke="var(--bg)" strokeWidth={2} />
-              ) : (
-                <circle key={i} cx={x(Math.max(+m.date, t0))} cy={y(m.price)} r={3.6} fill="var(--bg)" stroke="var(--fg-1)" strokeWidth={1.6} />
-              ),
-            )}
-            {sp && (
-              <g>
-                <line x1={x(sp.t)} x2={x(sp.t)} y1={0} y2={H} stroke="var(--fg-3)" strokeWidth={1} />
-                <circle cx={x(sp.t)} cy={y(sp.p)} r={4.5} fill="var(--signal)" stroke="var(--bg)" strokeWidth={2} />
-              </g>
             )}
           </svg>
         )}
       </div>
 
-      {ready && (
-        <div className="hd-xlab">
-          <span>{is1D ? fmtTime(t0) : fmtDay(new Date(t0))}</span>
-          <span>{is1D ? fmtTime(t1) : fmtShort(new Date(t1))}</span>
-        </div>
-      )}
+      {/* Holds its line while loading, so the range strip never jumps. */}
+      <div className="hd-chart-axis">
+        <span>{ready ? axisLabel(s[0].t, range) : "\u00a0"}</span>
+        <span>{ready ? axisLabel(s[last].t, range) : ""}</span>
+      </div>
 
-      <div className="hd-ranges" role="group" aria-label="Chart range">
+      <div className="hd-chart-controls" role="group" aria-label="Price history range">
         {RANGES.map((r) => (
-          <button key={r} type="button" aria-pressed={r === range} onClick={() => setRange(r)}>
+          <button key={r} type="button" className="hd-range" aria-pressed={r === range} onClick={() => setRange(r)}>
             {r}
           </button>
         ))}
+        {/* Leaves the app, so an outward arrow — never a chevron. */}
+        <a
+          className="hd-chart-ext"
+          href={yahooQuoteUrl(symbol)}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Open ${symbol} chart on Yahoo Finance`}
+        >
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 15 15 5M5 5h10v10" />
+          </svg>
+        </a>
       </div>
-
-      {ready && (shownMarks.length > 0 || ref) && (
-        <div className="hd-legend">
-          {shownMarks.some((m) => m.type === "buy") && (
-            <span>
-              <i className="hd-lg-buy" />
-              Buy
-            </span>
-          )}
-          {shownMarks.some((m) => m.type === "sell") && (
-            <span>
-              <i className="hd-lg-sell" />
-              Sell
-            </span>
-          )}
-          {ref && (
-            <span>
-              <i className="hd-lg-ref" />
-              {ref.label}
-            </span>
-          )}
-        </div>
-      )}
-
-      <div className="hd-daystats">
-        <div>
-          <div className="k">Open</div>
-          <div className="v num">{fmtCcy(quote.open, ccy)}</div>
-        </div>
-        <div>
-          <div className="k">High</div>
-          <div className="v num">{fmtCcy(quote.dayHigh, ccy)}</div>
-        </div>
-        <div>
-          <div className="k">Low</div>
-          <div className="v num">{fmtCcy(quote.dayLow, ccy)}</div>
-        </div>
-        <div>
-          <div className="k">Volume</div>
-          <div className="v num">{compact(quote.volume)}</div>
-        </div>
-      </div>
-    </section>
+    </>
   );
 }

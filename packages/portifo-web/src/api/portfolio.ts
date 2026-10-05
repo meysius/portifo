@@ -195,12 +195,19 @@ export interface PortfolioHistoryDto {
   // the server now carries into the replay as an opening balance instead of
   // drawing a curve permanently below the hero.
   reconciledCash: { currency: string; amount: number }[];
+  // Deposits less withdrawals after the first point, in `currency`.
+  netDeposits: number;
 }
 
-export async function getPortfolioHistory(range: HistoryRange, currency: string): Promise<PortfolioHistoryDto> {
-  const res = await apiFetch(
-    `/portfolio/history?range=${encodeURIComponent(range)}&currency=${encodeURIComponent(currency)}`,
-  );
+// `accountId` scopes the series to one account; omitted, it is the portfolio.
+export async function getPortfolioHistory(
+  range: HistoryRange,
+  currency: string,
+  accountId?: string,
+): Promise<PortfolioHistoryDto> {
+  const query = new URLSearchParams({ range, currency });
+  if (accountId) query.set("account", accountId);
+  const res = await apiFetch(`/portfolio/history?${query}`);
   if (!res.ok) throw new Error("Failed to fetch portfolio history");
   return res.json();
 }

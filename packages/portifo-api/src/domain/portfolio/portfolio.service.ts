@@ -24,6 +24,10 @@ export type PortfolioValueHistory = {
   // silently: a non-empty list means the ledger and the balances disagree, and
   // that is worth knowing even though the chart now survives it.
   reconciledCash: { currency: string; amount: number }[];
+  // Money added (deposits) less money taken out (withdrawals) after the first
+  // point, in the display currency at each transfer's own rate. What separates
+  // the change in value over the range from the investment gain inside it.
+  netDeposits: number;
 };
 
 export class PortfolioService {
@@ -166,18 +170,24 @@ export class PortfolioService {
   // now estimates and reports rather than silently omitting — see
   // PortfolioValueHistory. The remaining honest gap is that the last point is
   // the last CLOSE while the hero is the live quote.
+  //
+  // `accountId` narrows the whole reconstruction — ledger, balances and the
+  // opening-balance reconciliation — to one account of the portfolio.
   async getPortfolioValueHistory(
     portfolioId: string,
     range: HistoryRange,
     displayCurrency: string,
+    accountId?: string,
   ): Promise<PortfolioValueHistory> {
-    const accounts = await this.portfolioRepo.listAccountsByPortfolio(portfolioId);
+    const accounts = (await this.portfolioRepo.listAccountsByPortfolio(portfolioId)).filter(
+      (account) => !accountId || account.id === accountId,
+    );
     const transactionsByAccount = await Promise.all(
       accounts.map((account) => this.portfolioRepo.listTransactionsByAccount(account.id)),
     );
     const transactions = transactionsByAccount.flat().sort((a, b) => a.date.localeCompare(b.date));
     if (transactions.length === 0) {
-      return { points: [], estimatedTickers: [], estimatedCurrencies: [], reconciledCash: [] };
+      return { points: [], estimatedTickers: [], estimatedCurrencies: [], reconciledCash: [], netDeposits: 0 };
     }
 
     // THE OPENING BALANCE. The hero on the Portfolio screen totals the stored
@@ -240,7 +250,11 @@ export class PortfolioService {
     // holding onto a synthetic grid. A cash-only portfolio has no series at
     // all, and falls back to a synthetic daily one.
     const gridSource = tickers.map((t) => priceHistoryByTicker.get(t) ?? []).find((series) => series.length > 0) ?? [];
-    const grid = gridSource.length > 0 ? gridSource.map((p) => p.date) : this.syntheticDateGrid(range, transactions[0].date);
+    // Nothing is held before the first transaction, so the series starts there:
+    // a price series reaching further back would draw years of zero.
+    const grid = (
+      gridSource.length > 0 ? gridSource.map((p) => p.date) : this.syntheticDateGrid(range, transactions[0].date)
+    ).filter((timestamp) => timestamp.slice(0, 10) >= transactions[0].date);
 
     const quotes = await this.marketService.getQuotes(tickers).catch(() => []);
     const nativeCurrencyByTicker = new Map(quotes.map((q) => [q.symbol, q.currency]));
@@ -341,6 +355,11 @@ export class PortfolioService {
     // data provider does not recognise.
     const ledgerPriceByTicker = new Map<string, number>();
 
+    // Transfers applied before the first point are part of the starting value;
+    // only the ones after it are flows within the range.
+    let netDeposits = 0;
+    const isTransfer = (t: (typeof transactions)[number]) => t.type === "deposit" || t.type === "withdraw";
+
     const points: HistoryPoint[] = [];
     for (const timestamp of grid) {
       // Ledger dates carry no time-of-day, so a transaction is considered
@@ -359,6 +378,7 @@ export class PortfolioService {
         // for ticker rows would leave a buy's deposit sitting in cash while
         // the shares it bought are also valued, double-counting it.
         cashByCurrency.set(t.currency, (cashByCurrency.get(t.currency) ?? 0) + this.computeCashDelta(t));
+        if (points.length > 0 && isTransfer(t)) netDeposits += this.computeCashDelta(t) * fxRateAt(t.currency, timestamp);
         txIndex++;
       }
 
@@ -381,11 +401,20 @@ export class PortfolioService {
       points.push({ date: timestamp, close: value });
     }
 
+    // Dated after the last point (a deposit today, before today's first bar):
+    // not in the series, but already in the balances the current value is
+    // built from, so still a flow.
+    const lastTimestamp = grid[grid.length - 1];
+    for (const t of transactions.slice(txIndex)) {
+      if (isTransfer(t) && lastTimestamp) netDeposits += this.computeCashDelta(t) * fxRateAt(t.currency, lastTimestamp);
+    }
+
     return {
       points,
       estimatedTickers: [...estimatedTickers],
       estimatedCurrencies: [...estimatedCurrencies],
       reconciledCash: [...openingCash].map(([currency, amount]) => ({ currency, amount })),
+      netDeposits,
     };
   }
 

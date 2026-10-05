@@ -1,0 +1,84 @@
+/*
+ * The second Portifo design system — the one the design-poc/*.html studies
+ * share (holding-detail, portfolio-overview, accounts, transactions). Flat
+ * surfaces, cobalt actions, and the same three faces as the first system:
+ *   Inter          — page and section titles, the collapsed nav title
+ *   Public Sans    — everything else, including labels and buttons
+ *   JetBrains Mono — every money figure, share count and percentage
+ *
+ * Prefixed --ds-* so it can live beside theme/variables.css while screens move
+ * over one at a time. A screen opts in by using these tokens; nothing here
+ * restyles anything on its own.
+ *
+ * Type is specified at 100% and rendered at --ds-font-scale. The studies
+ * expose that as a slider; the app pins it at 120%. Only text scales — gutters,
+ * radii, control heights and chart geometry stay at their specified px.
+ */
+
+:root {
+  --ds-bg: #ffffff;
+  --ds-subtle: #f8f9fc;
+  --ds-text: #162239;
+  --ds-secondary: #657084;
+  --ds-muted: #929baa;
+  --ds-line: #e9edf3;
+  --ds-accent: #245ce8;
+  --ds-accent-tint: #edf2ff;
+  --ds-positive: #16734b;
+  --ds-negative: #b44145;
+  --ds-positive-bg: #edf8f2;
+  --ds-negative-bg: #fff1f1;
+  /* The filled button. Not --ds-accent: dark mode lightens the accent for
+     text on the dark ground, but the filled button stays a saturated cobalt
+     under white ink. */
+  --ds-action: #245ce8;
+  --ds-action-ink: #ffffff;
+  --ds-focus: #7597ff;
+  /* Cash's share of the portfolio, beside the accent's stocks. */
+  --ds-cash: #a4c8b9;
+  /* Stock breakdown: one hue per holding, assigned by rank of value. The
+     studies use the same five in both themes. */
+  --ds-hold-1: #426be3;
+  --ds-hold-2: #9968cf;
+  --ds-hold-3: #da9b3d;
+  --ds-hold-4: #379b9c;
+  --ds-hold-5: #df7d69;
+
+  --ds-gutter: 23px;
+
+  --ds-font-scale: 1.2;
+  --ds-fs-8: calc(8px * var(--ds-font-scale));
+  --ds-fs-9: calc(9px * var(--ds-font-scale));
+  --ds-fs-10: calc(10px * var(--ds-font-scale));
+  --ds-fs-11: calc(11px * var(--ds-font-scale));
+  --ds-fs-12: calc(12px * var(--ds-font-scale));
+  --ds-fs-13: calc(13px * var(--ds-font-scale));
+  --ds-fs-14: calc(14px * var(--ds-font-scale));
+  --ds-fs-15: calc(15px * var(--ds-font-scale));
+  --ds-fs-16: calc(16px * var(--ds-font-scale));
+  --ds-fs-21: calc(21px * var(--ds-font-scale));
+  --ds-fs-22: calc(22px * var(--ds-font-scale));
+  --ds-fs-23: calc(23px * var(--ds-font-scale));
+  --ds-fs-27: calc(27px * var(--ds-font-scale));
+  --ds-fs-31: calc(31px * var(--ds-font-scale));
+  --ds-fs-34: calc(34px * var(--ds-font-scale));
+  --ds-fs-37: calc(37px * var(--ds-font-scale));
+}
+
+/* Dark follows the app's class-based theme (src/lib/theme.ts). */
+:root.ion-palette-dark {
+  --ds-bg: #121820;
+  --ds-subtle: #19212c;
+  --ds-text: #eef2f8;
+  --ds-secondary: #9aa8ba;
+  --ds-muted: #708094;
+  --ds-line: #27313f;
+  --ds-accent: #81a5ff;
+  --ds-accent-tint: #202f4d;
+  --ds-positive: #72d3a6;
+  --ds-negative: #fb9297;
+  --ds-positive-bg: #1c302a;
+  --ds-negative-bg: #352429;
+  --ds-action: #426fea;
+  --ds-cash: #77ae99;
+}

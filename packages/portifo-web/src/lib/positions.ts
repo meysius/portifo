@@ -93,7 +93,9 @@ export type TickerAgg = {
 // every lot removes exactly that fraction of total basis. `pricePerShare` is
 // the original purchase price and never moves; only `shares` shrinks.
 // `origShares` is what the purchase bought, so a shrunk lot can say so.
+// `txId` is the buy that opened it, so a lot row can open that transaction.
 export type Lot = {
+  txId: string;
   date: string;
   shares: number;
   origShares: number;
@@ -145,7 +147,7 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
     // Open purchases, oldest first. Carried alongside the aggregate figures
     // rather than replacing them: the aggregates stay the single source of
     // truth and the lots are a pro-rata decomposition of them.
-    lots: { date: string; shares: number; origShares: number; pricePerShare: number }[];
+    lots: { txId: string; date: string; shares: number; origShares: number; pricePerShare: number }[];
   };
   const ledgers = new Map<string, Ledger>();
 
@@ -162,7 +164,7 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
       ledger.costBasis += shares * price;
       ledger.dateBasis += shares * day;
       ledger.shares += shares;
-      ledger.lots.push({ date: tx.date, shares, origShares: shares, pricePerShare: price });
+      ledger.lots.push({ txId: tx.id, date: tx.date, shares, origShares: shares, pricePerShare: price });
     } else {
       const avgCost = ledger.shares > 0 ? ledger.costBasis / ledger.shares : 0;
       const avgDay = ledger.shares > 0 ? ledger.dateBasis / ledger.shares : day;
@@ -255,6 +257,7 @@ export function aggregateTickers(transactions: Transaction[]): TickerAgg[] {
             lots: pa.lots
               .filter((l) => l.shares > 1e-9)
               .map((l) => ({
+                txId: l.txId,
                 date: l.date,
                 shares: l.shares,
                 origShares: l.origShares,

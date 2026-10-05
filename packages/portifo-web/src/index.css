@@ -778,109 +778,6 @@ ion-tab-button svg {
   background: var(--signal);
 }
 
-/* ---------- fx note ---------- */
-
-.fx-note {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin: 8px var(--gutter) 0;
-  color: var(--fg-3);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-.fx-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--signal);
-  flex-shrink: 0;
-}
-
-.fx-note--fallback .fx-dot {
-  background: var(--fg-3);
-}
-
-.fx-refresh {
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  display: grid;
-  place-items: center;
-  background: none;
-  border: none;
-  color: var(--fg-3);
-  padding: 0;
-  margin: 0;
-  cursor: pointer;
-}
-
-/* ---------- allocation (DS .alloc-bar / .alloc-legend) ----------
- * One component, two parts, never shipped apart. The bar answers what a sorted
- * column of figures does not — whether the portfolio is a single position
- * wearing a disguise — and the legend under it is where the share is actually
- * read. THE LEGEND IS WHAT MAKES --cat-* LEGAL (guidelines § Weight is coloured
- * in exactly one place): the palette is keyed by rank and recycles at the fifth
- * slice, so hue is a pointer between two adjacent marks, never the encoding.
- * Do not draw the bar without it, and do not spend --cat-* anywhere else.
- *
- * 2px gaps rather than hairline borders between slices: a 1% slice is 3.5px
- * wide at 393pt and a border would eat most of it, so slices are separated by
- * ground. min-width for the same reason — a real position never renders as
- * nothing.
- */
-
-.alloc-bar {
-  display: flex;
-  gap: 2px;
-  height: 10px;
-  border-radius: 6px;
-  overflow: hidden;
-  margin: 9px var(--gutter) 0;
-}
-
-.alloc-bar span {
-  display: block;
-  min-width: 2px;
-}
-
-.alloc-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin: 6px var(--gutter) 0;
-}
-
-.alloc-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.alloc-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.alloc-lbl {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--fg-1);
-}
-
-.alloc-pct {
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 400;
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-}
-
 /* ---------- section head ----------
  * ONE style, everywhere (guidelines § Components): mono uppercase label, a
  * hairline filling the remainder, optional right-aligned meta. --sec-gap above
@@ -917,128 +814,6 @@ ion-tab-button svg {
   color: var(--fg-3);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-}
-
-/* ---------- today's movers (DS .mv) ----------
-   Stands where the portfolio value chart used to. Diverging off one neutral
-   baseline: gains right, losses left, sorted by size of contribution and
-   scaled to the largest. SIGN IS THE SIDE OF THE BASELINE, never the colour —
-   --gain against --loss separates at only ΔE 6.5 (light) / 4.7 (dark) under
-   simulated deuteranopia, so a red-green reader takes sign from position and
-   from the signed figure. */
-
-.movers {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  margin: 0 var(--gutter);
-}
-
-.mv-row {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.mv-t {
-  flex: 0 0 40px;
-  /* same reason: an unusually long ticker must not shift the baseline */
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--fg-1);
-}
-
-.mv-plot {
-  position: relative;
-  /* A FIXED share of the row, never `flex: 1`. The baseline is the chart's
-     zero, so it has to fall on the same x on every row — and each bar's width
-     is a percentage of this box, so the box is also the shared scale. With
-     `flex: 1` the plot inherited whatever the value column left over, and a
-     flex item's automatic minimum size lets `flex: 0 0 116px` grow past its
-     basis: the rows reading "−$4,004.00 · −3.55%" took 129.5px and the rest
-     116px, which put the zero line at 151.8px on two rows and 158.4px on the
-     other four, and made a 50% bar mean 82.8px on one row and 89.4px on
-     another. A percentage basis is identical on every row and scales with the
-     screen. */
-  flex: 0 0 42%;
-  height: 10px;
-}
-
-.mv-plot::before {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: -2px;
-  bottom: -2px;
-  width: 1px;
-  background: var(--border);
-}
-
-/* a real move never renders as nothing: a −$28 day on a small position is
-   0.35% of the arm, so bars floor at 2px and only a true zero gets the tick */
-.mv-plot i {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  display: block;
-  min-width: 2px;
-}
-
-.mv-plot i.neg {
-  right: 50%;
-  margin-right: 1px;
-  border-radius: 3px 0 0 3px;
-  background: var(--loss);
-}
-
-.mv-plot i.pos {
-  left: 50%;
-  margin-left: 1px;
-  border-radius: 0 3px 3px 0;
-  background: var(--gain);
-}
-
-.mv-plot i.flat {
-  left: calc(50% - 1px);
-  width: 2px;
-  border-radius: 1px;
-  background: var(--fg-3);
-}
-
-.mv-v {
-  /* absorbs the width the plot does not take; min-width:0 keeps a long figure
-     from stealing back from the plot */
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: right;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-  color: var(--fg-2);
-  white-space: nowrap;
-}
-
-.mv-v .pc {
-  margin-left: 4px;
-}
-
-.mv-v.gain .pc {
-  color: var(--gain);
-}
-
-.mv-v.loss .pc {
-  color: var(--loss);
-}
-
-/* past six movers the block truncates rather than scrolls, so the section has
-   a fixed ceiling of about 130pt */
-.mv-tail {
-  margin: 2px var(--gutter) 0;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--fg-3);
 }
 
 /* the day's total rides on the Today divider's meta — the one place a
@@ -2640,20 +2415,119 @@ ion-toast {
 }
 
 /* ---------- Holding detail ----------
-   One screen, read as three layers: the hero (worth, and am I up), the price
-   chart (where is it, where did I buy), then the position, where it is held,
-   and what was realized — each further back in time. Everything is scoped to
-   .hd-page; plain divs, so no ion-item specificity applies. */
+   design-poc/holding-detail.html, in the second design system (theme/ds.css):
+   flat surfaces, cobalt actions, one --ds-line hairline per edge, and type at
+   --ds-font-scale. Every rule is scoped to .hd-page and reads only --ds-*
+   tokens, so the rest of the app's palette never leaks in. Plain elements, so
+   no ion-item specificity applies. */
 
-/* The POC's phone body: every block inherits 15px/1.35 in the body face. */
 .hd-page {
-  font-size: 15px;
-  line-height: 1.35;
-  color: var(--fg-1);
+  font-family: var(--font-body);
+  font-size: var(--ds-fs-16);
+  line-height: normal;
+  color: var(--ds-text);
 }
 
-/* The POC's large title: 34px/41px, on the gutter, directly above the
-   subtitle. Deliberately larger than the app-wide 24px .ph-large. */
+.hd-page ion-content {
+  --background: var(--ds-bg);
+  --color: var(--ds-text);
+}
+
+/* :where() keeps the reset at element weight, so any one-class rule below
+   still wins over it. */
+:where(.hd-page) button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(.hd-page) a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:where(.hd-page) :is(button, a):focus-visible {
+  outline: 3px solid var(--ds-focus);
+  outline-offset: 3px;
+}
+
+.hd-page .money {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
+}
+
+.hd-page .positive {
+  color: var(--ds-positive);
+}
+
+.hd-page .negative {
+  color: var(--ds-negative);
+}
+
+/* ── navigation ──────────────────────────────────────────────────────────────
+   An opaque bar on the page ground — no blur material — closed by one hairline
+   once the large title has scrolled under it. Back is the parent tab's name in
+   accent ink; the centred title fades in on collapse; the currency rides the
+   trailing edge. */
+.hd-page ion-header:not(.header-collapse-condense)::before,
+.hd-page ion-header.header-translucent-ios:not(.header-collapse-condense)::before {
+  background: var(--ds-bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.hd-page ion-header:not(.header-collapse-condense)::after {
+  background: var(--ds-line);
+}
+
+.hd-page ion-header:not(.header-collapse-condense) ion-toolbar {
+  --min-height: 50px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 13px;
+  --padding-end: 19px;
+}
+
+.hd-page ion-toolbar ion-back-button {
+  --color: var(--ds-accent);
+  --icon-font-size: 22px;
+  --icon-margin-start: 0;
+  --icon-margin-end: 2px;
+  --padding-start: 0;
+  --padding-end: 0;
+  font-family: var(--font-body);
+  font-size: var(--ds-fs-15);
+  font-weight: 400;
+  letter-spacing: 0;
+  max-width: 140px;
+}
+
+.hd-page ion-header:not(.header-collapse-condense) ion-title {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-16);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ds-text);
+}
+
+.hd-ccy {
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-10);
+  line-height: normal;
+  letter-spacing: 0.4px;
+  color: var(--ds-secondary);
+  padding: 4px 7px;
+  border: 1px solid var(--ds-line);
+  border-radius: 5px;
+}
+
+/* ── page heading: the large title, then the company line ────────────────── */
 .hd-page ion-header.header-collapse-condense ion-toolbar {
   --padding-start: 0;
   --padding-end: 0;
@@ -2663,211 +2537,165 @@ ion-toast {
 }
 
 .ios .hd-page ion-title.title-large {
-  font-size: 34px;
-  line-height: 41px;
-  letter-spacing: -0.02em;
-  padding-top: 2px;
-  padding-bottom: 0;
-}
-
-/* Clears the action bar by the POC's 25px. */
-.hd-end {
-  height: 25px;
-}
-
-.hd-page .num {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  letter-spacing: -0.02em;
-}
-
-.hd-page .gain {
-  color: var(--gain);
-}
-
-.hd-page .loss {
-  color: var(--loss);
-}
-
-.hd-subtitle {
-  margin: 0 var(--gutter);
-  color: var(--fg-2);
-  font-size: 15px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* hero */
-.hd-hero {
-  margin: 18px var(--gutter) 0;
-}
-
-.hd-lbl {
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-34);
+  font-weight: 650;
+  letter-spacing: -1.5px;
   line-height: 1.2;
-  color: var(--fg-2);
+  color: var(--ds-text);
+  padding: 12px var(--ds-gutter) 0;
 }
 
-.hd-page .hd-big {
-  font-family: var(--font-mono);
-  font-size: 38px;
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.04em;
+.hd-company {
   margin-top: 4px;
-  overflow: hidden;
+  padding: 0 var(--ds-gutter);
+  font-size: var(--ds-fs-12);
+  line-height: 1.6;
+  color: var(--ds-secondary);
 }
 
-.hd-fx {
-  color: var(--fg-2);
-  font-size: 14px;
-  margin-top: 2px;
+.hd-company .dot {
+  padding: 0 5px;
+  color: var(--ds-muted);
 }
 
-/* Amount | percent | what it is — two rows sharing columns, so all-time and
-   today line up figure for figure. */
-.hd-deltas {
-  display: grid;
-  grid-template-columns: auto auto 1fr;
-  column-gap: 12px;
-  row-gap: 3px;
+/* ── hero: your money ────────────────────────────────────────────────────── */
+.hd-hero {
+  padding: 27px var(--ds-gutter) 21px;
+}
+
+.hd-hero-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 9px;
+  font-size: var(--ds-fs-12);
+  color: var(--ds-secondary);
+}
+
+.hd-badge {
+  display: inline-block;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: var(--ds-fs-10);
+  line-height: 1;
+  color: var(--ds-secondary);
+  background: var(--ds-subtle);
+}
+
+/* After .money, which it refines. */
+.hd-page .hd-hero-value {
+  font-size: var(--ds-fs-37);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -1.9px;
+}
+
+.hd-page .hd-hero-value.compact {
+  font-size: var(--ds-fs-31);
+}
+
+.hd-hero-return {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin-top: 10px;
-  font-size: 15px;
-  align-items: baseline;
+  font-size: var(--ds-fs-12);
 }
 
-.hd-deltas.two {
-  grid-template-columns: auto 1fr;
+.hd-return-label {
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
 }
 
-.hd-deltas .dl {
-  color: var(--fg-3);
-  font-size: 14px;
+/* A return's percentage, on its own tint. */
+.hd-page .hd-pill {
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: var(--ds-fs-10);
+  letter-spacing: -0.2px;
+  background: var(--ds-subtle);
 }
 
-.hd-pill {
-  line-height: normal;
-  display: inline-flex;
-  align-items: center;
-  margin-top: 12px;
+.hd-page .hd-pill.positive {
+  background: var(--ds-positive-bg);
+}
+
+.hd-page .hd-pill.negative {
+  background: var(--ds-negative-bg);
+}
+
+.hd-hero-unavailable {
+  margin-bottom: 9px;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: var(--ds-fs-27);
+  font-weight: 550;
+  letter-spacing: -1px;
+}
+
+.hd-hero-subtext {
+  margin: 0;
+  font-size: var(--ds-fs-11);
+  line-height: 1.6;
+  color: var(--ds-secondary);
+}
+
+/* ── market: today, the share price, the chart ───────────────────────────── */
+.hd-market {
+  margin: 0 var(--ds-gutter);
+  padding-top: 17px;
+  border-top: 1px solid var(--ds-line);
+}
+
+.hd-market-numbers {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: 16px;
+}
+
+.hd-metric-label {
+  margin-bottom: 6px;
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
+}
+
+.hd-page .hd-metric-main {
+  font-size: var(--ds-fs-16);
   font-weight: 500;
-  color: var(--fg-2);
-  background: var(--surface-2);
-  padding: 4px 9px;
-  border-radius: 999px;
+  letter-spacing: -0.6px;
 }
 
-.hd-unavail {
-  margin-top: 8px;
-  padding: 12px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  font-size: 14px;
-  color: var(--fg-2);
+.hd-metric-foot {
   display: flex;
-  gap: 12px;
   align-items: center;
-  justify-content: space-between;
+  gap: 5px;
+  margin-top: 4px;
+  font-size: var(--ds-fs-10);
 }
 
-.hd-unavail b {
-  display: block;
-  color: var(--fg-1);
-  font-weight: 600;
+.hd-metric-foot.secondary {
+  color: var(--ds-secondary);
 }
 
-.hd-retry {
+.hd-live-dot {
   flex: none;
-  background: none;
-  border: 0;
-  padding: 0;
-  color: var(--signal);
-  font-weight: 600;
-  font-size: 15px;
-  cursor: pointer;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--ds-positive);
 }
 
-/* sections */
-.hd-sec {
-  margin: var(--sec-gap) var(--gutter) 0;
+.hd-live-dot.closed {
+  background: var(--ds-muted);
 }
 
-.hd-sec-h {
-  line-height: normal;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin: 0 2px 8px;
-  font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--fg-2);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.hd-sec-h .aside {
-  text-transform: none;
-  letter-spacing: 0;
-  font-weight: 500;
-  color: var(--fg-3);
-}
-
-.hd-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-}
-
-.hd-foot {
-  margin: 8px 2px 0;
-  font-size: 12.5px;
-  line-height: 1.4;
-  color: var(--fg-3);
-}
-
-/* chart */
-.hd-pricehead {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 12px;
-}
-
-.hd-page .hd-price {
-  font-size: 22px;
-  font-weight: 500;
-  line-height: 1.2;
-  letter-spacing: -0.03em;
-}
-
-.hd-pricechg {
-  font-size: 13.5px;
-  margin-top: 2px;
-}
-
-.hd-dim {
-  color: var(--fg-3);
-}
-
-.hd-asof {
-  font-size: 12.5px;
-  color: var(--fg-3);
-  text-align: right;
-}
-
-/* Scrubbing owns the gesture inside the plot, as in Stocks. */
+/* The plot lets a vertical swipe scroll the page; a horizontal one scrubs. */
 .hd-chart {
   position: relative;
-  height: 170px;
-  margin-top: 10px;
-  touch-action: none;
+  height: 94px;
+  margin-top: 16px;
+  touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -2875,422 +2703,1383 @@ ion-toast {
 .hd-chart svg {
   display: block;
   overflow: visible;
+  touch-action: pan-y;
+  cursor: crosshair;
+}
+
+.hd-chart-tip {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  padding: 4px 7px;
+  border: 1px solid var(--ds-line);
+  border-radius: 5px;
+  font-size: var(--ds-fs-9);
+  white-space: nowrap;
+  color: var(--ds-text);
+  background: var(--ds-bg);
+  pointer-events: none;
 }
 
 .hd-chart-empty {
-  height: 100%;
+  position: absolute;
+  inset: 0;
   display: grid;
   place-items: center;
-  font-size: 13px;
-  color: var(--fg-3);
-  border: 1px dashed var(--border);
-  border-radius: 10px;
+  font-size: var(--ds-fs-10);
+  color: var(--ds-muted);
 }
 
-.hd-reftext {
-  font-family: var(--font-body);
-  font-size: 10.5px;
-  fill: var(--fg-2);
-}
-
-.hd-xlab {
+.hd-chart-axis {
   display: flex;
   justify-content: space-between;
-  margin-top: 4px;
-  font-size: 11px;
-  color: var(--fg-3);
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-8);
+  color: var(--ds-muted);
 }
 
-.hd-ranges {
+.hd-chart-controls {
   display: flex;
-  margin-top: 10px;
-  padding: 2px;
-  border-radius: 9px;
-  background: var(--surface-2);
-}
-
-.hd-ranges button {
-  line-height: normal;
-  flex: 1;
-  height: 28px;
-  border: 0;
-  border-radius: 7px;
-  background: none;
-  font-family: var(--font-display);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--fg-2);
-  cursor: pointer;
-}
-
-.hd-ranges button[aria-pressed="true"] {
-  background: var(--surface);
-  color: var(--fg-1);
-  box-shadow: 0 0 0 1px var(--border);
-}
-
-.hd-legend {
-  display: flex;
-  gap: 14px;
   align-items: center;
-  margin-top: 8px;
-  font-size: 11.5px;
-  color: var(--fg-3);
+  gap: 4px;
+  padding: 12px 0 14px;
 }
 
-.hd-legend i {
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 5px;
+.hd-range {
+  min-width: 35px;
+  min-height: 30px;
+  border-radius: 6px;
+  font-size: var(--ds-fs-10);
+  font-weight: 600;
+  color: var(--ds-secondary);
 }
 
-.hd-lg-buy {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--signal);
+.hd-range[aria-pressed="true"] {
+  background: var(--ds-accent-tint);
+  color: var(--ds-accent);
 }
 
-.hd-lg-sell {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  border: 1.6px solid var(--fg-1);
+.hd-chart-ext {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 7px;
+  border-radius: 5px;
+  color: var(--ds-secondary);
 }
 
-.hd-lg-ref {
-  width: 14px;
-  border-top: 1px dashed var(--fg-3);
+/* ── sections ────────────────────────────────────────────────────────────── */
+.hd-section {
+  padding: 21px var(--ds-gutter);
+  border-top: 6px solid var(--ds-subtle);
 }
 
-.hd-daystats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-top: 14px;
+.hd-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 17px;
 }
 
-.hd-daystats .k {
-  font-size: 12px;
-  color: var(--fg-3);
+.hd-section-heading h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-16);
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: -0.4px;
+  color: var(--ds-text);
 }
 
-.hd-daystats .v {
-  font-size: 13.5px;
-  margin-top: 1px;
-  color: var(--fg-1);
+.hd-section-heading .meta {
+  font-size: var(--ds-fs-10);
+  color: var(--ds-muted);
 }
 
-/* position grid */
-.hd-grid {
+.hd-position-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 18px 15px;
 }
 
-.hd-cell {
+.hd-position-grid .hd-metric-label {
+  margin-bottom: 5px;
+  font-size: var(--ds-fs-10);
+}
+
+.hd-position-grid .money {
+  font-size: var(--ds-fs-13);
+}
+
+/* ── accounts ────────────────────────────────────────────────────────────── */
+.hd-account {
+  border: 1px solid var(--ds-line);
+  border-radius: 12px;
+  background: var(--ds-bg);
+}
+
+.hd-account + .hd-account {
+  margin-top: 12px;
+}
+
+.hd-account-toggle,
+.hd-account-head {
+  display: block;
+  width: 100%;
+  padding: 13px 14px;
+  text-align: left;
+  color: var(--ds-text);
+  background: var(--ds-subtle);
+  border-radius: 11px;
+}
+
+.hd-account-toggle[aria-expanded="true"],
+.hd-account-head {
+  border-radius: 11px 11px 0 0;
+}
+
+:where(.hd-page) .hd-account-toggle:focus-visible {
+  outline-offset: -3px;
+}
+
+.hd-account-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hd-account-identity {
+  flex: 1;
   min-width: 0;
-  padding: 12px 14px;
-  border-top: 1px solid var(--border);
 }
 
-.hd-cell:nth-child(-n + 2) {
-  border-top: 0;
+.hd-account-name,
+.hd-account-meta {
+  display: block;
 }
 
-.hd-cell:nth-child(odd) {
-  border-right: 1px solid var(--border);
-}
-
-.hd-cell.wide {
-  grid-column: 1 / -1;
-  border-right: 0;
-}
-
-.hd-cell .k {
-  font-size: 12.5px;
-  color: var(--fg-2);
-}
-
-.hd-cell .v {
-  font-size: 16px;
-  margin-top: 3px;
-  color: var(--fg-1);
-}
-
-.hd-cell .t {
-  font-size: 15px;
-  font-weight: 500;
-  margin-top: 3px;
-  color: var(--fg-1);
+.hd-account-name {
+  font-size: var(--ds-fs-13);
+  font-weight: 600;
+  line-height: 1.45;
   overflow-wrap: anywhere;
 }
 
-/* rows: accounts, lots, realized-by-account */
-.hd-row {
+.hd-account-meta {
+  margin-top: 3px;
+  font-size: var(--ds-fs-10);
+  line-height: 1.7;
+  color: var(--ds-secondary);
+}
+
+.hd-account-value {
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  padding: 12px 14px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin-top: 12px;
 }
 
-.hd-row + .hd-row,
-.hd-row + .hd-lots,
-.hd-lots .hd-row {
-  border-top: 1px solid var(--border);
+.hd-account-value .money {
+  display: block;
+  font-size: var(--ds-fs-13);
+  font-weight: 500;
 }
 
-.hd-row .l {
-  flex: 1;
-  min-width: 0;
-}
-
-.hd-row .r {
-  flex: none;
+.hd-page .hd-account-value .hd-account-gain {
+  margin-left: auto;
+  font-size: var(--ds-fs-9);
+  font-weight: 400;
   text-align: right;
 }
 
-.hd-name {
-  font-weight: 600;
-  font-size: 15.5px;
-  color: var(--fg-1);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  overflow-wrap: anywhere;
+.hd-disclosure {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: var(--ds-secondary);
 }
 
-.hd-meta {
-  margin-top: 2px;
-  font-size: 13px;
-  color: var(--fg-2);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.hd-disclosure svg {
+  transition: transform 0.18s ease;
 }
 
-.hd-row .r .v {
-  font-size: 15.5px;
-  color: var(--fg-1);
+.hd-account-toggle[aria-expanded="true"] .hd-disclosure svg {
+  transform: rotate(180deg);
 }
 
-.hd-row .r .g {
-  margin-top: 3px;
-  font-size: 13px;
-  color: var(--fg-2);
+.hd-account-detail {
+  padding: 12px 14px 4px;
+  border-top: 1px solid var(--ds-line);
 }
 
-.hd-row .r .g .num + .num {
-  margin-left: 6px;
+.hd-account-detail[hidden] {
+  display: none;
 }
 
-.hd-tag {
-  line-height: normal;
-  display: inline-block;
-  margin-left: 6px;
-  padding: 2px 6px;
-  border-radius: 5px;
-  vertical-align: 2px;
-  font-family: var(--font-display);
-  font-size: 10.5px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--fg-2);
-  background: var(--surface-2);
+.hd-account.single .hd-account-detail {
+  padding-top: 0;
 }
 
-.hd-acct + .hd-acct {
-  margin-top: 10px;
+.hd-account-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+  padding: 0 0 12px;
+  line-height: 1.6;
 }
 
-.hd-acct.closed > .hd-row:first-child {
-  opacity: 0.55;
+.hd-account-stats > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
 }
 
-.hd-lots {
-  background: var(--surface-2);
+.hd-account-stats .hd-metric-label {
+  margin-bottom: 0;
+  font-size: var(--ds-fs-9);
 }
 
-.ion-palette-dark .hd-lots {
-  background: rgba(0, 0, 0, 0.14);
+.hd-account-stats .money {
+  font-size: var(--ds-fs-10);
 }
 
-.hd-lots .hd-row {
-  padding: 10px 14px;
-}
-
-.hd-lotdate {
-  font-size: 14.5px;
-  font-weight: 500;
-  color: var(--fg-1);
-}
-
-/* key/value rows (Realized) */
-.hd-kv {
+.hd-lots-heading {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 12px;
-  padding: 11px 14px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid var(--ds-line);
+  font-size: var(--ds-fs-10);
+  color: var(--ds-secondary);
 }
 
-.hd-kv + .hd-kv {
-  border-top: 1px solid var(--border);
-}
-
-.hd-kv .k {
-  color: var(--fg-2);
-  font-size: 14.5px;
-}
-
-.hd-kv .v {
-  font-size: 15px;
-  color: var(--fg-1);
-}
-
-.hd-kv.total {
-  background: var(--surface-2);
-}
-
-.hd-kv.total .k {
-  color: var(--fg-1);
+.hd-lots-heading span:first-child {
   font-weight: 600;
+  color: var(--ds-text);
 }
 
-/* links */
-.hd-link {
+.hd-lots-heading span:last-child {
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+/* A purchase row's highlight bleeds 10px into the card's padding, so the row's
+   content stays on the card's text edge. */
+.hd-lot {
+  --row-inset: 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 13px 14px;
-  border: 0;
-  background: none;
+  justify-content: space-between;
+  gap: 9px;
+  width: calc(100% + 2 * var(--row-inset));
+  margin-inline: calc(-1 * var(--row-inset));
+  padding: 11px var(--row-inset);
+  border-top: 1px solid var(--ds-line);
   text-align: left;
-  text-decoration: none;
+  color: var(--ds-text);
+}
+
+.hd-lot:active,
+.hd-lot:focus-visible {
+  background: var(--ds-subtle);
+}
+
+.hd-lot-date {
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+}
+
+.hd-lot-meta {
+  margin-top: 5px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.6;
+  color: var(--ds-secondary);
+}
+
+.hd-lot-end {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-shrink: 0;
+}
+
+.hd-lot-end .money {
+  font-size: var(--ds-fs-10);
+  text-align: right;
+}
+
+.hd-lot-end small {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--ds-fs-9);
+  color: var(--ds-secondary);
+}
+
+.hd-lot.compact .hd-lot-date {
+  font-size: var(--ds-fs-12);
+}
+
+.hd-lot.compact .hd-lot-meta {
+  font-size: var(--ds-fs-10);
+}
+
+.hd-lot.compact .hd-lot-end .money {
+  font-size: var(--ds-fs-11);
+}
+
+.hd-lot-details {
+  font-size: var(--ds-fs-11);
+  color: var(--ds-accent);
+}
+
+.hd-accounting-note {
+  padding: 12px 0 10px;
+  border-top: 1px solid var(--ds-line);
+  font-size: var(--ds-fs-10);
+  line-height: 1.65;
+  color: var(--ds-secondary);
+}
+
+.hd-text-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 13px 0 0;
+  border-top: 1px solid var(--ds-line);
+  text-align: left;
+  font-size: var(--ds-fs-12);
+  color: var(--ds-accent);
+}
+
+.hd-account-detail > .hd-text-link {
+  margin-bottom: 10px;
+}
+
+/* ── already realized ────────────────────────────────────────────────────── */
+.hd-realized-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+/* Sets the pill beside it too: figure and percentage at one size. */
+.hd-page .hd-realized-summary .money {
+  font-size: var(--ds-fs-22);
+  font-weight: 500;
+}
+
+.hd-realized-note {
+  margin: 0 0 18px;
+  font-size: var(--ds-fs-11);
+  line-height: 1.65;
+  color: var(--ds-secondary);
+}
+
+/* ── no quote ────────────────────────────────────────────────────────────── */
+.hd-quote-note {
+  margin: 0 var(--ds-gutter) 23px;
+  padding: 14px;
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  font-size: var(--ds-fs-11);
+  line-height: 1.7;
+  color: var(--ds-secondary);
+}
+
+.hd-quote-note strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: var(--ds-fs-12);
+  font-weight: 550;
+  color: var(--ds-text);
+}
+
+.hd-quote-note.loading {
+  display: flex;
+  gap: 10px;
+}
+
+.hd-spinner {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  border: 1.5px solid var(--ds-line);
+  border-top-color: var(--ds-accent);
+  border-radius: 50%;
+  animation: hd-spin 1.1s linear infinite;
+}
+
+@keyframes hd-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hd-footer-note {
+  padding: 17px var(--ds-gutter) 25px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.7;
+  text-align: center;
+  color: var(--ds-muted);
+}
+
+/* ── actions: Buy / Sell in thumb reach, where the hidden tab bar was ─────── */
+.hd-actions {
+  display: flex;
+  gap: 10px;
+  padding: 12px var(--ds-gutter) max(25px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--ds-line);
+  background: var(--ds-bg);
+}
+
+.hd-action {
+  flex: 1;
+  height: 45px;
+  border-radius: 10px;
+  font-size: var(--ds-fs-14);
+  font-weight: 600;
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.hd-action.primary {
+  color: var(--ds-action-ink);
+  background: var(--ds-action);
+}
+
+.hd-action:active {
+  opacity: 0.85;
+}
+
+/* ── unknown holding ─────────────────────────────────────────────────────── */
+.hd-empty {
+  padding: 80px var(--ds-gutter) 70px;
+  text-align: center;
+}
+
+.hd-empty-symbol {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 24px;
+  border-radius: 18px;
+  color: var(--ds-muted);
+  background: var(--ds-subtle);
+}
+
+.hd-empty h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-23);
+  font-weight: 550;
+  line-height: normal;
+  letter-spacing: -0.8px;
+  color: var(--ds-text);
+}
+
+.hd-empty p {
+  max-width: 275px;
+  margin: 0 auto 26px;
+  font-size: var(--ds-fs-12);
+  line-height: 1.8;
+  color: var(--ds-secondary);
+}
+
+.hd-empty .hd-action {
+  flex: none;
+  padding: 0 20px;
+}
+
+@media (hover: hover) {
+  .hd-lot:hover,
+  .hd-chart-ext:hover {
+    background: var(--ds-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hd-disclosure svg {
+    transition: none;
+  }
+
+  .hd-spinner {
+    animation: none;
+  }
+}
+
+/* ---------- Portfolio overview ----------
+   design-poc/portfolio-overview.html, in the second design system
+   (theme/ds.css), on the same footing as the holding-detail rules above: every
+   rule is scoped to .po-page (or .po-sheet, which Ionic portals out of the
+   page) and reads only --ds-* tokens. Type is at --ds-font-scale; gutters,
+   radii and the chart and movers geometry stay at their specified px. */
+
+.po-page,
+.po-sheet {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: normal;
+  color: var(--ds-text);
+}
+
+.po-page ion-content {
+  --background: var(--ds-bg);
+  --color: var(--ds-text);
+}
+
+:where(.po-page, .po-sheet) button {
   font: inherit;
-  font-size: 15.5px;
-  color: var(--fg-1);
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 
-.hd-link + .hd-link {
-  border-top: 1px solid var(--border);
+:where(.po-page, .po-sheet) :is(button, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--ds-focus);
+  outline-offset: 3px;
 }
 
-.hd-link .grow {
-  flex: 1;
+:is(.po-page, .po-sheet) .money {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
 }
 
-.hd-link .cnt {
-  color: var(--fg-3);
-  font-size: 14.5px;
+:is(.po-page, .po-sheet) .positive {
+  color: var(--ds-positive);
 }
 
-.hd-link svg {
-  flex: none;
-  color: var(--fg-3);
+:is(.po-page, .po-sheet) .negative {
+  color: var(--ds-negative);
 }
 
-
-/* bottom action bar — the blur material the header uses */
-.hd-footer {
-  background: color-mix(in srgb, var(--bg) 85%, transparent);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  backdrop-filter: saturate(180%) blur(20px);
-  border-top: 1px solid var(--border);
-}
-
-.hd-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  /* 34px is the home indicator's inset on device; never below 10px. */
-  padding: 10px var(--gutter) max(10px, env(safe-area-inset-bottom));
-}
-
-.hd-actions.one {
-  grid-template-columns: 1fr;
-}
-
-.hd-btn {
+:is(.po-page, .po-sheet) :is(h1, h2, h3) {
+  margin: 0;
   line-height: normal;
-  height: 50px;
+}
+
+/* ── navigation: the account picker and the display currency ──────────────
+   A plain opaque bar on the page ground: no material, no hairline, no title.
+   The page heading below scrolls under it. */
+.po-page ion-header.po-header::before {
+  background: var(--ds-bg);
+}
+
+.po-page ion-header.po-header::after {
+  display: none;
+}
+
+.po-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: content-box;
+  height: 44px;
+  padding: var(--ion-safe-area-top, 0) var(--ds-gutter) 0;
+  background: var(--ds-bg);
+}
+
+.po-scope {
+  min-width: 0;
+  max-width: 260px;
+  padding: 8px 16px 8px 0;
   border: 0;
-  border-radius: 14px;
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 600;
+  background: transparent;
+  font: inherit;
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
   cursor: pointer;
-  transition: transform 0.08s ease;
 }
 
-.hd-btn:active {
-  transform: scale(0.98);
+.po-page .po-currency {
+  padding: 4px 7px;
+  border: 1px solid var(--ds-line);
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-10);
+  letter-spacing: 0.4px;
+  color: var(--ds-secondary);
 }
 
-.hd-btn.primary {
-  background: var(--signal);
-  color: var(--signal-ink);
+/* ── heading: the portfolio's name (it switches portfolios) and Add ──────── */
+.po-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px var(--ds-gutter) 0;
 }
 
-/* Tinted, never red: selling is not destructive. */
-.hd-btn.secondary {
-  background: var(--signal-tint);
-  color: var(--signal);
+.po-page .po-heading h1 {
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-34);
+  font-weight: 650;
+  letter-spacing: -1.5px;
+  line-height: 1.2;
 }
 
-/* skeleton */
-.hd-sk {
-  background: var(--surface-2);
+.po-page .po-title {
+  display: inline;
+  text-align: left;
+}
+
+.po-title svg {
+  display: inline-block;
+  margin-left: 6px;
+  vertical-align: 0.05em;
+  color: var(--ds-muted);
+}
+
+.po-page .po-icon-button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+/* ── hero: the whole ─────────────────────────────────────────────────────── */
+.po-hero {
+  padding: 20px var(--ds-gutter) 0;
+}
+
+.po-hero-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+  font-size: var(--ds-fs-12);
+  color: var(--ds-secondary);
+}
+
+.po-page .po-hero-value {
+  font-size: var(--ds-fs-37);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -1.9px;
+}
+
+.po-hero-return {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: var(--ds-fs-12);
+}
+
+.po-return-label {
+  font-size: var(--ds-fs-10);
+  color: var(--ds-secondary);
+}
+
+.po-page .po-return-percent {
+  padding: 3px 5px;
+  border-radius: 4px;
+  font-size: var(--ds-fs-10);
+  letter-spacing: -0.2px;
+  background: var(--ds-subtle);
+}
+
+.po-page .po-return-percent.positive {
+  background: var(--ds-positive-bg);
+}
+
+.po-page .po-return-percent.negative {
+  background: var(--ds-negative-bg);
+}
+
+.po-spinner {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--ds-line);
+  border-top-color: var(--ds-accent);
+  border-radius: 50%;
+  animation: hd-spin 1.1s linear infinite;
+}
+
+/* ── growth: the value over time ─────────────────────────────────────────── */
+.po-growth {
+  padding: 18px var(--ds-gutter) 12px;
+}
+
+.po-growth-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.po-page .po-growth-heading h2 {
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+  color: var(--ds-secondary);
+}
+
+.po-page .po-period-change {
+  font-size: var(--ds-fs-10);
+}
+
+.po-info {
+  color: var(--ds-muted);
+}
+
+.po-chart-wrap {
+  position: relative;
+  height: 100px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* A vertical swipe scrolls the page; a horizontal one inspects. */
+.po-chart-svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+  cursor: crosshair;
+}
+
+.po-chart-tooltip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--ds-line);
   border-radius: 6px;
-  animation: hd-pulse 1.4s ease-in-out infinite;
+  font-size: var(--ds-fs-9);
+  line-height: 1.7;
+  white-space: nowrap;
+  color: var(--ds-text);
+  background: var(--ds-bg);
+  pointer-events: none;
 }
 
-@keyframes hd-pulse {
-  50% {
-    opacity: 0.5;
-  }
+.po-tip-date {
+  color: var(--ds-secondary);
 }
 
-/* unknown symbol */
-.hd-empty {
-  margin: 70px 32px 0;
+.po-chart-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--ds-fs-10);
+  color: var(--ds-muted);
+}
+
+.po-chart-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-8);
+  color: var(--ds-muted);
+}
+
+.po-chart-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding-top: 9px;
+}
+
+.po-page .po-chart-range {
+  flex: 1;
+  min-height: 32px;
+  border-radius: 6px;
+  font-size: var(--ds-fs-10);
+  font-weight: 600;
+  color: var(--ds-secondary);
+}
+
+.po-page .po-chart-range[aria-pressed="true"] {
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+/* ── sections ────────────────────────────────────────────────────────────── */
+.po-section {
+  padding: 17px var(--ds-gutter);
+  border-top: 6px solid var(--ds-subtle);
+}
+
+.po-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 13px;
+}
+
+.po-allocation .po-section-heading,
+.po-movers .po-section-heading {
+  flex-wrap: wrap;
+}
+
+.po-page .po-section-heading h2 {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-16);
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.po-section-heading .meta {
+  font-size: var(--ds-fs-10);
+  color: var(--ds-muted);
+}
+
+.po-section-heading h2 .meta {
+  margin-left: 5px;
+}
+
+/* ── breakdown ───────────────────────────────────────────────────────────── */
+.po-allocation-bar {
+  display: flex;
+  height: 14px;
+  margin-bottom: 17px;
+  overflow: hidden;
+  border-radius: 5px;
+}
+
+.po-allocation-segment {
+  height: 100%;
+  min-width: 0;
+  box-shadow: inset -2px 0 var(--ds-bg);
+}
+
+.po-allocation-segment:last-child {
+  box-shadow: none;
+}
+
+.po-allocation-legend {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 28px;
+}
+
+.po-allocation-stat {
+  position: relative;
+}
+
+.po-allocation-stat + .po-allocation-stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -14px;
+  width: 1px;
+  background: var(--ds-line);
+}
+
+.po-legend-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 7px;
+  font-size: var(--ds-fs-10);
+  color: var(--ds-secondary);
+}
+
+.po-legend-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--ds-accent);
+}
+
+.po-legend-dot.cash {
+  background: var(--ds-cash);
+}
+
+.po-page .po-legend-percent {
+  display: block;
+  margin-bottom: 5px;
+  font-size: var(--ds-fs-23);
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--ds-text);
+}
+
+.po-legend-value {
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
+}
+
+.po-allocation-note {
+  margin: 14px 0 0;
+  font-size: var(--ds-fs-9);
+  line-height: 1.5;
+  color: var(--ds-muted);
+}
+
+.po-stock-breakdown {
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid var(--ds-line);
+}
+
+.po-stock-breakdown-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.po-page .po-stock-breakdown-heading h3 {
+  font-size: var(--ds-fs-10);
+  font-weight: 500;
+  color: var(--ds-secondary);
+}
+
+.po-stock-breakdown-heading span {
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+.po-allocation-weights {
+  display: grid;
+  gap: 4px;
+}
+
+/* Rows bleed their highlight 10px into the gutter, so their content stays on
+   the text edge. */
+.po-page :is(.po-allocation-weight, .po-holding-row) {
+  width: calc(100% + 20px);
+  margin-inline: -10px;
+  padding-inline: 10px;
+  border-radius: 0;
+  text-align: left;
+  color: var(--ds-text);
+}
+
+.po-page .po-allocation-weight {
+  display: grid;
+  grid-template-columns: 65px minmax(0, 1fr) 55px;
+  align-items: center;
+  gap: 12px;
+  min-height: 30px;
+  padding-block: 4px;
+  font-size: var(--ds-fs-10);
+}
+
+.po-allocation-weight .po-legend-label {
+  margin: 0;
+  font-weight: 500;
+  color: var(--ds-text);
+}
+
+.po-allocation-weight .money {
+  text-align: right;
+}
+
+.po-weight-track {
+  display: block;
+  min-width: 0;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--ds-line);
+}
+
+.po-weight-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--weight-color, var(--ds-accent));
+}
+
+/* ── today's movers ──────────────────────────────────────────────────────── */
+.po-movers .po-section-heading {
+  margin-bottom: 4px;
+}
+
+.po-movers-context {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.5;
+  color: var(--ds-muted);
+}
+
+/* Gains rise and declines fall from one shared zero line, 58px down. */
+.po-movers-chart {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--mover-count), minmax(0, 1fr));
+  gap: 4px;
+}
+
+.po-movers-chart::before {
+  content: "";
+  position: absolute;
+  top: 58px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--ds-line);
+  pointer-events: none;
+}
+
+.po-page .po-mover-column {
+  position: relative;
+  display: block;
+  min-width: 0;
+  height: 116px;
+  border-radius: 5px;
+  text-align: center;
+  color: var(--ds-text);
+}
+
+.po-page .po-mover-percent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  font-size: var(--ds-fs-9);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.po-mover-bar-plot {
+  position: absolute;
+  top: 20px;
+  left: 0;
+  right: 0;
+  height: 76px;
+}
+
+.po-mover-bar {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: var(--bar-height);
+  min-height: 1px;
+  background: currentColor;
+  opacity: 0.85;
+}
+
+.po-mover-bar.positive {
+  bottom: 50%;
+  border-radius: 4px 4px 0 0;
+}
+
+.po-mover-bar.negative {
+  top: 50%;
+  border-radius: 0 0 4px 4px;
+}
+
+.po-mover-symbol {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ds-fs-9);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.po-movers-empty {
+  margin: 13px 0 0;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: var(--ds-fs-11);
+  line-height: 1.7;
+  color: var(--ds-secondary);
+  background: var(--ds-subtle);
+}
+
+/* ── holdings ────────────────────────────────────────────────────────────── */
+.po-section.po-holdings {
+  padding-bottom: 0;
+}
+
+.po-holdings .po-section-heading {
+  margin-bottom: 0;
+}
+
+.po-list-caption {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 0 2px;
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+.po-closed-caption {
+  padding-top: 22px;
+}
+
+.po-page .po-holding-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding-block: 15px;
+  border-bottom: 1px solid var(--ds-line);
+}
+
+.po-holding-summary {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 11px;
+}
+
+.po-holding-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.po-holding-symbol {
+  font-size: var(--ds-fs-12);
+  font-weight: 600;
+}
+
+.po-holding-symbol .po-legend-dot {
+  display: inline-block;
+  margin-right: 7px;
+  vertical-align: middle;
+}
+
+.po-holding-meta {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.5;
+  color: var(--ds-secondary);
+}
+
+.po-holding-end {
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.po-page .po-holding-value {
+  font-size: var(--ds-fs-12);
+  font-weight: 500;
+}
+
+.po-holding-return {
+  display: block;
+  margin-top: 6px;
+  font-size: var(--ds-fs-9);
+}
+
+.po-holding-return.secondary {
+  color: var(--ds-secondary);
+}
+
+.po-cash-accounts {
+  padding: 0 0 4px;
+  border-bottom: 1px solid var(--ds-line);
+}
+
+.po-cash-accounts[hidden] {
+  display: none;
+}
+
+.po-cash-account {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 0;
+  font-size: var(--ds-fs-10);
+  line-height: 1.6;
+}
+
+.po-cash-account span:first-child {
+  color: var(--ds-secondary);
+}
+
+/* ── an empty portfolio ──────────────────────────────────────────────────── */
+.po-empty {
+  padding: 60px var(--ds-gutter);
   text-align: center;
 }
 
-.hd-empty .ic {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 16px;
-  border-radius: 16px;
+.po-empty-symbol {
   display: grid;
   place-items: center;
-  background: var(--surface-2);
-  color: var(--fg-2);
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 24px;
+  border-radius: 18px;
+  color: var(--ds-muted);
+  background: var(--ds-subtle);
 }
 
-.hd-empty h2 {
-  line-height: normal;
-  margin: 0 0 6px;
+.po-page .po-empty h2 {
+  margin: 0 0 12px;
   font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--fg-1);
+  font-size: var(--ds-fs-23);
+  font-weight: 550;
+  letter-spacing: -0.8px;
 }
 
-.hd-empty p {
-  margin: 0 0 20px;
-  font-size: 15px;
-  color: var(--fg-2);
+.po-empty p {
+  margin: 1em 0;
+  font-size: var(--ds-fs-12);
+  line-height: 1.8;
+  color: var(--ds-secondary);
 }
 
-.hd-empty .hd-btn {
+.po-page .po-action {
   width: 100%;
+  min-height: 45px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: var(--ds-fs-13);
+  font-weight: 600;
+  color: var(--ds-action-ink);
+  background: var(--ds-action);
 }
 
+/* ── behind the growth (sheet) ───────────────────────────────────────────── */
+ion-modal.po-sheet {
+  --background: var(--ds-bg);
+  --border-radius: 22px;
+  --box-shadow: none;
+  --backdrop-opacity: 0.4;
+}
+
+.po-sheet-body {
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 12px var(--ds-gutter) max(31px, env(safe-area-inset-bottom));
+  background: var(--ds-bg);
+}
+
+.po-sheet-grabber {
+  width: 34px;
+  height: 4px;
+  margin: 0 auto 19px;
+  border-radius: 5px;
+  background: var(--ds-line);
+}
+
+.po-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.po-sheet .po-sheet-header h2 {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-21);
+  font-weight: 700;
+  letter-spacing: -0.7px;
+}
+
+.po-sheet .po-close-sheet {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: var(--ds-secondary);
+  background: var(--ds-subtle);
+}
+
+.po-sheet-notice {
+  margin: 16px 0;
+  font-size: var(--ds-fs-11);
+  line-height: 1.8;
+  color: var(--ds-secondary);
+}
+
+.po-detail-pair {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--ds-line);
+  font-size: var(--ds-fs-11);
+}
+
+.po-detail-pair span:first-child {
+  color: var(--ds-secondary);
+}
+
+.po-detail-pair span:last-child {
+  text-align: right;
+}
+
+/* ── feedback ────────────────────────────────────────────────────────────── */
+.po-page :is(.po-holding-row, .po-allocation-weight, .po-mover-column):is(:active, :focus-visible) {
+  background: var(--ds-subtle);
+}
+
+@media (hover: hover) {
+  .po-page :is(.po-holding-row, .po-allocation-weight, .po-mover-column):hover {
+    background: var(--ds-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .po-hero,
+  .po-growth,
+  .po-allocation {
+    animation: po-arrive 0.4s ease both;
+  }
+
+  .po-growth {
+    animation-delay: 0.05s;
+  }
+
+  .po-allocation {
+    animation-delay: 0.1s;
+  }
+}
+
+@keyframes po-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .po-spinner {
+    animation: none;
+  }
+}
 
 /* ---------- add-transaction wizard (POC) ---------- */
 

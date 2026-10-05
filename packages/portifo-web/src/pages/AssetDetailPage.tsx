@@ -8,211 +8,242 @@ import {
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useHistory } from "react-router-dom";
 import type { RouteComponentProps } from "react-router-dom";
-import type { Quote } from "../api/market";
 import HoldingChart from "../components/HoldingChart";
-import type { TradeMark } from "../components/HoldingChart";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
-import { useDisplayCurrency } from "../lib/displayCurrency";
-import {
-  convert,
-  fmtAge,
-  fmtCcy,
-  fmtDay,
-  fmtShares,
-  fmtSignedCcy,
-  fmtSignedPct,
-  parseDay,
-  yahooQuoteUrl,
-} from "../lib/fx";
-import { cashValue, positionsValue } from "../lib/positions";
+import { convert, fmtAge, fmtCcy, fmtDay, fmtShares, fmtSignedCcy, fmtSignedPct, parseDay } from "../lib/fx";
 import type { AccountPosition, Lot, TickerAgg } from "../lib/positions";
 
-// The ONE holding screen, read top to bottom as three questions:
-//   1. What is it worth, and am I up?  — the hero: market value, then all-time
-//      and today, answered before any scroll.
-//   2. Where is the price, and where did I buy? — the chart: share price with
-//      buy/sell dots and an avg-cost line.
-//   3. How is it made up? — position facts, then where it is held (accounts →
-//      the lots still open in them), then what has already been realized.
-// Each layer goes further back in time.
+// The holding screen, built from design-poc/holding-detail.html, in the
+// second design system (theme/ds.css). Read top to bottom:
+//   1. Your money — what the position is worth, and the unrealized return.
+//   2. The context — today's return before the share price, then a quiet
+//      price-history chart.
+//   3. The ownership — a compact position ledger, then the accounts it is
+//      held in; an account expands in place to its open purchases, and a
+//      purchase pushes its transaction.
 //
-// Colour budget: the hero deltas are tinted at full strength. Everywhere below,
-// only a PERCENTAGE is tinted and the money beside it stays neutral — with every
-// figure tinted, green stops meaning gain and becomes the page's colour.
+// Colour is reserved for returns: the headline value stays neutral, and a
+// return is tinted (with its percentage on a tinted pill in the hero).
 //
-// No price means no value, no gain and no today. Cost figures still show, and
-// say they are cost — the old avg-cost fallback passed a historical figure off
-// as a live one.
+// No quote means no value, no today and no unrealized return — shares and cost
+// still show, and say what they are. A closed position headlines its realized
+// gain instead of a $0 value, and needs no quote at all.
+//
+// Every figure is in the security's own currency (the one it was bought in);
+// display-currency conversion is deliberately left out so the ledger reads
+// unambiguously.
 
-const tone = (n: number) => (n > 1e-9 ? "gain" : n < -1e-9 ? "loss" : "");
+const tone = (n: number) => (n > 1e-9 ? "positive" : n < -1e-9 ? "negative" : "");
+const pctOf = (n: number, base: number) => (base > 1e-9 ? (n / base) * 100 : 0);
+const shrunk = (l: Lot) => Math.abs(l.shares - l.origShares) > 1e-6;
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// Shrinks a one-line figure until it fits its column (38px down to 22px), so a
-// seven-figure value never wraps or clips.
-function FitFigure({ className, children }: { className: string; children: ReactNode }) {
+// Quote times are shown in the exchange's clock, as the study does.
+const ET: Intl.DateTimeFormatOptions = { timeZone: "America/New_York" };
+const fmtEtTime = (d: Date) => `${d.toLocaleTimeString("en-US", { ...ET, hour: "numeric", minute: "2-digit" })} ET`;
+const fmtEtDay = (d: Date) => d.toLocaleDateString("en-US", { ...ET, month: "short", day: "2-digit" });
+const fmtEtStamp = (d: Date) =>
+  `${d.toLocaleDateString("en-US", { ...ET, month: "short", day: "2-digit", year: "numeric" })}, ${fmtEtTime(d)}`;
+
+// The study's back chevron. Raw markup, not URL-encoded: ionicons reads a
+// `;utf8,` SVG data URL by parsing the string as HTML.
+const BACK_ICON =
+  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5-7 7 7 7"/></svg>';
+
+const Chevron = () => (
+  <svg
+    width="13"
+    height="16"
+    viewBox="0 0 16 20"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="m6 5 5 5-5 5" />
+  </svg>
+);
+
+// The headline figure: one line, never wrapped or clipped. A long figure starts
+// at the compact size, then shrinks a pixel at a time until it fits, never
+// below 22px.
+function HeroValue({ text, className = "" }: { text: string; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    let size = 38;
-    el.style.fontSize = `${size}px`;
+    el.style.removeProperty("font-size");
+    let size = parseFloat(getComputedStyle(el).fontSize);
     while (el.scrollWidth > el.clientWidth && size > 22) el.style.fontSize = `${--size}px`;
   });
   return (
-    <div ref={ref} className={className}>
+    <div ref={ref} className={`hd-hero-value money ${text.length > 12 ? "compact" : ""} ${className}`}>
+      {text}
+    </div>
+  );
+}
+
+function Metric({ label, value, className = "" }: { label: string; value: ReactNode; className?: string }) {
+  return (
+    <div>
+      <div className="hd-metric-label">{label}</div>
+      <div className={`money ${className}`}>{value}</div>
+    </div>
+  );
+}
+
+function ReturnPill({ value, base }: { value: number; base: number }) {
+  return <span className={`money hd-pill ${tone(value)}`}>{fmtSignedPct(pctOf(value, base))}</span>;
+}
+
+function SectionHeading({ title, meta }: { title: string; meta?: string }) {
+  return (
+    <div className="hd-section-heading">
+      <h2>{title}</h2>
+      {meta && <span className="meta">{meta}</span>}
+    </div>
+  );
+}
+
+function TextLink({ children, onClick, style }: { children: ReactNode; onClick: () => void; style?: CSSProperties }) {
+  return (
+    <button type="button" className="hd-text-link" onClick={onClick} style={style}>
       {children}
-    </div>
+    </button>
   );
 }
 
-function Sk({ w, h = 14, style }: { w: string; h?: number; style?: CSSProperties }) {
-  return <div className="hd-sk" style={{ width: w, height: h, ...style }} />;
-}
-
-function Cell({ k, v, text, wide }: { k: string; v: ReactNode; text?: boolean; wide?: boolean }) {
-  return (
-    <div className={wide ? "hd-cell wide" : "hd-cell"}>
-      <div className="k">{k}</div>
-      <div className={text ? "t" : "v num"}>{v}</div>
-    </div>
-  );
-}
-
-// A lot is a purchase, so it is named by its date. A sale shrinks every open lot
-// in its account pro rata (average cost), so a lot can hold fewer shares than
-// were bought — "6.67 of 10 sh" says so; its price never changes.
-function LotRow({ lot, price, ccy }: { lot: Lot; price: number | null; ccy: string }) {
-  const shrunk = Math.abs(lot.shares - lot.origShares) > 1e-6;
-  const sh = shrunk ? `${fmtShares(lot.shares)} of ${fmtShares(lot.origShares)} sh` : `${fmtShares(lot.shares)} sh`;
-  return (
-    <div className="hd-row">
-      <div className="l">
-        <div className="hd-lotdate">{fmtDay(parseDay(lot.date))}</div>
-        <div className="hd-meta">
-          {sh} @ {fmtCcy(lot.pricePerShare, ccy)} · {fmtAge(lot.ageYears)}
-        </div>
-      </div>
-      <div className="r">
-        <Worth value={price != null ? lot.shares * price : null} cost={lot.costBasis} ccy={ccy} />
-      </div>
-    </div>
-  );
-}
-
-// The right-hand column of an account or lot row: value over P&L, or — with no
-// price — cost, labelled as cost.
-function Worth({ value, cost, ccy }: { value: number | null; cost: number; ccy: string }) {
-  if (value == null) {
-    return (
-      <>
-        <div className="v num">{fmtCcy(cost, ccy)}</div>
-        <div className="g">cost</div>
-      </>
-    );
-  }
-  const g = value - cost;
-  return (
-    <>
-      <div className="v num">{fmtCcy(value, ccy)}</div>
-      <div className="g">
-        <span className="num">{fmtSignedCcy(g, ccy)}</span>
-        <span className={`num ${tone(g)}`}>{fmtSignedPct(cost > 1e-9 ? (g / cost) * 100 : 0)}</span>
-      </div>
-    </>
-  );
-}
-
-const ShrinkNote = ({ lots }: { lots: Lot[] }) =>
-  lots.some((l) => Math.abs(l.shares - l.origShares) > 1e-6) ? (
-    <div className="hd-foot">
-      Each lot is what remains of one purchase. A sale shrinks every lot in that account proportionally (average
-      cost), so a lot can hold fewer shares than were bought. Its price never changes.
+const AccountingNote = ({ lots }: { lots: Lot[] }) =>
+  lots.some(shrunk) ? (
+    <div className="hd-accounting-note">
+      After a sale, remaining shares decrease proportionally across every purchase. Original purchase prices do not
+      change.
     </div>
   ) : null;
 
+// One purchase, named by its date. A sale shrinks every open purchase in its
+// account pro rata (average cost), so a shrunk one says "remaining"; its price
+// never changes.
+function LotRow({
+  lot,
+  price,
+  ccy,
+  compact,
+  onOpen,
+}: {
+  lot: Lot;
+  price: number | null;
+  ccy: string;
+  compact?: boolean;
+  onOpen: () => void;
+}) {
+  const pl = price != null ? (price - lot.pricePerShare) * lot.shares : null;
+  return (
+    <button
+      type="button"
+      className={compact ? "hd-lot compact" : "hd-lot"}
+      onClick={onOpen}
+      aria-label={`Purchase on ${fmtDay(parseDay(lot.date))}, ${fmtShares(lot.shares)} shares, view transaction`}
+    >
+      <div>
+        <div className="hd-lot-date">{fmtDay(parseDay(lot.date))}</div>
+        <div className="hd-lot-meta">
+          {fmtShares(lot.shares)} {shrunk(lot) ? "remaining" : "shares"} ×{" "}
+          <span className="money">{fmtCcy(lot.pricePerShare, ccy)}</span>
+        </div>
+      </div>
+      <div className="hd-lot-end">
+        {pl != null ? (
+          <div>
+            <span className={`money ${tone(pl)}`}>{fmtSignedCcy(pl, ccy)}</span>
+            <small className="money">{fmtSignedPct(pctOf(pl, lot.costBasis))}</small>
+          </div>
+        ) : (
+          <div>
+            <span className="money">{fmtCcy(lot.costBasis, ccy)}</span>
+            <small>Cost basis</small>
+          </div>
+        )}
+      </div>
+    </button>
+  );
+}
+
+// The only purchase in the only account: the hero already carries its value
+// and return, so the row names it and opens it — nothing more.
+function OnlyLotRow({ lot, onOpen }: { lot: Lot; onOpen: () => void }) {
+  return (
+    <button
+      type="button"
+      className="hd-lot compact"
+      onClick={onOpen}
+      aria-label={`View purchase transaction on ${fmtDay(parseDay(lot.date))}`}
+    >
+      <div>
+        <div className="hd-lot-date">{fmtDay(parseDay(lot.date))}</div>
+        <div className="hd-lot-meta">Original purchase · Held {fmtAge(lot.ageYears)}</div>
+      </div>
+      <div className="hd-lot-end">
+        <span className="hd-lot-details">Details</span>
+      </div>
+    </button>
+  );
+}
+
 function Hero({
   agg,
-  quote,
-  loading,
   ccy,
-  displayCurrency,
-  fx,
-  lastSell,
-  onRetry,
+  price,
+  quoteLoading,
 }: {
   agg: TickerAgg;
-  quote: Quote | undefined;
-  loading: boolean;
   ccy: string;
-  displayCurrency: string;
-  fx: (n: number) => number;
-  lastSell: string | null;
-  onRetry: () => void;
+  price: number | null;
+  quoteLoading: boolean;
 }) {
   if (agg.closed) {
-    const ret = agg.realizedCostBasis > 1e-9 ? (agg.realizedPL / agg.realizedCostBasis) * 100 : 0;
     return (
-      <section className="hd-hero">
-        <div className="hd-lbl">Realized {agg.realizedPL < 0 ? "loss" : "gain"}</div>
-        <FitFigure className={`hd-big num ${tone(agg.realizedPL)}`}>{fmtSignedCcy(agg.realizedPL, ccy)}</FitFigure>
-        <div className="hd-deltas two">
-          <span className={`num ${tone(ret)}`}>{fmtSignedPct(ret)}</span>
-          <span className="dl">on {fmtCcy(agg.realizedCostBasis, ccy)} cost</span>
+      <section className="hd-hero" aria-label="Position summary">
+        <div className="hd-hero-label">
+          Realized {agg.realizedPL < -1e-9 ? "loss" : "gain"} · {ccy}
+          <span className="hd-badge">Closed</span>
         </div>
-        {lastSell && <div className="hd-pill">Position closed · last sold {fmtDay(parseDay(lastSell))}</div>}
-      </section>
-    );
-  }
-  if (!quote && loading) {
-    return (
-      <section className="hd-hero">
-        <div className="hd-lbl">Market value</div>
-        <Sk w="62%" h={38} style={{ marginTop: 6 }} />
-        <Sk w="48%" h={16} style={{ marginTop: 12 }} />
-        <Sk w="40%" h={16} style={{ marginTop: 7 }} />
-      </section>
-    );
-  }
-  if (!quote) {
-    return (
-      <section className="hd-hero">
-        <div className="hd-lbl">Market value</div>
-        <div className="hd-unavail">
-          <span>
-            <b>Price unavailable</b>
-            Value and gain need a live quote.
-          </span>
-          <button type="button" className="hd-retry" onClick={onRetry}>
-            Retry
-          </button>
+        <HeroValue text={fmtSignedCcy(agg.realizedPL, ccy)} className={tone(agg.realizedPL)} />
+        <div className="hd-hero-return">
+          <ReturnPill value={agg.realizedPL} base={agg.realizedCostBasis} />
+          <span className="hd-return-label">Return on sold shares</span>
         </div>
       </section>
     );
   }
-  const mv = quote.price * agg.totalShares;
-  const unreal = mv - agg.costBasis;
-  const unrealPct = agg.costBasis > 1e-9 ? (unreal / agg.costBasis) * 100 : 0;
-  const today = quote.change * agg.totalShares;
+  if (price == null) {
+    return (
+      <section className="hd-hero" aria-label="Position summary">
+        <div className="hd-hero-label">Position value · {ccy}</div>
+        <div className="hd-hero-unavailable">{quoteLoading ? "Getting the latest quote…" : "Value unavailable"}</div>
+        <p className="hd-hero-subtext">
+          {fmtShares(agg.totalShares)} shares held · {fmtCcy(agg.costBasis, ccy)} invested
+        </p>
+      </section>
+    );
+  }
+  const value = price * agg.totalShares;
+  const pl = value - agg.costBasis;
   return (
-    <section className="hd-hero">
-      <div className="hd-lbl">Market value</div>
-      <FitFigure className="hd-big num">{fmtCcy(mv, ccy)}</FitFigure>
-      {ccy !== displayCurrency && (
-        <div className="hd-fx">
-          ≈ <span className="num">{fmtCcy(fx(mv), displayCurrency)}</span> {displayCurrency}
-        </div>
-      )}
-      <div className="hd-deltas">
-        <span className={`num ${tone(unreal)}`}>{fmtSignedCcy(unreal, ccy)}</span>
-        <span className={`num ${tone(unreal)}`}>{fmtSignedPct(unrealPct)}</span>
-        <span className="dl">{agg.realizedShares > 1e-9 ? "unrealized" : "all time"}</span>
-        <span className={`num ${tone(today)}`}>{fmtSignedCcy(today, ccy)}</span>
-        <span className={`num ${tone(today)}`}>{fmtSignedPct(quote.changePercent)}</span>
-        <span className="dl">today</span>
+    <section className="hd-hero" aria-label="Position summary">
+      <div className="hd-hero-label">Position value · {ccy}</div>
+      <HeroValue text={fmtCcy(value, ccy)} />
+      <div className="hd-hero-return">
+        <span className={`money ${tone(pl)}`}>{fmtSignedCcy(pl, ccy)}</span>
+        <ReturnPill value={pl} base={agg.costBasis} />
+        <span className="hd-return-label">Unrealized return</span>
       </div>
     </section>
   );
@@ -222,69 +253,91 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const history = useHistory();
   const { tabBase, tabLabel } = useTabBase();
   const symbol = match.params.symbol;
-  const { tickerAggregates, transactions, quotes, fxRates, cashByCurrency, loading, refreshMarket } =
-    usePortfolioData();
-  const [displayCurrency] = useDisplayCurrency();
+  const { tickerAggregates, transactions, quotes, fxRates, loading, refreshMarket } = usePortfolioData();
   const agg = tickerAggregates.find((t) => t.symbol === symbol);
   const quote = quotes[symbol];
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     if (!quotes[symbol]) refreshMarket([symbol]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol]);
 
-  const trades = useMemo(
-    () => transactions.filter((tx) => tx.symbol === symbol && (tx.type === "buy" || tx.type === "sell")),
+  const lastSell = useMemo(
+    () =>
+      transactions.reduce<string | null>(
+        (d, tx) => (tx.symbol === symbol && tx.type === "sell" && (!d || tx.date > d) ? tx.date : d),
+        null,
+      ),
     [transactions, symbol],
   );
-  const marks: TradeMark[] = useMemo(
-    () =>
-      trades.map((tx) => ({
-        date: parseDay(tx.date),
-        type: tx.type === "sell" ? "sell" : "buy",
-        price: tx.pricePerShare ?? 0,
-      })),
-    [trades],
-  );
-  const lastSell = trades.reduce<string | null>((d, tx) => (tx.type === "sell" && (!d || tx.date > d) ? tx.date : d), null);
 
+  const assetPath = `${tabBase}/asset/${encodeURIComponent(symbol)}`;
+  const openTx = (id: string) => history.push(`${tabBase}/transaction/${id}`);
+  const openHistory = (query: Record<string, string>) =>
+    history.push(`${assetPath}/transactions?${new URLSearchParams(query)}`);
   const buy = () => history.push(`${tabBase}/add-transaction`, { type: "buy", symbol });
   const sell = () => history.push(`${tabBase}/add-transaction`, { type: "sell", symbol });
+  const toggle = (account: string) =>
+    setExpanded((s) => {
+      const next = new Set(s);
+      if (!next.delete(account)) next.add(account);
+      return next;
+    });
 
+  const ccy = agg?.currency;
   const header = (
     <IonHeader translucent>
       <IonToolbar>
         <IonButtons slot="start">
-          <IonBackButton defaultHref={tabBase} text={tabLabel} />
+          <IonBackButton defaultHref={tabBase} text={tabLabel} icon={BACK_ICON} />
         </IonButtons>
         <IonTitle>{symbol}</IonTitle>
+        {ccy && (
+          <span slot="end" className="hd-ccy">
+            {ccy}
+          </span>
+        )}
+      </IonToolbar>
+    </IonHeader>
+  );
+  const largeTitle = (
+    <IonHeader collapse="condense">
+      <IonToolbar>
+        <IonTitle size="large">{symbol}</IonTitle>
       </IonToolbar>
     </IonHeader>
   );
 
-  if (!agg) {
+  if (!agg || !ccy) {
     return (
       <IonPage className="hd-page">
         {header}
         <IonContent fullscreen>
-          <IonHeader collapse="condense">
-            <IonToolbar>
-              <IonTitle size="large">{symbol}</IonTitle>
-            </IonToolbar>
-          </IonHeader>
-          <div className="hd-empty">
-            <div className="ic">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.8" />
-                <path d="m16 16 4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
+          {largeTitle}
+          {/* Until the ledger has loaded, "not found" would be a guess. */}
+          {!loading.transactions && (
+            <div className="hd-empty">
+              <div className="hd-empty-symbol">
+                <svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" aria-hidden="true">
+                  <circle cx="10" cy="10" r="6" />
+                  <path d="m15 15 5 5" />
+                </svg>
+              </div>
+              <h2>No holding found</h2>
+              <p>
+                There isn’t a position for {symbol} in this portfolio. It may have been removed, or this link may be out
+                of date.
+              </p>
+              <button
+                type="button"
+                className="hd-action primary"
+                onClick={() => (history.length > 1 ? history.goBack() : history.replace(tabBase))}
+              >
+                Back to {tabLabel}
+              </button>
             </div>
-            <h2>No position in {symbol}</h2>
-            <p>None of your accounts has a transaction for this symbol.</p>
-            <button type="button" className="hd-btn primary" onClick={buy}>
-              Add a buy
-            </button>
-          </div>
+          )}
         </IonContent>
       </IonPage>
     );
@@ -293,297 +346,302 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   // A quote in a different currency than the ledger (rare: a cross-listed
   // symbol) is converted onto the ledger's scale, so every figure here is in
   // ONE currency — the one the user paid in.
-  const ccy = agg.currency;
   const price = quote ? convert(quote.price, quote.currency, ccy, fxRates) : null;
-  const marketLoading = !quote && loading.market;
-  const fx = (n: number) => convert(n, ccy, displayCurrency, fxRates);
-  const mv = price != null ? price * agg.totalShares : null;
-
-  const subtitle = [quote?.shortName, quote?.exchange, ccy].filter(Boolean).join(" · ");
+  const quoteLoading = !quote && loading.market;
   const accounts = agg.perAccount;
-  const single = accounts.length === 1;
   const openAccounts = accounts.filter((a) => a.shares > 1e-9);
-  const lotCount = openAccounts.reduce((n, a) => n + a.lots.length, 0);
+  const single = accounts.length === 1 && !agg.closed;
   const newestFirst = (lots: Lot[]) => [...lots].sort((a, b) => b.date.localeCompare(a.date));
+  const company = [quote?.shortName, quote?.exchange].filter(Boolean);
+  const quoteTime = quote?.marketTime ? new Date(quote.marketTime) : null;
 
-  // ── Position facts ───────────────────────────────────────────────────────
-  let facts: ReactNode;
+  // ── Today, then the market ─────────────────────────────────────────────────
+  let market: ReactNode = null;
   if (agg.closed) {
-    facts = (
-      <section className="hd-sec">
-        <div className="hd-sec-h">Summary</div>
-        <div className="hd-card hd-grid">
-          <Cell k="Shares sold" v={fmtShares(agg.realizedShares)} />
-          <Cell k="Avg holding period" v={fmtAge(agg.realizedAgeYears)} />
-          <Cell k="Cost of shares sold" v={fmtCcy(agg.realizedCostBasis, ccy)} />
-          <Cell k="Proceeds" v={fmtCcy(agg.realizedCostBasis + agg.realizedPL, ccy)} />
+    market = null;
+  } else if (quote && price != null) {
+    const day = convert(quote.change, quote.currency, ccy, fxRates) * agg.totalShares;
+    const open = quote.marketState === "REGULAR";
+    market = (
+      <section className="hd-market" aria-label="Today and share price">
+        <div className="hd-market-numbers">
+          <div>
+            <div className="hd-metric-label">Today’s return</div>
+            <div className={`hd-metric-main money ${tone(day)}`}>{fmtSignedCcy(day, ccy)}</div>
+            <div className={`hd-metric-foot money ${tone(day)}`}>{fmtSignedPct(quote.changePercent)}</div>
+          </div>
+          <div>
+            <div className="hd-metric-label">Share price</div>
+            <div className="hd-metric-main money">{fmtCcy(price, ccy)}</div>
+            {quoteTime && (
+              <div className="hd-metric-foot secondary">
+                <span className={open ? "hd-live-dot" : "hd-live-dot closed"} />
+                {open ? `At ${fmtEtTime(quoteTime)}` : `At close · ${fmtEtDay(quoteTime)}`}
+              </div>
+            )}
+          </div>
         </div>
+        <HoldingChart symbol={symbol} ccy={quote.currency} />
       </section>
     );
   } else {
-    const cells: { k: string; v: ReactNode; text?: boolean }[] = [
-      { k: "Shares", v: fmtShares(agg.totalShares) },
-      { k: "Avg cost", v: fmtCcy(agg.avgCost, ccy) },
-      { k: "Cost basis", v: fmtCcy(agg.costBasis, ccy) },
-      { k: "Avg time held", v: fmtAge(agg.avgAgeYears) },
-    ];
-    if (mv != null) {
-      const total =
-        cashValue(cashByCurrency, displayCurrency, fxRates) +
-        positionsValue(tickerAggregates, quotes, displayCurrency, fxRates);
-      if (total > 1e-9) cells.push({ k: "Portfolio weight", v: `${((fx(mv) / total) * 100).toFixed(1)}%` });
-    }
-    // One account and one lot: no account or lot list follows, so where and
-    // when become two facts here instead.
-    if (single && lotCount === 1) cells.push({ k: "Bought", v: fmtDay(parseDay(openAccounts[0].lots[0].date)), text: true });
-    if (single) cells.push({ k: "Held in", v: accounts[0].account, text: true });
-    facts = (
-      <section className="hd-sec">
-        <div className="hd-sec-h">Position</div>
-        <div className="hd-card hd-grid">
-          {cells.map((c, i) => (
-            <Cell key={c.k} {...c} wide={i === cells.length - 1 && cells.length % 2 === 1} />
-          ))}
+    market = quoteLoading ? (
+      <div className="hd-quote-note loading" role="status">
+        <span className="hd-spinner" aria-hidden="true" />
+        <div>
+          <strong>Loading market data</strong>
+          Your shares and cost are available below. Value and returns will appear when a quote arrives.
         </div>
-      </section>
+      </div>
+    ) : (
+      <div className="hd-quote-note" role="status">
+        <strong>We couldn’t get a current quote</strong>
+        Market value, today’s change and unrealized return are unavailable. Your purchase details are still here.
+        <TextLink onClick={() => refreshMarket([symbol])}>
+          Try again <span aria-hidden="true">↻</span>
+        </TextLink>
+      </div>
     );
   }
 
-  // ── Where it is held ─────────────────────────────────────────────────────
-  let holdings: ReactNode = null;
-  if (agg.closed) {
-    const sold = accounts
-      .filter((a) => a.realizedShares > 1e-9)
-      .sort((a, b) => b.realizedPL - a.realizedPL);
-    if (sold.length > 1) {
-      holdings = (
-        <section className="hd-sec">
-          <div className="hd-sec-h">By account</div>
-          <div className="hd-card">
-            {sold.map((a) => {
-              const r = a.realizedCostBasis > 1e-9 ? (a.realizedPL / a.realizedCostBasis) * 100 : 0;
-              return (
-                <div className="hd-row" key={a.account}>
-                  <div className="l">
-                    <div className="hd-name">{a.account}</div>
-                    <div className="hd-meta">
-                      {fmtShares(a.realizedShares)} sh sold · held {fmtAge(a.realizedAgeYears)}
-                    </div>
-                  </div>
-                  <div className="r">
-                    <div className="v num">{fmtSignedCcy(a.realizedPL, ccy)}</div>
-                    <div className="g">
-                      <span className={`num ${tone(r)}`}>{fmtSignedPct(r)}</span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      );
-    }
-  } else if (single) {
-    // The one account is named in the Position grid, so only its lots are
-    // listed — and only when there is more than one.
-    const lots = newestFirst(accounts[0].lots);
-    if (lots.length > 1) {
-      holdings = (
-        <section className="hd-sec">
-          <div className="hd-sec-h">
-            Current lots <span className="aside">{lots.length}</span>
-          </div>
-          <div className="hd-card">
-            {lots.map((l, i) => (
-              <LotRow key={`${l.date}-${i}`} lot={l} price={price} ccy={ccy} />
-            ))}
-          </div>
-          <ShrinkNote lots={lots} />
-        </section>
-      );
-    }
-  } else {
-    const worth = (a: AccountPosition) => (price != null ? a.shares * price : a.costBasis);
-    const sorted = [...accounts].sort((a, b) => worth(b) - worth(a));
+  // ── The position ledger ────────────────────────────────────────────────────
+  const position = agg.closed ? (
+    <section className="hd-section">
+      <SectionHeading title="Position closed" meta="No shares held" />
+      <div className="hd-position-grid">
+        <Metric label="Shares sold" value={fmtShares(agg.realizedShares)} />
+        <Metric label="Cost of sold shares" value={fmtCcy(agg.realizedCostBasis, ccy)} />
+        <Metric label="Avg. holding period" value={fmtAge(agg.realizedAgeYears)} />
+        <Metric label="Last sale" value={lastSell ? fmtDay(parseDay(lastSell)) : "—"} />
+      </div>
+    </section>
+  ) : (
+    <section className="hd-section">
+      <SectionHeading title="Your position" meta={plural(openAccounts.length, "account")} />
+      <div className="hd-position-grid">
+        <Metric label="Shares held" value={fmtShares(agg.totalShares)} />
+        <Metric label="Average cost / share" value={fmtCcy(agg.avgCost, ccy)} />
+        <Metric label="Total cost" value={fmtCcy(agg.costBasis, ccy)} />
+        <Metric label="Average age" value={fmtAge(agg.avgAgeYears)} />
+      </div>
+    </section>
+  );
+
+  // ── Where it is held ───────────────────────────────────────────────────────
+  let holdings: ReactNode;
+  if (single) {
+    // One account: identified once, its purchases listed open beneath it.
+    const a = accounts[0];
+    const lots = newestFirst(a.lots);
     holdings = (
-      <section className="hd-sec">
-        <div className="hd-sec-h">
-          Accounts <span className="aside">{sorted.length}</span>
+      <section className="hd-section">
+        <SectionHeading title="Held in" />
+        <div className="hd-account single">
+          <div className="hd-account-head">
+            <div className="hd-account-name">{a.account}</div>
+            <div className="hd-account-meta">
+              {lots.length === 1 ? "One purchase" : `${lots.length} open purchases`}
+            </div>
+          </div>
+          <div className="hd-account-detail">
+            <div className="hd-purchases">
+              <div className="hd-lots-heading">
+                <span>{lots.length === 1 ? "Purchase" : "Open purchases"}</span>
+                <span>{lots.length === 1 ? "Read-only" : price == null ? "Cost basis" : "Unrealized return"}</span>
+              </div>
+              {lots.length === 1 ? (
+                <OnlyLotRow lot={lots[0]} onOpen={() => openTx(lots[0].txId)} />
+              ) : (
+                lots.map((l) => (
+                  <LotRow key={l.txId} lot={l} price={price} ccy={ccy} compact onOpen={() => openTx(l.txId)} />
+                ))
+              )}
+              <AccountingNote lots={lots} />
+            </div>
+          </div>
         </div>
+      </section>
+    );
+  } else {
+    // Several accounts (or a closed position): value and gain visible at once,
+    // cost and purchases revealed in place.
+    const worth = (a: AccountPosition) =>
+      a.shares > 1e-9 ? (price != null ? a.shares * price : a.costBasis) : -Infinity;
+    const sorted = [...accounts].sort((a, b) => worth(b) - worth(a) || b.realizedPL - a.realizedPL);
+    holdings = (
+      <section className="hd-section">
+        <SectionHeading
+          title={agg.closed ? "Realized by account" : "Accounts"}
+          meta={plural(sorted.length, "account")}
+        />
         {sorted.map((a) => {
-          const closed = a.shares <= 1e-9;
+          const open = expanded.has(a.account);
+          const exited = a.shares <= 1e-9;
           const lots = newestFirst(a.lots);
+          const value = price != null ? a.shares * price : null;
+          const pl = value != null ? value - a.costBasis : null;
+          const detailId = `hd-acct-${a.account.replace(/\W+/g, "-")}`;
           return (
-            <div className={closed ? "hd-card hd-acct closed" : "hd-card hd-acct"} key={a.account}>
-              <div className="hd-row">
-                <div className="l">
-                  <div className="hd-name">
-                    {a.account}
-                    {closed && <span className="hd-tag">Closed</span>}
-                  </div>
-                  <div className="hd-meta">
-                    {closed
-                      ? `All sold · ${fmtShares(a.realizedShares)} sh`
-                      : `${fmtShares(a.shares)} sh · avg ${fmtCcy(a.avgCost, ccy)}`}
-                  </div>
-                </div>
-                <div className="r">
-                  {closed ? (
+            <div className="hd-account" key={a.account}>
+              <button
+                type="button"
+                className="hd-account-toggle"
+                aria-expanded={open}
+                aria-controls={detailId}
+                onClick={() => toggle(a.account)}
+              >
+                <span className="hd-account-title">
+                  <span className="hd-account-identity">
+                    <span className="hd-account-name">{a.account}</span>
+                    <span className="hd-account-meta">
+                      {exited
+                        ? `${fmtShares(a.realizedShares)} shares sold · Closed`
+                        : `${fmtShares(a.shares)} shares · ${plural(lots.length, "purchase")}`}
+                    </span>
+                  </span>
+                  <span className="hd-disclosure" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </span>
+                </span>
+                <span className="hd-account-value">
+                  {exited ? (
                     <>
-                      <div className="v num">{fmtSignedCcy(a.realizedPL, ccy)}</div>
-                      <div className="g">realized</div>
+                      <span className={`money ${tone(a.realizedPL)}`}>{fmtSignedCcy(a.realizedPL, ccy)}</span>
+                      <span className={`money hd-account-gain ${tone(a.realizedPL)}`}>
+                        {fmtSignedPct(pctOf(a.realizedPL, a.realizedCostBasis))}
+                      </span>
                     </>
                   ) : (
-                    <Worth value={price != null ? a.shares * price : null} cost={a.costBasis} ccy={ccy} />
+                    <>
+                      <span className="money">{fmtCcy(value ?? a.costBasis, ccy)}</span>
+                      <span className={`money hd-account-gain ${pl != null ? tone(pl) : ""}`}>
+                        {pl != null
+                          ? `${fmtSignedCcy(pl, ccy)} · ${fmtSignedPct(pctOf(pl, a.costBasis))}`
+                          : "Cost basis"}
+                      </span>
+                    </>
                   )}
-                </div>
-              </div>
-              {lots.length > 0 && (
-                <div className="hd-lots">
-                  {lots.map((l, i) => (
-                    <LotRow key={`${l.date}-${i}`} lot={l} price={price} ccy={ccy} />
+                </span>
+              </button>
+              <div id={detailId} className="hd-account-detail" hidden={!open}>
+                {open &&
+                  (exited ? (
+                    <>
+                      <div className="hd-account-stats">
+                        <Metric label="Cost of sold shares" value={fmtCcy(a.realizedCostBasis, ccy)} />
+                        <Metric label="Avg. holding period" value={fmtAge(a.realizedAgeYears)} />
+                      </div>
+                      <TextLink onClick={() => openHistory({ account: a.account })}>
+                        View transactions <Chevron />
+                      </TextLink>
+                    </>
+                  ) : (
+                    <>
+                      <div className="hd-account-stats">
+                        <Metric label="Avg. cost/share" value={fmtCcy(a.avgCost, ccy)} />
+                        <Metric label="Cost" value={fmtCcy(a.costBasis, ccy)} />
+                        <Metric label="Avg. age" value={fmtAge(a.avgAgeYears)} />
+                      </div>
+                      {a.realizedShares > 1e-9 && (
+                        <div className="hd-realized-note">
+                          Already realized{" "}
+                          <span className={`money ${tone(a.realizedPL)}`}>{fmtSignedCcy(a.realizedPL, ccy)}</span>
+                        </div>
+                      )}
+                      <div className="hd-purchases">
+                        <div className="hd-lots-heading">
+                          <span>{plural(lots.length, "open purchase")}</span>
+                          <span>{price == null ? "Cost basis" : "Unrealized return"}</span>
+                        </div>
+                        {lots.map((l) => (
+                          <LotRow key={l.txId} lot={l} price={price} ccy={ccy} onOpen={() => openTx(l.txId)} />
+                        ))}
+                        <AccountingNote lots={lots} />
+                      </div>
+                    </>
                   ))}
-                </div>
-              )}
+              </div>
             </div>
           );
         })}
-        <ShrinkNote lots={accounts.flatMap((a) => a.lots)} />
       </section>
     );
   }
 
-  // ── Realized, on a position that is still open ───────────────────────────
-  let realized: ReactNode = null;
-  if (!agg.closed && agg.realizedShares > 1e-9) {
-    const r = agg.realizedCostBasis > 1e-9 ? (agg.realizedPL / agg.realizedCostBasis) * 100 : 0;
-    const t = mv != null ? agg.realizedPL + (mv - agg.costBasis) : null;
-    const tp = t != null ? (t / (agg.realizedCostBasis + agg.costBasis)) * 100 : 0;
-    realized = (
-      <section className="hd-sec">
-        <div className="hd-sec-h">Realized</div>
-        <div className="hd-card">
-          <div className="hd-kv">
-            <span className="k">Realized {agg.realizedPL < 0 ? "loss" : "gain"}</span>
-            <span className="v">
-              <span className="num">{fmtSignedCcy(agg.realizedPL, ccy)}</span>{" "}
-              <span className={`num ${tone(r)}`}>{fmtSignedPct(r)}</span>
-            </span>
-          </div>
-          <div className="hd-kv">
-            <span className="k">Shares sold</span>
-            <span className="v num">{fmtShares(agg.realizedShares)}</span>
-          </div>
-          <div className="hd-kv">
-            <span className="k">Cost of shares sold</span>
-            <span className="v num">{fmtCcy(agg.realizedCostBasis, ccy)}</span>
-          </div>
-          <div className="hd-kv">
-            <span className="k">Avg holding period</span>
-            <span className="v num">{fmtAge(agg.realizedAgeYears)}</span>
-          </div>
-          {t != null && (
-            <div className="hd-kv total">
-              <span className="k">Total return</span>
-              <span className="v">
-                <span className={`num ${tone(t)}`}>{fmtSignedCcy(t, ccy)}</span>{" "}
-                <span className={`num ${tone(t)}`}>{fmtSignedPct(tp)}</span>
-              </span>
-            </div>
-          )}
+  // ── Already realized, on a position that is still open ─────────────────────
+  // Kept apart from the open position's return: two different percentages on
+  // two different bases.
+  const realized =
+    !agg.closed && agg.realizedShares > 1e-9 ? (
+      <section className="hd-section">
+        <SectionHeading title="Already realized" meta="Sold shares" />
+        <div className="hd-realized-summary">
+          <span className={`money ${tone(agg.realizedPL)}`}>{fmtSignedCcy(agg.realizedPL, ccy)}</span>
+          <ReturnPill value={agg.realizedPL} base={agg.realizedCostBasis} />
         </div>
-        {t != null && <div className="hd-foot">Total return = realized + unrealized, over everything you ever paid.</div>}
+        <p className="hd-realized-note">
+          From {fmtShares(agg.realizedShares)} {Math.abs(agg.realizedShares - 1) < 1e-9 ? "share" : "shares"} sold.
+          Separate from the return on your current position.
+        </p>
+        <div className="hd-position-grid">
+          <Metric label="Cost of sold shares" value={fmtCcy(agg.realizedCostBasis, ccy)} />
+          <Metric label="Avg. holding period" value={fmtAge(agg.realizedAgeYears)} />
+        </div>
+        <TextLink onClick={() => openHistory({ type: "sell" })} style={{ marginTop: 18 }}>
+          View sales <Chevron />
+        </TextLink>
       </section>
-    );
-  }
+    ) : null;
 
   return (
     <IonPage className="hd-page">
       {header}
 
       <IonContent fullscreen>
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">{symbol}</IonTitle>
-          </IonToolbar>
-        </IonHeader>
-
-        {marketLoading ? (
-          <Sk w="55%" h={15} style={{ margin: "4px var(--gutter) 0" }} />
-        ) : (
-          <div className="hd-subtitle">{subtitle}</div>
+        {largeTitle}
+        {/* Reserves its line while the quote loads, so nothing below jumps. */}
+        {(company.length > 0 || quoteLoading) && (
+          <div className="hd-company">
+            {company.length > 0
+              ? company.map((part, i) => (
+                  <span key={i}>
+                    {i > 0 && <span className="dot">·</span>}
+                    {part}
+                  </span>
+                ))
+              : " "}
+          </div>
         )}
 
-        <Hero
-          agg={agg}
-          quote={price != null && quote ? { ...quote, price, change: convert(quote.change, quote.currency, ccy, fxRates) } : undefined}
-          loading={marketLoading}
-          ccy={ccy}
-          displayCurrency={displayCurrency}
-          fx={fx}
-          lastSell={lastSell}
-          onRetry={() => refreshMarket([symbol])}
-        />
-
-        {quote ? (
-          <HoldingChart
-            symbol={symbol}
-            quote={quote}
-            avgCost={!agg.closed && quote.currency === ccy ? agg.avgCost : null}
-            marks={quote.currency === ccy ? marks : []}
-          />
-        ) : (
-          marketLoading && (
-            <section className="hd-sec">
-              <Sk w="40%" h={22} />
-              <Sk w="100%" h={170} style={{ marginTop: 12, borderRadius: 10 }} />
-              <Sk w="100%" h={32} style={{ marginTop: 10 }} />
-            </section>
-          )
-        )}
-
-        {facts}
+        <Hero agg={agg} ccy={ccy} price={price} quoteLoading={quoteLoading} />
+        {market}
+        {position}
         {holdings}
         {realized}
 
-        <section className="hd-sec">
-          <div className="hd-card">
-            <button
-              type="button"
-              className="hd-link"
-              onClick={() => history.push(`${tabBase}/asset/${encodeURIComponent(symbol)}/transactions`)}
-            >
-              <span className="grow">Transactions</span>
-              <span className="cnt">{trades.length}</span>
-              <svg width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true">
-                <path d="m1.5 1.5 5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-            {/* Leaves the app, so an outward arrow — never a chevron. */}
-            <a className="hd-link" href={yahooQuoteUrl(symbol)} target="_blank" rel="noopener noreferrer">
-              <span className="grow">{quote ? "More on Yahoo Finance" : "View on Yahoo Finance"}</span>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                <path d="M4.5 2.5h7v7M11.5 2.5 2.5 11.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </a>
-          </div>
-        </section>
-        <div className="hd-end" />
-      </IonContent>
-
-      {/* Buy/Sell in thumb reach, in the space the hidden tab bar leaves. Sell
-          is tinted, never red: selling is not destructive. */}
-      <IonFooter className="hd-footer">
-        <div className={agg.closed ? "hd-actions one" : "hd-actions"}>
-          <button type="button" className="hd-btn primary" onClick={buy}>
-            {agg.closed ? "Buy again" : "Buy"}
-          </button>
-          {!agg.closed && (
-            <button type="button" className="hd-btn secondary" onClick={sell}>
-              Sell
-            </button>
+        <div className="hd-footer-note">
+          All amounts in {ccy} · Average-cost accounting
+          {!agg.closed && price != null && quoteTime && (
+            <>
+              <br />
+              Quote as of {fmtEtStamp(quoteTime)}
+            </>
           )}
         </div>
+      </IonContent>
+
+      {/* Sell is tinted, never red: selling is not destructive. */}
+      <IonFooter className="hd-actions">
+        <button type="button" className="hd-action primary" onClick={buy}>
+          {agg.closed ? "Buy again" : "Buy"}
+        </button>
+        {!agg.closed && (
+          <button type="button" className="hd-action" onClick={sell}>
+            Sell
+          </button>
+        )}
       </IonFooter>
     </IonPage>
   );

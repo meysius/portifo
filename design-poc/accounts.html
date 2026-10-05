@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f9fc">
+  <title>Portifo · Accounts</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Public+Sans:wght@400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme:light; --desk:#f0f1ef; --desk-ink:#262e39; --desk-muted:#78808a; --desk-line:#d9deda; --blue:#245ce8; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--desk); color:var(--desk-ink); font-family:'Public Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+    button,select,input { font:inherit; } button { cursor:pointer; border:0; } button,a,select { -webkit-tap-highlight-color:transparent; }
+    button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible { outline:3px solid #7597ff; outline-offset:3px; }
+    svg { display:block; flex-shrink:0; } a { color:inherit; } [hidden] { display:none!important; }
+    .workbench { max-width:1320px; margin:auto; padding:42px 48px 34px; }
+    .desk-header { display:flex; align-items:center; justify-content:space-between; padding-bottom:25px; border-bottom:1px solid var(--desk-line); }
+    .brand { display:flex; gap:10px; align-items:center; font-family:Inter,sans-serif; font-weight:650; font-size:23px; letter-spacing:-1px; }
+    .brand-mark { width:25px; height:26px; display:flex; gap:3px; align-items:flex-end; }
+    .brand-mark i { display:block; width:6px; background:var(--blue); border-radius:2px; }
+    .brand-mark i:nth-child(1) { height:12px; }.brand-mark i:nth-child(2) { height:20px; }.brand-mark i:nth-child(3) { height:26px; }
+    .desk-caption { font-size:11px; text-transform:uppercase; letter-spacing:1.8px; color:var(--desk-muted); }
+    .workspace { display:grid; grid-template-columns:minmax(210px,1fr) 390px minmax(230px,1fr); gap:54px; padding-top:35px; align-items:start; }
+    .rail { padding-top:11px; }.eyebrow { margin:0 0 16px; font-size:10px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:var(--desk-muted); }
+    .rail h1 { font-family:Inter,sans-serif; font-weight:550; font-size:32px; letter-spacing:-1.5px; line-height:1.15; margin:0 0 13px; }
+    .intro { color:#6c747e; line-height:1.7; font-size:13px; max-width:220px; margin:0 0 32px; }
+    .state-list { display:flex; flex-direction:column; gap:3px; }
+    .state-option { width:100%; text-align:left; background:none; display:flex; gap:12px; align-items:center; color:#626b76; font-size:12px; line-height:1.35; padding:11px 10px; border-radius:7px; }
+    .state-option span { font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.6; }.state-option:hover { background:#e7eae6; }
+    .state-option.active { background:#e1e7f3; color:#204ba9; font-weight:600; }.state-option.active span { opacity:1; }
+    .controls { border-top:1px solid var(--desk-line); margin-top:26px; padding-top:23px; }
+    .control-label { font-size:11px; color:#6c747e; display:block; margin-bottom:9px; }
+    .theme-control { display:flex; gap:3px; background:#e4e7e3; padding:3px; border-radius:8px; margin-bottom:19px; }
+    .theme-control button { flex:1; padding:8px; background:none; color:#69717b; border-radius:5px; font-size:11px; }.theme-control button.active { background:#fff; color:#273140; }
+    .font-control-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+    .font-control output { font-family:'JetBrains Mono',monospace; font-size:11px; color:#204ba9; }
+    .font-scale-slider { display:block; width:100%; height:28px; margin:0; accent-color:var(--blue); cursor:ew-resize; }
+    .font-control-footer { display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#6c747e; margin-top:4px; }
+    .font-reset { background:none; padding:5px 0 5px 8px; color:#204ba9; font-size:11px; }
+    .companion-link { display:flex; align-items:center; gap:8px; margin-top:20px; color:#204ba9; font-size:11px; text-decoration:none; }.companion-link:hover { text-decoration:underline; }
+    .phone-wrap { width:390px; }
+    .phone { --bg:#fff; --subtle:#f8f9fc; --text:#162239; --secondary:#657084; --muted:#929baa; --line:#e9edf3; --accent:#245ce8; --accent-tint:#edf2ff; --positive:#16734b; --negative:#b44145; --positive-bg:#edf8f2; --font-scale:1.15; --cash:#a4c8b9; --row-inset:10px; color-scheme:light; width:390px; height:844px; background:var(--bg); color:var(--text); border:1px solid #d8dce2; border-radius:38px; position:relative; overflow:hidden; display:flex; flex-direction:column; isolation:isolate; container-type:inline-size; }
+    .phone.dark { --bg:#121820; --subtle:#19212c; --text:#eef2f8; --secondary:#9aa8ba; --muted:#708094; --line:#27313f; --accent:#81a5ff; --accent-tint:#202f4d; --positive:#72d3a6; --negative:#fb9297; --positive-bg:#1c302a; --cash:#77ae99; color-scheme:dark; border-color:#333e4b; }
+    .status { height:47px; padding:17px 27px 8px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; font-family:Inter,sans-serif; font-size:14px; font-weight:650; }
+    .status-icons { display:flex; align-items:center; gap:6px; }
+    .navigation { height:38px; padding:0 23px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:var(--bg); z-index:3; }
+    .workspace-label { color:var(--secondary); font-size:calc(11px * var(--font-scale)); }
+    .currency { font-family:'JetBrains Mono',monospace; font-size:calc(10px * var(--font-scale)); color:var(--secondary); letter-spacing:.4px; padding:4px 7px; border:1px solid var(--line); border-radius:5px; }
+    .screen { overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; flex:1; min-height:0; }.screen::-webkit-scrollbar { display:none; }
+    .page-heading { padding:8px 23px 0; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .page-heading h1 { margin:0; font-family:Inter,sans-serif; font-weight:650; font-size:min(calc(34px * var(--font-scale)),11cqw); letter-spacing:-1.5px; line-height:1.2; }
+    .icon-button { width:36px; height:36px; background:var(--accent-tint); color:var(--accent); border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
+    .money { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; white-space:nowrap; letter-spacing:-.5px; }
+    .hero-label { color:var(--secondary); font-size:calc(11px * var(--font-scale)); margin:0 0 9px; }
+    .hero-value { display:block; font-weight:500; font-size:min(calc(34px * var(--font-scale)),10.4cqw); letter-spacing:-1.7px; line-height:1.3; }
+    .account-list { padding:0 23px; margin-top:20px; }
+    /* Match the existing studies: highlights bleed into the gutter; text stays aligned. */
+    .account-row { display:block; width:calc(100% + 2 * var(--row-inset)); margin-inline:calc(-1 * var(--row-inset)); padding:14px var(--row-inset) 12px; text-align:left; background:none; color:var(--text); border-bottom:1px solid var(--line); }
+    .account-row:hover,.account-row:focus-visible { background:var(--subtle); }.account-row:last-child { border-bottom:0; }
+    .account-top { display:flex; align-items:center; gap:10px; }
+    .account-icon { width:34px; height:34px; border-radius:9px; display:grid; place-items:center; background:var(--accent-tint); color:var(--accent); flex-shrink:0; }
+    .account-icon.savings { background:var(--positive-bg); color:var(--positive); }.account-icon.retirement { background:var(--subtle); color:var(--secondary); }
+    .account-identity { flex:1; min-width:0; }.account-name { display:block; font-size:calc(12px * var(--font-scale)); font-weight:600; line-height:1.45; overflow-wrap:anywhere; }
+    .account-meta { display:block; margin-top:3px; color:var(--secondary); font-size:calc(9px * var(--font-scale)); line-height:1.6; overflow-wrap:anywhere; }
+    .row-chevron { color:var(--muted); }
+    .account-balance { display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; margin-top:9px; }
+    .account-balance .money { font-size:min(calc(20px * var(--font-scale)),7cqw); font-weight:500; letter-spacing:-.8px; }
+    .account-cash { color:var(--secondary); font-size:calc(9px * var(--font-scale)); line-height:1.5; }.account-cash .money { font-size:inherit; font-weight:400; letter-spacing:-.3px; }
+    .mix-bar { display:flex; height:3px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:9px; }.mix-bar i { display:block; background:var(--accent); }.mix-bar i.cash { background:var(--cash); }
+    .list-footer { color:var(--muted); text-align:center; font-size:calc(9px * var(--font-scale)); line-height:1.8; padding:17px 23px 22px; }
+    .tab-bar { border-top:1px solid var(--line); background:var(--bg); flex-shrink:0; display:flex; padding:10px 10px 24px; position:relative; }
+    .tab { color:var(--muted); background:none; flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:5px; text-decoration:none; font-size:calc(9px * var(--font-scale)); padding:3px 0; }.tab.active { color:var(--accent); }
+    .home-indicator { width:120px; height:4px; border-radius:3px; background:var(--text); position:absolute; bottom:7px; left:50%; transform:translateX(-50%); opacity:.9; }
+    .device-caption { display:flex; justify-content:space-between; padding:15px 4px 0; color:var(--desk-muted); font-size:10px; letter-spacing:.3px; }
+    .annotation { padding-top:13px; }.annotation-title { font-size:11px; display:flex; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid var(--desk-line); margin-bottom:28px; }.annotation-title span { color:var(--desk-muted); }
+    .design-note { margin-bottom:27px; }.design-note .number { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--blue); display:block; margin-bottom:8px; }.design-note h3 { margin:0 0 7px; font-size:14px; font-weight:550; letter-spacing:-.3px; }.design-note p { font-size:12px; line-height:1.8; color:#727b85; margin:0; }
+    .state-note { border-top:1px solid var(--desk-line); padding-top:22px; margin-top:28px; }.state-note h3 { font-size:11px; font-weight:600; margin:0 0 9px; }.state-note p { font-size:11px; color:#727b85; line-height:1.8; margin:0; }
+    .desk-footer { display:flex; justify-content:space-between; color:var(--desk-muted); font-size:10px; margin-top:33px; padding-top:19px; border-top:1px solid var(--desk-line); line-height:1.7; gap:25px; }
+    .overlay { position:absolute; inset:0; z-index:10; display:flex; align-items:flex-end; background:#0006; }
+    .sheet { background:var(--bg); width:100%; border-radius:22px 22px 0 0; padding:12px 23px 31px; max-height:90%; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+    .sheet-grabber { width:34px; height:4px; background:var(--line); border-radius:5px; margin:0 auto 19px; }
+    .sheet-header { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:18px; }.sheet-header h2 { font-family:Inter,sans-serif; font-size:calc(21px * var(--font-scale)); letter-spacing:-.7px; margin:0; overflow-wrap:anywhere; }
+    .close-sheet { background:var(--subtle); color:var(--secondary); border-radius:50%; width:30px; height:30px; display:grid; place-items:center; flex-shrink:0; }
+    .sheet-notice { font-size:calc(11px * var(--font-scale)); color:var(--secondary); line-height:1.8; margin:16px 0; }
+    .sheet label { display:block; font-size:calc(10px * var(--font-scale)); color:var(--secondary); margin:16px 0 7px; }
+    .sheet input,.sheet select { width:100%; border:1px solid var(--line); background:var(--subtle); color:var(--text); padding:11px; border-radius:8px; min-width:0; font-size:calc(12px * var(--font-scale)); }
+    .sheet input[type=number] { font-family:'JetBrains Mono',monospace; }.form-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+    .detail-hero { padding:2px 0 16px; }.detail-hero .account-icon { width:46px; height:46px; border-radius:12px; margin-bottom:15px; }.detail-hero .hero-value { font-size:min(calc(29px * var(--font-scale)),10cqw); }
+    .detail-pair { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); font-size:calc(11px * var(--font-scale)); }.detail-pair span:first-child { color:var(--secondary); }.detail-pair span:last-child { text-align:right; max-width:65%; overflow-wrap:anywhere; }
+    .action { display:block; text-align:center; text-decoration:none; min-height:45px; border-radius:10px; font-size:calc(13px * var(--font-scale)); font-weight:600; background:#245ce8; color:#fff; width:100%; padding:12px 14px; margin-top:18px; }.action.secondary { margin-top:8px; background:var(--accent-tint); color:var(--accent); }
+    .form-error { font-size:calc(11px * var(--font-scale)); color:var(--negative); line-height:1.6; margin:12px 0 0; }
+    .sheet-options { display:grid; grid-template-columns:1fr 1fr; gap:5px; }.sheet-option { padding:11px 5px; border-radius:7px; background:var(--subtle); color:var(--secondary); font-size:calc(11px * var(--font-scale)); }.sheet-option.active { background:var(--accent-tint); color:var(--accent); }
+    .empty-state { padding:42px 23px; text-align:center; }.empty-symbol { width:62px; height:62px; display:grid; place-items:center; border-radius:18px; background:var(--subtle); color:var(--muted); margin:0 auto 23px; }
+    .empty-state h2 { font-family:Inter,sans-serif; font-size:calc(22px * var(--font-scale)); font-weight:550; letter-spacing:-.8px; margin:0 0 12px; }.empty-state p { font-size:calc(11px * var(--font-scale)); color:var(--secondary); line-height:1.8; margin:0; }
+    .toast { position:absolute; bottom:89px; left:23px; right:23px; z-index:5; padding:12px 14px; border:1px solid var(--line); border-radius:9px; background:var(--text); color:var(--bg); font-size:calc(11px * var(--font-scale)); box-shadow:0 4px 18px #0001; }
+    @media(min-width:1500px) { .workbench { padding-top:55px; }.workspace { gap:80px; } }
+    @media(max-width:1120px) { .workbench { padding:28px; }.workspace { gap:28px; grid-template-columns:minmax(170px,1fr) 390px minmax(180px,1fr); }.rail h1 { font-size:28px; } }
+    @media(max-width:940px) and (min-width:601px) { .workspace { grid-template-columns:1fr 390px; gap:35px; max-width:700px; margin:auto; }.annotation { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }.annotation-title { grid-column:1 / -1; margin:0; }.state-note { grid-column:1 / -1; margin:0; }.desk-footer { max-width:700px; margin:30px auto 0; } }
+    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; }.status { display:none; }.navigation { height:44px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.sheet { padding-bottom:max(31px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
+    @media(max-width:370px) { .page-heading,.account-list { padding-left:18px; padding-right:18px; } }
+    @media(prefers-reduced-motion:no-preference) { .page-heading,.account-list { animation:arrive .4s ease both; }.sheet { animation:sheet-in .2s ease both; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } @keyframes sheet-in { from { transform:translateY(25px); opacity:.5; } to { transform:translateY(0); opacity:1; } } }
+  </style>
+</head>
+<body>
+  <div class="workbench">
+    <header class="desk-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>portifo<span style="color:#9ca3a9;font-weight:400">/</span></div>
+      <div class="desk-caption">Accounts &nbsp; / &nbsp; Design study 04</div>
+    </header>
+    <div class="workspace">
+      <aside class="rail">
+        <p class="eyebrow">Where it all lives</p>
+        <h1>Different accounts.<br>One clear view.</h1>
+        <p class="intro">Your brokerage. Your savings. Your future. A simple home for every part of your portfolio.</p>
+        <p class="eyebrow">Explore the states</p>
+        <nav class="state-list" id="state-list" aria-label="Preview scenario"></nav>
+        <div class="controls">
+          <span class="control-label">Appearance</span>
+          <div class="theme-control" aria-label="Theme"><button class="active" data-theme="light" aria-pressed="true">Light</button><button data-theme="dark" aria-pressed="false">Dark</button></div>
+          <div class="font-control">
+            <div class="font-control-heading"><label class="control-label" for="font-scale">Preview font size</label><output id="font-scale-value" for="font-scale">115%</output></div>
+            <input class="font-scale-slider" id="font-scale" type="range" min="100" max="140" step="5" value="115" aria-valuetext="115 percent">
+            <div class="font-control-footer"><span>100% original · 140% larger</span><button class="font-reset" id="font-scale-reset">Reset</button></div>
+          </div>
+          <a class="companion-link" href="portfolio-overview.html">Portfolio overview study <span aria-hidden="true">↗</span></a>
+          <a class="companion-link" href="holding-detail.html">Holding detail study <span aria-hidden="true">↗</span></a>
+          <a class="companion-link" href="transactions.html">Transactions study <span aria-hidden="true">↗</span></a>
+        </div>
+      </aside>
+      <main class="phone-wrap">
+        <div class="phone" id="phone" aria-label="Accounts mobile prototype">
+          <div class="status" aria-hidden="true"><span>9:41</span><div class="status-icons"><svg width="17" height="13" viewBox="0 0 17 13" fill="currentColor"><rect x="0" y="9" width="3" height="4" rx=".7"/><rect x="4.5" y="6" width="3" height="7" rx=".7"/><rect x="9" y="3" width="3" height="10" rx=".7"/><rect x="13.5" y="0" width="3" height="13" rx=".7"/></svg><svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 4a11 11 0 0 1 14 0M3.5 7a7 7 0 0 1 9 0M6 10a3 3 0 0 1 4 0"/><circle cx="8" cy="12" r=".6" fill="currentColor"/></svg><svg width="25" height="13" viewBox="0 0 25 13" fill="none"><rect x=".5" y="1" width="21" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2.5" y="3" width="17" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg></div></div>
+          <header class="navigation"><span class="workspace-label">My workspace</span><span class="currency" aria-label="Balances in US dollars">USD</span></header>
+          <div class="screen" id="screen" tabindex="0" aria-label="Accounts, scroll for all accounts">
+            <div class="page-heading"><h1>Accounts</h1><button class="icon-button" id="add-account" aria-label="Add account"></button></div>
+            <div id="account-list" class="account-list"></div>
+            <div class="list-footer" id="list-footer">Manually tracked. Always in your control.<br>Illustrative balances · October 3, 2025</div>
+          </div>
+          <nav class="tab-bar" id="tab-bar" aria-label="Main navigation"></nav>
+          <div class="toast" id="toast" role="status" hidden></div>
+          <div id="overlay-root"></div>
+        </div>
+        <div class="device-caption"><span>390 × 844 · iOS / mobile web</span><span>Scroll to explore ↓</span></div>
+      </main>
+      <aside class="annotation">
+        <div class="annotation-title">The hierarchy <span>01 — 03</span></div>
+        <div class="design-note"><span class="number">01 / THE IDENTITY</span><h3>Straight to your accounts.</h3><p>The page title leads directly into the list. Account names and institutions provide context without an extra summary or toolbar.</p></div>
+        <div class="design-note"><span class="number">02 / THE ACCOUNTS</span><h3>A list, not a wall of cards.</h3><p>Account name and institution come first. A clear balance, cash amount and quiet mix bar follow. Flat rows and hairline dividers keep the view calm, even as the list grows.</p></div>
+        <div class="design-note"><span class="number">03 / THE CONTROL</span><h3>A home you can make your own.</h3><p>Tap a row for its breakdown and edit its details, or add a manually tracked account without connecting a brokerage.</p></div>
+        <div class="state-note"><h3 id="state-note-title"></h3><p id="state-note-text"></p></div>
+      </aside>
+    </div>
+    <footer class="desk-footer"><span>Flat surfaces · Cobalt actions · Inter / Public Sans / JetBrains Mono<br>Same tokens, device frame and hierarchy as the existing studies.</span><span>Interactive HTML study · All balances are illustrative<br>Account changes live in this preview only. Nothing is connected.</span></footer>
+  </div>
+  <script>
+    const $ = s => document.querySelector(s);
+    const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const icon = (body,size=20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+    const icons = {
+      plus:icon('<path d="M12 5v14M5 12h14"/>'), close:icon('<path d="m6 6 12 12M18 6 6 18"/>',14),
+      chevron:icon('<path d="m9 6 6 6-6 6"/>',15),
+      brokerage:icon('<path d="M4 20V10m5 10V6m6 14v-8m5 8V3M2 20h20"/>',18),
+      savings:icon('<path d="M12 3v11m-4-4 4 4 4-4M4 14v6h16v-6"/>',18),
+      retirement:icon('<path d="M12 3 4 7v5c0 5 8 9 8 9s8-4 8-9V7l-8-4Z"/><path d="m8 12 3 3 5-6"/>',18),
+      accounts:icon('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/>'),
+      portfolio:icon('<rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3M3 12h18M10 12v3h4v-3"/>'),
+      transactions:icon('<path d="M4 7h16M4 12h10M4 17h16"/><path d="m17 10 3 2-3 2"/>'),
+      settings:icon('<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="var(--bg)"/><circle cx="15" cy="17" r="3" fill="var(--bg)"/>')
+    };
+    const money = n => '$'+n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const types = {brokerage:'Brokerage',savings:'Tax-free savings',retirement:'Retirement'};
+    // Use the same prices, share counts and cash balances as portfolio-overview.html.
+    const holdings = [
+      {symbol:'NVDA',price:139.08,shares:[120,80,50]},
+      {symbol:'AAPL',price:243.18,shares:[60,25,15]},
+      {symbol:'MSFT',price:443.5,shares:[30,10,10]},
+      {symbol:'VTI',price:307.6,shares:[10,25,25]},
+      {symbol:'AMZN',price:211.4384615385,shares:[35,20,10]}
+    ];
+    const seed = [
+      {id:1,name:'Individual brokerage',type:'brokerage',institution:'Questrade',cash:6750,index:0},
+      {id:2,name:'Tax-free savings',type:'savings',institution:'Wealthsimple',cash:4500,index:1},
+      {id:3,name:'Retirement savings',type:'retirement',institution:'Questrade',cash:3750,index:2}
+    ].map(a=>({...a,investments:holdings.reduce((n,h)=>n+h.price*h.shares[a.index],0),holdings:5}));
+    const scenarios = [
+      {id:'balanced',label:'A home for every account',note:'Three accounts with the same investments and cash as the portfolio overview. Institutions are illustrative. The page stays focused on the accounts themselves.'},
+      {id:'cash',label:'Cash, ready for what’s next',note:'Accounts can hold cash without investments. The mix bars become entirely sage, and account details show zero holdings rather than inventing returns.'},
+      {id:'single',label:'Keeping it simple',note:'One brokerage account gets the same hierarchy as a larger portfolio. No extra charts or filler just to occupy space.'},
+      {id:'empty',label:'Your first account',note:'A true empty state, with no invented balance. Add an account with just a name. Changes stay within this scenario until refresh.'}
+    ];
+    const records = Object.fromEntries(scenarios.map(s=>[s.id,s.id==='empty'?[]:seed.filter((a,i)=>s.id!=='single'||i===0).map(a=>({...a,...(s.id==='cash'?{investments:0,holdings:0,index:null}:{})}))]));
+    const state = {id:'balanced',theme:'light',fontScale:115};
+    let nextId=4, sheetOpener=null, editingId=null, toastTimer;
+    const total = a => a.cash+a.investments;
+    const accountIcon = a => `<span class="account-icon ${a.type}">${icons[a.type]}</span>`;
+    const pair = (label,value,mono=false) => `<div class="detail-pair"><span>${esc(label)}</span><span${mono?' class="money"':''}>${esc(value)}</span></div>`;
+    function updateControls() {
+      $('#state-list').innerHTML=scenarios.map((s,i)=>`<button class="state-option ${s.id===state.id?'active':''}" data-state="${s.id}" aria-pressed="${s.id===state.id}"><span>${String(i+1).padStart(2,'0')}</span>${s.label}</button>`).join('');
+      document.querySelectorAll('[data-theme]').forEach(b=>{b.classList.toggle('active',b.dataset.theme===state.theme);b.setAttribute('aria-pressed',b.dataset.theme===state.theme);});
+      $('#phone').classList.toggle('dark',state.theme==='dark');
+      $('#phone').style.setProperty('--font-scale',state.fontScale/100);
+      $('#font-scale').value=state.fontScale;$('#font-scale-value').value=state.fontScale+'%';$('#font-scale').setAttribute('aria-valuetext',state.fontScale+' percent');
+      const scenario=scenarios.find(s=>s.id===state.id);$('#state-note-title').textContent=scenario.label;$('#state-note-text').textContent=scenario.note;
+    }
+    function renderList() {
+      const rows=records[state.id];
+      if(!rows.length) {
+        $('#account-list').classList.remove('account-list');
+        $('#account-list').innerHTML=`<section class="empty-state"><div class="empty-symbol">${icons.accounts}</div><h2>Make room for your portfolio.</h2><p>Start with the account you already have.<br>Bring the rest together, one at a time.</p><button class="action" data-command="add">Add your first account</button></section>`;
+      } else {
+        $('#account-list').classList.add('account-list');
+        $('#account-list').innerHTML=rows.map(a=>{
+          const value=total(a), invested=value?a.investments/value*100:0,cash=value?a.cash/value*100:0;
+          return `<button class="account-row" data-account="${a.id}"><span class="account-top">${accountIcon(a)}<span class="account-identity"><span class="account-name">${esc(a.name)}</span><span class="account-meta">${esc(a.institution||'Manually tracked')} · ${esc(types[a.type])}</span></span><span class="row-chevron">${icons.chevron}</span></span><span class="account-balance"><span class="money">${money(value)}</span><span class="account-cash"><span class="money">${money(a.cash)}</span> cash</span></span><span class="mix-bar" aria-hidden="true"><i style="width:${invested}%"></i><i class="cash" style="width:${cash}%"></i></span></button>`;
+        }).join('');
+      }
+      $('#list-footer').hidden=!rows.length;
+    }
+    function render() {
+      updateControls();
+      renderList();
+    }
+    function notify(text) { clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>$('#toast').hidden=true,3500); }
+    function sheet(title,body,opener=document.activeElement) {
+      if(!$('#overlay-root').children.length)sheetOpener=opener;
+      ['.navigation','#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=true);
+      $('#overlay-root').innerHTML=`<div class="overlay"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1"><div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">${esc(title)}</h2><button class="close-sheet" data-command="close" aria-label="Close dialog">${icons.close}</button></div>${body}</section></div>`;
+      $('.sheet').focus({preventScroll:true});
+    }
+    function closeSheet() {
+      $('#overlay-root').innerHTML='';['.navigation','#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=false);
+      const replacement=sheetOpener?.dataset.account?$(`[data-account="${sheetOpener.dataset.account}"]`):null;
+      if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true});else if(replacement)replacement.focus({preventScroll:true});else $('#add-account').focus({preventScroll:true});
+      editingId=null;
+    }
+    function showDetail(id,opener) {
+      const a=records[state.id].find(a=>a.id===Number(id));if(!a)return;
+      sheet(a.name,`<div class="detail-hero">${accountIcon(a)}<p class="hero-label">Total account value</p><span class="hero-value money">${money(total(a))}</span></div>`+
+        pair('Investments',money(a.investments),true)+pair('Cash',money(a.cash),true)+pair('Holdings',String(a.holdings))+pair('Account type',types[a.type])+pair('Institution',a.institution||'Not specified')+pair('Currency','USD')+
+        `<p class="sheet-notice">Manually tracked, not connected to a brokerage. Balances are illustrative; changes won’t update the other design studies.</p><button class="action" data-edit="${a.id}">Edit account</button><button class="action secondary" data-command="close">Done</button>`,opener);
+    }
+    function openAccountForm(id=null,opener=document.activeElement) {
+      const a=id===null?null:records[state.id].find(a=>a.id===Number(id));
+      if(id!==null&&!a)return;
+      editingId=a?.id??null;
+      sheet(a?'Edit account':'Add account',`<p class="sheet-notice">${a?'Give this account a name that makes sense to you. Editing these details won’t change its balance.':'Track an existing account manually. No login, connection or account number needed.'}</p><form id="account-form"><label for="account-name">Account name</label><input id="account-name" name="name" value="${esc(a?.name||'')}" placeholder="e.g. My investment account" required maxlength="60" autocomplete="off">${a?`<label for="account-type">Account type</label><select id="account-type" name="type">${Object.entries(types).map(([v,l])=>`<option value="${v}" ${v===a.type?'selected':''}>${l}</option>`).join('')}</select><label for="account-institution">Institution <span>(optional)</span></label><input id="account-institution" name="institution" value="${esc(a.institution||'')}" placeholder="e.g. Questrade" maxlength="60" autocomplete="off">`:''}<p class="form-error" id="form-error" role="alert" hidden></p><p class="sheet-notice">${a?'Saved only in this preview, until you refresh.':'New accounts start with a zero balance and no investments. Saved only in this preview, until you refresh.'}</p><button class="action" type="submit">${a?'Save changes':'Add account'}</button><button class="action secondary" type="button" data-command="close">Cancel</button></form>`,opener);
+    }
+    function saveAccount(form) {
+      const editing=editingId!==null;
+      const data=new FormData(form),name=String(data.get('name')||'').trim(),institution=editing?String(data.get('institution')||'').trim():'',type=editing?data.get('type'):'brokerage';
+      const error=$('#form-error');
+      const problem=!name?'Please enter an account name.':editing&&!Object.hasOwn(types,type)?'Please choose an account type.':'';
+      if(problem){error.textContent=problem;error.hidden=false;if(!name)$('#account-name').focus();return;}
+      if(editing)Object.assign(records[state.id].find(a=>a.id===editingId),{name,institution,type});
+      else records[state.id].push({id:nextId++,name,institution,type,cash:0,investments:0,holdings:0,index:null});
+      render();closeSheet();$('#screen').scrollTop=0;notify(editing?'Account details updated.':'Account added to this preview.');
+    }
+    function openSettings(opener) {
+      sheet('Appearance',`<p class="sheet-notice">The same quiet palette, in light or dark.</p><div class="sheet-options" aria-label="Theme">${['light','dark'].map(t=>`<button class="sheet-option ${t===state.theme?'active':''}" data-mobile-theme="${t}" aria-pressed="${t===state.theme}">${t==='light'?'Light':'Dark'}</button>`).join('')}</div><label for="mobile-font">Text size <span id="mobile-font-value">${state.fontScale}%</span></label><input id="mobile-font" type="range" min="100" max="140" step="5" value="${state.fontScale}" aria-valuetext="${state.fontScale} percent"><button class="action secondary" data-command="close">Done</button>`,opener);
+    }
+    $('#add-account').innerHTML=icons.plus;
+    $('#tab-bar').innerHTML=`<a class="tab" href="portfolio-overview.html">${icons.portfolio}<span>Portfolio</span></a><button class="tab active" data-command="top" aria-current="page">${icons.accounts}<span>Accounts</span></button><a class="tab" href="transactions.html">${icons.transactions}<span>Transactions</span></a><button class="tab" data-command="settings">${icons.settings}<span>Settings</span></button><div class="home-indicator" aria-hidden="true"></div>`;
+    $('#add-account').addEventListener('click',e=>openAccountForm(null,e.currentTarget));
+    $('#font-scale').addEventListener('input',e=>{state.fontScale=Number(e.target.value);updateControls();});
+    $('#font-scale-reset').addEventListener('click',()=>{state.fontScale=115;updateControls();});
+    document.addEventListener('click',e=>{
+      const b=e.target.closest('button');if(!b)return;
+      if(b.dataset.state){state.id=b.dataset.state;render();$('#screen').scrollTop=0;}
+      if(b.dataset.theme){state.theme=b.dataset.theme;updateControls();}
+      if(b.dataset.account)showDetail(b.dataset.account,b);
+      if(b.dataset.edit)openAccountForm(Number(b.dataset.edit));
+      if(b.dataset.mobileTheme){state.theme=b.dataset.mobileTheme;updateControls();document.querySelectorAll('[data-mobile-theme]').forEach(el=>{el.classList.toggle('active',el.dataset.mobileTheme===state.theme);el.setAttribute('aria-pressed',el.dataset.mobileTheme===state.theme);});}
+      switch(b.dataset.command){
+        case 'close':closeSheet();break;
+        case 'add':openAccountForm(null,b);break;
+        case 'settings':openSettings(b);break;
+        case 'top':$('#screen').scrollTop=0;break;
+      }
+    });
+    document.addEventListener('input',e=>{
+      if(e.target.id==='mobile-font'){state.fontScale=Number(e.target.value);e.target.setAttribute('aria-valuetext',state.fontScale+' percent');$('#mobile-font-value').textContent=state.fontScale+'%';updateControls();}
+    });
+    document.addEventListener('submit',e=>{
+      if(e.target.id==='account-form'){e.preventDefault();saveAccount(e.target);}
+    });
+    $('#overlay-root').addEventListener('click',e=>{if(e.target.classList.contains('overlay'))closeSheet();});
+    document.addEventListener('keydown',e=>{
+      const dialog=$('.sheet');if(!dialog)return;
+      if(e.key==='Escape'){e.preventDefault();closeSheet();return;}
+      if(e.key==='Tab'){
+        const targets=Array.from(dialog.querySelectorAll('button,input,select,a[href],[tabindex="0"]')).filter(el=>!el.disabled&&el.getClientRects().length),first=targets[0],last=targets[targets.length-1];
+        if(e.shiftKey&&(document.activeElement===first||document.activeElement===dialog)){e.preventDefault();last?.focus();}
+        else if(!e.shiftKey&&(document.activeElement===last||document.activeElement===dialog)){e.preventDefault();first?.focus();}
+      }
+    });
+    render();
+  </script>
+</body>
+</html>

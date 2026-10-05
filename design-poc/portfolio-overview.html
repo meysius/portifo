@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f8f9fc">
+  <title>Portifo · Portfolio overview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;550;600;650;700&family=Public+Sans:wght@400;450;500;550;600;650;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root { color-scheme:light; --desk:#f0f1ef; --desk-ink:#262e39; --desk-muted:#78808a; --desk-line:#d9deda; --blue:#245ce8; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--desk); color:var(--desk-ink); font-family:'Public Sans',sans-serif; -webkit-font-smoothing:antialiased; }
+    button,select,input { font:inherit; } button { cursor:pointer; border:0; } button,a,select { -webkit-tap-highlight-color:transparent; }
+    button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible { outline:3px solid #7597ff; outline-offset:3px; }
+    svg { display:block; flex-shrink:0; } a { color:inherit; } [hidden] { display:none!important; }
+    .workbench { max-width:1320px; margin:auto; padding:42px 48px 34px; }
+    .desk-header { display:flex; align-items:center; justify-content:space-between; padding-bottom:25px; border-bottom:1px solid var(--desk-line); }
+    .brand { display:flex; gap:10px; align-items:center; font-family:Inter,sans-serif; font-weight:650; font-size:23px; letter-spacing:-1px; }
+    .brand-mark { width:25px; height:26px; display:flex; gap:3px; align-items:flex-end; }
+    .brand-mark i { display:block; width:6px; background:var(--blue); border-radius:2px; }
+    .brand-mark i:nth-child(1) { height:12px; }.brand-mark i:nth-child(2) { height:20px; }.brand-mark i:nth-child(3) { height:26px; }
+    .desk-caption { font-size:11px; text-transform:uppercase; letter-spacing:1.8px; color:var(--desk-muted); }
+    .workspace { display:grid; grid-template-columns:minmax(210px,1fr) 390px minmax(230px,1fr); gap:54px; padding-top:35px; align-items:start; }
+    .rail { padding-top:11px; }.eyebrow { margin:0 0 16px; font-size:10px; font-weight:600; letter-spacing:1.6px; text-transform:uppercase; color:var(--desk-muted); }
+    .rail h1 { font-family:Inter,sans-serif; font-weight:550; font-size:32px; letter-spacing:-1.5px; line-height:1.15; margin:0 0 13px; }
+    .intro { color:#6c747e; line-height:1.7; font-size:13px; max-width:220px; margin:0 0 32px; }
+    .state-list { display:flex; flex-direction:column; gap:3px; }
+    .state-option { width:100%; text-align:left; background:none; display:flex; gap:12px; align-items:center; color:#626b76; font-size:12px; line-height:1.35; padding:11px 10px; border-radius:7px; }
+    .state-option span { font-family:'JetBrains Mono',monospace; font-size:10px; opacity:.6; }.state-option:hover { background:#e7eae6; }
+    .state-option.active { background:#e1e7f3; color:#204ba9; font-weight:600; }.state-option.active span { opacity:1; }
+    .controls { border-top:1px solid var(--desk-line); margin-top:26px; padding-top:23px; }
+    .control-label { font-size:11px; color:#6c747e; display:block; margin-bottom:9px; }
+    .theme-control { display:flex; gap:3px; background:#e4e7e3; padding:3px; border-radius:8px; margin-bottom:19px; }
+    .theme-control button { flex:1; padding:8px; background:none; color:#69717b; border-radius:5px; font-size:11px; }.theme-control button.active { background:#fff; color:#273140; }
+    .font-control-heading { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+    .font-control output { font-family:'JetBrains Mono',monospace; font-size:11px; color:#204ba9; }
+    .font-scale-slider { display:block; width:100%; height:28px; margin:0; accent-color:var(--blue); cursor:ew-resize; }
+    .font-control-footer { display:flex; justify-content:space-between; align-items:center; font-size:10px; color:#6c747e; margin-top:4px; }
+    .font-reset { background:none; padding:5px 0 5px 8px; color:#204ba9; font-size:11px; }
+    .companion-link { display:flex; align-items:center; gap:8px; margin-top:25px; color:#204ba9; font-size:11px; text-decoration:none; }
+    .companion-link:hover { text-decoration:underline; }
+    .phone-wrap { width:390px; }
+    /* Extend row highlights into the gutter without shifting aligned content. */
+    .phone { --row-inset:10px; --row-radius:0; }
+    .phone { --bg:#fff; --subtle:#f8f9fc; --text:#162239; --secondary:#657084; --muted:#929baa; --line:#e9edf3; --accent:#245ce8; --accent-tint:#edf2ff; --positive:#16734b; --negative:#b44145; --positive-bg:#edf8f2; --negative-bg:#fff1f1; --font-scale:1.15; --cash:#a4c8b9; color-scheme:light; width:390px; height:844px; background:var(--bg); color:var(--text); border:1px solid #d8dce2; border-radius:38px; position:relative; overflow:hidden; display:flex; flex-direction:column; isolation:isolate; }
+    .phone.dark { --bg:#121820; --subtle:#19212c; --text:#eef2f8; --secondary:#9aa8ba; --muted:#708094; --line:#27313f; --accent:#81a5ff; --accent-tint:#202f4d; --positive:#72d3a6; --negative:#fb9297; --positive-bg:#1c302a; --negative-bg:#352429; --cash:#77ae99; color-scheme:dark; border-color:#333e4b; }
+    .status { height:47px; padding:17px 27px 8px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; font-family:Inter,sans-serif; font-size:14px; font-weight:650; }
+    .status-icons { display:flex; align-items:center; gap:6px; }
+    .navigation { height:38px; padding:0 23px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:var(--bg); z-index:3; }
+    .scope-select { max-width:260px; min-width:0; background:transparent; border:0; color:var(--secondary); padding:8px 16px 8px 0; font-size:calc(11px * var(--font-scale)); cursor:pointer; }
+    .currency { font-family:'JetBrains Mono',monospace; font-size:calc(10px * var(--font-scale)); color:var(--secondary); letter-spacing:.4px; padding:4px 7px; border:1px solid var(--line); border-radius:5px; }
+    .screen { overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; flex:1; min-height:0; }.screen::-webkit-scrollbar { display:none; }
+    .page-heading { padding:12px 23px 0; display:flex; align-items:center; justify-content:space-between; }
+    .page-heading h1 { margin:0; font-family:Inter,sans-serif; font-weight:650; font-size:calc(34px * var(--font-scale)); letter-spacing:-1.5px; line-height:1.2; }
+    .icon-button { width:34px; height:34px; background:var(--accent-tint); color:var(--accent); border-radius:10px; display:grid; place-items:center; }
+    .hero { padding:20px 23px 0; }.hero-label { font-size:calc(12px * var(--font-scale)); color:var(--secondary); margin-bottom:9px; }
+    .money { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; white-space:nowrap; letter-spacing:-.5px; }
+    .hero-value { font-size:calc(37px * var(--font-scale)); letter-spacing:-1.9px; line-height:1.25; font-weight:500; }
+    .hero-return { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:calc(12px * var(--font-scale)); }
+    .return-label { color:var(--secondary); font-size:calc(10px * var(--font-scale)); }.positive { color:var(--positive); }.negative { color:var(--negative); }
+    .return-percent { padding:3px 5px; border-radius:4px; font-size:calc(10px * var(--font-scale)); letter-spacing:-.2px; }.return-percent.positive { background:var(--positive-bg); }.return-percent.negative { background:var(--negative-bg); }
+    .growth { padding:18px 23px 12px; }
+    .growth-heading { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:9px; }
+    .growth-heading h2 { font-weight:500; font-size:calc(11px * var(--font-scale)); color:var(--secondary); margin:0; }
+    .period-change { font-size:calc(10px * var(--font-scale)); }
+    .chart-wrap { height:100px; position:relative; }.chart-svg { width:100%; height:100%; overflow:visible; touch-action:pan-y; cursor:crosshair; }
+    .chart-tooltip { position:absolute; left:0; top:0; pointer-events:none; background:var(--bg); border:1px solid var(--line); border-radius:6px; font-size:calc(9px * var(--font-scale)); padding:5px 8px; color:var(--text); opacity:0; z-index:1; line-height:1.7; }
+    .chart-axis { display:flex; justify-content:space-between; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:calc(8px * var(--font-scale)); margin-top:8px; }
+    .chart-controls { display:flex; justify-content:space-between; gap:4px; padding-top:9px; }
+    .chart-range { flex:1; min-height:32px; border-radius:6px; background:none; color:var(--secondary); font-size:calc(10px * var(--font-scale)); font-weight:600; }.chart-range.active { background:var(--accent-tint); color:var(--accent); }
+    .section { padding:17px 23px; border-top:6px solid var(--subtle); }
+    .section-heading { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:13px; }
+    .section-heading h2 { font-family:Inter,sans-serif; font-weight:600; font-size:calc(16px * var(--font-scale)); letter-spacing:-.4px; margin:0; }
+    .section-heading .meta { color:var(--muted); font-size:calc(10px * var(--font-scale)); }
+    .allocation .section-heading,.movers .section-heading { flex-wrap:wrap; }
+    .allocation-bar { display:flex; height:14px; overflow:hidden; border-radius:5px; margin-bottom:17px; }
+    .allocation-segment { height:100%; min-width:0; box-shadow:inset -2px 0 var(--bg); }.allocation-segment:last-child { box-shadow:none; }
+    .allocation-legend { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:28px; }
+    .allocation-stat { position:relative; }
+    .allocation-stat + .allocation-stat::before { content:''; position:absolute; left:-14px; top:0; bottom:0; width:1px; background:var(--line); }
+    .legend-label { color:var(--secondary); font-size:calc(10px * var(--font-scale)); display:flex; align-items:center; gap:7px; margin-bottom:7px; }
+    .legend-dot { height:7px; width:7px; background:var(--accent); border-radius:2px; flex-shrink:0; }.legend-dot.cash { background:var(--cash); }
+    .legend-percent { display:block; color:var(--text); font-size:calc(23px * var(--font-scale)); line-height:1.2; font-weight:500; margin-bottom:5px; }
+    .legend-value { font-size:calc(11px * var(--font-scale)); color:var(--secondary); }
+    .allocation-note { color:var(--muted); font-size:calc(9px * var(--font-scale)); line-height:1.5; margin:14px 0 0; }
+    .stock-breakdown { margin-top:18px; padding-top:15px; border-top:1px solid var(--line); }
+    .stock-breakdown-heading { display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-bottom:10px; }
+    .stock-breakdown-heading h3 { margin:0; font-size:calc(10px * var(--font-scale)); font-weight:500; color:var(--secondary); }
+    .stock-breakdown-heading span { font-size:calc(9px * var(--font-scale)); color:var(--muted); }
+    .allocation-weights { display:grid; gap:4px; }
+    .allocation-weight { display:grid; grid-template-columns:65px minmax(0,1fr) 55px; gap:12px; align-items:center; width:100%; min-height:30px; padding:4px 0; background:none; color:var(--text); text-decoration:none; text-align:left; font-size:calc(10px * var(--font-scale)); border-radius:4px; }
+    .allocation-weight:hover,.allocation-weight:focus-visible { background:var(--subtle); }
+    .allocation-weight .legend-label { margin:0; color:var(--text); font-weight:500; }
+    .allocation-weight .money { text-align:right; }
+    .allocation-weight .weight-track { height:5px; }
+    .holdings { padding-bottom:0; }.holdings .section-heading { margin-bottom:0; }
+    .list-caption { display:flex; justify-content:space-between; padding:13px 0 2px; font-size:calc(9px * var(--font-scale)); color:var(--muted); }
+    .holding-row { width:100%; text-decoration:none; display:flex; align-items:center; gap:11px; color:var(--text); text-align:left; background:none; padding:15px 0; border-bottom:1px solid var(--line); }
+    .holding-row,.allocation-weight { width:calc(100% + 2 * var(--row-inset)); margin-inline:calc(-1 * var(--row-inset)); padding-inline:var(--row-inset); border-radius:var(--row-radius); }
+    .holding-row:hover,.holding-row:focus-visible { background:var(--subtle); }
+    .holding-identity { flex:1; min-width:0; }.holding-symbol { font-size:calc(12px * var(--font-scale)); font-weight:600; }
+    .holding-meta { font-size:calc(9px * var(--font-scale)); color:var(--secondary); margin-top:5px; line-height:1.5; }
+    .holding-end { text-align:right; flex-shrink:0; }.holding-value { font-size:calc(12px * var(--font-scale)); font-weight:500; }.holding-return { font-size:calc(9px * var(--font-scale)); margin-top:6px; }
+    .holding-summary { display:flex; flex:1; align-items:center; gap:11px; }
+    .holding-summary .holding-meta { display:block; }
+    .weight-track { display:block; min-width:0; height:5px; background:var(--line); border-radius:3px; overflow:hidden; }
+    .weight-track i { height:100%; display:block; border-radius:inherit; background:var(--weight-color,var(--accent)); }
+    .holding-symbol .legend-dot { display:inline-block; vertical-align:middle; margin-right:7px; }
+    .movers .section-heading { margin-bottom:4px; }
+    .movers-context { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:8px; color:var(--muted); font-size:calc(9px * var(--font-scale)); line-height:1.5; }
+    .movers-chart { display:grid; grid-template-columns:repeat(var(--mover-count),minmax(0,1fr)); gap:4px; position:relative; }
+    .movers-chart::before { content:''; position:absolute; left:0; right:0; top:58px; height:1px; background:var(--line); pointer-events:none; }
+    .mover-column { position:relative; display:block; min-width:0; height:116px; padding:0; color:var(--text); background:none; border-radius:5px; text-decoration:none; text-align:center; }
+    .mover-column:hover { background:var(--subtle); }
+    .mover-percent { display:block; position:absolute; top:0; left:0; right:0; font-size:calc(9px * var(--font-scale)); line-height:1.4; font-weight:500; }
+    .mover-bar-plot { position:absolute; left:0; right:0; top:20px; height:76px; }
+    .mover-bar { position:absolute; left:50%; transform:translateX(-50%); width:20px; height:var(--bar-height); min-height:1px; background:currentColor; opacity:.85; }
+    .mover-bar.positive { bottom:50%; border-radius:4px 4px 0 0; }.mover-bar.negative { top:50%; border-radius:0 0 4px 4px; }
+    .mover-symbol { display:block; position:absolute; bottom:0; left:0; right:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:calc(9px * var(--font-scale)); line-height:1.4; font-weight:600; }
+    .movers-empty { margin:13px 0 0; padding:14px; background:var(--subtle); border-radius:8px; color:var(--secondary); font-size:calc(11px * var(--font-scale)); line-height:1.7; }
+    .cash-accounts { padding:0 0 4px; border-bottom:1px solid var(--line); }.cash-account { padding:12px 0; display:flex; justify-content:space-between; gap:8px; font-size:calc(10px * var(--font-scale)); line-height:1.6; }.cash-account span:first-child { color:var(--secondary); }
+    .tab-bar { border-top:1px solid var(--line); background:var(--bg); flex-shrink:0; display:flex; padding:10px 12px 24px; position:relative; }
+    .tab { color:var(--muted); background:none; flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; text-decoration:none; font-size:calc(9px * var(--font-scale)); padding:3px; }.tab.active { color:var(--accent); }
+    .home-indicator { width:120px; height:4px; border-radius:3px; background:var(--text); position:absolute; bottom:7px; left:50%; transform:translateX(-50%); opacity:.9; }
+    .device-caption { display:flex; justify-content:space-between; padding:15px 4px 0; color:var(--desk-muted); font-size:10px; letter-spacing:.3px; }
+    .annotation { padding-top:13px; }.annotation-title { font-size:11px; display:flex; justify-content:space-between; padding-bottom:16px; border-bottom:1px solid var(--desk-line); margin-bottom:28px; }.annotation-title span { color:var(--desk-muted); }
+    .design-note { margin-bottom:27px; }.design-note .number { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--blue); display:block; margin-bottom:8px; }.design-note h3 { margin:0 0 7px; font-size:14px; font-weight:550; letter-spacing:-.3px; }.design-note p { font-size:12px; line-height:1.8; color:#727b85; margin:0; }
+    .state-note { border-top:1px solid var(--desk-line); padding-top:22px; margin-top:28px; }.state-note h3 { font-size:11px; font-weight:600; margin:0 0 9px; }.state-note p { font-size:11px; color:#727b85; line-height:1.8; margin:0; }
+    .desk-footer { display:flex; justify-content:space-between; color:var(--desk-muted); font-size:10px; margin-top:33px; padding-top:19px; border-top:1px solid var(--desk-line); line-height:1.7; gap:25px; }
+    .overlay { position:absolute; inset:0; z-index:10; display:flex; align-items:flex-end; background:#0006; }.sheet { background:var(--bg); width:100%; border-radius:22px 22px 0 0; padding:12px 23px 31px; max-height:90%; overflow-y:auto; }
+    .sheet-grabber { width:34px; height:4px; background:var(--line); border-radius:5px; margin:0 auto 19px; }.sheet-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }.sheet-header h2 { font-family:Inter,sans-serif; font-size:calc(21px * var(--font-scale)); letter-spacing:-.7px; margin:0; }.close-sheet { background:var(--subtle); color:var(--secondary); border-radius:50%; width:30px; height:30px; display:grid; place-items:center; }
+    .sheet-notice { font-size:calc(11px * var(--font-scale)); color:var(--secondary); line-height:1.8; margin:16px 0; }
+    .detail-pair { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:15px 0; border-bottom:1px solid var(--line); font-size:calc(11px * var(--font-scale)); }.detail-pair span:first-child { color:var(--secondary); }.detail-pair span:last-child { text-align:right; }
+    .action { min-height:45px; border-radius:10px; font-size:calc(13px * var(--font-scale)); font-weight:600; background:#245ce8; color:#fff; width:100%; padding:10px 14px; margin-top:18px; }
+    .empty-state { padding:60px 23px; text-align:center; }.empty-symbol { width:62px; height:62px; display:grid; place-items:center; border-radius:18px; background:var(--subtle); color:var(--muted); margin:0 auto 24px; }.empty-state h2 { font-family:Inter,sans-serif; font-size:calc(23px * var(--font-scale)); font-weight:550; letter-spacing:-.8px; margin:0 0 12px; }.empty-state p { font-size:calc(12px * var(--font-scale)); color:var(--secondary); line-height:1.8; }
+    @media(min-width:1500px) { .workbench { padding-top:55px; }.workspace { gap:80px; } }
+    @media(max-width:1120px) { .workbench { padding:28px; }.workspace { gap:28px; grid-template-columns:minmax(170px,1fr) 390px minmax(180px,1fr); }.rail h1 { font-size:28px; } }
+    @media(max-width:940px) and (min-width:601px) { .workspace { grid-template-columns:1fr 390px; gap:35px; max-width:700px; margin:auto; }.annotation { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }.annotation-title { grid-column:1 / -1; margin:0; }.state-note { grid-column:1 / -1; margin:0; }.desk-footer { max-width:700px; margin:30px auto 0; } }
+    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; }.status { display:none; }.navigation { height:44px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
+    @media(prefers-reduced-motion:no-preference) { .hero,.growth,.allocation { animation:arrive .4s ease both; }.growth { animation-delay:.05s; }.allocation { animation-delay:.1s; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } }
+  </style>
+</head>
+<body>
+  <div class="workbench">
+    <header class="desk-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>portifo<span style="color:#9ca3a9;font-weight:400">/</span></div>
+      <div class="desk-caption">Portfolio overview &nbsp; / &nbsp; Design study 02</div>
+    </header>
+    <div class="workspace">
+      <aside class="rail">
+        <p class="eyebrow">The bigger picture</p>
+        <h1>Every holding.<br>One portfolio.</h1>
+        <p class="intro">What you have. How it’s grown. Where it lives. Your whole portfolio, at a glance.</p>
+        <p class="eyebrow">Explore the states</p>
+        <nav class="state-list" id="state-list" aria-label="Preview scenario"></nav>
+        <div class="controls">
+          <span class="control-label">Appearance</span>
+          <div class="theme-control" aria-label="Theme"><button class="active" data-theme="light" aria-pressed="true">Light</button><button data-theme="dark" aria-pressed="false">Dark</button></div>
+          <div class="font-control">
+            <div class="font-control-heading"><label class="control-label" for="font-scale">Preview font size</label><output id="font-scale-value" for="font-scale">115%</output></div>
+            <input class="font-scale-slider" id="font-scale" type="range" min="100" max="140" step="5" value="115" aria-valuetext="115 percent">
+            <div class="font-control-footer"><span>100% original · 140% larger</span><button class="font-reset" id="font-scale-reset">Reset</button></div>
+          </div>
+          <a class="companion-link" href="holding-detail.html">Holding detail study <span aria-hidden="true">↗</span></a>
+        </div>
+      </aside>
+      <main class="phone-wrap">
+        <div class="phone" id="phone" aria-label="Portfolio overview mobile prototype">
+          <div class="status" aria-hidden="true"><span>9:41</span><div class="status-icons"><svg width="17" height="13" viewBox="0 0 17 13" fill="currentColor"><rect x="0" y="9" width="3" height="4" rx=".7"/><rect x="4.5" y="6" width="3" height="7" rx=".7"/><rect x="9" y="3" width="3" height="10" rx=".7"/><rect x="13.5" y="0" width="3" height="13" rx=".7"/></svg><svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 4a11 11 0 0 1 14 0M3.5 7a7 7 0 0 1 9 0M6 10a3 3 0 0 1 4 0"/><circle cx="8" cy="12" r=".6" fill="currentColor"/></svg><svg width="25" height="13" viewBox="0 0 25 13" fill="none"><rect x=".5" y="1" width="21" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2.5" y="3" width="17" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg></div></div>
+          <header class="navigation"><select class="scope-select" id="scope" aria-label="Portfolio account"><option value="all">All accounts</option><option value="0">Individual brokerage</option><option value="1">Tax-free savings</option><option value="2">Retirement savings</option></select><span class="currency">USD</span></header>
+          <div class="screen" id="screen" tabindex="0" aria-label="Portfolio overview, scroll for all holdings"></div>
+          <nav class="tab-bar" aria-label="Main navigation" id="tab-bar"></nav>
+          <div id="overlay-root"></div>
+        </div>
+        <div class="device-caption"><span>390 × 844 · iOS / mobile web</span><span>Scroll to explore ↓</span></div>
+      </main>
+      <aside class="annotation">
+        <div class="annotation-title">The hierarchy <span>01 — 03</span></div>
+        <div class="design-note"><span class="number">01 / THE WHOLE</span><h3>Your money, together.</h3><p>Cash and investments add up to one quiet headline. Today’s move sits underneath, without colouring the balance itself.</p></div>
+        <div class="design-note"><span class="number">02 / THE JOURNEY</span><h3>Growth, with context.</h3><p>A cobalt value chart tracks the portfolio over time. The period’s value change includes deposits; the detail sheet separates those flows from investment gains.</p></div>
+        <div class="design-note"><span class="number">03 / THE PARTS</span><h3>From balance to breakdown.</h3><p>Stocks and cash lead into a colourful stock breakdown. Today’s movers chart up to five of the strongest daily percentage changes around a shared zero line. The holdings ledger stays focused on shares, value and returns, without repeating weights.</p></div>
+        <div class="state-note"><h3 id="state-note-title"></h3><p id="state-note-text"></p></div>
+      </aside>
+    </div>
+    <footer class="desk-footer"><span>Flat surfaces · Cobalt actions · Inter / Public Sans / JetBrains Mono<br>Same tokens, device frame and hierarchy as the holding-detail study.</span><span>Interactive HTML study · All balances and history are illustrative<br>Change ranges & accounts. Explore cash. Tap a holding.</span></footer>
+  </div>
+  <script>
+    const $ = s => document.querySelector(s);
+    const icon = (body,size=20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
+    const icons = {
+      plus:icon('<path d="M12 5v14M5 12h14"'), close:icon('<path d="m6 6 12 12M18 6 6 18"',14),
+      portfolio:icon('<rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3M3 12h18M10 12v3h4v-3"'),
+      accounts:icon('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"'),
+      activity:icon('<path d="M3 12h4l3-7 4 14 3-7h4"'), settings:icon('<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="var(--bg)"/><circle cx="15" cy="17" r="3" fill="var(--bg)"/>'),
+      cash:icon('<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"',18),
+    };
+    const money = (n,signed=false) => `${n<0?'−':signed&&n>0?'+':''}$${Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    const percent = (n,signed=false) => `${n<0?'−':signed&&n>0?'+':''}${Math.abs(n).toFixed(1)}%`;
+    const tone = n => n<0?'negative':'positive';
+    const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const accounts = ['Individual brokerage','Tax-free savings','Retirement savings'];
+    // Account share counts for NVIDIA match the multi-account holding-detail study.
+    const baseHoldings = [
+      {symbol:'NVDA',name:'NVIDIA Corporation',mark:'n',price:139.08,shares:[120,80,50],cost:[10867,7839.25,5056],day:3.42,color:'#426be3'},
+      {symbol:'AAPL',name:'Apple Inc.',mark:'a',price:243.18,shares:[60,25,15],cost:[12300,5125,3075],day:-1.24,color:'#9968cf'},
+      {symbol:'MSFT',name:'Microsoft Corporation',mark:'m',price:443.5,shares:[30,10,10],cost:[10980,3660,3660],day:2.86,color:'#da9b3d'},
+      {symbol:'VTI',name:'Vanguard Total Stock Market ETF',mark:'v',price:307.6,shares:[10,25,25],cost:[2791.6666667,6979.16666665,6979.16666665],day:1.0833333333,color:'#379b9c'},
+      {symbol:'AMZN',name:'Amazon.com, Inc.',mark:'a',price:211.4384615385,shares:[35,20,10],cost:[6569.23076923,3753.84615385,1876.92307692],day:1.3769230769,color:'#df7d69'}
+    ];
+    const scenarios = [
+      {id:'balanced',label:'Invested portfolio',note:'Five holdings and cash across three accounts. NVIDIA’s 250 shares link to the existing multi-account study. The chart and ledger use the selected account’s balances.'},
+      {id:'down',label:'A down day',note:'The balance stays neutral; negative returns use the same restrained red as holding detail. Today’s loss does not erase the portfolio’s longer-term gains.'},
+      {id:'cash',label:'Cash only',note:'Cash is a real portfolio balance, not an empty state. A flat value chart and account breakdown remain available; there are no invented investment returns.'},
+      {id:'empty',label:'Getting started',note:'No balance is shown before an account is added. An honest empty state replaces charts and allocations. The setup flow is illustrative and saves nothing.'}
+    ];
+    const state = {id:'balanced',theme:'light',scope:'all',range:'1Y',cashOpen:false,fontScale:115};
+    const ranges = ['1D','1W','1M','3M','1Y','All'];
+    const historyConfig = {
+      '1D':{start:'2025-10-03T09:30:00',end:'2025-10-03T10:24:00',ratio:.992,flow:0},
+      '1W':{start:'2025-09-26T12:00:00',end:'2025-10-03T12:00:00',ratio:.978,flow:0},
+      '1M':{start:'2025-09-03T12:00:00',end:'2025-10-03T12:00:00',ratio:.943,flow:1500},
+      '3M':{start:'2025-07-03T12:00:00',end:'2025-10-03T12:00:00',ratio:.864,flow:4500},
+      '1Y':{start:'2024-10-03T12:00:00',end:'2025-10-03T12:00:00',ratio:.678,flow:18000},
+      'All':{start:'2024-03-04T12:00:00',end:'2025-10-03T12:00:00',ratio:.36,flow:54000}
+    };
+    function data() {
+      const indices=state.scope==='all'?[0,1,2]:[Number(state.scope)];
+      const rows=state.id==='cash'||state.id==='empty'?[]:baseHoldings.map(h=>{
+        const shares=indices.reduce((n,i)=>n+h.shares[i],0),cost=indices.reduce((n,i)=>n+h.cost[i],0),value=shares*h.price;
+        return {...h,shares,cost,value,gain:value-cost,dayValue:shares*(state.id==='down'?-Math.abs(h.day)*1.4:h.day)};
+      });
+      const cashByAccount=state.id==='empty'?[0,0,0]:[6750,4500,3750];
+      const cash=indices.reduce((n,i)=>n+cashByAccount[i],0),stocks=rows.reduce((n,h)=>n+h.value,0),day=rows.reduce((n,h)=>n+h.dayValue,0),cost=rows.reduce((n,h)=>n+h.cost,0);
+      return {rows,cashByAccount,cash,stocks,total:stocks+cash,day,cost,gain:stocks-cost,indices};
+    }
+    function history(d) {
+      const c=historyConfig[state.range],cashOnly=!d.rows.length;
+      const start=cashOnly?d.total:state.range==='1D'?d.total-d.day:d.total*c.ratio;
+      const flow=cashOnly?0:c.flow*d.total/128462.5;
+      const change=d.total-start,gain=change-flow;
+      const points=Array.from({length:64},(_,i)=>{
+        const t=i/63,envelope=Math.sin(t*Math.PI),dip=state.range==='1Y'||state.range==='All'?-Math.exp(-Math.pow((t-.53)/.085,2))*.085:0;
+        const wiggle=(Math.sin(i*1.8)*.003+Math.sin(i*.53)*.008+dip)*envelope*d.total;
+        return cashOnly?d.total:start+change*t+wiggle;
+      });
+      return {points,start,change,flow,gain,c};
+    }
+    function updateControls() {
+      $('#state-list').innerHTML=scenarios.map((s,i)=>`<button class="state-option ${state.id===s.id?'active':''}" data-state="${s.id}" aria-pressed="${state.id===s.id}"><span>${String(i+1).padStart(2,'0')}</span>${s.label}</button>`).join('');
+      document.querySelectorAll('[data-theme]').forEach(b=>{b.classList.toggle('active',b.dataset.theme===state.theme);b.setAttribute('aria-pressed',b.dataset.theme===state.theme);});
+      $('#phone').classList.toggle('dark',state.theme==='dark');
+      const scenario=scenarios.find(s=>s.id===state.id);$('#state-note-title').textContent=scenario.label;$('#state-note-text').textContent=scenario.note;
+    }
+    function render(reset=true) {
+      const d=data();updateControls();
+      $('#tab-bar').innerHTML=['portfolio','accounts','activity','settings'].map(tab=>`<button class="tab ${tab==='portfolio'?'active':''}" data-tab="${tab}" ${tab==='portfolio'?'aria-current="page"':''}>${icons[tab]}<span>${tab[0].toUpperCase()+tab.slice(1)}</span></button>`).join('')+'<div class="home-indicator" aria-hidden="true"></div>';
+      let html=`<div class="page-heading"><h1>Portfolio</h1><button class="icon-button" data-action="add" aria-label="Add to portfolio">${icons.plus}</button></div>`;
+      if(state.id==='empty') html+=`<div class="empty-state"><div class="empty-symbol">${icons.portfolio}</div><h2>A place for your portfolio.</h2><p>Add your first account, then your cash and holdings. We’ll bring the whole picture together here.</p><button class="action" data-action="add">Add your first account</button></div>`;
+      else html+=`<section class="hero" aria-label="Portfolio value"><div class="hero-label">Total portfolio value</div><div class="hero-value money">${money(d.total)}</div><div class="hero-return"><span class="money ${d.day===0?'':tone(d.day)}">${money(d.day,true)}</span><span class="money return-percent ${d.day===0?'':tone(d.day)}">${percent(d.day/(d.total-d.day)*100,true)}</span><span class="return-label">Today</span></div></section>
+        <section class="growth" aria-label="Portfolio value history"><div class="growth-heading"><h2>Portfolio growth</h2><button class="period-change money ${tone(history(d).change)}" style="background:none;padding:0" data-action="performance" aria-label="Explain portfolio value change">${money(history(d).change,true)} <span style="color:var(--muted)">ⓘ</span></button></div><div class="chart-wrap"><div class="chart-tooltip" id="chart-tooltip"></div><svg class="chart-svg" id="chart" viewBox="0 0 342 125" preserveAspectRatio="none" tabindex="0" role="img" aria-label="Portfolio value chart; use left and right arrow keys to explore"></svg></div><div class="chart-axis" id="chart-axis"></div><div class="chart-controls" aria-label="Portfolio history range">${ranges.map(r=>`<button class="chart-range ${r===state.range?'active':''}" data-range="${r}" aria-pressed="${r===state.range}">${r}</button>`).join('')}</div></section>
+        <section class="section allocation" id="allocation" aria-label="Portfolio allocation"></section>
+        <section class="section movers" id="movers" aria-label="Today's Movers"></section>
+        <section class="section holdings" aria-label="All holdings"><div class="section-heading"><h2>Holdings <span class="meta" style="margin-left:5px">${d.rows.length}</span></h2></div><div class="list-caption"><span>Holding / shares</span><span>Value / total return</span></div><div id="holdings-list"></div></section>`;
+      $('#screen').innerHTML=html;
+      if(state.id!=='empty') { renderAllocation();renderMovers();renderHoldings();renderChart(); }
+      if(reset) $('#screen').scrollTop=0;
+      fitMoney();
+    }
+    // Every weight includes cash in the denominator, even in the stock detail rows.
+    const weight = (value,total) => total>0?value/total*100:0;
+    const dailyPercent = h => h.value-h.dayValue>0?h.dayValue/(h.value-h.dayValue)*100:0;
+    function holdingTarget(h) {
+      const link=h.symbol==='NVDA'&&state.id==='balanced'&&state.scope==='all';
+      return link?{open:`<a href="holding-detail.html?state=multi&theme=${state.theme}&font=${state.fontScale}&origin=Portfolio"`,close:'</a>'}:{open:`<button data-holding="${h.symbol}"`,close:'</button>'};
+    }
+    function renderAllocation() {
+      const d=data(),rows=[...d.rows].sort((a,b)=>b.value-a.value);
+      const assets=[{label:'Stocks',value:d.stocks,color:'var(--accent)'},{label:'Cash',value:d.cash,color:'var(--cash)'}];
+      const description=assets.map(e=>`${e.label} ${percent(weight(e.value,d.total))}`).join(', ');
+      $('#allocation').innerHTML=`<div class="section-heading"><h2>Breakdown</h2><span class="meta">${state.scope==='all'?'All accounts':'This account'}</span></div>
+        <div class="allocation-bar" role="img" aria-label="${description}">${assets.filter(e=>e.value>0).map(e=>`<span class="allocation-segment" style="flex:${e.value};background:${e.color}" title="${e.label} · ${percent(weight(e.value,d.total))}"></span>`).join('')}</div>
+        <div class="allocation-legend">${assets.map(e=>`<div class="allocation-stat"><div class="legend-label"><span class="legend-dot" style="background:${e.color}"></span>${e.label}</div><span class="legend-percent money">${percent(weight(e.value,d.total))}</span><div class="legend-value money">${money(e.value)}</div></div>`).join('')}</div>
+        ${rows.length?`<div class="stock-breakdown"><div class="stock-breakdown-heading"><h3>Stock breakdown</h3><span>% of portfolio</span></div><div class="allocation-weights">${rows.map(h=>{const target=holdingTarget(h);return `${target.open} class="allocation-weight" aria-label="${h.symbol}, ${percent(weight(h.value,d.total))} of portfolio, view holding detail"><span class="legend-label"><span class="legend-dot" style="background:${h.color}" aria-hidden="true"></span>${h.symbol}</span><span class="weight-track" aria-hidden="true" style="--weight-color:${h.color}"><i style="width:${weight(h.value,d.total)}%"></i></span><span class="money">${percent(weight(h.value,d.total))}</span>${target.close}`;}).join('')}</div></div>`:'<p class="allocation-note">No stock holdings. Your portfolio is held in cash.</p>'}`;
+    }
+    function moverSummary(rows) {
+      const gainers=rows.filter(h=>h.dayValue>0),decliners=rows.filter(h=>h.dayValue<0);
+      // Select only the five strongest moves, then arrange from gain to decline.
+      const movers=[...gainers,...decliners].sort((a,b)=>Math.abs(dailyPercent(b))-Math.abs(dailyPercent(a))||a.symbol.localeCompare(b.symbol)).slice(0,5).sort((a,b)=>dailyPercent(b)-dailyPercent(a)||a.symbol.localeCompare(b.symbol));
+      return {gainers,decliners,flat:rows.length-gainers.length-decliners.length,movers};
+    }
+    function renderMovers() {
+      const d=data(),summary=moverSummary(d.rows),maxChange=Math.max(...summary.movers.map(h=>Math.abs(dailyPercent(h))),0);
+      $('#movers').innerHTML=`<div class="section-heading"><h2>Today’s Movers</h2></div>
+        ${summary.movers.length?`<div class="movers-context"><span>${summary.gainers.length} up · ${summary.decliners.length} down${summary.flat?' · '+summary.flat+' flat':''}</span><span>${d.rows.length>5?'Top 5 · % change':'Daily % change'}</span></div><div class="movers-chart" role="group" aria-label="Daily percentage changes; gains rise above zero and declines fall below zero" style="--mover-count:${summary.movers.length}">${summary.movers.map(h=>{const target=holdingTarget(h),pct=dailyPercent(h),height=maxChange?Math.abs(pct)/maxChange*38:0;return `${target.open} class="mover-column" aria-label="${h.symbol}, ${percent(pct,true)} today, position change ${money(h.dayValue,true)}, view holding detail"><span class="mover-percent money ${tone(h.dayValue)}">${percent(pct,true)}</span><span class="mover-bar-plot" aria-hidden="true"><span class="mover-bar ${tone(h.dayValue)}" style="--bar-height:${height.toFixed(3)}px"></span></span><span class="mover-symbol">${h.symbol}</span>${target.close}`;}).join('')}</div>`:`<p class="movers-empty">${d.rows.length?'No price changes in your holdings today.':'No stock movers yet. Add an investment to see its daily change here.'}</p>`}`;
+    }
+    function renderHoldings() {
+      const d=data(),rows=[...d.rows,{symbol:'Cash',value:d.cash,isCash:true}].sort((a,b)=>b.value-a.value);
+      $('#holdings-list').innerHTML=rows.map(h=>{
+        if(h.isCash) return `<button class="holding-row portfolio-holding" data-action="cash" aria-expanded="${state.cashOpen}" aria-controls="cash-accounts"><span class="holding-summary"><span class="holding-identity"><span class="holding-symbol"><span class="legend-dot cash" aria-hidden="true"></span>Cash</span><span class="holding-meta">Uninvested</span></span><span class="holding-end"><span class="holding-value money">${money(d.cash)}</span><span class="holding-meta">${state.cashOpen?'Hide':'By'} account ${state.cashOpen?'⌃':'⌄'}</span></span></span></button><div class="cash-accounts" id="cash-accounts" ${state.cashOpen?'':'hidden'}>${d.indices.map(i=>`<div class="cash-account"><span>${accounts[i]}</span><span class="money">${money(d.cashByAccount[i])}</span></div>`).join('')}</div>`;
+        const ret=h.gain,pct=h.cost>0?ret/h.cost*100:0,target=holdingTarget(h);
+        return `${target.open} class="holding-row portfolio-holding" aria-label="${h.symbol}, ${h.shares} shares, ${money(h.value)}, view holding detail"><span class="holding-summary"><span class="holding-identity"><span class="holding-symbol"><span class="legend-dot" style="background:${h.color}" aria-hidden="true"></span>${h.symbol}</span><span class="holding-meta">${h.shares} shares</span></span><span class="holding-end"><span class="holding-value money">${money(h.value)}</span><span class="holding-return money ${tone(ret)}" style="display:block">${money(ret,true)} · ${percent(pct,true)}</span></span></span>${target.close}`;
+      }).join('');
+    }
+    function chartDate(h,i) {
+      const date=new Date(+new Date(h.c.start)+(+new Date(h.c.end)-+new Date(h.c.start))*i/63);
+      return date.toLocaleString('en-US',state.range==='1D'?{hour:'numeric',minute:'2-digit'}:{month:'short',day:'numeric',year:['1Y','All'].includes(state.range)?'numeric':undefined});
+    }
+    function renderChart() {
+      const chart=$('#chart');if(!chart)return;
+      const h=history(data()),min=Math.min(...h.points),max=Math.max(...h.points),spread=max-min||Math.max(max*.1,1);
+      const ys=h.points.map(p=>max===min?65:112-(p-min)/spread*93),xs=h.points.map((_,i)=>i*342/63),path=ys.map((y,i)=>`${i?'L':'M'}${xs[i].toFixed(2)},${y.toFixed(2)}`).join(' ');
+      chart.setAttribute('aria-label',`Illustrative ${state.range} portfolio value, ${money(h.start)} to ${money(data().total)}. Use left and right arrow keys to inspect.`);
+      chart.innerHTML=`<defs><linearGradient id="growth-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".12"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs><path d="M0 28H342M0 70H342M0 112H342" fill="none" stroke="var(--line)" stroke-width=".7" stroke-dasharray="2 4"/><path d="${path} L342,125 L0,125 Z" fill="url(#growth-fill)"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="342" cy="${ys[63]}" r="3" fill="var(--accent)"/><g id="chart-cursor" visibility="hidden"><line y1="0" y2="125" stroke="var(--muted)" stroke-dasharray="2 3"/><circle r="4" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/></g>`;
+      $('#chart-axis').innerHTML=[0,32,63].map(i=>`<span>${chartDate(h,i)}</span>`).join('');
+      let index=63;
+      const inspect=i=>{
+        index=Math.max(0,Math.min(63,i));const cursor=$('#chart-cursor'),line=cursor.querySelector('line'),dot=cursor.querySelector('circle');cursor.setAttribute('visibility','visible');line.setAttribute('x1',xs[index]);line.setAttribute('x2',xs[index]);dot.setAttribute('cx',xs[index]);dot.setAttribute('cy',ys[index]);
+        const tip=$('#chart-tooltip');tip.innerHTML=`<span style="color:var(--secondary)">${chartDate(h,index)}</span><br><span class="money">${money(h.points[index])}</span>`;tip.style.opacity=1;tip.style.left=Math.max(0,Math.min(chart.clientWidth-tip.offsetWidth,xs[index]/342*chart.clientWidth-60))+'px';
+      };
+      const hide=()=>{ $('#chart-cursor').setAttribute('visibility','hidden');$('#chart-tooltip').style.opacity=0; };
+      chart.onpointermove=e=>inspect(Math.round((e.clientX-chart.getBoundingClientRect().left)/chart.clientWidth*63));chart.onpointerleave=hide;
+      chart.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();inspect(e.key==='Home'?0:e.key==='End'?63:index+(e.key==='ArrowLeft'?-1:1));}};chart.onblur=hide;
+    }
+    function fitMoney() { requestAnimationFrame(()=>document.querySelectorAll('.hero-value').forEach(el=>{el.style.removeProperty('font-size');while(el.scrollWidth>el.clientWidth&&parseFloat(getComputedStyle(el).fontSize)>22)el.style.fontSize=(parseFloat(getComputedStyle(el).fontSize)-1)+'px';})); }
+    function setFontScale(value) {
+      const n=Number(value);state.fontScale=Number.isFinite(n)?Math.max(100,Math.min(140,Math.round(n/5)*5)):115;
+      $('#phone').style.setProperty('--font-scale',state.fontScale/100);$('#font-scale').value=state.fontScale;$('#font-scale-value').value=state.fontScale+'%';$('#font-scale').setAttribute('aria-valuetext',state.fontScale+' percent');fitMoney();
+      if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}
+    }
+    let sheetOpener=null;
+    function pair(label,value,cls='money') { return `<div class="detail-pair"><span>${label}</span><span class="${cls}">${value}</span></div>`; }
+    function openSheet(title,body,opener) {
+      if(!$('.sheet'))sheetOpener=opener;['.navigation','#screen','#tab-bar'].forEach(s=>$(s).inert=true);
+      $('#overlay-root').innerHTML=`<div class="overlay"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"><div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">${title}</h2><button class="close-sheet" data-action="close" aria-label="Close dialog">${icons.close}</button></div>${body}</section></div>`;$('.close-sheet').focus();
+    }
+    function closeSheet() { $('#overlay-root').innerHTML='';['.navigation','#screen','#tab-bar'].forEach(s=>$(s).inert=false);if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true}); }
+    function showPerformance(opener) {
+      const d=data(),h=history(d);openSheet('Behind the growth',`<p class="sheet-notice">${state.range==='All'?'Since Mar 04, 2024':state.range+' period'} · ${state.scope==='all'?'All accounts':accounts[Number(state.scope)]}<br>Value growth includes money added to your portfolio. It isn’t an investment return percentage.</p>${pair('Starting value',money(h.start))}${pair('Net deposits',money(h.flow,true))}${pair('Investment gain / loss',money(h.gain,true),'money '+tone(h.gain))}${pair('Ending value',money(d.total))}${pair('Total value change',money(h.change,true),'money '+tone(h.change))}<p class="sheet-notice">Illustrative history and cash flows. Current unrealized gain on your stock holdings: <span class="money ${tone(d.gain)}">${money(d.gain,true)}</span>.</p>`,opener);
+    }
+    document.addEventListener('click',e=>{
+      if(e.target.classList.contains('overlay')){closeSheet();return;}
+      const b=e.target.closest('button');if(!b)return;
+      if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;state.scope='all';$('#scope').value='all';render();return;}
+      if(b.dataset.theme){state.theme=b.dataset.theme;updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}return;}
+      if(b.dataset.range){state.range=b.dataset.range;document.querySelectorAll('[data-range]').forEach(el=>{el.classList.toggle('active',el.dataset.range===state.range);el.setAttribute('aria-pressed',el.dataset.range===state.range);});const h=history(data());$('.period-change').innerHTML=money(h.change,true)+' <span style="color:var(--muted)">ⓘ</span>';$('.period-change').className='period-change money '+tone(h.change);renderChart();return;}
+      if(b.dataset.holding){const d=data(),h=d.rows.find(h=>h.symbol===b.dataset.holding);openSheet(h.symbol,`<p class="sheet-notice">${h.name} · ${h.symbol==='VTI'?'NYSE Arca / ETF':'NASDAQ'}<br>${state.scope==='all'?'Across all accounts':accounts[Number(state.scope)]}</p><div class="hero-label">Position value · USD</div><div class="hero-value money">${money(h.value)}</div>${pair('Shares held',String(h.shares))}${pair('Share price',money(h.price))}${pair('Total cost',money(h.cost))}${pair('Unrealized return',money(h.gain,true),'money '+tone(h.gain))}${pair('Today’s position change',money(h.dayValue,true),'money '+tone(h.dayValue))}${pair('Today’s price change',percent(dailyPercent(h),true),'money '+tone(h.dayValue))}<p class="sheet-notice">Read-only holding preview. The full holding-detail study is available for NVIDIA in the all-accounts invested portfolio.</p>`,b);fitMoney();return;}
+      if(b.dataset.tab){const tab=b.dataset.tab,d=data();if(tab==='portfolio'){$('#screen').scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
+        const bodies={accounts:`<p class="sheet-notice">Your portfolio is brought together from these accounts. Choose an account at the top of the overview to explore its holdings.</p>${accounts.map((name,i)=>{const stock=(state.id==='cash'||state.id==='empty')?0:baseHoldings.reduce((n,h)=>n+h.shares[i]*h.price,0);return pair(name,money(stock+d.cashByAccount[i]));}).join('')}`,activity:'<p class="sheet-notice">Activity is outside this overview study. Portfolio history is illustrative, not a transaction ledger.</p><button class="action" data-action="performance">Explore portfolio growth</button>',settings:`<p class="sheet-notice">Display currency: USD. This study uses the same light and dark palettes as holding detail.</p><button class="action" data-action="toggle-theme">Switch to ${state.theme==='light'?'dark':'light'} appearance</button>`};openSheet(tab[0].toUpperCase()+tab.slice(1),bodies[tab],b);return;
+      }
+      switch(b.dataset.action){
+        case 'close':closeSheet();break;
+        case 'performance':showPerformance(b);break;
+        case 'cash':state.cashOpen=!state.cashOpen;renderHoldings();$('[data-action="cash"]').focus({preventScroll:true});break;
+        case 'toggle-theme':state.theme=state.theme==='light'?'dark':'light';updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}closeSheet();break;
+        case 'add':openSheet('Add to portfolio',`<p class="sheet-notice">Start with an account, then add its cash and stock purchases. Portifo tracks your investments; it doesn’t place trades.</p><button class="holding-row" data-action="setup"><span class="holding-identity"><span class="holding-symbol">Add an account</span><span class="holding-meta" style="display:block">Brokerage, savings or retirement</span></span><span aria-hidden="true">›</span></button><p class="sheet-notice">Design preview only. Nothing is connected or saved.</p>`,b);break;
+        case 'setup':$('.sheet').innerHTML=`<div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">Your first account</h2><button class="close-sheet" data-action="close" aria-label="Close dialog">${icons.close}</button></div><p class="sheet-notice">Account creation is outside this study. Explore a populated sample to see how cash and investments come together.</p><button class="action" data-action="sample">Explore sample portfolio</button>`;$('.sheet .action').focus();break;
+        case 'sample':closeSheet();state.id='balanced';state.scope='all';$('#scope').value='all';render();$('#scope').focus();break;
+      }
+    });
+    document.addEventListener('input',e=>{if(e.target.id==='font-scale')setFontScale(e.target.value);});
+    document.addEventListener('change',e=>{if(e.target.id==='scope'){state.scope=e.target.value;state.cashOpen=false;render();}});
+    document.addEventListener('keydown',e=>{
+      const sheet=$('.sheet');if(!sheet)return;
+      if(e.key==='Escape'){closeSheet();return;}
+      if(e.key==='Tab'){const items=[...sheet.querySelectorAll('button,a[href],input,select')],first=items[0],last=items[items.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
+    });
+    $('#font-scale-reset').onclick=()=>setFontScale(100);
+    const params=new URLSearchParams(location.search);
+    if(scenarios.some(s=>s.id===params.get('state')))state.id=params.get('state');
+    if(params.get('theme')==='dark')state.theme='dark';
+    if(ranges.includes(params.get('range')))state.range=params.get('range');
+    setFontScale(params.has('font')?params.get('font'):115);render();document.fonts.ready.then(fitMoney);
+    window.addEventListener('resize',fitMoney);
+  </script>
+</body>
+</html>

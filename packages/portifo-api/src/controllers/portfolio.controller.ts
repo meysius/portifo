@@ -498,13 +498,15 @@ export class PortfolioController implements SWController {
 
     const range = req.query.range;
     const currency = String(req.query.currency ?? "USD").toUpperCase();
-    if (!isHistoryRange(range) || !CURRENCY_RE.test(currency)) {
+    // Optional: one account of the active portfolio instead of all of them.
+    const account = req.query.account == null ? undefined : String(req.query.account);
+    if (!isHistoryRange(range) || !CURRENCY_RE.test(currency) || (account != null && !UUID_RE.test(account))) {
       res.status(400).json({ error: "Invalid history query" });
       return;
     }
 
     try {
-      res.json(await this.portfolioService.getPortfolioValueHistory(portfolioId, range, currency));
+      res.json(await this.portfolioService.getPortfolioValueHistory(portfolioId, range, currency, account));
     } catch (err) {
       this.logger.error("PortfolioController.getPortfolioHistory failed");
       res.status(502).json({ error: "Failed to compute portfolio history" });
