@@ -463,34 +463,56 @@ function HoldingsPage() {
                 );
               })()}
               {rows.length > 0 ? (
-                <div className="po-stock-breakdown">
-                  <div className="po-stock-breakdown-heading">
-                    <h3>Stock breakdown</h3>
+                <div className="po-breakdown-list">
+                  <div className="po-breakdown-list-heading">
+                    <h3>Portfolio breakdown</h3>
                     <span>% of portfolio</span>
                   </div>
+                  {/* Every holding and cash, ranked together, so the list
+                      accounts for the whole total. Cash has no holding page
+                      to open, so its row is not a control. */}
                   <div className="po-allocation-weights">
-                    {rows.map((r) => (
-                      <button
-                        key={r.symbol}
-                        type="button"
-                        className="po-allocation-weight"
-                        aria-label={`${r.symbol}, ${percent(weight(r.value, total))} of portfolio, view holding detail`}
-                        onClick={() => openHolding(r.symbol)}
-                      >
-                        <span className="po-legend-label">
-                          <span className="po-legend-dot" style={{ background: r.color }} aria-hidden="true" />
-                          {r.symbol}
-                        </span>
-                        <span
-                          className="po-weight-track"
-                          aria-hidden="true"
-                          style={{ "--weight-color": r.color } as CSSProperties}
-                        >
-                          <i style={{ width: `${Math.max(0, Math.min(100, weight(r.value, total)))}%` }} />
-                        </span>
-                        <span className="money">{percent(weight(r.value, total))}</span>
-                      </button>
-                    ))}
+                    {[
+                      ...rows.map((r) => ({ key: r.symbol, label: r.symbol, value: r.value, color: r.color })),
+                      ...(Math.abs(cash) >= 0.005
+                        ? [{ key: "", label: "Cash", value: cash, color: "var(--ds-cash)" }]
+                        : []),
+                    ]
+                      .sort((a, b) => b.value - a.value)
+                      .map((w) => {
+                        const share = weight(w.value, total);
+                        const cells = (
+                          <>
+                            <span className="po-legend-label">
+                              <span className="po-legend-dot" style={{ background: w.color }} aria-hidden="true" />
+                              {w.label}
+                            </span>
+                            <span
+                              className="po-weight-track"
+                              aria-hidden="true"
+                              style={{ "--weight-color": w.color } as CSSProperties}
+                            >
+                              <i style={{ width: `${Math.max(0, Math.min(100, share))}%` }} />
+                            </span>
+                            <span className="money">{percent(share)}</span>
+                          </>
+                        );
+                        return w.key ? (
+                          <button
+                            key={w.key}
+                            type="button"
+                            className="po-allocation-weight"
+                            aria-label={`${w.label}, ${percent(share)} of portfolio, view holding detail`}
+                            onClick={() => openHolding(w.key)}
+                          >
+                            {cells}
+                          </button>
+                        ) : (
+                          <div key="cash" className="po-allocation-weight">
+                            {cells}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               ) : (

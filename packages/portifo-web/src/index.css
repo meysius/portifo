@@ -3644,13 +3644,13 @@ ion-modal.ds-sheet {
   color: var(--ds-muted);
 }
 
-.po-stock-breakdown {
+.po-breakdown-list {
   margin-top: 18px;
   padding-top: 15px;
   border-top: 1px solid var(--ds-line);
 }
 
-.po-stock-breakdown-heading {
+.po-breakdown-list-heading {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -3658,13 +3658,13 @@ ion-modal.ds-sheet {
   margin-bottom: 10px;
 }
 
-.po-page .po-stock-breakdown-heading h3 {
+.po-page .po-breakdown-list-heading h3 {
   font-size: var(--ds-fs-10);
   font-weight: 500;
   color: var(--ds-secondary);
 }
 
-.po-stock-breakdown-heading span {
+.po-breakdown-list-heading span {
   font-size: var(--ds-fs-9);
   color: var(--ds-muted);
 }
@@ -3996,12 +3996,12 @@ ion-modal.ds-sheet {
 }
 
 /* ── feedback ────────────────────────────────────────────────────────────── */
-.po-page :is(.po-holding-row, .po-allocation-weight, .po-mover-column):is(:active, :focus-visible) {
+.po-page :is(.po-holding-row, button.po-allocation-weight, .po-mover-column):is(:active, :focus-visible) {
   background: var(--ds-subtle);
 }
 
 @media (hover: hover) {
-  .po-page :is(.po-holding-row, .po-allocation-weight, .po-mover-column):hover {
+  .po-page :is(.po-holding-row, button.po-allocation-weight, .po-mover-column):hover {
     background: var(--ds-subtle);
   }
 }
