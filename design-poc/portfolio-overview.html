@@ -48,16 +48,13 @@
     .phone.dark { --bg:#121820; --subtle:#19212c; --text:#eef2f8; --secondary:#9aa8ba; --muted:#708094; --line:#27313f; --accent:#81a5ff; --accent-tint:#202f4d; --positive:#72d3a6; --negative:#fb9297; --positive-bg:#1c302a; --negative-bg:#352429; --cash:#77ae99; color-scheme:dark; border-color:#333e4b; }
     .status { height:47px; padding:17px 27px 8px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; font-family:Inter,sans-serif; font-size:14px; font-weight:650; }
     .status-icons { display:flex; align-items:center; gap:6px; }
-    .navigation { height:38px; padding:0 23px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:var(--bg); z-index:3; }
-    .scope-select { max-width:260px; min-width:0; background:transparent; border:0; color:var(--secondary); padding:8px 16px 8px 0; font-size:calc(11px * var(--font-scale)); cursor:pointer; }
-    .currency { font-family:'JetBrains Mono',monospace; font-size:calc(10px * var(--font-scale)); color:var(--secondary); letter-spacing:.4px; padding:4px 7px; border:1px solid var(--line); border-radius:5px; }
     .screen { overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; flex:1; min-height:0; }.screen::-webkit-scrollbar { display:none; }
-    .page-heading { padding:12px 23px 0; display:flex; align-items:center; justify-content:space-between; }
-    .page-heading h1 { margin:0; font-family:Inter,sans-serif; font-weight:650; font-size:calc(34px * var(--font-scale)); letter-spacing:-1.5px; line-height:1.2; }
-    .icon-button { width:34px; height:34px; background:var(--accent-tint); color:var(--accent); border-radius:10px; display:grid; place-items:center; }
-    .hero { padding:20px 23px 0; }.hero-label { font-size:calc(12px * var(--font-scale)); color:var(--secondary); margin-bottom:9px; }
+    .page-heading { padding:16px 23px 0; display:flex; align-items:center; justify-content:space-between; }
+    .page-heading h1 { margin:0; font-family:Inter,sans-serif; font-weight:650; font-size:calc(23px * var(--font-scale)); letter-spacing:-.8px; line-height:1.2; }
+    .icon-button { width:32px; height:32px; background:var(--accent-tint); color:var(--accent); border-radius:9px; display:grid; place-items:center; }
+    .hero { padding:18px 23px 0; }.hero-label { font-size:calc(12px * var(--font-scale)); color:var(--secondary); margin-bottom:9px; }
     .money { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; white-space:nowrap; letter-spacing:-.5px; }
-    .hero-value { font-size:calc(37px * var(--font-scale)); letter-spacing:-1.9px; line-height:1.25; font-weight:500; }
+    .hero-value { font-size:calc(27px * var(--font-scale)); letter-spacing:-1.2px; line-height:1.25; font-weight:500; }
     .hero-return { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:calc(12px * var(--font-scale)); }
     .return-label { color:var(--secondary); font-size:calc(10px * var(--font-scale)); }.positive { color:var(--positive); }.negative { color:var(--negative); }
     .return-percent { padding:3px 5px; border-radius:4px; font-size:calc(10px * var(--font-scale)); letter-spacing:-.2px; }.return-percent.positive { background:var(--positive-bg); }.return-percent.negative { background:var(--negative-bg); }
@@ -138,7 +135,7 @@
     @media(min-width:1500px) { .workbench { padding-top:55px; }.workspace { gap:80px; } }
     @media(max-width:1120px) { .workbench { padding:28px; }.workspace { gap:28px; grid-template-columns:minmax(170px,1fr) 390px minmax(180px,1fr); }.rail h1 { font-size:28px; } }
     @media(max-width:940px) and (min-width:601px) { .workspace { grid-template-columns:1fr 390px; gap:35px; max-width:700px; margin:auto; }.annotation { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }.annotation-title { grid-column:1 / -1; margin:0; }.state-note { grid-column:1 / -1; margin:0; }.desk-footer { max-width:700px; margin:30px auto 0; } }
-    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; }.status { display:none; }.navigation { height:44px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
+    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; padding-top:env(safe-area-inset-top); }.status { display:none; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
     @media(prefers-reduced-motion:no-preference) { .hero,.growth,.allocation { animation:arrive .4s ease both; }.growth { animation-delay:.05s; }.allocation { animation-delay:.1s; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } }
   </style>
 </head>
@@ -169,7 +166,6 @@
       <main class="phone-wrap">
         <div class="phone" id="phone" aria-label="Portfolio overview mobile prototype">
           <div class="status" aria-hidden="true"><span>9:41</span><div class="status-icons"><svg width="17" height="13" viewBox="0 0 17 13" fill="currentColor"><rect x="0" y="9" width="3" height="4" rx=".7"/><rect x="4.5" y="6" width="3" height="7" rx=".7"/><rect x="9" y="3" width="3" height="10" rx=".7"/><rect x="13.5" y="0" width="3" height="13" rx=".7"/></svg><svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 4a11 11 0 0 1 14 0M3.5 7a7 7 0 0 1 9 0M6 10a3 3 0 0 1 4 0"/><circle cx="8" cy="12" r=".6" fill="currentColor"/></svg><svg width="25" height="13" viewBox="0 0 25 13" fill="none"><rect x=".5" y="1" width="21" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2.5" y="3" width="17" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg></div></div>
-          <header class="navigation"><select class="scope-select" id="scope" aria-label="Portfolio account"><option value="all">All accounts</option><option value="0">Individual brokerage</option><option value="1">Tax-free savings</option><option value="2">Retirement savings</option></select><span class="currency">USD</span></header>
           <div class="screen" id="screen" tabindex="0" aria-label="Portfolio overview, scroll for all holdings"></div>
           <nav class="tab-bar" aria-label="Main navigation" id="tab-bar"></nav>
           <div id="overlay-root"></div>
@@ -184,7 +180,7 @@
         <div class="state-note"><h3 id="state-note-title"></h3><p id="state-note-text"></p></div>
       </aside>
     </div>
-    <footer class="desk-footer"><span>Flat surfaces · Cobalt actions · Inter / Public Sans / JetBrains Mono<br>Same tokens, device frame and hierarchy as the holding-detail study.</span><span>Interactive HTML study · All balances and history are illustrative<br>Change ranges & accounts. Explore cash. Tap a holding.</span></footer>
+    <footer class="desk-footer"><span>Flat surfaces · Cobalt actions · Inter / Public Sans / JetBrains Mono<br>Same tokens, device frame and hierarchy as the holding-detail study.</span><span>Interactive HTML study · All balances and history are illustrative<br>Change ranges. Explore cash. Tap a holding.</span></footer>
   </div>
   <script>
     const $ = s => document.querySelector(s);
@@ -210,7 +206,7 @@
       {symbol:'AMZN',name:'Amazon.com, Inc.',mark:'a',price:211.4384615385,shares:[35,20,10],cost:[6569.23076923,3753.84615385,1876.92307692],day:1.3769230769,color:'#df7d69'}
     ];
     const scenarios = [
-      {id:'balanced',label:'Invested portfolio',note:'Five holdings and cash across three accounts. NVIDIA’s 250 shares link to the existing multi-account study. The chart and ledger use the selected account’s balances.'},
+      {id:'balanced',label:'Invested portfolio',note:'Five holdings and cash across three accounts. NVIDIA’s 250 shares link to the existing multi-account study.'},
       {id:'down',label:'A down day',note:'The balance stays neutral; negative returns use the same restrained red as holding detail. Today’s loss does not erase the portfolio’s longer-term gains.'},
       {id:'cash',label:'Cash only',note:'Cash is a real portfolio balance, not an empty state. A flat value chart and account breakdown remain available; there are no invented investment returns.'},
       {id:'empty',label:'Getting started',note:'No balance is shown before an account is added. An honest empty state replaces charts and allocations. The setup flow is illustrative and saves nothing.'}
@@ -332,22 +328,22 @@
     let sheetOpener=null;
     function pair(label,value,cls='money') { return `<div class="detail-pair"><span>${label}</span><span class="${cls}">${value}</span></div>`; }
     function openSheet(title,body,opener) {
-      if(!$('.sheet'))sheetOpener=opener;['.navigation','#screen','#tab-bar'].forEach(s=>$(s).inert=true);
+      if(!$('.sheet'))sheetOpener=opener;['#screen','#tab-bar'].forEach(s=>$(s).inert=true);
       $('#overlay-root').innerHTML=`<div class="overlay"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"><div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">${title}</h2><button class="close-sheet" data-action="close" aria-label="Close dialog">${icons.close}</button></div>${body}</section></div>`;$('.close-sheet').focus();
     }
-    function closeSheet() { $('#overlay-root').innerHTML='';['.navigation','#screen','#tab-bar'].forEach(s=>$(s).inert=false);if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true}); }
+    function closeSheet() { $('#overlay-root').innerHTML='';['#screen','#tab-bar'].forEach(s=>$(s).inert=false);if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true}); }
     function showPerformance(opener) {
       const d=data(),h=history(d);openSheet('Behind the growth',`<p class="sheet-notice">${state.range==='All'?'Since Mar 04, 2024':state.range+' period'} · ${state.scope==='all'?'All accounts':accounts[Number(state.scope)]}<br>Value growth includes money added to your portfolio. It isn’t an investment return percentage.</p>${pair('Starting value',money(h.start))}${pair('Net deposits',money(h.flow,true))}${pair('Investment gain / loss',money(h.gain,true),'money '+tone(h.gain))}${pair('Ending value',money(d.total))}${pair('Total value change',money(h.change,true),'money '+tone(h.change))}<p class="sheet-notice">Illustrative history and cash flows. Current unrealized gain on your stock holdings: <span class="money ${tone(d.gain)}">${money(d.gain,true)}</span>.</p>`,opener);
     }
     document.addEventListener('click',e=>{
       if(e.target.classList.contains('overlay')){closeSheet();return;}
       const b=e.target.closest('button');if(!b)return;
-      if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;state.scope='all';$('#scope').value='all';render();return;}
+      if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;state.scope='all';render();return;}
       if(b.dataset.theme){state.theme=b.dataset.theme;updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}return;}
       if(b.dataset.range){state.range=b.dataset.range;document.querySelectorAll('[data-range]').forEach(el=>{el.classList.toggle('active',el.dataset.range===state.range);el.setAttribute('aria-pressed',el.dataset.range===state.range);});const h=history(data());$('.period-change').innerHTML=money(h.change,true)+' <span style="color:var(--muted)">ⓘ</span>';$('.period-change').className='period-change money '+tone(h.change);renderChart();return;}
       if(b.dataset.holding){const d=data(),h=d.rows.find(h=>h.symbol===b.dataset.holding);openSheet(h.symbol,`<p class="sheet-notice">${h.name} · ${h.symbol==='VTI'?'NYSE Arca / ETF':'NASDAQ'}<br>${state.scope==='all'?'Across all accounts':accounts[Number(state.scope)]}</p><div class="hero-label">Position value · USD</div><div class="hero-value money">${money(h.value)}</div>${pair('Shares held',String(h.shares))}${pair('Share price',money(h.price))}${pair('Total cost',money(h.cost))}${pair('Unrealized return',money(h.gain,true),'money '+tone(h.gain))}${pair('Today’s position change',money(h.dayValue,true),'money '+tone(h.dayValue))}${pair('Today’s price change',percent(dailyPercent(h),true),'money '+tone(h.dayValue))}<p class="sheet-notice">Read-only holding preview. The full holding-detail study is available for NVIDIA in the all-accounts invested portfolio.</p>`,b);fitMoney();return;}
       if(b.dataset.tab){const tab=b.dataset.tab,d=data();if(tab==='portfolio'){$('#screen').scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
-        const bodies={accounts:`<p class="sheet-notice">Your portfolio is brought together from these accounts. Choose an account at the top of the overview to explore its holdings.</p>${accounts.map((name,i)=>{const stock=(state.id==='cash'||state.id==='empty')?0:baseHoldings.reduce((n,h)=>n+h.shares[i]*h.price,0);return pair(name,money(stock+d.cashByAccount[i]));}).join('')}`,activity:'<p class="sheet-notice">Activity is outside this overview study. Portfolio history is illustrative, not a transaction ledger.</p><button class="action" data-action="performance">Explore portfolio growth</button>',settings:`<p class="sheet-notice">Display currency: USD. This study uses the same light and dark palettes as holding detail.</p><button class="action" data-action="toggle-theme">Switch to ${state.theme==='light'?'dark':'light'} appearance</button>`};openSheet(tab[0].toUpperCase()+tab.slice(1),bodies[tab],b);return;
+        const bodies={accounts:`<p class="sheet-notice">Your portfolio is brought together from these accounts.</p>${accounts.map((name,i)=>{const stock=(state.id==='cash'||state.id==='empty')?0:baseHoldings.reduce((n,h)=>n+h.shares[i]*h.price,0);return pair(name,money(stock+d.cashByAccount[i]));}).join('')}`,activity:'<p class="sheet-notice">Activity is outside this overview study. Portfolio history is illustrative, not a transaction ledger.</p><button class="action" data-action="performance">Explore portfolio growth</button>',settings:`<p class="sheet-notice">Display currency: USD. This study uses the same light and dark palettes as holding detail.</p><button class="action" data-action="toggle-theme">Switch to ${state.theme==='light'?'dark':'light'} appearance</button>`};openSheet(tab[0].toUpperCase()+tab.slice(1),bodies[tab],b);return;
       }
       switch(b.dataset.action){
         case 'close':closeSheet();break;
@@ -356,11 +352,10 @@
         case 'toggle-theme':state.theme=state.theme==='light'?'dark':'light';updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}closeSheet();break;
         case 'add':openSheet('Add to portfolio',`<p class="sheet-notice">Start with an account, then add its cash and stock purchases. Portifo tracks your investments; it doesn’t place trades.</p><button class="holding-row" data-action="setup"><span class="holding-identity"><span class="holding-symbol">Add an account</span><span class="holding-meta" style="display:block">Brokerage, savings or retirement</span></span><span aria-hidden="true">›</span></button><p class="sheet-notice">Design preview only. Nothing is connected or saved.</p>`,b);break;
         case 'setup':$('.sheet').innerHTML=`<div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">Your first account</h2><button class="close-sheet" data-action="close" aria-label="Close dialog">${icons.close}</button></div><p class="sheet-notice">Account creation is outside this study. Explore a populated sample to see how cash and investments come together.</p><button class="action" data-action="sample">Explore sample portfolio</button>`;$('.sheet .action').focus();break;
-        case 'sample':closeSheet();state.id='balanced';state.scope='all';$('#scope').value='all';render();$('#scope').focus();break;
+        case 'sample':closeSheet();state.id='balanced';state.scope='all';render();$('#screen').focus({preventScroll:true});break;
       }
     });
     document.addEventListener('input',e=>{if(e.target.id==='font-scale')setFontScale(e.target.value);});
-    document.addEventListener('change',e=>{if(e.target.id==='scope'){state.scope=e.target.value;state.cashOpen=false;render();}});
     document.addEventListener('keydown',e=>{
       const sheet=$('.sheet');if(!sheet)return;
       if(e.key==='Escape'){closeSheet();return;}

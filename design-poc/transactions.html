@@ -47,13 +47,10 @@
     .phone.dark { --bg:#121820; --subtle:#19212c; --text:#eef2f8; --secondary:#9aa8ba; --muted:#708094; --line:#27313f; --accent:#81a5ff; --accent-tint:#202f4d; --positive:#72d3a6; --negative:#fb9297; --positive-bg:#1c302a; --negative-bg:#352429; --sell:#c1a0e7; --sell-bg:#2c253a; --withdraw:#d7b371; --withdraw-bg:#312b20; color-scheme:dark; border-color:#333e4b; }
     .status { height:47px; padding:17px 27px 8px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; font-family:Inter,sans-serif; font-size:14px; font-weight:650; }
     .status-icons { display:flex; align-items:center; gap:6px; }
-    .navigation { height:38px; padding:0 23px; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; background:var(--bg); z-index:3; }
-    .scope-select { max-width:275px; min-width:0; background:transparent; border:0; color:var(--secondary); padding:8px 16px 8px 0; font-size:calc(11px * var(--font-scale)); cursor:pointer; }
-    .currency { font-family:'JetBrains Mono',monospace; font-size:calc(10px * var(--font-scale)); color:var(--secondary); letter-spacing:.4px; padding:4px 7px; border:1px solid var(--line); border-radius:5px; }
     .screen { overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; flex:1; min-height:0; }.screen::-webkit-scrollbar { display:none; }
-    .page-heading { padding:8px 23px 0; display:flex; align-items:center; justify-content:space-between; gap:8px; }
-    .page-heading h1 { margin:0; font-family:Inter,sans-serif; font-weight:650; font-size:min(calc(31px * var(--font-scale)),11cqw); letter-spacing:-1.5px; line-height:1.2; }
-    .icon-button { width:36px; height:36px; background:var(--accent-tint); color:var(--accent); border-radius:10px; display:grid; place-items:center; flex-shrink:0; }
+    .page-heading { padding:16px 23px 0; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+    .page-heading h1 { margin:0; font-family:Inter,sans-serif; font-weight:650; font-size:calc(23px * var(--font-scale)); letter-spacing:-.8px; line-height:1.2; }
+    .icon-button { width:32px; height:32px; background:var(--accent-tint); color:var(--accent); border-radius:9px; display:grid; place-items:center; flex-shrink:0; }
     .money { font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums; white-space:nowrap; letter-spacing:-.5px; }
     .history-filters { margin:12px 23px 0; }
     .filter-heading { display:flex; align-items:center; justify-content:space-between; min-height:24px; margin-bottom:5px; }
@@ -112,7 +109,7 @@
     .sheet input[type=number] { font-family:'JetBrains Mono',monospace; }.form-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
     .sheet-types { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; }.sheet-type { padding:10px 2px; border-radius:7px; background:var(--subtle); color:var(--secondary); font-size:calc(10px * var(--font-scale)); }.sheet-type.active { background:var(--accent-tint); color:var(--accent); }
     .detail-pair { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); font-size:calc(11px * var(--font-scale)); }.detail-pair span:first-child { color:var(--secondary); }.detail-pair span:last-child { text-align:right; max-width:65%; overflow-wrap:anywhere; }
-    .detail-hero { padding:3px 0 18px; }.detail-hero .transaction-icon { margin-bottom:13px; width:46px; height:46px; border-radius:12px; }.detail-hero .money { font-size:calc(29px * var(--font-scale)); font-weight:500; letter-spacing:-1px; }.detail-caption { color:var(--secondary); font-size:calc(10px * var(--font-scale)); margin-top:7px; line-height:1.7; }
+    .detail-hero { padding:3px 0 18px; }.detail-hero .transaction-icon { margin-bottom:13px; width:46px; height:46px; border-radius:12px; }.detail-hero .money { font-size:calc(27px * var(--font-scale)); font-weight:500; letter-spacing:-1.2px; }.detail-caption { color:var(--secondary); font-size:calc(10px * var(--font-scale)); margin-top:7px; line-height:1.7; }
     .action { min-height:45px; border-radius:10px; font-size:calc(13px * var(--font-scale)); font-weight:600; background:#245ce8; color:#fff; width:100%; padding:12px 14px; margin-top:18px; }.action.secondary { margin-top:8px; background:var(--accent-tint); color:var(--accent); }
     .form-total { display:flex; justify-content:space-between; gap:8px; padding:18px 0 0; border-top:1px solid var(--line); margin-top:20px; font-size:calc(11px * var(--font-scale)); }
     .form-error { font-size:calc(11px * var(--font-scale)); color:var(--negative); line-height:1.6; margin:12px 0 0; }
@@ -162,7 +159,7 @@
     @media(min-width:1500px) { .workbench { padding-top:55px; }.workspace { gap:80px; } }
     @media(max-width:1120px) { .workbench { padding:28px; }.workspace { gap:28px; grid-template-columns:minmax(170px,1fr) 390px minmax(180px,1fr); }.rail h1 { font-size:28px; } }
     @media(max-width:940px) and (min-width:601px) { .workspace { grid-template-columns:1fr 390px; gap:35px; max-width:700px; margin:auto; }.annotation { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }.annotation-title { grid-column:1 / -1; margin:0; }.state-note { grid-column:1 / -1; margin:0; }.desk-footer { max-width:700px; margin:30px auto 0; } }
-    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; }.status { display:none; }.navigation { height:44px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.sheet { padding-bottom:max(31px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
+    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; padding-top:env(safe-area-inset-top); }.status { display:none; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.sheet { padding-bottom:max(31px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
     @media(max-width:370px) { .page-heading,.date-group { padding-left:18px; padding-right:18px; }.transaction-row { gap:8px; }.transaction-icon { width:29px; }.transaction-end .money { font-size:calc(10px * var(--font-scale)); } }
     @media(prefers-reduced-motion:no-preference) { .page-heading { animation:arrive .35s ease both; }.sheet { animation:sheet-in .2s ease both; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } @keyframes sheet-in { from { transform:translateY(25px); opacity:.5; } to { transform:translateY(0); opacity:1; } } }
   </style>
@@ -195,7 +192,6 @@
       <main class="phone-wrap">
         <div class="phone" id="phone" aria-label="Transactions mobile prototype">
           <div class="status" aria-hidden="true"><span>9:41</span><div class="status-icons"><svg width="17" height="13" viewBox="0 0 17 13" fill="currentColor"><rect x="0" y="9" width="3" height="4" rx=".7"/><rect x="4.5" y="6" width="3" height="7" rx=".7"/><rect x="9" y="3" width="3" height="10" rx=".7"/><rect x="13.5" y="0" width="3" height="13" rx=".7"/></svg><svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 4a11 11 0 0 1 14 0M3.5 7a7 7 0 0 1 9 0M6 10a3 3 0 0 1 4 0"/><circle cx="8" cy="12" r=".6" fill="currentColor"/></svg><svg width="25" height="13" viewBox="0 0 25 13" fill="none"><rect x=".5" y="1" width="21" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2.5" y="3" width="17" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg></div></div>
-          <header class="navigation"><select class="scope-select" id="scope" aria-label="Portfolio account"><option value="all">All accounts</option><option value="0">Individual brokerage</option><option value="1">Tax-free savings</option><option value="2">Retirement savings</option></select><span class="currency">USD</span></header>
           <div class="screen" id="screen" tabindex="0" aria-label="Transactions, scroll for full history">
             <div class="page-heading"><h1>Transactions</h1><button class="icon-button" id="add-transaction" aria-label="Add transaction"></button></div>
             <section class="history-filters" aria-label="Transaction filters">
@@ -302,7 +298,6 @@
       document.querySelectorAll('[data-theme]').forEach(b=>{b.classList.toggle('active',b.dataset.theme===state.theme);b.setAttribute('aria-pressed',b.dataset.theme===state.theme);});
       $('#phone').style.setProperty('--font-scale',state.fontScale/100);
       $('#font-scale').value=state.fontScale; $('#font-scale-value').value=state.fontScale+'%'; $('#font-scale').setAttribute('aria-valuetext',state.fontScale+' percent');
-      $('#scope').value=state.scope;
       const scenario=scenarios.find(s=>s.id===state.id); $('#state-note-title').textContent=scenario.label; $('#state-note-text').textContent=scenario.note;
     }
     function renderLedger() {
@@ -322,13 +317,13 @@
     function notify(text) { clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>$('#toast').hidden=true,3500); }
     function sheet(titleText,body,opener=document.activeElement) {
       if(!$('#overlay-root').children.length) sheetOpener=opener;
-      ['.navigation','#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=true);
+      ['#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=true);
       $('#overlay-root').innerHTML=`<div class="overlay"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1"><div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">${esc(titleText)}</h2><button class="close-sheet" data-command="close" aria-label="Close dialog">${icons.close}</button></div>${body}</section></div>`;
       $('.sheet').focus({preventScroll:true});
     }
     function closeSheet() {
       closeDatePicker(false);
-      $('#overlay-root').innerHTML='';['.navigation','#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=false);
+      $('#overlay-root').innerHTML='';['#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=false);
       if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true});else if(sheetOpener?.dataset.filter)$(`[data-filter="${sheetOpener.dataset.filter}"]`)?.focus({preventScroll:true});else $('#add-transaction').focus({preventScroll:true});
       $('.state-list').inert=false;
       filterDraft=null;draft=null;
@@ -373,7 +368,7 @@
     const dateControl = () => `<div class="wizard-options"><input type="hidden" name="date" value="${esc(draft.date)}"><button type="button" class="date-chip" id="transaction-date" data-command="pick-date" aria-haspopup="dialog" aria-label="Transaction date: ${esc(dateChipText(draft.date))}">${icons.calendar}<span id="date-chip-text">${esc(dateChipText(draft.date))}</span>${icons.chevron}</button></div>`;
     function renderWizard(body,opener=document.activeElement) {
       if(!$('#overlay-root').children.length)sheetOpener=opener;
-      ['.navigation','#screen','#tab-bar'].forEach(s=>$(s).inert=true);
+      ['#screen','#tab-bar'].forEach(s=>$(s).inert=true);
       // This is a pushed page, not a modal. The desktop study controls stay usable.
       $('.rail').inert=false;$('.state-list').inert=true;
       $('#overlay-root').innerHTML=`<section class="sheet wizard wizard-page" role="region" aria-labelledby="wizard-title" tabindex="-1"><header class="wizard-navigation"><button type="button" class="wizard-back" data-command="wizard-back" aria-label="${draft.step===0&&!draft.flow?'Back to transactions':'Back one step'}">${icons.chevron}<span>${draft.step===0&&!draft.flow?'Transactions':'Back'}</span></button><h2 id="wizard-title">Add transaction</h2><button type="button" class="wizard-cancel" data-command="close">Cancel</button></header>${body}</section>`;
@@ -565,7 +560,6 @@
     function openSettings(opener) { sheet('Appearance',`<p class="sheet-notice">Use the same quiet palette in either light or dark.</p><div class="sheet-types" style="grid-template-columns:1fr 1fr">${['light','dark'].map(t=>`<button class="sheet-type ${state.theme===t?'active':''}" data-mobile-theme="${t}" aria-pressed="${state.theme===t}">${t==='light'?'Light':'Dark'}</button>`).join('')}</div><label for="mobile-font">Text size</label><input id="mobile-font" type="range" min="100" max="140" step="5" value="${state.fontScale}" aria-valuetext="${state.fontScale} percent"><button class="action secondary" data-command="close">Done</button>`,opener); }
     $('#add-transaction').innerHTML=icons.plus;
     $('#tab-bar').innerHTML=`<a class="tab" href="portfolio-overview.html">${icons.portfolio}<span>Portfolio</span></a><button class="tab" data-command="accounts">${icons.accounts}<span>Accounts</span></button><button class="tab active" aria-current="page" data-command="top">${icons.transactions}<span>Transactions</span></button><button class="tab" data-command="settings">${icons.filter}<span>Settings</span></button><div class="home-indicator" aria-hidden="true"></div>`;
-    $('#scope').addEventListener('change',e=>{state.scope=e.target.value;renderLedger();});
     $('#font-scale').addEventListener('input',e=>{state.fontScale=Number(e.target.value);updateControls();});
     $('#font-scale-reset').addEventListener('click',()=>{state.fontScale=115;updateControls();});
     document.addEventListener('click',e=>{

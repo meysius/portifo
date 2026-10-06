@@ -40,11 +40,10 @@
     assert(document.querySelector('#clear-history-filters').hidden, 'Reset hides clear action');
     open('scope'); choose('1'); apply();
     assert(state.scope === '1' && visibleRows().length === 4, 'Account filter applies');
-    assert(document.querySelector('#scope').value === '1', 'Account filter syncs portfolio selector');
-    document.querySelector('#scope').value = '0';
-    document.querySelector('#scope').dispatchEvent(new Event('change', { bubbles: true }));
-    assert(document.querySelector('[data-filter="scope"]').textContent.includes('Brokerage'), 'Portfolio selector syncs account chip');
-    assert(visibleRows().length === 6, 'Portfolio selector updates records');
+    assert(document.querySelector('[data-filter="scope"]').textContent.includes('Tax-free savings'), 'Account chip shows the chosen account');
+    open('scope'); choose('0'); apply();
+    assert(document.querySelector('[data-filter="scope"]').textContent.includes('Brokerage'), 'Account chip follows a new choice');
+    assert(visibleRows().length === 6, 'Changing the account updates records');
     reset();
     for (const scope of ['all', '0', '1', '2']) {
       for (const type of ['all', 'buy', 'sell', 'deposit', 'withdrawal']) {

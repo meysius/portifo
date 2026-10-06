@@ -1,6 +1,5 @@
 import {
   IonContent,
-  IonHeader,
   IonModal,
   IonPage,
   IonRefresher,
@@ -10,11 +9,9 @@ import type { RefresherEventDetail } from "@ionic/react";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useHistory } from "react-router-dom";
-import CurrencyPickerSheet from "../CurrencyPickerSheet";
 import ActionSheetModal from "../components/ActionSheetModal";
 import AddPortfolioModal from "../components/AddPortfolioModal";
 import GrowthChart from "../components/GrowthChart";
-import DebugInfoButton from "../components/DebugInfoButton";
 import { ActionPlusIcon, CheckIcon } from "../components/ds";
 import { getPortfolioHistory } from "../api/portfolio";
 import type { HistoryPoint, HistoryRange, Quote } from "../api/market";
@@ -33,9 +30,8 @@ import { cashValue } from "../lib/positions";
 //   3. The parts — stocks vs cash, each stock's share, today's movers, and the
 //      holdings ledger (shares, value, total return).
 //
-// Everything follows the account picker in the bar: one account or all of
-// them. Figures are in the display currency (the chip beside it); a stock's
-// share is always of the whole, cash included.
+// Always the whole portfolio, every account together. Figures are in the
+// display currency; a holding's share is always of the whole, cash included.
 
 type Row = {
   symbol: string;
@@ -54,7 +50,7 @@ type Growth = { points: HistoryPoint[]; netDeposits: number; estimated: string[]
 
 const NO_GROWTH: Growth = { points: [], netDeposits: 0, estimated: [] };
 
-// Last series per portfolio + scope + range + currency, so flipping back to a
+// Last series per portfolio + range + currency, so flipping back to a
 // range redraws at once while the fresh one loads.
 const growthCache = new Map<string, Growth>();
 
@@ -140,24 +136,16 @@ function HoldingsPage() {
     refreshMarket,
     hasActivity,
   } = usePortfolioData();
-  const [ccy, setCcy] = useDisplayCurrency();
+  const [ccy] = useDisplayCurrency();
 
-  const [scope, setScope] = useState("all");
   const [range, setRange] = useState<HistoryRange>("1Y");
   const [cashOpen, setCashOpen] = useState(false);
   const [growthOpen, setGrowthOpen] = useState(false);
-  const [currencySheetOpen, setCurrencySheetOpen] = useState(false);
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
   const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
 
-  // A picked account belongs to one portfolio; switching starts over at all.
-  useEffect(() => {
-    setScope("all");
-    setCashOpen(false);
-  }, [activePortfolio?.id]);
-
-  const account = accounts.find((a) => a.id === scope) ?? null;
-  const scopeLabel = account ? account.name : "All accounts";
+  // Another portfolio's cash has other accounts.
+  useEffect(() => setCashOpen(false), [activePortfolio?.id]);
 
   const openAggs = tickerAggregates.filter((t) => !t.closed);
   const openSymbols = openAggs.map((t) => t.symbol);
@@ -169,7 +157,7 @@ function HoldingsPage() {
   }, [symbolsKey]);
 
   // ── The series ───────────────────────────────────────────────────────────
-  const growthKey = `${activePortfolio?.id}|${account?.id ?? "all"}|${range}|${ccy}`;
+  const growthKey = `${activePortfolio?.id}|${range}|${ccy}`;
   const [growth, setGrowth] = useState<Growth>(() => growthCache.get(growthKey) ?? NO_GROWTH);
   const [growthFailed, setGrowthFailed] = useState(false);
   const growthRequest = useRef(0);
@@ -177,7 +165,7 @@ function HoldingsPage() {
   const loadGrowth = useCallback(async () => {
     const id = ++growthRequest.current;
     try {
-      const h = await getPortfolioHistory(range, ccy, account?.id);
+      const h = await getPortfolioHistory(range, ccy);
       const next = {
         points: h.points,
         netDeposits: h.netDeposits ?? 0,
@@ -191,7 +179,7 @@ function HoldingsPage() {
     } catch {
       if (growthRequest.current === id) setGrowthFailed(true);
     }
-  }, [range, ccy, account?.id, growthKey]);
+  }, [range, ccy, growthKey]);
 
   // The ledger is a dependency: a transaction added anywhere redraws the curve.
   useEffect(() => {
@@ -220,8 +208,7 @@ function HoldingsPage() {
     return q ? convert(q.price * shares, q.currency, ccy, fxRates) : convert(avgCost * shares, native, ccy, fxRates);
   };
 
-  // Hues go by rank across the whole portfolio, so a stock keeps its colour
-  // when the picker narrows to one account.
+  // Hues go by rank of value, the same order the breakdown lists them in.
   const colorOf = new Map(
     [...openAggs]
       .sort((a, b) => valueOf(b.symbol, b.totalShares, b.avgCost, b.currency) - valueOf(a.symbol, a.totalShares, a.avgCost, a.currency))
@@ -231,11 +218,9 @@ function HoldingsPage() {
   const rows: Row[] = [];
   const closed: Closed[] = [];
   for (const t of tickerAggregates) {
-    const pa = account ? t.perAccount.find((p) => p.account === account.name) : null;
-    if (account && !pa) continue;
-    const shares = pa ? pa.shares : t.totalShares;
+    const shares = t.totalShares;
     if (shares > 1e-9) {
-      const cost = pa ? pa.costBasis : t.costBasis;
+      const cost = t.costBasis;
       const q = quotes[t.symbol];
       let gain: number | null = null;
       let gainPct: number | null = null;
@@ -259,14 +244,11 @@ function HoldingsPage() {
         color: colorOf.get(t.symbol) ?? HOLD_COLORS[0],
       });
     } else {
-      const realized = pa ? pa.realizedPL : t.realizedPL;
-      const basis = pa ? pa.realizedCostBasis : t.realizedCostBasis;
+      const realized = t.realizedPL;
+      const basis = t.realizedCostBasis;
       if (basis <= 1e-9) continue;
       const lastSale = transactions.reduce<string | null>(
-        (d, tx) =>
-          tx.type === "sell" && tx.symbol === t.symbol && (!account || tx.account === account.name) && (!d || tx.date > d)
-            ? tx.date
-            : d,
+        (d, tx) => (tx.type === "sell" && tx.symbol === t.symbol && (!d || tx.date > d) ? tx.date : d),
         null,
       );
       closed.push({
@@ -282,8 +264,8 @@ function HoldingsPage() {
 
   const balancesOf = (a: (typeof accounts)[number]) =>
     Object.fromEntries(a.balances.map((b) => [b.currency, b.balance] as const));
-  const cash = account ? cashValue(balancesOf(account), ccy, fxRates) : cashValue(cashByCurrency, ccy, fxRates);
-  const cashByAccount = (account ? [account] : accounts)
+  const cash = cashValue(cashByCurrency, ccy, fxRates);
+  const cashByAccount = accounts
     .map((a) => ({ id: a.id, name: a.name, value: cashValue(balancesOf(a), ccy, fxRates) }))
     .filter((a) => Math.abs(a.value) >= 0.005);
   const stocks = rows.reduce((s, r) => s + r.value, 0);
@@ -328,35 +310,6 @@ function HoldingsPage() {
 
   return (
     <IonPage className="tab-root-page ds-screen po-page">
-      <IonHeader className="ds-nav-header">
-        <div className="ds-navigation">
-          <select
-            className="ds-scope"
-            aria-label="Portfolio account"
-            value={account ? account.id : "all"}
-            onChange={(e) => {
-              setScope(e.target.value);
-              setCashOpen(false);
-            }}
-          >
-            <option value="all">All accounts</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="ds-currency"
-            aria-label={`Display currency, ${ccy}`}
-            onClick={() => setCurrencySheetOpen(true)}
-          >
-            {ccy}
-          </button>
-        </div>
-      </IonHeader>
-
       <IonContent>
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
@@ -423,7 +376,7 @@ function HoldingsPage() {
             <section className="po-section po-allocation" aria-label="Portfolio allocation">
               <div className="po-section-heading">
                 <h2>Breakdown</h2>
-                <span className="meta">{account ? "This account" : "All accounts"}</span>
+                <span className="meta">All accounts</span>
               </div>
               {(() => {
                 const parts = [
@@ -708,9 +661,6 @@ function HoldingsPage() {
           </>
         )}
 
-        {/* TEMPORARY: diagnostics for the iOS 27 frosted top bar. */}
-        <DebugInfoButton />
-
         <IonModal
           isOpen={growthOpen}
           onDidDismiss={() => setGrowthOpen(false)}
@@ -729,7 +679,7 @@ function HoldingsPage() {
               </button>
             </div>
             <p className="ds-sheet-notice">
-              {range === "All" && firstDay ? `Since ${fmtDay(new Date(firstDay))}` : `${range} period`} · {scopeLabel}
+              {range === "All" && firstDay ? `Since ${fmtDay(new Date(firstDay))}` : `${range} period`} · All accounts
               <br />
               Value growth includes money added to your portfolio. It isn’t an investment return percentage.
             </p>
@@ -749,13 +699,6 @@ function HoldingsPage() {
             </p>
           </div>
         </IonModal>
-
-        <CurrencyPickerSheet
-          isOpen={currencySheetOpen}
-          selected={ccy}
-          onClose={() => setCurrencySheetOpen(false)}
-          onSelect={setCcy}
-        />
 
         <ActionSheetModal
           isOpen={portfolioSheetOpen}

@@ -1,13 +1,11 @@
-import { IonContent, IonHeader, IonModal, IonPage, IonRefresher, IonRefresherContent } from "@ionic/react";
+import { IonContent, IonModal, IonPage, IonRefresher, IonRefresherContent } from "@ionic/react";
 import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useHistory } from "react-router-dom";
-import CurrencyPickerSheet from "../CurrencyPickerSheet";
 import type { Transaction, TransactionType } from "../api/portfolio";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
-import { useDisplayCurrency } from "../lib/displayCurrency";
 import { fmtCcy, fmtShares, fmtSignedCcy, fmtSignedPct } from "../lib/fx";
 
 // The Transactions tab, built from design-poc/transactions.html in the second
@@ -145,8 +143,6 @@ function TransactionsPage() {
   const { tabBase } = useTabBase();
   const { transactions, accounts, quotes, realizedPLByTx, loading, refreshTransactions, refreshMarket } =
     usePortfolioData();
-  const [ccy, setCcy] = useDisplayCurrency();
-  const [currencySheetOpen, setCurrencySheetOpen] = useState(false);
 
   const [filters, setFilters] = useState<Filters>(ALL);
   // Each sheet keeps what it shows after it closes, so it doesn't empty out
@@ -234,7 +230,6 @@ function TransactionsPage() {
     setDetailId(id);
     setDetailOpen(true);
   };
-  const setAccount = (account: string) => setFilters((f) => ({ ...f, account }));
   const addTransaction = () => history.push(`${tabBase}/add-transaction`);
 
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
@@ -255,32 +250,6 @@ function TransactionsPage() {
 
   return (
     <IonPage className="tab-root-page ds-screen tl-page">
-      <IonHeader className="ds-nav-header">
-        <div className="ds-navigation">
-          <select
-            className="ds-scope tl-scope"
-            aria-label="Portfolio account"
-            value={filters.account}
-            onChange={(e) => setAccount(e.target.value)}
-          >
-            <option value="all">All accounts</option>
-            {accountNames.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            className="ds-currency"
-            aria-label={`Display currency, ${ccy}`}
-            onClick={() => setCurrencySheetOpen(true)}
-          >
-            {ccy}
-          </button>
-        </div>
-      </IonHeader>
-
       <IonContent>
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
@@ -553,13 +522,6 @@ function TransactionsPage() {
             </div>
           )}
         </IonModal>
-
-        <CurrencyPickerSheet
-          isOpen={currencySheetOpen}
-          selected={ccy}
-          onClose={() => setCurrencySheetOpen(false)}
-          onSelect={setCcy}
-        />
       </IonContent>
     </IonPage>
   );

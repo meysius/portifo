@@ -67,10 +67,6 @@
   --ds-fs-22: calc(22px * var(--ds-font-scale));
   --ds-fs-23: calc(23px * var(--ds-font-scale));
   --ds-fs-27: calc(27px * var(--ds-font-scale));
-  --ds-fs-29: calc(29px * var(--ds-font-scale));
-  --ds-fs-31: calc(31px * var(--ds-font-scale));
-  --ds-fs-34: calc(34px * var(--ds-font-scale));
-  --ds-fs-37: calc(37px * var(--ds-font-scale));
 }
 
 /* Dark follows the app's class-based theme (src/lib/theme.ts). */

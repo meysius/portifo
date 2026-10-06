@@ -2487,9 +2487,9 @@ ion-toast {
 
 .ios .hd-page ion-title.title-large {
   font-family: var(--font-display);
-  font-size: var(--ds-fs-34);
+  font-size: var(--ds-fs-23);
   font-weight: 650;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.8px;
   line-height: 1.2;
   color: var(--ds-text);
   padding: 12px var(--ds-gutter) 0;
@@ -2534,14 +2534,14 @@ ion-toast {
 
 /* After .money, which it refines. */
 .hd-page .hd-hero-value {
-  font-size: var(--ds-fs-37);
+  font-size: var(--ds-fs-27);
   font-weight: 500;
   line-height: 1.25;
-  letter-spacing: -1.9px;
+  letter-spacing: -1.2px;
 }
 
 .hd-page .hd-hero-value.compact {
-  font-size: var(--ds-fs-31);
+  font-size: var(--ds-fs-23);
 }
 
 .hd-hero-return {
@@ -3173,7 +3173,7 @@ ion-toast {
 /* ---------- Second design system: shared screen chrome ----------
    What every screen ported from design-poc/*.html shares: the base reset and
    type (.ds-screen, also on their sheets, which Ionic portals out of the
-   page), the tab roots' account/currency bar, and the bottom-sheet chrome.
+   page) and the bottom-sheet chrome.
    Reads only --ds-* tokens (theme/ds.css); type is at --ds-font-scale. */
 
 .ds-screen {
@@ -3222,49 +3222,6 @@ ion-toast {
 .ds-screen :is(h1, h2, h3) {
   margin: 0;
   line-height: normal;
-}
-
-/* ── navigation: the account picker and the display currency ──────────────
-   The tab roots' bar: a plain opaque bar on the page ground — no material, no
-   hairline, no title. The page heading below scrolls under it. */
-.ds-screen ion-header.ds-nav-header::before {
-  background: var(--ds-bg);
-}
-
-.ds-screen ion-header.ds-nav-header::after {
-  display: none;
-}
-
-.ds-navigation {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-sizing: content-box;
-  height: 44px;
-  padding: var(--ion-safe-area-top, 0) var(--ds-gutter) 0;
-  background: var(--ds-bg);
-}
-
-.ds-scope {
-  min-width: 0;
-  max-width: 260px;
-  padding: 8px 16px 8px 0;
-  border: 0;
-  background: transparent;
-  font: inherit;
-  font-size: var(--ds-fs-11);
-  color: var(--ds-secondary);
-  cursor: pointer;
-}
-
-.ds-screen .ds-currency {
-  padding: 4px 7px;
-  border: 1px solid var(--ds-line);
-  border-radius: 5px;
-  font-family: var(--font-mono);
-  font-size: var(--ds-fs-10);
-  letter-spacing: 0.4px;
-  color: var(--ds-secondary);
 }
 
 /* Content settling in on first paint. */
@@ -3337,19 +3294,21 @@ ion-modal.ds-sheet {
    gutters, radii and the chart and movers geometry stay at their specified px. */
 
 /* ── heading: the portfolio's name (it switches portfolios) and Add ──────── */
+/* The first thing on the page, so it clears the status bar itself — zero
+   under the "default" status-bar style (index.html), the inset otherwise. */
 .po-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px var(--ds-gutter) 0;
+  padding: calc(16px + var(--ion-safe-area-top, 0px)) var(--ds-gutter) 0;
 }
 
 .po-page .po-heading h1 {
   min-width: 0;
   font-family: var(--font-display);
-  font-size: var(--ds-fs-34);
+  font-size: var(--ds-fs-23);
   font-weight: 650;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.8px;
   line-height: 1.2;
 }
 
@@ -3369,16 +3328,16 @@ ion-modal.ds-sheet {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   color: var(--ds-accent);
   background: var(--ds-accent-tint);
 }
 
 /* ── hero: the whole ─────────────────────────────────────────────────────── */
 .po-hero {
-  padding: 20px var(--ds-gutter) 0;
+  padding: 18px var(--ds-gutter) 0;
 }
 
 .po-hero-label {
@@ -3391,10 +3350,10 @@ ion-modal.ds-sheet {
 }
 
 .po-page .po-hero-value {
-  font-size: var(--ds-fs-37);
+  font-size: var(--ds-fs-27);
   font-weight: 500;
   line-height: 1.25;
-  letter-spacing: -1.9px;
+  letter-spacing: -1.2px;
 }
 
 .po-hero-return {
@@ -4038,58 +3997,26 @@ ion-modal.ds-sheet {
   }
 }
 
-/* TEMPORARY: the diagnostics button at the end of Portfolio. */
-.debug-info {
-  padding: 28px var(--ds-gutter) 36px;
-  text-align: center;
-}
-
-.ds-screen .debug-info-button {
-  padding: 10px 14px;
-  border: 1px solid var(--ds-line);
-  border-radius: 8px;
-  font-size: var(--ds-fs-10);
-  color: var(--ds-secondary);
-}
-
-.debug-info-text {
-  display: block;
-  width: 100%;
-  height: 220px;
-  margin-top: 12px;
-  padding: 8px;
-  border: 1px solid var(--ds-line);
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--ds-text);
-  background: var(--ds-subtle);
-}
-
 /* ---------- Transactions ----------
    design-poc/transactions.html. Scoped to .tl-page and its sheets (.tl-sheet)
    and read only --ds-* tokens. (.tx-* belongs to the older TransactionRow,
    still used by a holding's own transaction list.) */
 
-.tl-page .tl-scope {
-  max-width: 275px;
-}
-
 /* ── heading ─────────────────────────────────────────────────────────────── */
+/* Clears the status bar itself, as .po-heading does. */
 .tl-heading {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px var(--ds-gutter) 0;
+  padding: calc(16px + var(--ion-safe-area-top, 0px)) var(--ds-gutter) 0;
 }
 
-/* Never wider than the screen allows, at any font scale. */
 .tl-page .tl-heading h1 {
   font-family: var(--font-display);
-  font-size: min(var(--ds-fs-31), 11vw);
+  font-size: var(--ds-fs-23);
   font-weight: 650;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.8px;
   line-height: 1.2;
 }
 
@@ -4097,9 +4024,9 @@ ion-modal.ds-sheet {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   color: var(--ds-accent);
   background: var(--ds-accent-tint);
 }
@@ -4504,9 +4431,9 @@ ion-modal.ds-sheet {
 }
 
 .tl-sheet .tl-detail-hero .money {
-  font-size: var(--ds-fs-29);
+  font-size: var(--ds-fs-27);
   font-weight: 500;
-  letter-spacing: -1px;
+  letter-spacing: -1.2px;
 }
 
 .tl-detail-caption {
