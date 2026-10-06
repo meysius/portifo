@@ -45,6 +45,11 @@
     .phone.dark { --bg:#121820; --subtle:#19212c; --text:#eef2f8; --secondary:#9aa8ba; --muted:#708094; --line:#27313f; --accent:#81a5ff; --accent-tint:#202f4d; --positive:#72d3a6; --negative:#fb9297; --positive-bg:#1c302a; --cash:#77ae99; color-scheme:dark; border-color:#333e4b; }
     .status { height:47px; padding:17px 27px 8px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; font-family:Inter,sans-serif; font-size:14px; font-weight:650; }
     .status-icons { display:flex; align-items:center; gap:6px; }
+    /* The sticky bar, the same on every page: on a tab root it is absent at rest and fades in, with the page's
+       title and a hairline, once the page heading has scrolled away. Holding detail shows the same bar with Back. */
+    .navigation { position:absolute; left:0; right:0; top:47px; z-index:4; height:43px; display:flex; align-items:center; justify-content:center; background:var(--bg); border-bottom:1px solid var(--line); opacity:0; pointer-events:none; transition:opacity .18s; }
+    .navigation.collapsed { opacity:1; }
+    .nav-title { font-family:Inter,sans-serif; font-size:calc(16px * var(--font-scale)); font-weight:600; }
     .screen { overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; flex:1; min-height:0; }.screen::-webkit-scrollbar { display:none; }
     .page-heading { padding:16px 23px 0; display:flex; align-items:center; justify-content:space-between; gap:8px; }
     .page-heading h1 { margin:0; font-family:Inter,sans-serif; font-weight:650; font-size:calc(23px * var(--font-scale)); letter-spacing:-.8px; line-height:1.2; }
@@ -95,7 +100,7 @@
     @media(min-width:1500px) { .workbench { padding-top:55px; }.workspace { gap:80px; } }
     @media(max-width:1120px) { .workbench { padding:28px; }.workspace { gap:28px; grid-template-columns:minmax(170px,1fr) 390px minmax(180px,1fr); }.rail h1 { font-size:28px; } }
     @media(max-width:940px) and (min-width:601px) { .workspace { grid-template-columns:1fr 390px; gap:35px; max-width:700px; margin:auto; }.annotation { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }.annotation-title { grid-column:1 / -1; margin:0; }.state-note { grid-column:1 / -1; margin:0; }.desk-footer { max-width:700px; margin:30px auto 0; } }
-    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; padding-top:env(safe-area-inset-top); }.status { display:none; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.sheet { padding-bottom:max(31px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
+    @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; padding-top:env(safe-area-inset-top); }.status { display:none; }.navigation { top:0; height:50px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.sheet { padding-bottom:max(31px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
     @media(max-width:370px) { .page-heading,.account-list { padding-left:18px; padding-right:18px; } }
     @media(prefers-reduced-motion:no-preference) { .page-heading,.account-list { animation:arrive .4s ease both; }.sheet { animation:sheet-in .2s ease both; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } @keyframes sheet-in { from { transform:translateY(25px); opacity:.5; } to { transform:translateY(0); opacity:1; } } }
   </style>
@@ -129,6 +134,7 @@
       <main class="phone-wrap">
         <div class="phone" id="phone" aria-label="Accounts mobile prototype">
           <div class="status" aria-hidden="true"><span>9:41</span><div class="status-icons"><svg width="17" height="13" viewBox="0 0 17 13" fill="currentColor"><rect x="0" y="9" width="3" height="4" rx=".7"/><rect x="4.5" y="6" width="3" height="7" rx=".7"/><rect x="9" y="3" width="3" height="10" rx=".7"/><rect x="13.5" y="0" width="3" height="13" rx=".7"/></svg><svg width="16" height="13" viewBox="0 0 16 13" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 4a11 11 0 0 1 14 0M3.5 7a7 7 0 0 1 9 0M6 10a3 3 0 0 1 4 0"/><circle cx="8" cy="12" r=".6" fill="currentColor"/></svg><svg width="25" height="13" viewBox="0 0 25 13" fill="none"><rect x=".5" y="1" width="21" height="11" rx="3" stroke="currentColor" opacity=".5"/><rect x="2.5" y="3" width="17" height="7" rx="1.5" fill="currentColor"/><path d="M23 4v5" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5"/></svg></div></div>
+          <header class="navigation" id="navigation" aria-hidden="true"><span class="nav-title">Accounts</span></header>
           <div class="screen" id="screen" tabindex="0" aria-label="Accounts, scroll for all accounts">
             <div class="page-heading"><h1>Accounts</h1><button class="icon-button" id="add-account" aria-label="Add account"></button></div>
             <div id="account-list" class="account-list"></div>
@@ -217,6 +223,7 @@
     function render() {
       updateControls();
       renderList();
+      updateNavigation();
     }
     function notify(text) { clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>$('#toast').hidden=true,3500); }
     function sheet(title,body,opener=document.activeElement) {
@@ -292,6 +299,9 @@
       }
     });
     render();
+    // The sticky bar shows once the page heading has scrolled under the top of the screen.
+    function updateNavigation() { const s=$('#screen'),h=s.querySelector('.page-heading'); $('#navigation').classList.toggle('collapsed',!!h&&h.getBoundingClientRect().bottom<=s.getBoundingClientRect().top+1); }
+    $('#screen').addEventListener('scroll',updateNavigation,{passive:true});
   </script>
 </body>
 </html>

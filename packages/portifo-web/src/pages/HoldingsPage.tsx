@@ -12,6 +12,7 @@ import { useHistory } from "react-router-dom";
 import ActionSheetModal from "../components/ActionSheetModal";
 import AddPortfolioModal from "../components/AddPortfolioModal";
 import GrowthChart from "../components/GrowthChart";
+import StickyTitleBar from "../components/StickyTitleBar";
 import { ActionPlusIcon, CheckIcon } from "../components/ds";
 import { getPortfolioHistory } from "../api/portfolio";
 import type { HistoryPoint, HistoryRange, Quote } from "../api/market";
@@ -19,6 +20,7 @@ import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtDay, fmtShares, fmtSignedCcy, fmtSignedPct, parseDay } from "../lib/fx";
 import { useDisplayCurrency } from "../lib/displayCurrency";
+import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 import { cashValue } from "../lib/positions";
 
 // The Portfolio tab, built from design-poc/portfolio-overview.html in the
@@ -76,7 +78,6 @@ const icon = (body: ReactNode, size = 20) => (
     {body}
   </svg>
 );
-const PLUS = icon(<path d="M12 5v14M5 12h14" />);
 const CLOSE = icon(<path d="m6 6 12 12M18 6 6 18" />, 14);
 const PORTFOLIO = icon(
   <>
@@ -137,6 +138,7 @@ function HoldingsPage() {
     hasActivity,
   } = usePortfolioData();
   const [ccy] = useDisplayCurrency();
+  const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
 
   const [range, setRange] = useState<HistoryRange>("1Y");
   const [cashOpen, setCashOpen] = useState(false);
@@ -310,12 +312,13 @@ function HoldingsPage() {
 
   return (
     <IonPage className="tab-root-page ds-screen po-page">
-      <IonContent>
+      <StickyTitleBar title={activePortfolio?.name ?? "Portfolio"} shown={away} />
+      <IonContent scrollEvents onIonScroll={onIonScroll}>
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
         </IonRefresher>
 
-        <div className="po-heading">
+        <div className="po-heading" ref={headingRef}>
           <h1>
             <button
               type="button"
@@ -327,9 +330,6 @@ function HoldingsPage() {
               {SWITCH}
             </button>
           </h1>
-          <button type="button" className="po-icon-button" aria-label="Add transaction" onClick={addTransaction}>
-            {PLUS}
-          </button>
         </div>
 
         {isEmpty ? (

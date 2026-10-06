@@ -60,7 +60,6 @@
     .nav-title { position:absolute; left:50%; transform:translateX(-50%); font-family:Inter,sans-serif; font-size:16px; font-weight:600; opacity:0; transition:opacity .18s; }
     .navigation.collapsed { border-bottom:1px solid var(--line); }
     .navigation.collapsed .nav-title { opacity:1; }
-    .currency { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--secondary); letter-spacing:.4px; padding:4px 7px; border:1px solid var(--line); border-radius:5px; }
     .screen { overflow-y:auto; overscroll-behavior:contain; scrollbar-width:none; flex:1; position:relative; }
     .screen::-webkit-scrollbar { display:none; }
     .page-heading { padding:12px 23px 0; }
@@ -188,7 +187,7 @@
     .phone { --font-scale:1.15; font-size:calc(16px * var(--font-scale)); }
     .phone .chart-axis { font-size:calc(8px * var(--font-scale)); }
     .phone .chart-tooltip,.phone .account-value .money.account-gain,.phone .account-stats .metric-label,.phone .lots-heading span:last-child,.phone .lot-meta,.phone .lot-end small,.phone .footer-note { font-size:calc(9px * var(--font-scale)); }
-    .phone .account-stats .money,.phone .currency,.phone .badge,.phone .return-percent,.phone .metric-foot,.phone .chart-range,.phone .section-heading .meta,.phone .position-grid .metric-label,.phone .account-meta,.phone .lots-heading,.phone .lot-end .money,.phone .accounting-note,.phone .compact-lot .lot-meta,.phone .preview-tag { font-size:calc(10px * var(--font-scale)); }
+    .phone .account-stats .money,.phone .badge,.phone .return-percent,.phone .metric-foot,.phone .chart-range,.phone .section-heading .meta,.phone .position-grid .metric-label,.phone .account-meta,.phone .lots-heading,.phone .lot-end .money,.phone .accounting-note,.phone .compact-lot .lot-meta,.phone .preview-tag { font-size:calc(10px * var(--font-scale)); }
     .phone .return-label,.phone .metric-label,.phone .lot-date,.phone .compact-lot .lot-end .money,.phone .realized-note,.phone .quote-note,.phone .hero-subtext,.phone .sheet label,.phone .sheet .sheet-notice,.phone .form-error,.phone .lot-details-link { font-size:calc(11px * var(--font-scale)); }
     .phone .company,.phone .hero-label,.phone .hero-return,.phone .account-name,.phone .compact-lot .lot-date,.phone .text-link,.phone .quote-note strong,.phone .form-total,.phone .detail-body .detail-caption,.phone .detail-pair,.phone .empty-state p { font-size:calc(12px * var(--font-scale)); }
     .phone .position-grid .money,.phone .account-value .money,.phone .single-account .account-name,.phone .account-toggle .account-name { font-size:calc(13px * var(--font-scale)); }
@@ -335,7 +334,7 @@
     }
     function heading(d) { return `<div class="page-heading"><div class="identity"><h1>${esc(d.symbol)}</h1></div>${d.name?`<div class="company">${esc(d.name)}<span class="dot">·</span>${esc(d.exchange)}</div>`:''}</div>`; }
     function nav(d,backLabel=state.origin,backAction='back',title=d.symbol) {
-      $('#navigation').innerHTML=`<button class="back" data-action="${backAction}">${icons.back}${esc(backLabel)}</button><span class="nav-title">${esc(title)}</span>${!d.unknown?`<span class="currency">${d.currency}</span>`:''}`;
+      $('#navigation').innerHTML=`<button class="back" data-action="${backAction}">${icons.back}${esc(backLabel)}</button><span class="nav-title">${esc(title)}</span>`;
       $('#navigation').classList.toggle('collapsed',state.view!=='holding');
     }
     function render(reset=true) {

@@ -293,11 +293,6 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
           <IonBackButton defaultHref={tabBase} text={tabLabel} icon={BACK_ICON} />
         </IonButtons>
         <IonTitle>{symbol}</IonTitle>
-        {ccy && (
-          <span slot="end" className="hd-ccy">
-            {ccy}
-          </span>
-        )}
       </IonToolbar>
     </IonHeader>
   );

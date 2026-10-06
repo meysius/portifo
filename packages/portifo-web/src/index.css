@@ -2422,8 +2422,8 @@ ion-toast {
 /* ── navigation ──────────────────────────────────────────────────────────────
    An opaque bar on the page ground — no blur material — closed by one hairline
    once the large title has scrolled under it. Back is the parent tab's name in
-   accent ink; the centred title fades in on collapse; the currency rides the
-   trailing edge. */
+   accent ink; the centred title fades in on collapse. Collapsed, it is the
+   same bar the tab roots show (.ds-sticky-bar). */
 .hd-page ion-header:not(.header-collapse-condense)::before,
 .hd-page ion-header.header-translucent-ios:not(.header-collapse-condense)::before {
   background: var(--ds-bg);
@@ -2463,17 +2463,6 @@ ion-toast {
   font-weight: 600;
   letter-spacing: 0;
   color: var(--ds-text);
-}
-
-.hd-ccy {
-  font-family: var(--font-mono);
-  font-size: var(--ds-fs-10);
-  line-height: normal;
-  letter-spacing: 0.4px;
-  color: var(--ds-secondary);
-  padding: 4px 7px;
-  border: 1px solid var(--ds-line);
-  border-radius: 5px;
 }
 
 /* ── page heading: the large title, then the company line ────────────────── */
@@ -3224,6 +3213,49 @@ ion-toast {
   line-height: normal;
 }
 
+/* ── the sticky bar ────────────────────────────────────────────────────────
+   One bar for every screen once scrolled: the page's title centred over a
+   hairline, the look Holding detail's header takes when it collapses (same
+   50px, ground and type). On a tab root it lies over the page, absent until
+   the heading has scrolled under it, so at rest the heading starts at the
+   top. */
+.ds-sticky-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: content-box;
+  height: 50px;
+  padding-top: var(--ion-safe-area-top, 0px);
+  /* Inside the 50px, as Holding detail's header draws its hairline. */
+  box-shadow: inset 0 -1px var(--ds-line);
+  background: var(--ds-bg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.ds-sticky-bar.shown {
+  opacity: 1;
+}
+
+.ds-sticky-title {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-16);
+  font-weight: 600;
+  color: var(--ds-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-sticky-bar {
+    transition: none;
+  }
+}
+
 /* Content settling in on first paint. */
 @keyframes ds-arrive {
   from {
@@ -3293,7 +3325,7 @@ ion-modal.ds-sheet {
    growth sheet) and reads only --ds-* tokens. Type is at --ds-font-scale;
    gutters, radii and the chart and movers geometry stay at their specified px. */
 
-/* ── heading: the portfolio's name (it switches portfolios) and Add ──────── */
+/* ── heading: the portfolio's name, which switches portfolios ────────────── */
 /* The first thing on the page, so it clears the status bar itself — zero
    under the "default" status-bar style (index.html), the inset otherwise. */
 .po-heading {
@@ -3322,17 +3354,6 @@ ion-modal.ds-sheet {
   margin-left: 6px;
   vertical-align: 0.05em;
   color: var(--ds-muted);
-}
-
-.po-page .po-icon-button {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  color: var(--ds-accent);
-  background: var(--ds-accent-tint);
 }
 
 /* ── hero: the whole ─────────────────────────────────────────────────────── */

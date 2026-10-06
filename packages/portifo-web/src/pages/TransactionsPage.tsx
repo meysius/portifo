@@ -4,9 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { useHistory } from "react-router-dom";
 import type { Transaction, TransactionType } from "../api/portfolio";
+import StickyTitleBar from "../components/StickyTitleBar";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { fmtCcy, fmtShares, fmtSignedCcy, fmtSignedPct } from "../lib/fx";
+import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 
 // The Transactions tab, built from design-poc/transactions.html in the second
 // design system (theme/ds.css). Read top to bottom:
@@ -141,6 +143,7 @@ function SheetHeader({ id, title, onClose }: { id: string; title: string; onClos
 function TransactionsPage() {
   const history = useHistory();
   const { tabBase } = useTabBase();
+  const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
   const { transactions, accounts, quotes, realizedPLByTx, loading, refreshTransactions, refreshMarket } =
     usePortfolioData();
 
@@ -250,12 +253,13 @@ function TransactionsPage() {
 
   return (
     <IonPage className="tab-root-page ds-screen tl-page">
-      <IonContent>
+      <StickyTitleBar title="Transactions" shown={away} />
+      <IonContent scrollEvents onIonScroll={onIonScroll}>
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
         </IonRefresher>
 
-        <div className="tl-heading">
+        <div className="tl-heading" ref={headingRef}>
           <h1>Transactions</h1>
           <button type="button" className="tl-icon-button" aria-label="Add transaction" onClick={addTransaction}>
             {ICONS.plus}
