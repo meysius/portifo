@@ -9,10 +9,11 @@ export type ThemePreference = "system" | "light" | "dark";
 
 const STORAGE_KEY = "portifo.theme";
 
-// Must match --bg in theme/variables.css and the theme-color metas in
-// index.html (which only cover the pre-JS first paint).
-const DARK_BG = "#11161B";
-const LIGHT_BG = "#F2F1EC";
+// theme-color paints the iOS status bar (index.html sets the "default" style),
+// so it must be the page ground: --ds-bg, read from the token so it cannot
+// drift. These fallbacks match it and the first-paint metas in index.html.
+const DARK_BG = "#121820";
+const LIGHT_BG = "#FFFFFF";
 
 const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
 const listeners = new Set<() => void>();
@@ -29,7 +30,9 @@ let resolvedDark = false;
 function apply() {
   resolvedDark = preference === "dark" || (preference === "system" && prefersDark.matches);
   document.documentElement.classList.toggle("ion-palette-dark", resolvedDark);
-  const bg = resolvedDark ? DARK_BG : LIGHT_BG;
+  const bg =
+    getComputedStyle(document.documentElement).getPropertyValue("--ds-bg").trim() ||
+    (resolvedDark ? DARK_BG : LIGHT_BG);
   document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.setAttribute("content", bg));
 }
 

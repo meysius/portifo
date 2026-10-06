@@ -6,11 +6,22 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover"
     />
+    <!-- The status bar's colour (see the style note below): --ds-bg per theme.
+         These cover first paint only; src/lib/theme.ts rewrites them from the
+         token whenever the theme changes, including the manual override. -->
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#15181B" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#121820" media="(prefers-color-scheme: dark)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- "default", never "black-translucent". Since iOS 26 the system lays its
+         Liquid Glass scroll-edge blur over whatever a home-screen app draws under
+         the status bar, so with black-translucent our top bar (account picker,
+         currency, back button) rendered frosted on device — a fixed/sticky
+         opaque header does not stop it. With "default" the page starts below an
+         opaque status bar painted with theme-color, and nothing is blurred.
+         iOS reads this at install: changing it needs the app re-added to the
+         Home Screen. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Portifo" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

@@ -12,6 +12,15 @@ body,
   height: 100%;
 }
 
+/* iOS paints the status bar ("default" style, see index.html) with the page's
+   root background, not theme-color. The root wears the redesigned screens'
+   ground (Ionic's would be the older --ion-background-color), or a strip of
+   it shows above their bars. Seen only there and in overscroll. */
+html,
+body {
+  background: var(--ds-bg);
+}
+
 /* Best-effort defense against the OS-level edge-swipe-back gesture on iOS
    home-screen PWAs (see preventEdgeSwipeBack.ts for the JS-side half of
    this). Only actually stops it when the swipe starts on visible content;
