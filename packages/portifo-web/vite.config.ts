@@ -8,6 +8,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    // The commit a build was made from (GitHub Actions sets GITHUB_SHA), so a
+    // report from a device can say which deploy it came from.
+    define: {
+      __BUILD__: JSON.stringify((process.env.GITHUB_SHA ?? "dev").slice(0, 7)),
+    },
     server: {
       host: true,
       port: 5173,

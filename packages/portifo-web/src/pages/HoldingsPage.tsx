@@ -14,6 +14,7 @@ import CurrencyPickerSheet from "../CurrencyPickerSheet";
 import ActionSheetModal from "../components/ActionSheetModal";
 import AddPortfolioModal from "../components/AddPortfolioModal";
 import GrowthChart from "../components/GrowthChart";
+import DebugInfoButton from "../components/DebugInfoButton";
 import { ActionPlusIcon, CheckIcon } from "../components/ds";
 import { getPortfolioHistory } from "../api/portfolio";
 import type { HistoryPoint, HistoryRange, Quote } from "../api/market";
@@ -706,6 +707,9 @@ function HoldingsPage() {
             </section>
           </>
         )}
+
+        {/* TEMPORARY: diagnostics for the iOS 27 frosted top bar. */}
+        <DebugInfoButton />
 
         <IonModal
           isOpen={growthOpen}
