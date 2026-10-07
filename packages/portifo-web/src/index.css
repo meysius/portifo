@@ -2547,6 +2547,16 @@ ion-toast {
   color: var(--ds-secondary);
 }
 
+/* Today's return on the shares held, under the overall return. */
+.hd-today-return {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: var(--ds-fs-11);
+}
+
 /* A return's percentage, on its own tint. */
 .hd-page .hd-pill {
   padding: 3px 5px;
@@ -2579,7 +2589,7 @@ ion-toast {
   color: var(--ds-secondary);
 }
 
-/* ── market: today, the share price, the chart ───────────────────────────── */
+/* ── market: the share price, its move today, the chart ──────────────────── */
 .hd-market {
   margin: 0 var(--ds-gutter);
   padding-top: 17px;
@@ -2587,9 +2597,19 @@ ion-toast {
 }
 
 .hd-market-numbers {
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-  gap: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.hd-quote-stamp {
+  margin-left: auto;
+  font-size: var(--ds-fs-9);
+  line-height: 1.7;
+  text-align: right;
+  color: var(--ds-secondary);
 }
 
 .hd-metric-label {
@@ -2612,21 +2632,6 @@ ion-toast {
   font-size: var(--ds-fs-10);
 }
 
-.hd-metric-foot.secondary {
-  color: var(--ds-secondary);
-}
-
-.hd-live-dot {
-  flex: none;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--ds-positive);
-}
-
-.hd-live-dot.closed {
-  background: var(--ds-muted);
-}
 
 /* The plot lets a vertical swipe scroll the page; a horizontal one scrubs. */
 .hd-chart {

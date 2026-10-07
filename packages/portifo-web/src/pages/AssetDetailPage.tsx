@@ -21,8 +21,9 @@ import type { AccountPosition, Lot, TickerAgg } from "../lib/positions";
 
 // The holding screen, built from design-poc/holding-detail.html, in the
 // second design system (theme/ds.css). Read top to bottom:
-//   1. Your money — what the position is worth, and the unrealized return.
-//   2. The context — today's return before the share price, then a quiet
+//   1. Your money — what the position is worth, the unrealized return, and
+//      today's return on the shares held.
+//   2. The market — the share price and its move today, then a quiet
 //      price-history chart.
 //   3. The ownership — a compact position ledger, then the accounts it is
 //      held in; an account expands in place to its open purchases, and a
@@ -33,7 +34,8 @@ import type { AccountPosition, Lot, TickerAgg } from "../lib/positions";
 //
 // No quote means no value, no today and no unrealized return — shares and cost
 // still show, and say what they are. A closed position headlines its realized
-// gain instead of a $0 value, and needs no quote at all.
+// gain instead of a $0 value; the share price and its chart stay, since they
+// belong to the symbol, not to ownership.
 //
 // Every figure is in the security's own currency (the one it was bought in);
 // display-currency conversion is deliberately left out so the ledger reads
@@ -198,11 +200,14 @@ function Hero({
   agg,
   ccy,
   price,
+  day,
   quoteLoading,
 }: {
   agg: TickerAgg;
   ccy: string;
   price: number | null;
+  /** Today's move on the shares held, when the quote has one. */
+  day: { value: number; pct: number } | null;
   quoteLoading: boolean;
 }) {
   if (agg.closed) {
@@ -242,6 +247,13 @@ function Hero({
         <ReturnPill value={pl} base={agg.costBasis} />
         <span className="hd-return-label">Unrealized return</span>
       </div>
+      {day && (
+        <div className="hd-today-return" aria-label="Today’s position return">
+          <span className="hd-return-label">Today’s return</span>
+          <span className={`money ${tone(day.value)}`}>{fmtSignedCcy(day.value, ccy)}</span>
+          <span className={`money ${tone(day.value)}`}>{fmtSignedPct(day.pct)}</span>
+        </div>
+      )}
     </section>
   );
 }
@@ -347,36 +359,42 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const company = [quote?.shortName, quote?.exchange].filter(Boolean);
   const quoteTime = quote?.marketTime ? new Date(quote.marketTime) : null;
 
-  // ── Today, then the market ─────────────────────────────────────────────────
+  // Today's move, per share and on the shares still held (none once closed).
+  const change = quote ? convert(quote.change, quote.currency, ccy, fxRates) : 0;
+  const day =
+    quote && price != null && !agg.closed && agg.totalShares > 1e-9
+      ? { value: change * agg.totalShares, pct: quote.changePercent }
+      : null;
+
+  // ── The market: the share price, its move today, the chart ────────────────
+  // The price belongs to the symbol, so a closed position keeps it; without a
+  // quote, a closed position simply has no market section.
   let market: ReactNode = null;
-  if (agg.closed) {
-    market = null;
-  } else if (quote && price != null) {
-    const day = convert(quote.change, quote.currency, ccy, fxRates) * agg.totalShares;
+  if (quote && price != null) {
     const open = quote.marketState === "REGULAR";
     market = (
-      <section className="hd-market" aria-label="Today and share price">
+      <section className="hd-market" aria-label="Share price and history">
         <div className="hd-market-numbers">
           <div>
-            <div className="hd-metric-label">Today’s return</div>
-            <div className={`hd-metric-main money ${tone(day)}`}>{fmtSignedCcy(day, ccy)}</div>
-            <div className={`hd-metric-foot money ${tone(day)}`}>{fmtSignedPct(quote.changePercent)}</div>
-          </div>
-          <div>
-            <div className="hd-metric-label">Share price</div>
+            <div className="hd-metric-label">Share price · {ccy}</div>
             <div className="hd-metric-main money">{fmtCcy(price, ccy)}</div>
-            {quoteTime && (
-              <div className="hd-metric-foot secondary">
-                <span className={open ? "hd-live-dot" : "hd-live-dot closed"} />
-                {open ? `At ${fmtEtTime(quoteTime)}` : `At close · ${fmtEtDay(quoteTime)}`}
-              </div>
-            )}
+            <div className={`hd-metric-foot money ${tone(change)}`} aria-label="Today’s change per share">
+              {fmtSignedCcy(change, ccy)} · {fmtSignedPct(quote.changePercent)}
+            </div>
           </div>
+          {/* The study's live dot is gone; whether the market is open is said in words. */}
+          {quoteTime && (
+            <div className="hd-quote-stamp">
+              {open ? `At ${fmtEtTime(quoteTime)}` : `At close · ${fmtEtDay(quoteTime)}`}
+              <br />
+              {open ? "Market open" : "Market closed"}
+            </div>
+          )}
         </div>
         <HoldingChart symbol={symbol} ccy={quote.currency} />
       </section>
     );
-  } else {
+  } else if (!agg.closed) {
     market = quoteLoading ? (
       <div className="hd-quote-note loading" role="status">
         <span className="hd-spinner" aria-hidden="true" />
@@ -607,7 +625,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
           </div>
         )}
 
-        <Hero agg={agg} ccy={ccy} price={price} quoteLoading={quoteLoading} />
+        <Hero agg={agg} ccy={ccy} price={price} day={day} quoteLoading={quoteLoading} />
         {market}
         {position}
         {holdings}
@@ -615,7 +633,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
 
         <div className="hd-footer-note">
           All amounts in {ccy} · Average-cost accounting
-          {!agg.closed && price != null && quoteTime && (
+          {price != null && quoteTime && (
             <>
               <br />
               Quote as of {fmtEtStamp(quoteTime)}
