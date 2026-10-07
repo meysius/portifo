@@ -74,10 +74,6 @@
         closeSheet();
       }
     }
-    reset();
-    openAdd(document.querySelector('#add-transaction'));
-    assert(document.querySelector('#transaction-form'), 'Add transaction still opens');
-    closeSheet();
   } finally {
     if (document.querySelector('.sheet')) closeSheet();
     Object.assign(state, saved); render();

@@ -110,60 +110,15 @@
     .sheet-grabber { width:34px; height:4px; background:var(--line); border-radius:5px; margin:0 auto 19px; }.sheet-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:18px; }.sheet-header h2 { font-family:Inter,sans-serif; font-size:calc(21px * var(--font-scale)); letter-spacing:-.7px; margin:0; }.close-sheet { background:var(--subtle); color:var(--secondary); border-radius:50%; width:30px; height:30px; display:grid; place-items:center; flex-shrink:0; }
     .sheet-notice { font-size:calc(11px * var(--font-scale)); color:var(--secondary); line-height:1.8; margin:16px 0; }
     .sheet label { display:block; font-size:calc(10px * var(--font-scale)); color:var(--secondary); margin:16px 0 7px; }
-    .sheet input,.sheet select { width:100%; border:1px solid var(--line); background:var(--subtle); color:var(--text); padding:11px; border-radius:8px; min-width:0; font-size:calc(12px * var(--font-scale)); }
-    .sheet input[type=number] { font-family:'JetBrains Mono',monospace; }.form-row { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+    .sheet input { width:100%; border:1px solid var(--line); background:var(--subtle); color:var(--text); padding:11px; border-radius:8px; min-width:0; font-size:calc(12px * var(--font-scale)); }
     .sheet-types { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:5px; }.sheet-type { padding:10px 2px; border-radius:7px; background:var(--subtle); color:var(--secondary); font-size:calc(10px * var(--font-scale)); }.sheet-type.active { background:var(--accent-tint); color:var(--accent); }
     .detail-pair { display:flex; justify-content:space-between; align-items:baseline; gap:12px; padding:14px 0; border-bottom:1px solid var(--line); font-size:calc(11px * var(--font-scale)); }.detail-pair span:first-child { color:var(--secondary); }.detail-pair span:last-child { text-align:right; max-width:65%; overflow-wrap:anywhere; }
     .detail-hero { padding:3px 0 18px; }.detail-hero .transaction-icon { margin-bottom:13px; width:46px; height:46px; border-radius:12px; }.detail-hero .money { font-size:calc(27px * var(--font-scale)); font-weight:500; letter-spacing:-1.2px; }.detail-caption { color:var(--secondary); font-size:calc(10px * var(--font-scale)); margin-top:7px; line-height:1.7; }
     .action { min-height:45px; border-radius:10px; font-size:calc(13px * var(--font-scale)); font-weight:600; background:#245ce8; color:#fff; width:100%; padding:12px 14px; margin-top:18px; }.action.secondary { margin-top:8px; background:var(--accent-tint); color:var(--accent); }
-    .form-total { display:flex; justify-content:space-between; gap:8px; padding:18px 0 0; border-top:1px solid var(--line); margin-top:20px; font-size:calc(11px * var(--font-scale)); }
-    .form-error { font-size:calc(11px * var(--font-scale)); color:var(--negative); line-height:1.6; margin:12px 0 0; }
-    .sheet.wizard { position:absolute; inset:47px 0 0; z-index:10; width:100%; height:auto; max-height:none; border-radius:0; padding:0 23px; display:flex; flex-direction:column; overflow:hidden; animation:none; }
-    .sheet.wizard:focus { outline:none; }
-    .wizard-navigation { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:52px; margin:0 -23px 20px; padding:0 16px; border-bottom:1px solid var(--line); flex-shrink:0; }
-    .wizard-navigation h2 { font-family:Inter,sans-serif; font-size:calc(13px * var(--font-scale)); font-weight:600; margin:0; letter-spacing:-.3px; }
-    .wizard-back,.wizard-cancel { display:flex; align-items:center; gap:3px; background:none; color:var(--accent); padding:10px 0; font-size:calc(11px * var(--font-scale)); }.wizard-back svg { transform:rotate(90deg); }.wizard-cancel { color:var(--secondary); }
-    .wizard-crumbs { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 16px; }
-    .wizard-crumb { display:flex; align-items:center; gap:5px; padding:7px 9px; border:1px solid var(--line); border-radius:6px; background:var(--subtle); color:var(--secondary); font-size:calc(10px * var(--font-scale)); text-align:left; }.wizard-crumb:first-child { color:var(--accent); background:var(--accent-tint); border-color:transparent; }.wizard-crumb:hover { border-color:var(--accent); }
-    .wizard-progress { display:flex; gap:6px; margin:0 0 20px; list-style:none; padding:0; flex-shrink:0; }
-    .wizard-progress li { flex:1; border-top:3px solid var(--line); padding-top:8px; color:var(--muted); font-size:calc(9px * var(--font-scale)); }
-    .wizard-progress li.complete,.wizard-progress li.current { border-color:var(--accent); color:var(--accent); }.wizard-progress li.current { font-weight:600; }
-    .wizard form { display:flex; flex-direction:column; flex:1; min-height:0; }
-    .wizard-body { flex:1; overflow-y:auto; overscroll-behavior:contain; padding:0 2px 16px; scrollbar-width:thin; }
-    .wizard-kicker { color:var(--accent); font-size:calc(9px * var(--font-scale)); letter-spacing:1px; text-transform:uppercase; margin:0 0 8px; }
-    .wizard h3 { font-family:Inter,sans-serif; font-size:calc(23px * var(--font-scale)); font-weight:600; letter-spacing:-.7px; margin:0 0 8px; }
-    .wizard-intro { color:var(--secondary); font-size:calc(11px * var(--font-scale)); line-height:1.7; margin:0 0 20px; }
-    .wizard-choice { display:flex; align-items:center; gap:13px; width:100%; padding:18px 13px; margin-bottom:10px; border:1px solid var(--line); border-radius:12px; background:var(--bg); color:var(--text); text-align:left; }
-    .wizard-choice:hover { background:var(--subtle); border-color:var(--accent); }.wizard-choice>span:nth-child(2) { flex:1; min-width:0; }
-    .wizard-choice strong { display:block; font-size:calc(13px * var(--font-scale)); font-weight:600; }.wizard-choice small { display:block; margin-top:5px; color:var(--secondary); line-height:1.6; font-size:calc(10px * var(--font-scale)); }
-    .wizard-choice .choice-arrow { color:var(--muted); transform:rotate(-90deg); }
-    .wizard-footer { flex-shrink:0; border-top:1px solid var(--line); padding:12px 0 max(24px,env(safe-area-inset-bottom)); background:var(--bg); }
-    .wizard-footer .action { margin:0; }.wizard-footer .secondary { margin-top:8px; }.action:disabled { opacity:.45; cursor:not-allowed; }
-    .wizard-context { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; background:var(--subtle); color:var(--secondary); font-size:calc(10px * var(--font-scale)); line-height:1.6; margin-bottom:16px; }
-    .balance-field { border-bottom:1px solid var(--line); padding-bottom:15px; }.balance-field label { display:flex; justify-content:space-between; gap:8px; }.balance-field label strong { color:var(--text); }.balance-field label span { font-size:calc(9px * var(--font-scale)); }
-    .balance-change { margin:7px 0 0; color:var(--secondary); font-size:calc(10px * var(--font-scale)); line-height:1.6; }.balance-change.deposit { color:var(--positive); }.balance-change.withdrawal { color:var(--withdraw); }
-    .adjustment-row { border:1px solid var(--line); border-radius:10px; padding:13px; margin-top:10px; }.adjustment-top { display:flex; gap:9px; align-items:center; }.adjustment-top strong { flex:1; font-size:calc(12px * var(--font-scale)); }.adjustment-top .money { font-size:calc(11px * var(--font-scale)); }.adjustment-row p { color:var(--secondary); font-size:calc(10px * var(--font-scale)); line-height:1.7; margin:10px 0 0; }
-    .wizard .detail-hero .money { font-size:min(calc(26px * var(--font-scale)),8cqw); }.wizard .money { white-space:normal; overflow-wrap:anywhere; }
-    .wizard-options { display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 8px; }
-    .date-chip { display:flex; align-items:center; gap:7px; background:var(--accent-tint); color:var(--accent); border:1px solid transparent; border-radius:8px; padding:10px 12px; font-size:calc(11px * var(--font-scale)); }.date-chip:hover { border-color:var(--accent); }
-    .balance-date { display:flex; align-items:center; gap:7px; color:var(--secondary); font-size:calc(10px * var(--font-scale)); line-height:1.7; margin:14px 0; }
-    .date-overlay { z-index:20; }.date-sheet { padding:0 23px max(24px,env(safe-area-inset-bottom)); overflow:hidden; }
-    .date-sheet .sheet-header { min-height:60px; margin:0; border-bottom:1px solid var(--line); }.date-sheet .sheet-header h2 { font-size:calc(17px * var(--font-scale)); }.date-done { background:none; color:var(--accent); font-size:calc(12px * var(--font-scale)); font-weight:600; padding:12px 0 12px 16px; }
-    .wheel-stage { --wheel-row:44px; position:relative; display:grid; grid-template-columns:1.5fr .8fr 1fr; gap:5px; height:220px; margin:18px 0 8px; }
-    .wheel-stage::before,.wheel-stage::after { content:''; position:absolute; left:0; right:0; height:44px; z-index:2; pointer-events:none; }.wheel-stage::before { top:0; background:linear-gradient(var(--bg),transparent); }.wheel-stage::after { bottom:0; background:linear-gradient(transparent,var(--bg)); }
-    .wheel-band { position:absolute; top:88px; height:44px; left:0; right:0; border-block:1px solid var(--line); pointer-events:none; }
-    .date-wheel { min-width:0; height:220px; overflow-y:auto; overscroll-behavior:contain; scroll-snap-type:y mandatory; padding-block:88px; scrollbar-width:none; }.date-wheel::-webkit-scrollbar { display:none; }
-    .date-wheel-option { display:block; width:100%; height:44px; padding:0 2px; scroll-snap-align:center; background:none; color:var(--muted); opacity:.35; font-size:calc(16px * var(--font-scale)); text-align:center; line-height:44px; white-space:nowrap; }
-    .date-wheel-option[data-distance="1"] { color:var(--secondary); opacity:.7; }.date-wheel-option[data-distance="0"] { color:var(--text); opacity:1; font-weight:600; }
-    .date-wheel[aria-label="Day"] .date-wheel-option,.date-wheel[aria-label="Year"] .date-wheel-option { font-family:'JetBrains Mono',monospace; font-size:calc(15px * var(--font-scale)); }
-    .date-selected { margin:0; text-align:center; color:var(--secondary); font-size:calc(10px * var(--font-scale)); line-height:1.7; }
-    @media(max-width:600px) { .sheet.wizard { inset:0; padding-top:env(safe-area-inset-top); }.wizard-navigation { min-height:56px; } }
-    @media(prefers-reduced-motion:no-preference) { .wizard-body { animation:wizard-in .2s ease both; } @keyframes wizard-in { from { opacity:.5; transform:translateX(10px); } to { opacity:1; transform:translateX(0); } } }
     .empty-state { padding:44px 23px; text-align:center; }.empty-symbol { width:62px; height:62px; display:grid; place-items:center; border-radius:18px; background:var(--subtle); color:var(--muted); margin:0 auto 23px; }.empty-state h2 { font-family:Inter,sans-serif; font-size:calc(22px * var(--font-scale)); font-weight:550; letter-spacing:-.8px; margin:0 0 12px; }.empty-state p { font-size:calc(11px * var(--font-scale)); color:var(--secondary); line-height:1.8; margin:0; }
-    .toast { position:absolute; bottom:89px; left:23px; right:23px; z-index:5; padding:12px 14px; border:1px solid var(--line); border-radius:9px; background:var(--text); color:var(--bg); font-size:calc(11px * var(--font-scale)); box-shadow:0 4px 18px #0001; }
     @media(min-width:1500px) { .workbench { padding-top:55px; }.workspace { gap:80px; } }
     @media(max-width:1120px) { .workbench { padding:28px; }.workspace { gap:28px; grid-template-columns:minmax(170px,1fr) 390px minmax(180px,1fr); }.rail h1 { font-size:28px; } }
-    @media(max-width:940px) and (min-width:601px) { .workspace { grid-template-columns:1fr 390px; gap:35px; max-width:700px; margin:auto; }.annotation { grid-column:1 / -1; display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }.annotation-title { grid-column:1 / -1; margin:0; }.state-note { grid-column:1 / -1; margin:0; }.desk-footer { max-width:700px; margin:30px auto 0; } }
+    @media(max-width:940px) and (min-width:601px) { .workspace { grid-template-columns:1fr 390px; gap:35px; max-width:700px; margin:auto; }.annotation { grid-column:1 / -1; display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }.annotation-title { grid-column:1 / -1; margin:0; }.state-note { grid-column:1 / -1; margin:0; }.desk-footer { max-width:700px; margin:30px auto 0; } }
     @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; padding-top:env(safe-area-inset-top); }.status { display:none; }.navigation { top:0; height:50px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.sheet { padding-bottom:max(31px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
     @media(max-width:370px) { .page-heading,.date-group { padding-left:18px; padding-right:18px; }.transaction-row { gap:8px; }.transaction-icon { width:29px; }.transaction-end .money { font-size:calc(10px * var(--font-scale)); } }
     @media(prefers-reduced-motion:no-preference) { .page-heading { animation:arrive .35s ease both; }.sheet { animation:sheet-in .2s ease both; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } @keyframes sheet-in { from { transform:translateY(25px); opacity:.5; } to { transform:translateY(0); opacity:1; } } }
@@ -210,21 +165,18 @@
             <div id="transaction-list"></div>
           </div>
           <nav class="tab-bar" id="tab-bar" aria-label="Main navigation"></nav>
-          <div class="toast" id="toast" role="status" hidden></div>
           <div id="overlay-root"></div>
-          <div id="date-root"></div>
         </div>
         <div class="device-caption"><span>390 × 844 · iOS / mobile web</span><span>Scroll to explore ↓</span></div>
       </main>
       <aside class="annotation">
-        <div class="annotation-title">The hierarchy <span>01 — 03</span></div>
+        <div class="annotation-title">The hierarchy <span>01 — 02</span></div>
         <div class="design-note"><span class="number">01 / THE CONTEXT</span><h3>Find the right move.</h3><p>Symbol, type and account filters sit directly above the ledger. The record count keeps the full timeline in context.</p></div>
         <div class="design-note"><span class="number">02 / THE RECORD</span><h3>Four moves. One timeline.</h3><p>Explicit labels and quiet, directional icons separate buys, sells, deposits and withdrawals. Signed amounts show the cash impact, not profit or loss.</p></div>
-        <div class="design-note"><span class="number">03 / THE GUIDANCE</span><h3>A clear path, screen by screen.</h3><p>A full-page wizard gives each step room. Previous answers are tappable, and a Today chip opens a wheel-style date sheet. Review before recording. Set currency balances to turn each difference into a deposit or withdrawal, without converting currencies.</p></div>
         <div class="state-note"><h3 id="state-note-title"></h3><p id="state-note-text"></p></div>
       </aside>
     </div>
-    <footer class="desk-footer"><span>Flat surfaces · Cobalt actions · Inter / Public Sans / JetBrains Mono<br>Same tokens, device frame and hierarchy as the existing studies.</span><span>Interactive HTML study · Illustrative history, as of October 3, 2025<br>New records live in this preview only. No orders are placed.</span></footer>
+    <footer class="desk-footer"><span>Flat surfaces · Cobalt actions · Inter / Public Sans / JetBrains Mono<br>Same tokens, device frame and hierarchy as the existing studies.</span><span>Interactive HTML study · Illustrative history, as of October 3, 2025<br>No orders are placed.</span></footer>
   </div>
   <script>
     const $ = s => document.querySelector(s);
@@ -237,7 +189,6 @@
       chevron:icon('<path d="m7 10 5 5 5-5"/>',14),
       buy:icon('<path d="M17 7 7 17M7 7v10h10"/>',18), sell:icon('<path d="M7 17 17 7M7 7h10v10"/>',18),
       deposit:icon('<path d="M12 3v11m-4-4 4 4 4-4M4 14v6h16v-6"/>',18), withdrawal:icon('<path d="M12 14V3m-4 4 4-4 4 4M4 14v6h16v-6"/>',18),
-      calendar:icon('<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 11h18"/>',16),
       transactions:icon('<path d="M4 7h16M4 12h10M4 17h16"/><path d="m17 10 3 2-3 2"/>'),
       portfolio:icon('<rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3M3 12h18M10 12v3h4v-3"/>'),
       accounts:icon('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/>')
@@ -245,8 +196,6 @@
     const money = (n,signed=false) => `${n<0?'−':signed&&n>0?'+':''}$${Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
     const currencyMoney = (n,currency='USD',signed=false) => `${n<0?'−':signed&&n>0?'+':''}${Math.abs(n).toLocaleString('en-US',{style:'currency',currency,minimumFractionDigits:2,maximumFractionDigits:2})}`;
     const number = n => n.toLocaleString('en-US',{maximumFractionDigits:6});
-    const currencies = {USD:'US dollar',CAD:'Canadian dollar',EUR:'Euro',GBP:'British pound'};
-    const currencyOptions = value => Object.entries(currencies).map(([code,name])=>`<option value="${code}" ${code===value?'selected':''}>${code} · ${name}</option>`).join('');
     const accounts = ['Individual brokerage','Tax-free savings','Retirement savings'];
     const shortAccounts = ['Brokerage','Tax-free savings','Retirement'];
     const companies = {NVDA:'NVIDIA Corporation',AAPL:'Apple Inc.',MSFT:'Microsoft Corporation',VTI:'Vanguard Total Stock Market ETF',AMZN:'Amazon.com, Inc.'};
@@ -269,23 +218,17 @@
       {id:'mixed',label:'A little of everything',note:'All four transaction types across three accounts. The full timeline includes both October and September records.'},
       {id:'trades',label:'Just the stock trades',note:'Buys and sells, including a fractional-share purchase. Fees are included in the cash impact and itemized in the detail sheet.'},
       {id:'cash',label:'Cash movements only',note:'Deposits and withdrawals stand on their own. Filter by type or account to find a contribution or transfer.'},
-      {id:'empty',label:'Your first transaction',note:'A clean starting point. Add a buy, sale, deposit or withdrawal to build a timeline. Records are kept only until this page is refreshed.'}
+      {id:'empty',label:'Your first transaction',note:'A clean starting point. Add a buy, sale, deposit or withdrawal to build a timeline.'}
     ];
     const state = {id:'mixed',theme:'light',fontScale:115,scope:'all',type:'all',symbol:'all'};
     // Each scenario keeps its own temporary records. There is intentionally no persistence or brokerage integration.
     const records = Object.fromEntries(scenarios.map(s=>[s.id,s.id==='empty'?[]:seed.filter(t=>s.id==='mixed'||(s.id==='trades'?['buy','sell']:['deposit','withdrawal']).includes(t.type)).map(t=>({...t}))]));
-    let nextId=100, sheetOpener=null, toastTimer, draft=null, filterDraft=null;
+    let sheetOpener=null, filterDraft=null;
     const isTrade = t => ['buy','sell'].includes(t.type);
     const cashImpact = t => {
       const gross = isTrade(t)?t.shares*t.price:t.amount;
       return Math.round(((t.type==='buy'||t.type==='withdrawal'?-gross:gross)-t.fee)*100)/100;
     };
-    // Seed history is illustrative, not a full ledger. Opening snapshots match the other studies.
-    // Only newly added records change these snapshots; each scenario remains independent.
-    function currencyBalance(account,currency) {
-      const opening=state.id==='empty'?0:currency==='USD'?[6750,4500,3750][Number(account)]:0;
-      return Math.round((opening+records[state.id].filter(t=>t.id>=100&&t.account===Number(account)&&(t.currency||'USD')===currency).reduce((sum,t)=>sum+cashImpact(t),0))*100)/100;
-    }
     const title = t => isTrade(t)?`${labels[t.type]} ${t.symbol}`:t.type==='deposit'?'Cash deposit':'Cash withdrawal';
     const dateText = (d,long=false) => new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:long?'long':'short',day:'numeric',...(long?{year:'numeric'}:{})});
     function visibleRows(filters=state) {
@@ -322,7 +265,6 @@
     }
     function render() { updateControls(); renderLedger(); updateNavigation(); }
     function clearFilters() { state.scope='all';state.type='all';state.symbol='all';render(); }
-    function notify(text) { clearTimeout(toastTimer);$('#toast').textContent=text;$('#toast').hidden=false;toastTimer=setTimeout(()=>$('#toast').hidden=true,3500); }
     function sheet(titleText,body,opener=document.activeElement) {
       if(!$('#overlay-root').children.length) sheetOpener=opener;
       ['#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=true);
@@ -330,11 +272,9 @@
       $('.sheet').focus({preventScroll:true});
     }
     function closeSheet() {
-      closeDatePicker(false);
       $('#overlay-root').innerHTML='';['#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=false);
       if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true});else if(sheetOpener?.dataset.filter)$(`[data-filter="${sheetOpener.dataset.filter}"]`)?.focus({preventScroll:true});else $('#add-transaction').focus({preventScroll:true});
-      $('.state-list').inert=false;
-      filterDraft=null;draft=null;
+      filterDraft=null;
     }
     const pair = (label,value,mono=false) => `<div class="detail-pair"><span>${esc(label)}</span><span${mono?' class="money"':''}>${esc(value)}</span></div>`;
     function detailBody(t) {
@@ -342,13 +282,12 @@
       return `<div class="detail-hero"><div class="transaction-icon ${t.type}">${icons[t.type]}</div><div class="money">${currencyMoney(cashImpact(t),t.currency,true)}</div><div class="detail-caption">${cashImpact(t)>=0?'Added to':'Deducted from'} account cash · ${t.currency||'USD'}</div></div>`+
         pair('Account',accounts[t.account])+pair('Date',dateText(t.date,true))+pair('Currency',t.currency||'USD')+(t.time?pair('Recorded time',t.time):'')+
         (isTrade(t)?pair('Security',`${t.symbol} · ${companies[t.symbol]||t.symbol}`)+pair('Shares',number(t.shares),true)+pair('Price per share',format(t.price),true)+pair(t.type==='buy'?'Purchase value':'Sale proceeds',format(t.shares*t.price),true):pair('Amount',format(t.amount),true))+
-        pair('Fees',format(t.fee),true)+(t.balanceAdjustment?pair('Balance adjustment',`${format(t.previousBalance)} → ${format(t.targetBalance)}`):'')+(t.note?pair('Note',t.note):'');
+        pair('Fees',format(t.fee),true)+(t.note?pair('Note',t.note):'');
     }
     function showDetail(id,opener) {
       const t=records[state.id].find(t=>t.id===Number(id)); if(!t)return;
       sheet(title(t),detailBody(t)+`<p class="sheet-notice">This is a recorded transaction, not a live order. Cash movement is not the same as investment profit or loss.</p><button class="action secondary" data-command="close">Done</button>`,opener);
     }
-    const accountOptions = (value,all=false) => (all?`<option value="all" ${value==='all'?'selected':''}>All accounts</option>`:'')+accounts.map((a,i)=>`<option value="${i}" ${String(i)===String(value)?'selected':''}>${a}</option>`).join('');
     function filterOptions(key) {
       if(key==='symbol')return [['all','All symbols','Includes cash movements'],...[...new Set(records[state.id].filter(isTrade).map(t=>t.symbol))].sort().map(s=>[s,s,companies[s]||'Recorded security'])];
       if(key==='type')return [['all','All types','Trades & cash movements'],...Object.entries(labels).map(([v,l])=>[v,l,v==='buy'?'Shares purchased':v==='sell'?'Shares sold':v==='deposit'?'Cash added to an account':'Cash moved out of an account'])];
@@ -371,200 +310,6 @@
       const count=visibleRows({...state,[filterDraft.key]:filterDraft.value}).length;
       $('#apply-filter').textContent=`Show ${count} ${count===1?'record':'records'}`;
     }
-    const previewToday = '2025-10-03';
-    const dateChipText = date => date===previewToday?'Today':dateText(date,true);
-    const dateControl = () => `<div class="wizard-options"><input type="hidden" name="date" value="${esc(draft.date)}"><button type="button" class="date-chip" id="transaction-date" data-command="pick-date" aria-haspopup="dialog" aria-label="Transaction date: ${esc(dateChipText(draft.date))}">${icons.calendar}<span id="date-chip-text">${esc(dateChipText(draft.date))}</span>${icons.chevron}</button></div>`;
-    function renderWizard(body,opener=document.activeElement) {
-      if(!$('#overlay-root').children.length)sheetOpener=opener;
-      ['#screen','#tab-bar'].forEach(s=>$(s).inert=true);
-      // This is a pushed page, not a modal. The desktop study controls stay usable.
-      $('.rail').inert=false;$('.state-list').inert=true;
-      $('#overlay-root').innerHTML=`<section class="sheet wizard wizard-page" role="region" aria-labelledby="wizard-title" tabindex="-1"><header class="wizard-navigation"><button type="button" class="wizard-back" data-command="wizard-back" aria-label="${draft.step===0&&!draft.flow?'Back to transactions':'Back one step'}">${icons.chevron}<span>${draft.step===0&&!draft.flow?'Transactions':'Back'}</span></button><h2 id="wizard-title">Add transaction</h2><button type="button" class="wizard-cancel" data-command="close">Cancel</button></header>${body}</section>`;
-      $('.wizard-page').focus({preventScroll:true});
-    }
-    let dateWheelTimers=[];
-    function dateParts() { const [year,month,day]=draft.date.split('-').map(Number);return {year,month,day}; }
-    function wheelValues(part) {
-      const {year,month}=dateParts();
-      const [maxYear,maxMonth,maxDay]=previewToday.split('-').map(Number);
-      if(part==='year')return Array.from({length:maxYear-2000+1},(_,i)=>2000+i);
-      if(part==='month')return Array.from({length:year===maxYear?maxMonth:12},(_,i)=>i+1);
-      const days=new Date(year,month,0).getDate();
-      return Array.from({length:year===maxYear&&month===maxMonth?Math.min(days,maxDay):days},(_,i)=>i+1);
-    }
-    function selectDatePart(part,value,focusPart=null) {
-      const parts={...dateParts(),[part]:Number(value)},[maxYear,maxMonth,maxDay]=previewToday.split('-').map(Number);
-      parts.year=Math.max(2000,Math.min(maxYear,parts.year));
-      parts.month=Math.max(1,Math.min(parts.year===maxYear?maxMonth:12,parts.month));
-      parts.day=Math.max(1,Math.min(parts.day,new Date(parts.year,parts.month,0).getDate(),parts.year===maxYear&&parts.month===maxMonth?maxDay:31));
-      draft.date=`${parts.year}-${String(parts.month).padStart(2,'0')}-${String(parts.day).padStart(2,'0')}`;
-      $('#transaction-form [name="date"]').value=draft.date;
-      $('#date-chip-text').textContent=dateChipText(draft.date);
-      $('#transaction-date').setAttribute('aria-label','Transaction date: '+dateChipText(draft.date));
-      renderDateWheels(focusPart);
-    }
-    function renderDateWheels(focusPart=null) {
-      dateWheelTimers.forEach(clearTimeout);dateWheelTimers=[];
-      const parts=dateParts();
-      $('#date-wheels').innerHTML=['month','day','year'].map(part=>{
-        const values=wheelValues(part),index=values.indexOf(parts[part]);
-        return `<div class="date-wheel" role="listbox" aria-label="${part[0].toUpperCase()+part.slice(1)}" data-date-part="${part}" tabindex="0" aria-activedescendant="date-${part}-${parts[part]}">${values.map((value,i)=>`<button type="button" role="option" tabindex="-1" class="date-wheel-option" id="date-${part}-${value}" data-date-value="${value}" data-distance="${Math.abs(i-index)}" aria-selected="${value===parts[part]}">${part==='month'?new Date(2024,value-1,1).toLocaleDateString('en-US',{month:'long'}):value}</button>`).join('')}</div>`;
-      }).join('')+'<div class="wheel-band" aria-hidden="true"></div>';
-      document.querySelectorAll('.date-wheel').forEach(wheel=>{
-        const values=wheelValues(wheel.dataset.datePart),index=values.indexOf(parts[wheel.dataset.datePart]);
-        wheel.scrollTop=index*44;
-        let timer;
-        wheel.addEventListener('scroll',()=>{
-          const nextIndex=Math.max(0,Math.min(values.length-1,Math.round(wheel.scrollTop/44)));
-          wheel.querySelectorAll('.date-wheel-option').forEach((option,i)=>option.dataset.distance=Math.abs(i-nextIndex));
-          clearTimeout(timer);
-          timer=setTimeout(()=>{
-            if(!wheel.isConnected||!draft)return;
-            const value=values[nextIndex];
-            if(value!==dateParts()[wheel.dataset.datePart])selectDatePart(wheel.dataset.datePart,value,document.activeElement===wheel?wheel.dataset.datePart:null);
-          },120);
-          dateWheelTimers.push(timer);
-        });
-      });
-      $('#date-selected').textContent=dateText(draft.date,true)+' · Preview dates through October 3, 2025';
-      if(focusPart)$(`[data-date-part="${focusPart}"]`).focus({preventScroll:true});
-    }
-    function openDatePicker() {
-      if(!draft||draft.type==='balances')return;
-      readDraft();$('.wizard-page').inert=true;$('.rail').inert=true;
-      $('#date-root').innerHTML=`<div class="overlay date-overlay"><section class="sheet date-sheet" role="dialog" aria-modal="true" aria-labelledby="date-title" tabindex="-1"><header class="sheet-header"><h2 id="date-title">Date</h2><button type="button" class="date-done" data-command="date-done">Done</button></header><div class="wheel-stage" id="date-wheels"></div><p class="date-selected" id="date-selected" aria-live="polite"></p></section></div>`;
-      renderDateWheels();$('.date-sheet').focus({preventScroll:true});
-    }
-    function closeDatePicker(restoreFocus=true) {
-      // Commit the wheel's visible selection even if Done was tapped during its scroll debounce.
-      if(draft&&$('.date-sheet')) {
-        const visible=Object.fromEntries(Array.from(document.querySelectorAll('.date-wheel'),wheel=>{
-          const values=wheelValues(wheel.dataset.datePart);
-          return [wheel.dataset.datePart,values[Math.max(0,Math.min(values.length-1,Math.round(wheel.scrollTop/44)))]];
-        }));
-        ['year','month','day'].forEach(part=>{if(visible[part]!==dateParts()[part])selectDatePart(part,visible[part]);});
-      }
-      dateWheelTimers.forEach(clearTimeout);dateWheelTimers=[];
-      $('#date-root').innerHTML='';
-      if($('.wizard-page')) { $('.wizard-page').inert=false;$('.rail').inert=false; }
-      if(restoreFocus)$('#transaction-date')?.focus({preventScroll:true});
-    }
-    function openAdd(opener) {
-      draft={step:0,flow:'',type:'',account:state.scope==='all'?0:Number(state.scope),date:'2025-10-03',currency:'USD',symbol:'',shares:'',price:'',amount:'',fee:'0',note:'',balances:{}};
-      renderAdd(opener);
-    }
-    function readDraft() {
-      const form=$('#transaction-form');if(!form||!draft)return;
-      new FormData(form).forEach((v,k)=>{if(k.startsWith('balance-'))draft.balances[k.slice(8)]=v;else draft[k]=v;});
-    }
-    function normalizedDraft() {
-      return {type:draft.type,currency:draft.currency,date:draft.date,symbol:draft.symbol.trim().toUpperCase(),account:Number(draft.account),shares:Number(draft.shares),price:Number(draft.price),amount:Number(draft.amount),fee:Number(draft.fee),note:draft.note.trim(),time:''};
-    }
-    function balanceChanges() {
-      return Object.keys(currencies).flatMap(currency=>{
-        const raw=draft.balances[currency];if(raw===undefined||raw==='')return [];
-        const previousBalance=currencyBalance(draft.account,currency),targetBalance=Number(raw);
-        const delta=Math.round((targetBalance-previousBalance)*100)/100;
-        return delta?[{type:delta>0?'deposit':'withdrawal',amount:Math.abs(delta),fee:0,currency,account:Number(draft.account),date:draft.date,time:'',note:draft.note.trim(),balanceAdjustment:true,previousBalance,targetBalance}]:[];
-      });
-    }
-    function accountStepError() {
-      if(!accounts[Number(draft.account)])return 'Choose a valid account.';
-      const date=new Date(draft.date+'T12:00:00');
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)||draft.date<'2000-01-01'||draft.date>'2025-10-03'||!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==draft.date)return 'Choose a valid date within this preview’s history.';
-      if(draft.type!=='balances'&&!currencies[draft.currency])return 'Choose a supported currency.';
-      return '';
-    }
-    function draftError() {
-      const accountError=accountStepError();if(accountError)return accountError;
-      if(draft.type==='balances') {
-        if(draft.date!=='2025-10-03')return 'Balance adjustments use the current preview date.';
-        if(Object.values(draft.balances).some(v=>v===''||!Number.isFinite(Number(v))||Number(v)<0||Number(v)>100000000||Math.abs(Number(v)*100-Math.round(Number(v)*100))>0.00001))return 'Enter non-negative balances up to 100 million, with at most two decimal places.';
-        if(!balanceChanges().length)return 'Your balances are already up to date. Change at least one balance to continue.';
-        return '';
-      }
-      const t=normalizedDraft();
-      if(!currencies[t.currency])return 'Choose a supported currency.';
-      if(isTrade(t)&&(!/^[A-Z0-9.\-^]{1,12}$/.test(t.symbol)||![t.shares,t.price].every(n=>Number.isFinite(n)&&n>=0.000001&&n<=100000000)))return 'Enter a symbol, positive shares and a positive price.';
-      if(!isTrade(t)&&(!Number.isFinite(t.amount)||t.amount<0.01||t.amount>100000000))return 'Enter an amount between 0.01 and 100 million.';
-      if(!Number.isFinite(t.fee)||t.fee<0||t.fee>1000000)return 'Fees must be between zero and 1 million.';
-      if(!Number.isFinite(cashImpact(t))||Math.abs(cashImpact(t))>1000000000)return 'Please enter a cash movement under 1 billion.';
-      if((t.type==='sell'&&t.fee>=t.shares*t.price)||(t.type==='deposit'&&t.fee>=t.amount))return 'Fees must be less than the incoming amount.';
-      return '';
-    }
-    function wizardChoice(value,label,description,glyph,kind='flow') {
-      return `<button type="button" class="wizard-choice" data-wizard-${kind}="${value}"><span class="transaction-icon ${value==='cash'||value==='balances'?'deposit':value}">${glyph}</span><span><strong>${label}</strong><small>${description}</small></span><span class="choice-arrow">${icons.chevron}</span></button>`;
-    }
-    function renderAdd(opener) {
-      const {step,type,flow}=draft,trade=isTrade(draft),balances=type==='balances';
-      let heading='',intro='',content='',button='Continue';
-      if(step===0) {
-        heading=flow==='cash'?'How did your cash change?':'What would you like to record?';
-        intro=flow==='cash'?'Add a cash movement, or bring your currency balances up to date.':'A few details. A clear record. No live orders or transfers.';
-        content=flow==='cash'?
-          wizardChoice('deposit','Deposit','Record cash added to an account.',icons.deposit,'type')+wizardChoice('withdrawal','Withdrawal','Record cash taken out of an account.',icons.withdrawal,'type')+wizardChoice('balances','Set currency balances','We’ll calculate the deposits and withdrawals for you.',icons.accounts,'type'):
-          wizardChoice('buy','Buy','Record a purchase of shares or an ETF.',icons.buy)+wizardChoice('sell','Sell','Record a sale of shares or an ETF.',icons.sell)+wizardChoice('cash','Cash','Deposits, withdrawals and currency balances.',icons.deposit);
-      } else if(step===1) {
-        heading='Choose the account';intro=balances?'Each currency is reconciled separately, as of today in this preview.':'Where did this transaction happen?';
-        content=`<label for="transaction-account">Account</label><select id="transaction-account" name="account">${accountOptions(draft.account)}</select>${!balances?`<label for="transaction-currency">${trade?'Settlement currency':'Currency'}</label><select id="transaction-currency" name="currency">${currencyOptions(draft.currency)}</select>`:'<p class="balance-date">'+icons.calendar+'As of Today · October 3, 2025</p>'}<p class="sheet-notice">Illustrative accounts · October 3, 2025. Changes stay in this preview and reset on refresh.</p>`;
-      } else if(step===2) {
-        heading=balances?'Set your cash balances':trade?'Enter the trade details':`Enter the ${labels[type].toLowerCase()}`;
-        intro=balances?'Enter the actual cash held in each currency, not the total account value. Unchanged balances create no transactions.':trade?'Use the executed share price. Fees are included in the cash movement.':'Enter the amount moved. Fees are recorded separately.';
-        if(balances)content=Object.keys(currencies).map(code=>{
-          const current=currencyBalance(draft.account,code);
-          return `<div class="balance-field"><label for="balance-${code}"><strong>${code}</strong><span>Current ${currencyMoney(current,code)}</span></label><input id="balance-${code}" name="balance-${code}" type="number" inputmode="decimal" min="0" max="100000000" step="0.01" required value="${esc(draft.balances[code]??current.toFixed(2))}" aria-describedby="change-${code}"><p class="balance-change" id="change-${code}"></p></div>`;
-        }).join('');
-        else content=(trade?`<label for="transaction-symbol">Stock or ETF symbol</label><input id="transaction-symbol" name="symbol" value="${esc(draft.symbol)}" placeholder="e.g. NVDA" maxlength="12" required autocapitalize="characters" autocomplete="off"><div class="form-row"><div><label for="transaction-shares">Shares</label><input id="transaction-shares" name="shares" type="number" min="0.000001" max="100000000" step="any" placeholder="0" value="${esc(draft.shares)}" required></div><div><label for="transaction-price">Price · ${draft.currency}</label><input id="transaction-price" name="price" type="number" min="0.000001" max="100000000" step="any" placeholder="0.00" value="${esc(draft.price)}" required></div></div>`:`<label for="transaction-amount">Amount · ${draft.currency}</label><input id="transaction-amount" name="amount" type="number" min="0.01" max="100000000" step="0.01" placeholder="0.00" value="${esc(draft.amount)}" required>`)+`<label for="transaction-fee">Fees · ${draft.currency} <span>(zero if none)</span></label><input id="transaction-fee" name="fee" type="number" min="0" max="1000000" step="0.01" value="${esc(draft.fee)}" required>`;
-        content+=balances?`<p class="balance-date">${icons.calendar}As of Today · October 3, 2025</p>`:dateControl();
-        content+=`<label for="transaction-note">Note <span>(optional)</span></label><input id="transaction-note" name="note" placeholder="What was this move for?" maxlength="160" value="${esc(draft.note)}">${balances?'':`<div class="form-total"><span>Net cash movement</span><span class="money" id="form-impact"></span></div>`}`;
-        button=balances?'Review adjustments':'Review transaction';
-      } else {
-        const changes=balances?balanceChanges():[];
-        heading=balances?'Review the adjustments':'Everything look right?';intro=balances?`${changes.length} ${changes.length===1?'transaction will':'transactions will'} bring your currency balances up to date. No currency conversion or fees.`:'Check the details before adding this record to your timeline.';
-        content=balances?pair('Account',accounts[Number(draft.account)])+pair('Date',dateText(draft.date,true))+changes.map(t=>`<div class="adjustment-row"><div class="adjustment-top"><span class="transaction-icon ${t.type}">${icons[t.type]}</span><strong>${labels[t.type]} · ${t.currency}</strong><span class="money">${currencyMoney(cashImpact(t),t.currency,true)}</span></div><p>${currencyMoney(t.previousBalance,t.currency)} → <strong>${currencyMoney(t.targetBalance,t.currency)}</strong></p></div>`).join('')+(draft.note?pair('Note',draft.note):''):detailBody(normalizedDraft());
-        content+='<p class="sheet-notice">Only records in this preview are updated. Nothing is sent to your broker, and the other portfolio studies are unchanged.</p>';
-        button=balances?`Add ${changes.length} ${changes.length===1?'transaction':'transactions'}`:`Add ${labels[type].toLowerCase()}`;
-      }
-      const crumbs=step>0?`<nav class="wizard-crumbs" aria-label="Edit previous answers"><button type="button" class="wizard-crumb" data-wizard-step="0">${balances?'Set balances':labels[type]}</button>${step>1?`<button type="button" class="wizard-crumb" data-wizard-step="1">${esc(shortAccounts[Number(draft.account)])}${balances?'':' · '+draft.currency}</button>`:''}${step>2?'<button type="button" class="wizard-crumb" data-wizard-step="2">Details</button>':''}</nav>`:'';
-      renderWizard(`<ol class="wizard-progress" aria-label="Transaction steps">${['Choose','Account','Details','Review'].map((label,i)=>`<li class="${i===step?'current':i<step?'complete':''}" ${i===step?'aria-current="step"':''}>${i+1} ${label}</li>`).join('')}</ol><form id="transaction-form"><div class="wizard-body"><p class="wizard-kicker">Step ${step+1} of 4${flow==='cash'?' · Cash':''}</p>${crumbs}<h3>${heading}</h3><p class="wizard-intro">${intro}</p>${content}<p id="form-error" class="form-error" role="alert"></p></div>${step>0?`<div class="wizard-footer"><button class="action" id="wizard-next" type="submit">${button}</button></div>`:''}</form>`,opener);
-      if(step===2)updateImpact();
-    }
-    function updateImpact() {
-      readDraft();if(!draft||draft.step!==2)return;
-      if(draft.type!=='balances') { const impact=cashImpact(normalizedDraft());$('#form-impact').textContent=Number.isFinite(impact)?currencyMoney(impact,draft.currency,true):'—';return; }
-      const changes=balanceChanges();
-      Object.keys(currencies).forEach(code=>{
-        const el=$('#change-'+code),raw=draft.balances[code],t=changes.find(t=>t.currency===code);
-        const valid=raw!==''&&Number.isFinite(Number(raw))&&Number(raw)>=0&&Number(raw)<=100000000;
-        el.className='balance-change'+(valid&&t?' '+t.type:'');
-        el.textContent=!valid?'Enter a valid balance.':t?`${labels[t.type]} of ${currencyMoney(t.amount,code)} will be created.`:'No change · no transaction';
-      });
-      $('#wizard-next').disabled=!!draftError();
-    }
-    function wizardBack() {
-      readDraft();
-      if(draft.step>0)draft.step--;
-      else if(draft.flow)draft.flow='';
-      else { closeSheet();return; }
-      renderAdd();
-    }
-    function advanceDraft() {
-      if(!draft||draft.step===0)return;
-      readDraft();
-      const error=draft.step===1?accountStepError():draftError();
-      if(error){$('#form-error').textContent=error;return;}
-      if(draft.step===3){confirmDraft();return;}
-      if(draft.step===1&&draft.balanceAccount!==Number(draft.account)) { draft.balances={};draft.balanceAccount=Number(draft.account); }
-      draft.step++;renderAdd();
-    }
-    function confirmDraft() {
-      if(!draft||draft.step!==3)return;
-      const error=draftError();if(error){$('#form-error').textContent=error;return;}
-      const entries=draft.type==='balances'?balanceChanges():[normalizedDraft()];
-      records[state.id].push(...entries.map(t=>({...t,id:nextId++})));
-      state.scope=String(draft.account);state.type='all';state.symbol='all';
-      render();closeSheet();$('#screen').scrollTop=0;notify(entries.length===1?'Transaction added to this preview.':`${entries.length} balance adjustments added to this preview.`);
-    }
     function openSettings(opener) { sheet('Appearance',`<p class="sheet-notice">Use the same quiet palette in either light or dark.</p><div class="sheet-types" style="grid-template-columns:1fr 1fr">${['light','dark'].map(t=>`<button class="sheet-type ${state.theme===t?'active':''}" data-mobile-theme="${t}" aria-pressed="${state.theme===t}">${t==='light'?'Light':'Dark'}</button>`).join('')}</div><label for="mobile-font">Text size</label><input id="mobile-font" type="range" min="100" max="140" step="5" value="${state.fontScale}" aria-valuetext="${state.fontScale} percent"><button class="action secondary" data-command="close">Done</button>`,opener); }
     $('#add-transaction').innerHTML=icons.plus;
     $('#tab-bar').innerHTML=`<a class="tab" href="portfolio-overview.html">${icons.portfolio}<span>Portfolio</span></a><a class="tab" href="accounts.html">${icons.accounts}<span>Accounts</span></a><button class="tab active" aria-current="page" data-command="top">${icons.transactions}<span>Transactions</span></button><button class="tab" data-command="settings">${icons.filter}<span>Settings</span></button><div class="home-indicator" aria-hidden="true"></div>`;
@@ -576,35 +321,22 @@
       if(b.dataset.theme) { state.theme=b.dataset.theme;updateControls(); }
       if(b.dataset.filter) openFilter(b.dataset.filter,b);
       if(b.dataset.transaction) showDetail(b.dataset.transaction,b);
-      if(b.dataset.wizardStep!==undefined&&draft) { readDraft();draft.step=Number(b.dataset.wizardStep);renderAdd(); }
-      if(b.dataset.dateValue&&draft)selectDatePart(b.closest('[data-date-part]').dataset.datePart,b.dataset.dateValue,b.closest('[data-date-part]').dataset.datePart);
-      if(b.dataset.wizardFlow&&draft) { draft.flow=b.dataset.wizardFlow;draft.type=draft.flow==='cash'?'':draft.flow;draft.step=draft.flow==='cash'?0:1;renderAdd(); }
-      if(b.dataset.wizardType&&draft) { draft.type=b.dataset.wizardType;draft.step=1;if(draft.type==='balances')draft.date='2025-10-03';renderAdd(); }
       if(b.dataset.mobileTheme) { state.theme=b.dataset.mobileTheme;updateControls();document.querySelectorAll('[data-mobile-theme]').forEach(el=>{el.classList.toggle('active',el.dataset.mobileTheme===state.theme);el.setAttribute('aria-pressed',el.dataset.mobileTheme===state.theme);}); }
       switch(b.dataset.command) {
-        case 'close':closeSheet();break;case 'add':break;case 'clear':clearFilters();break;case 'clear-history':clearFilters();break;
-        case 'wizard-back':wizardBack();break;case 'pick-date':openDatePicker();break;case 'date-done':closeDatePicker();break;
-        case 'accounts':openFilter('scope',b);break;case 'settings':openSettings(b);break;case 'top':$('#screen').scrollTop=0;break;
+        case 'close':closeSheet();break;case 'clear':clearFilters();break;case 'clear-history':clearFilters();break;
+        case 'settings':openSettings(b);break;case 'top':$('#screen').scrollTop=0;break;
       }
     });
     document.addEventListener('change',e=>{if(e.target.name==='filter-value'&&filterDraft){filterDraft.value=e.target.value;updateFilterPreview();}});
-    document.addEventListener('input',e=>{if(e.target.id==='symbol-search')renderFilterOptions();if(e.target.closest('#transaction-form'))updateImpact();if(e.target.id==='mobile-font'){state.fontScale=Number(e.target.value);e.target.setAttribute('aria-valuetext',state.fontScale+' percent');updateControls();}});
+    document.addEventListener('input',e=>{if(e.target.id==='symbol-search')renderFilterOptions();if(e.target.id==='mobile-font'){state.fontScale=Number(e.target.value);e.target.setAttribute('aria-valuetext',state.fontScale+' percent');updateControls();}});
     document.addEventListener('submit',e=>{
-      if(e.target.id==='transaction-form'){e.preventDefault();advanceDraft();}
       if(e.target.id==='filter-form'){e.preventDefault();state[filterDraft.key]=filterDraft.value;render();closeSheet();}
     });
     $('#overlay-root').addEventListener('click',e=>{if(e.target.classList.contains('overlay'))closeSheet();});
-    $('#date-root').addEventListener('click',e=>{if(e.target.classList.contains('date-overlay'))closeDatePicker();});
     document.addEventListener('keydown',e=>{
-      const dateSheet=$('.date-sheet'),dialog=dateSheet||$('.sheet');if(!dialog)return;
-      const wheel=e.target.closest?.('.date-wheel');
-      if(wheel&&['ArrowUp','ArrowDown','Home','End'].includes(e.key)) {
-        e.preventDefault();const part=wheel.dataset.datePart,values=wheelValues(part),index=values.indexOf(dateParts()[part]);
-        const next=e.key==='Home'?0:e.key==='End'?values.length-1:index+(e.key==='ArrowUp'?-1:1);
-        selectDatePart(part,values[Math.max(0,Math.min(values.length-1,next))],part);return;
-      }
-      if(e.key==='Escape'){e.preventDefault();if(dateSheet)closeDatePicker();else if(draft)wizardBack();else closeSheet();return;}
-      if(e.key==='Tab'&&dialog.getAttribute('role')==='dialog') {
+      const dialog=$('.sheet');if(!dialog)return;
+      if(e.key==='Escape'){e.preventDefault();closeSheet();return;}
+      if(e.key==='Tab') {
         const targets=Array.from(dialog.querySelectorAll('button:not([tabindex="-1"]),input:not([type="hidden"]),select,a[href],[tabindex="0"]')).filter(el=>!el.disabled&&el.getClientRects().length);
         const first=targets[0],last=targets[targets.length-1];
         if(e.shiftKey&&(document.activeElement===first||document.activeElement===dialog)){e.preventDefault();last?.focus();}

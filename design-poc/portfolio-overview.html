@@ -202,7 +202,6 @@
       portfolio:icon('<rect x="3" y="7" width="18" height="14" rx="3"/><path d="M8 7V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3M3 12h18M10 12v3h4v-3"'),
       accounts:icon('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"'),
       activity:icon('<path d="M3 12h4l3-7 4 14 3-7h4"'), settings:icon('<path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3" fill="var(--bg)"/><circle cx="15" cy="17" r="3" fill="var(--bg)"/>'),
-      cash:icon('<rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"',18),
     };
     const money = (n,signed=false) => `${n<0?'−':signed&&n>0?'+':''}$${Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
     const percent = (n,signed=false) => `${n<0?'−':signed&&n>0?'+':''}${Math.abs(n).toFixed(1)}%`;
@@ -211,11 +210,11 @@
     const accounts = ['Individual brokerage','Tax-free savings','Retirement savings'];
     // Account share counts for NVIDIA match the multi-account holding-detail study.
     const baseHoldings = [
-      {symbol:'NVDA',name:'NVIDIA Corporation',mark:'n',price:139.08,shares:[120,80,50],cost:[10867,7839.25,5056],day:3.42,color:'var(--hold-1)'},
-      {symbol:'AAPL',name:'Apple Inc.',mark:'a',price:243.18,shares:[60,25,15],cost:[12300,5125,3075],day:-1.24,color:'var(--hold-2)'},
-      {symbol:'MSFT',name:'Microsoft Corporation',mark:'m',price:443.5,shares:[30,10,10],cost:[10980,3660,3660],day:2.86,color:'var(--hold-3)'},
-      {symbol:'VTI',name:'Vanguard Total Stock Market ETF',mark:'v',price:307.6,shares:[10,25,25],cost:[2791.6666667,6979.16666665,6979.16666665],day:1.0833333333,color:'var(--hold-4)'},
-      {symbol:'AMZN',name:'Amazon.com, Inc.',mark:'a',price:211.4384615385,shares:[35,20,10],cost:[6569.23076923,3753.84615385,1876.92307692],day:1.3769230769,color:'var(--hold-5)'}
+      {symbol:'NVDA',name:'NVIDIA Corporation',price:139.08,shares:[120,80,50],cost:[10867,7839.25,5056],day:3.42,color:'var(--hold-1)'},
+      {symbol:'AAPL',name:'Apple Inc.',price:243.18,shares:[60,25,15],cost:[12300,5125,3075],day:-1.24,color:'var(--hold-2)'},
+      {symbol:'MSFT',name:'Microsoft Corporation',price:443.5,shares:[30,10,10],cost:[10980,3660,3660],day:2.86,color:'var(--hold-3)'},
+      {symbol:'VTI',name:'Vanguard Total Stock Market ETF',price:307.6,shares:[10,25,25],cost:[2791.6666667,6979.16666665,6979.16666665],day:1.0833333333,color:'var(--hold-4)'},
+      {symbol:'AMZN',name:'Amazon.com, Inc.',price:211.4384615385,shares:[35,20,10],cost:[6569.23076923,3753.84615385,1876.92307692],day:1.3769230769,color:'var(--hold-5)'}
     ];
     const scenarios = [
       {id:'balanced',label:'Invested portfolio',note:'Five holdings and cash across three accounts. NVIDIA’s 250 shares link to the existing multi-account study.'},
@@ -223,7 +222,7 @@
       {id:'cash',label:'Cash only',note:'Cash is a real portfolio balance, not an empty state. A flat value chart and account breakdown remain available; there are no invented investment returns.'},
       {id:'empty',label:'Getting started',note:'No balance is shown before an account is added. An honest empty state replaces charts and allocations. The setup flow is illustrative and saves nothing.'}
     ];
-    const state = {id:'balanced',theme:'light',scope:'all',range:'1Y',cashOpen:false,fontScale:115};
+    const state = {id:'balanced',theme:'light',range:'1Y',cashOpen:false,fontScale:115};
     const ranges = ['1D','1W','1M','3M','1Y','All'];
     const historyConfig = {
       '1D':{start:'2025-10-03T09:30:00',end:'2025-10-03T10:24:00',ratio:.992,flow:0},
@@ -234,14 +233,14 @@
       'All':{start:'2024-03-04T12:00:00',end:'2025-10-03T12:00:00',ratio:.36,flow:54000}
     };
     function data() {
-      const indices=state.scope==='all'?[0,1,2]:[Number(state.scope)];
+      const sum=list=>list.reduce((n,x)=>n+x,0);
       const rows=state.id==='cash'||state.id==='empty'?[]:baseHoldings.map(h=>{
-        const shares=indices.reduce((n,i)=>n+h.shares[i],0),cost=indices.reduce((n,i)=>n+h.cost[i],0),value=shares*h.price;
+        const shares=sum(h.shares),cost=sum(h.cost),value=shares*h.price;
         return {...h,shares,cost,value,gain:value-cost,dayValue:shares*(state.id==='down'?-Math.abs(h.day)*1.4:h.day)};
       });
       const cashByAccount=state.id==='empty'?[0,0,0]:[6750,4500,3750];
-      const cash=indices.reduce((n,i)=>n+cashByAccount[i],0),stocks=rows.reduce((n,h)=>n+h.value,0),day=rows.reduce((n,h)=>n+h.dayValue,0),cost=rows.reduce((n,h)=>n+h.cost,0);
-      return {rows,cashByAccount,cash,stocks,total:stocks+cash,day,cost,gain:stocks-cost,indices};
+      const cash=sum(cashByAccount),stocks=rows.reduce((n,h)=>n+h.value,0),day=rows.reduce((n,h)=>n+h.dayValue,0),cost=rows.reduce((n,h)=>n+h.cost,0);
+      return {rows,cashByAccount,cash,stocks,total:stocks+cash,day,cost,gain:stocks-cost};
     }
     function history(d) {
       const c=historyConfig[state.range],cashOnly=!d.rows.length;
@@ -281,7 +280,7 @@
     const weight = (value,total) => total>0?value/total*100:0;
     const dailyPercent = h => h.value-h.dayValue>0?h.dayValue/(h.value-h.dayValue)*100:0;
     function holdingTarget(h) {
-      const link=h.symbol==='NVDA'&&state.id==='balanced'&&state.scope==='all';
+      const link=h.symbol==='NVDA'&&state.id==='balanced';
       return link?{open:`<a href="holding-detail.html?state=multi&theme=${state.theme}&font=${state.fontScale}&origin=Portfolio"`,close:'</a>'}:{open:`<button data-holding="${h.symbol}"`,close:'</button>'};
     }
     // Every holding and Cash, each with its share of the whole portfolio.
@@ -295,7 +294,7 @@
       const d=data(),rows=[...d.rows].sort((a,b)=>b.value-a.value),parts=breakdownParts(d).sort((a,b)=>b.value-a.value);
       const assets=[{label:'Stocks',value:d.stocks,color:'var(--accent)'},{label:'Cash',value:d.cash,color:'var(--cash)'}];
       const description=assets.map(e=>`${e.label} ${percent(weight(e.value,d.total))}`).join(', ');
-      $('#allocation').innerHTML=`<div class="section-heading"><h2>Breakdown</h2><span class="meta">${state.scope==='all'?'All accounts':'This account'}</span></div>
+      $('#allocation').innerHTML=`<div class="section-heading"><h2>Breakdown</h2><span class="meta">All accounts</span></div>
         <div class="allocation-bar" role="img" aria-label="${description}">${assets.filter(e=>e.value>0).map(e=>`<span class="allocation-segment" style="flex:${e.value};background:${e.color}" title="${e.label} · ${percent(weight(e.value,d.total))}"></span>`).join('')}</div>
         <div class="allocation-legend">${assets.map(e=>`<div class="allocation-stat"><div class="legend-label"><span class="legend-dot" style="background:${e.color}"></span>${e.label}</div><span class="legend-percent money">${percent(weight(e.value,d.total))}</span><div class="legend-value money">${money(e.value)}</div></div>`).join('')}</div>
         ${rows.length?`<div class="stock-breakdown"><div class="stock-breakdown-heading"><h3>Portfolio breakdown</h3><span>% of portfolio</span></div><div class="allocation-weights">${parts.map(p=>{const cells=`<span class="legend-label"><span class="legend-dot" style="background:${p.color}" aria-hidden="true"></span>${esc(p.label)}</span><span class="weight-track" aria-hidden="true" style="--weight-color:${p.color}"><i style="width:${Math.max(0,Math.min(100,p.pct))}%"></i></span><span class="money">${percent(p.pct)}</span>`;if(!p.holding)return `<div class="allocation-weight">${cells}</div>`;const target=holdingTarget(p.holding);return `${target.open} class="allocation-weight" aria-label="${p.label}, ${percent(p.pct)} of portfolio, view holding detail">${cells}${target.close}`;}).join('')}</div></div>`:'<p class="allocation-note">No stock holdings. Your portfolio is held in cash.</p>'}`;
@@ -314,7 +313,7 @@
     function renderHoldings() {
       const d=data(),rows=[...d.rows,{symbol:'Cash',value:d.cash,isCash:true}].sort((a,b)=>b.value-a.value);
       $('#holdings-list').innerHTML=rows.map(h=>{
-        if(h.isCash) return `<button class="holding-row portfolio-holding" data-action="cash" aria-expanded="${state.cashOpen}" aria-controls="cash-accounts"><span class="holding-summary"><span class="holding-identity"><span class="holding-symbol"><span class="legend-dot cash" aria-hidden="true"></span>Cash</span><span class="holding-meta">Uninvested</span></span><span class="holding-end"><span class="holding-value money">${money(d.cash)}</span><span class="holding-meta">${state.cashOpen?'Hide':'By'} account ${state.cashOpen?'⌃':'⌄'}</span></span></span></button><div class="cash-accounts" id="cash-accounts" ${state.cashOpen?'':'hidden'}>${d.indices.map(i=>`<div class="cash-account"><span>${accounts[i]}</span><span class="money">${money(d.cashByAccount[i])}</span></div>`).join('')}</div>`;
+        if(h.isCash) return `<button class="holding-row portfolio-holding" data-action="cash" aria-expanded="${state.cashOpen}" aria-controls="cash-accounts"><span class="holding-summary"><span class="holding-identity"><span class="holding-symbol"><span class="legend-dot cash" aria-hidden="true"></span>Cash</span><span class="holding-meta">Uninvested</span></span><span class="holding-end"><span class="holding-value money">${money(d.cash)}</span><span class="holding-meta">${state.cashOpen?'Hide':'By'} account ${state.cashOpen?'⌃':'⌄'}</span></span></span></button><div class="cash-accounts" id="cash-accounts" ${state.cashOpen?'':'hidden'}>${accounts.map((name,i)=>`<div class="cash-account"><span>${name}</span><span class="money">${money(d.cashByAccount[i])}</span></div>`).join('')}</div>`;
         const ret=h.gain,pct=h.cost>0?ret/h.cost*100:0,target=holdingTarget(h);
         return `${target.open} class="holding-row portfolio-holding" aria-label="${h.symbol}, ${h.shares} shares, ${money(h.value)}, view holding detail"><span class="holding-summary"><span class="holding-identity"><span class="holding-symbol"><span class="legend-dot" style="background:${h.color}" aria-hidden="true"></span>${h.symbol}</span><span class="holding-meta">${h.shares} shares</span></span><span class="holding-end"><span class="holding-value money">${money(h.value)}</span><span class="holding-return money ${tone(ret)}" style="display:block">${money(ret,true)} · ${percent(pct,true)}</span></span></span>${target.close}`;
       }).join('');
@@ -353,17 +352,17 @@
     }
     function closeSheet() { $('#overlay-root').innerHTML='';['#screen','#tab-bar'].forEach(s=>$(s).inert=false);if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true}); }
     function showPerformance(opener) {
-      const d=data(),h=history(d);openSheet('Behind the growth',`<p class="sheet-notice">${state.range==='All'?'Since Mar 04, 2024':state.range+' period'} · ${state.scope==='all'?'All accounts':accounts[Number(state.scope)]}<br>Value growth includes money added to your portfolio. It isn’t an investment return percentage.</p>${pair('Starting value',money(h.start))}${pair('Net deposits',money(h.flow,true))}${pair('Investment gain / loss',money(h.gain,true),'money '+tone(h.gain))}${pair('Ending value',money(d.total))}${pair('Total value change',money(h.change,true),'money '+tone(h.change))}<p class="sheet-notice">Illustrative history and cash flows. Current unrealized gain on your stock holdings: <span class="money ${tone(d.gain)}">${money(d.gain,true)}</span>.</p>`,opener);
+      const d=data(),h=history(d);openSheet('Behind the growth',`<p class="sheet-notice">${state.range==='All'?'Since Mar 04, 2024':state.range+' period'} · All accounts<br>Value growth includes money added to your portfolio. It isn’t an investment return percentage.</p>${pair('Starting value',money(h.start))}${pair('Net deposits',money(h.flow,true))}${pair('Investment gain / loss',money(h.gain,true),'money '+tone(h.gain))}${pair('Ending value',money(d.total))}${pair('Total value change',money(h.change,true),'money '+tone(h.change))}<p class="sheet-notice">Illustrative history and cash flows. Current unrealized gain on your stock holdings: <span class="money ${tone(d.gain)}">${money(d.gain,true)}</span>.</p>`,opener);
     }
     document.addEventListener('click',e=>{
       if(e.target.classList.contains('overlay')){closeSheet();return;}
       const b=e.target.closest('button');if(!b)return;
-      if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;state.scope='all';render();return;}
+      if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;render();return;}
       if(b.dataset.theme){state.theme=b.dataset.theme;updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}return;}
       if(b.dataset.range){state.range=b.dataset.range;document.querySelectorAll('[data-range]').forEach(el=>{el.classList.toggle('active',el.dataset.range===state.range);el.setAttribute('aria-pressed',el.dataset.range===state.range);});const h=history(data());$('.period-change').innerHTML=money(h.change,true)+' <span style="color:var(--muted)">ⓘ</span>';$('.period-change').className='period-change money '+tone(h.change);renderChart();return;}
-      if(b.dataset.holding){const d=data(),h=d.rows.find(h=>h.symbol===b.dataset.holding);openSheet(h.symbol,`<p class="sheet-notice">${h.name} · ${h.symbol==='VTI'?'NYSE Arca / ETF':'NASDAQ'}<br>${state.scope==='all'?'Across all accounts':accounts[Number(state.scope)]}</p><div class="hero-label">Position value · USD</div><div class="hero-value money">${money(h.value)}</div>${pair('Shares held',String(h.shares))}${pair('Share price',money(h.price))}${pair('Total cost',money(h.cost))}${pair('Unrealized return',money(h.gain,true),'money '+tone(h.gain))}${pair('Today’s position change',money(h.dayValue,true),'money '+tone(h.dayValue))}${pair('Today’s price change',percent(dailyPercent(h),true),'money '+tone(h.dayValue))}<p class="sheet-notice">Read-only holding preview. The full holding-detail study is available for NVIDIA in the all-accounts invested portfolio.</p>`,b);fitMoney();return;}
-      if(b.dataset.tab){const tab=b.dataset.tab,d=data();if(tab==='portfolio'){$('#screen').scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
-        const bodies={accounts:`<p class="sheet-notice">Your portfolio is brought together from these accounts.</p>${accounts.map((name,i)=>{const stock=(state.id==='cash'||state.id==='empty')?0:baseHoldings.reduce((n,h)=>n+h.shares[i]*h.price,0);return pair(name,money(stock+d.cashByAccount[i]));}).join('')}`,activity:'<p class="sheet-notice">Activity is outside this overview study. Portfolio history is illustrative, not a transaction ledger.</p><button class="action" data-action="performance">Explore portfolio growth</button>',settings:`<p class="sheet-notice">Display currency: USD. This study uses the same light and dark palettes as holding detail.</p><button class="action" data-action="toggle-theme">Switch to ${state.theme==='light'?'dark':'light'} appearance</button>`};openSheet(tab[0].toUpperCase()+tab.slice(1),bodies[tab],b);return;
+      if(b.dataset.holding){const d=data(),h=d.rows.find(h=>h.symbol===b.dataset.holding);openSheet(h.symbol,`<p class="sheet-notice">${h.name} · ${h.symbol==='VTI'?'NYSE Arca / ETF':'NASDAQ'}<br>Across all accounts</p><div class="hero-label">Position value · USD</div><div class="hero-value money">${money(h.value)}</div>${pair('Shares held',String(h.shares))}${pair('Share price',money(h.price))}${pair('Total cost',money(h.cost))}${pair('Unrealized return',money(h.gain,true),'money '+tone(h.gain))}${pair('Today’s position change',money(h.dayValue,true),'money '+tone(h.dayValue))}${pair('Today’s price change',percent(dailyPercent(h),true),'money '+tone(h.dayValue))}<p class="sheet-notice">Read-only holding preview. The full holding-detail study is available for NVIDIA in the all-accounts invested portfolio.</p>`,b);fitMoney();return;}
+      if(b.dataset.tab){const tab=b.dataset.tab;if(tab==='portfolio'){$('#screen').scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
+        const bodies={activity:'<p class="sheet-notice">Activity is outside this overview study. Portfolio history is illustrative, not a transaction ledger.</p><button class="action" data-action="performance">Explore portfolio growth</button>',settings:`<p class="sheet-notice">Display currency: USD. This study uses the same light and dark palettes as holding detail.</p><button class="action" data-action="toggle-theme">Switch to ${state.theme==='light'?'dark':'light'} appearance</button>`};openSheet(tab[0].toUpperCase()+tab.slice(1),bodies[tab],b);return;
       }
       switch(b.dataset.action){
         case 'close':closeSheet();break;
@@ -372,7 +371,7 @@
         case 'toggle-theme':state.theme=state.theme==='light'?'dark':'light';updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}closeSheet();break;
         case 'add':openSheet('Add to portfolio',`<p class="sheet-notice">Start with an account, then add its cash and stock purchases. Portifo tracks your investments; it doesn’t place trades.</p><button class="holding-row" data-action="setup"><span class="holding-identity"><span class="holding-symbol">Add an account</span><span class="holding-meta" style="display:block">Brokerage, savings or retirement</span></span><span aria-hidden="true">›</span></button><p class="sheet-notice">Design preview only. Nothing is connected or saved.</p>`,b);break;
         case 'setup':$('.sheet').innerHTML=`<div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">Your first account</h2><button class="close-sheet" data-action="close" aria-label="Close dialog">${icons.close}</button></div><p class="sheet-notice">Account creation is outside this study. Explore a populated sample to see how cash and investments come together.</p><button class="action" data-action="sample">Explore sample portfolio</button>`;$('.sheet .action').focus();break;
-        case 'sample':closeSheet();state.id='balanced';state.scope='all';render();$('#screen').focus({preventScroll:true});break;
+        case 'sample':closeSheet();state.id='balanced';render();$('#screen').focus({preventScroll:true});break;
       }
     });
     document.addEventListener('input',e=>{if(e.target.id==='font-scale')setFontScale(e.target.value);});
