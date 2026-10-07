@@ -28,7 +28,8 @@ function toIso(t: unknown): string | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
-export type HistoryPoint = { date: string; close: number };
+// Volume is shares traded in the bar; the portfolio series has none.
+export type HistoryPoint = { date: string; close: number; volume?: number };
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
 
 export type SymbolResult = {
@@ -91,7 +92,7 @@ export class MarketService {
   async getHistory(symbol: string, range: HistoryRange): Promise<HistoryPoint[]> {
     const period2 = new Date();
     const period1 = new Date(period2);
-    let interval: "5m" | "15m" | "1d" | "1wk" = "1d";
+    let interval: "5m" | "15m" | "1h" | "1d" | "1wk" = "1d";
     switch (range) {
       case "1D":
         // The last SESSION, not the last 24h — on a weekend or holiday the last
@@ -104,8 +105,10 @@ export class MarketService {
         interval = "15m";
         break;
       case "1M":
+        // Hourly, as Apple Stocks draws a month: daily closes give ~21 points,
+        // which read as a jagged polyline at this width.
         period1.setMonth(period1.getMonth() - 1);
-        interval = "1d";
+        interval = "1h";
         break;
       case "3M":
         period1.setMonth(period1.getMonth() - 3);
@@ -136,7 +139,9 @@ export class MarketService {
     // change) are regular-session figures, so extended-hours bars would end
     // the line somewhere the readout does not.
     const result = await this.client.chart(symbol, { period1, period2, interval, includePrePost: false });
-    const points = result.quotes.filter((q) => q.close != null).map((q) => ({ date: q.date.toISOString(), close: q.close as number }));
+    const points: HistoryPoint[] = result.quotes
+      .filter((q) => q.close != null)
+      .map((q) => ({ date: q.date.toISOString(), close: q.close as number, volume: q.volume ?? 0 }));
     if (range !== "1D" || points.length === 0) return points;
     // Keep the last session: everything after the last overnight gap. Bars are
     // 5 minutes apart within a session (extended hours included, when Yahoo

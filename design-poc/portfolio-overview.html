@@ -71,11 +71,13 @@
     .growth-heading { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:9px; }
     .growth-heading h2 { font-weight:500; font-size:calc(11px * var(--font-scale)); color:var(--secondary); margin:0; }
     .period-change { font-size:calc(10px * var(--font-scale)); }
-    .chart-wrap { height:100px; position:relative; }.chart-svg { width:100%; height:100%; overflow:visible; touch-action:pan-y; cursor:crosshair; }
+    /* Range picker above the chart, as in Apple Stocks; the chart itself (plot, value and time scales) is poc-chart.js, which also sets the wrap's height. */
+    .chart-wrap { position:relative; }.chart-svg { display:block; width:100%; height:100%; overflow:visible; touch-action:pan-y; cursor:crosshair; }
     .chart-tooltip { position:absolute; left:0; top:0; pointer-events:none; background:var(--bg); border:1px solid var(--line); border-radius:6px; font-size:calc(9px * var(--font-scale)); padding:5px 8px; color:var(--text); opacity:0; z-index:1; line-height:1.7; }
-    .chart-axis { display:flex; justify-content:space-between; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:calc(8px * var(--font-scale)); margin-top:8px; }
-    .chart-controls { display:flex; align-items:center; gap:4px; padding-top:9px; }
-    .chart-range { min-width:35px; min-height:30px; border-radius:6px; background:none; color:var(--secondary); font-size:calc(10px * var(--font-scale)); font-weight:600; }.chart-range.active { background:var(--accent-tint); color:var(--accent); }
+    .chart-axis-label { font-family:'JetBrains Mono',monospace; font-size:calc(10px * var(--font-scale)); fill:var(--text); pointer-events:none; }
+    .chart-controls { display:flex; align-items:center; gap:4px; padding:4px 0 12px; }
+    /* Packed to the left as on holding detail. Every range in primary ink; the chosen one bold on a neutral pill, so the line keeps the accent. */
+    .chart-range { min-width:38px; min-height:30px; border-radius:6px; background:none; color:var(--text); font-size:calc(11px * var(--font-scale)); font-weight:500; }.chart-range.active { font-weight:700; background:var(--line); }
     .section { padding:17px 23px; border-top:6px solid var(--subtle); }
     .section-heading { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:13px; }
     .section-heading h2 { font-family:Inter,sans-serif; font-weight:600; font-size:calc(16px * var(--font-scale)); letter-spacing:-.4px; margin:0; }
@@ -91,29 +93,22 @@
     .legend-percent { display:block; color:var(--text); font-size:calc(23px * var(--font-scale)); line-height:1.2; font-weight:500; margin-bottom:5px; }
     .legend-value { font-size:calc(11px * var(--font-scale)); color:var(--secondary); }
     .allocation-note { color:var(--muted); font-size:calc(9px * var(--font-scale)); line-height:1.5; margin:14px 0 0; }
-    .stock-breakdown { margin-top:18px; padding-top:15px; border-top:1px solid var(--line); }
-    .stock-breakdown-heading { display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-bottom:10px; }
-    .stock-breakdown-heading h3 { margin:0; font-size:calc(10px * var(--font-scale)); font-weight:500; color:var(--secondary); }
-    .stock-breakdown-heading span { font-size:calc(9px * var(--font-scale)); color:var(--muted); }
-    .allocation-weights { display:grid; gap:4px; }
-    .allocation-weight { display:grid; grid-template-columns:65px minmax(0,1fr) 55px; gap:12px; align-items:center; width:100%; min-height:30px; padding:4px 0; background:none; color:var(--text); text-decoration:none; text-align:left; font-size:calc(10px * var(--font-scale)); border-radius:4px; }
-    .allocation-weight:hover,.allocation-weight:focus-visible { background:var(--subtle); }
-    .allocation-weight .legend-label { margin:0; color:var(--text); font-weight:500; }
-    .allocation-weight .money { text-align:right; }
-    .allocation-weight .weight-track { height:5px; }
+    /* Portfolio weight runs clockwise from twelve o’clock around an exact percentage. */
+    .weight-ring { display:grid; place-items:center; position:relative; width:calc(44px * var(--font-scale)); height:calc(44px * var(--font-scale)); flex-shrink:0; }
+    .weight-ring svg { position:absolute; inset:0; width:100%; height:100%; }
+    .weight-ring-track { stroke:var(--line); }
+    .weight-ring-progress { stroke:var(--weight-color); }
+    .weight-ring-label { color:var(--secondary); font-size:calc(10px * var(--font-scale)); font-weight:500; letter-spacing:-.4px; line-height:1; }
     .holdings { padding-bottom:0; }.holdings .section-heading { margin-bottom:0; }
     .list-caption { display:flex; justify-content:space-between; padding:13px 0 2px; font-size:calc(9px * var(--font-scale)); color:var(--muted); }
     .holding-row { width:100%; text-decoration:none; display:flex; align-items:center; gap:11px; color:var(--text); text-align:left; background:none; padding:15px 0; border-bottom:1px solid var(--line); }
-    .holding-row,.allocation-weight { width:calc(100% + 2 * var(--row-inset)); margin-inline:calc(-1 * var(--row-inset)); padding-inline:var(--row-inset); border-radius:var(--row-radius); }
+    .holding-row { width:calc(100% + 2 * var(--row-inset)); margin-inline:calc(-1 * var(--row-inset)); padding-inline:var(--row-inset); border-radius:var(--row-radius); }
     .holding-row:hover,.holding-row:focus-visible { background:var(--subtle); }
     .holding-identity { flex:1; min-width:0; }.holding-symbol { font-size:calc(12px * var(--font-scale)); font-weight:600; }
     .holding-meta { font-size:calc(9px * var(--font-scale)); color:var(--secondary); margin-top:5px; line-height:1.5; }
     .holding-end { text-align:right; flex-shrink:0; }.holding-value { font-size:calc(12px * var(--font-scale)); font-weight:500; }.holding-return { font-size:calc(9px * var(--font-scale)); margin-top:6px; }
     .holding-summary { display:flex; flex:1; align-items:center; gap:11px; }
     .holding-summary .holding-meta { display:block; }
-    .weight-track { display:block; min-width:0; height:5px; background:var(--line); border-radius:3px; overflow:hidden; }
-    .weight-track i { height:100%; display:block; border-radius:inherit; background:var(--weight-color,var(--accent)); }
-    .holding-symbol .legend-dot { display:inline-block; vertical-align:middle; margin-right:7px; }
     .movers .section-heading { margin-bottom:4px; }
     .movers-context { display:flex; justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:8px; color:var(--muted); font-size:calc(9px * var(--font-scale)); line-height:1.5; }
     .movers-chart { display:grid; grid-template-columns:repeat(var(--mover-count),minmax(0,1fr)); gap:4px; position:relative; }
@@ -148,6 +143,7 @@
     @media(prefers-reduced-motion:no-preference) { .hero,.growth,.allocation { animation:arrive .4s ease both; }.growth { animation-delay:.05s; }.allocation { animation-delay:.1s; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } }
   </style>
   <link rel="stylesheet" href="focus.css">
+  <link rel="stylesheet" href="poc-embed.css">
 </head>
 <body>
   <div class="workbench">
@@ -188,12 +184,13 @@
         <div class="annotation-title">The hierarchy <span>01 — 03</span></div>
         <div class="design-note"><span class="number">01 / THE WHOLE</span><h3>Your money, together.</h3><p>Cash and investments add up to one quiet headline. Today’s move sits underneath, without colouring the balance itself.</p></div>
         <div class="design-note"><span class="number">02 / THE JOURNEY</span><h3>Growth, with context.</h3><p>A cobalt value chart tracks the portfolio over time. The period’s value change includes deposits; the detail sheet separates those flows from investment gains.</p></div>
-        <div class="design-note"><span class="number">03 / THE PARTS</span><h3>From balance to breakdown.</h3><p>Stocks and cash lead into a colourful stock breakdown. Today’s movers chart up to five of the strongest daily percentage changes around a shared zero line. The holdings ledger stays focused on shares, value and returns, without repeating weights.</p></div>
+        <div class="design-note"><span class="number">03 / THE PARTS</span><h3>From balance to breakdown.</h3><p>Stocks and cash show the broad allocation. Today’s movers chart up to five of the strongest daily percentage changes around a shared zero line. In the holdings ledger, each coloured ring traces its share of the whole portfolio, with the exact percentage in the centre, alongside shares, value and returns.</p></div>
         <div class="state-note"><h3 id="state-note-title"></h3><p id="state-note-text"></p></div>
       </aside>
     </div>
     <footer class="desk-footer"><span>Flat surfaces · Cobalt actions · Inter / Public Sans / JetBrains Mono<br>Same tokens, device frame and hierarchy as the holding-detail study.</span><span>Interactive HTML study · All balances and history are illustrative<br>Change ranges. Explore cash. Tap a holding.</span></footer>
   </div>
+  <script src="poc-chart.js"></script>
   <script>
     const $ = s => document.querySelector(s);
     const icon = (body,size=20) => `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
@@ -223,12 +220,13 @@
       {id:'empty',label:'Getting started',note:'No balance is shown before an account is added. An honest empty state replaces charts and allocations. The setup flow is illustrative and saves nothing.'}
     ];
     const state = {id:'balanced',theme:'light',range:'1Y',cashOpen:false,fontScale:115};
-    const ranges = ['1D','1W','1M','3M','1Y','All'];
+    const ranges = ['1D','1W','1M','3M','6M','1Y','All'];
     const historyConfig = {
       '1D':{start:'2025-10-03T09:30:00',end:'2025-10-03T10:24:00',ratio:.992,flow:0},
       '1W':{start:'2025-09-26T12:00:00',end:'2025-10-03T12:00:00',ratio:.978,flow:0},
       '1M':{start:'2025-09-03T12:00:00',end:'2025-10-03T12:00:00',ratio:.943,flow:1500},
       '3M':{start:'2025-07-03T12:00:00',end:'2025-10-03T12:00:00',ratio:.864,flow:4500},
+      '6M':{start:'2025-04-03T12:00:00',end:'2025-10-03T12:00:00',ratio:.79,flow:9000},
       '1Y':{start:'2024-10-03T12:00:00',end:'2025-10-03T12:00:00',ratio:.678,flow:18000},
       'All':{start:'2024-03-04T12:00:00',end:'2025-10-03T12:00:00',ratio:.36,flow:54000}
     };
@@ -247,12 +245,15 @@
       const start=cashOnly?d.total:state.range==='1D'?d.total-d.day:d.total*c.ratio;
       const flow=cashOnly?0:c.flow*d.total/128462.5;
       const change=d.total-start,gain=change-flow;
-      const points=Array.from({length:64},(_,i)=>{
-        const t=i/63,envelope=Math.sin(t*Math.PI),dip=state.range==='1Y'||state.range==='All'?-Math.exp(-Math.pow((t-.53)/.085,2))*.085:0;
-        const wiggle=(Math.sin(i*1.8)*.003+Math.sin(i*.53)*.008+dip)*envelope*d.total;
+      // Bars at the app's spacing up to the 10:24 AM quote (see poc-chart.js); All starts at the first deposit.
+      const times=pocChart.tradingTimes(state.range,'2025-10-03T10:24:00',historyConfig.All.start),n=times.length;
+      const wander=pocChart.walk(n,ranges.indexOf(state.range)+7),reach={'1D':.002,'1W':.008,'1M':.014,'3M':.022,'6M':.028,'1Y':.035,'All':.04}[state.range];
+      const points=times.map((_,i)=>{
+        const t=n>1?i/(n-1):1,envelope=Math.sin(t*Math.PI),dip=state.range==='1Y'||state.range==='All'?-Math.exp(-Math.pow((t-.53)/.085,2))*.085:0;
+        const wiggle=(wander[i]*reach+dip*envelope)*d.total;
         return cashOnly?d.total:start+change*t+wiggle;
       });
-      return {points,start,change,flow,gain,c};
+      return {points,times,start,change,flow,gain,c};
     }
     function updateControls() {
       $('#state-list').innerHTML=scenarios.map((s,i)=>`<button class="state-option ${state.id===s.id?'active':''}" data-state="${s.id}" aria-pressed="${state.id===s.id}"><span>${String(i+1).padStart(2,'0')}</span>${s.label}</button>`).join('');
@@ -266,38 +267,35 @@
       let html=`<div class="page-heading"><h1>Portfolio</h1></div>`;
       if(state.id==='empty') html+=`<div class="empty-state"><div class="empty-symbol">${icons.portfolio}</div><h2>A place for your portfolio.</h2><p>Add your first account, then your cash and holdings. We’ll bring the whole picture together here.</p><button class="action" data-action="add">Add your first account</button></div>`;
       else html+=`<section class="hero" aria-label="Portfolio value"><div class="hero-label">Total portfolio value</div><div class="hero-value money">${money(d.total)}</div><div class="hero-return"><span class="money ${d.day===0?'':tone(d.day)}">${money(d.day,true)}</span><span class="money return-percent ${d.day===0?'':tone(d.day)}">${percent(d.day/(d.total-d.day)*100,true)}</span><span class="return-label">Today</span></div></section>
-        <section class="growth" aria-label="Portfolio value history"><div class="growth-heading"><h2>Portfolio growth</h2><button class="period-change money ${tone(history(d).change)}" style="background:none;padding:0" data-action="performance" aria-label="Explain portfolio value change">${money(history(d).change,true)} <span style="color:var(--muted)">ⓘ</span></button></div><div class="chart-wrap"><div class="chart-tooltip" id="chart-tooltip"></div><svg class="chart-svg" id="chart" viewBox="0 0 342 125" preserveAspectRatio="none" tabindex="0" role="img" aria-label="Portfolio value chart; use left and right arrow keys to explore"></svg></div><div class="chart-axis" id="chart-axis"></div><div class="chart-controls" aria-label="Portfolio history range">${ranges.map(r=>`<button class="chart-range ${r===state.range?'active':''}" data-range="${r}" aria-pressed="${r===state.range}">${r}</button>`).join('')}</div></section>
+        <section class="growth" aria-label="Portfolio value history"><div class="growth-heading"><h2>Portfolio growth</h2><button class="period-change money ${tone(history(d).change)}" style="background:none;padding:0" data-action="performance" aria-label="Explain portfolio value change">${money(history(d).change,true)} <span style="color:var(--muted)">ⓘ</span></button></div><div class="chart-controls" aria-label="Portfolio history range">${ranges.map(r=>`<button class="chart-range ${r===state.range?'active':''}" data-range="${r}" aria-pressed="${r===state.range}">${r}</button>`).join('')}</div><div class="chart-wrap"><div class="chart-tooltip" id="chart-tooltip"></div><svg class="chart-svg" id="chart" tabindex="0" role="img" aria-label="Portfolio value chart; use left and right arrow keys to explore"></svg></div></section>
         <section class="section allocation" id="allocation" aria-label="Portfolio allocation"></section>
-        <section class="section movers" id="movers" aria-label="Today's Movers"></section>
-        <section class="section holdings" aria-label="All holdings"><div class="section-heading"><h2>Holdings <span class="meta" style="margin-left:5px">${d.rows.length}</span></h2></div><div class="list-caption"><span>Holding / shares</span><span>Value / total return</span></div><div id="holdings-list"></div></section>`;
+        <section class="section holdings" aria-label="All holdings"><div class="section-heading"><h2>Holdings <span class="meta" style="margin-left:5px">${d.rows.length}</span></h2></div><div class="list-caption"><span>Holding / shares</span><span>Value / total return</span></div><div id="holdings-list"></div></section>
+        <section class="section movers" id="movers" aria-label="Today's Movers"></section>`;
       $('#screen').innerHTML=html;
       if(state.id!=='empty') { renderAllocation();renderMovers();renderHoldings();renderChart(); }
       if(reset) $('#screen').scrollTop=0;
       updateNavigation();
       fitMoney();
     }
-    // Every weight includes cash in the denominator, even in the stock detail rows.
+    // Every holding icon includes cash in the portfolio-weight denominator.
     const weight = (value,total) => total>0?value/total*100:0;
     const dailyPercent = h => h.value-h.dayValue>0?h.dayValue/(h.value-h.dayValue)*100:0;
     function holdingTarget(h) {
       const link=h.symbol==='NVDA'&&state.id==='balanced';
       return link?{open:`<a href="holding-detail.html?state=multi&theme=${state.theme}&font=${state.fontScale}&origin=Portfolio"`,close:'</a>'}:{open:`<button data-holding="${h.symbol}"`,close:'</button>'};
     }
-    // Every holding and Cash, each with its share of the whole portfolio.
-    function breakdownParts(d) {
-      const rows=[...d.rows].sort((a,b)=>b.value-a.value);
-      const parts=rows.map(h=>({label:h.symbol,value:h.value,color:h.color,holding:h}));
-      if(d.cash>0)parts.push({label:'Cash',value:d.cash,color:'var(--cash)',holding:null});
-      return parts.map(p=>({...p,pct:weight(p.value,d.total)}));
+    function holdingIcon(h,total) {
+      const pct=weight(h.value,total),arc=Math.max(0,Math.min(100,pct));
+      return `<span class="weight-ring" style="--weight-color:${h.isCash?'var(--cash)':h.color}" title="${percent(pct)} of portfolio" aria-hidden="true"><svg viewBox="0 0 44 44" fill="none"><circle class="weight-ring-track" cx="22" cy="22" r="19" stroke-width="2.5"/><circle class="weight-ring-progress" cx="22" cy="22" r="19" stroke-width="2.5" pathLength="100" stroke-dasharray="${arc} 100" transform="rotate(-90 22 22)"/></svg><span class="weight-ring-label money">${percent(pct)}</span></span>`;
     }
     function renderAllocation() {
-      const d=data(),rows=[...d.rows].sort((a,b)=>b.value-a.value),parts=breakdownParts(d).sort((a,b)=>b.value-a.value);
+      const d=data();
       const assets=[{label:'Stocks',value:d.stocks,color:'var(--accent)'},{label:'Cash',value:d.cash,color:'var(--cash)'}];
       const description=assets.map(e=>`${e.label} ${percent(weight(e.value,d.total))}`).join(', ');
       $('#allocation').innerHTML=`<div class="section-heading"><h2>Breakdown</h2><span class="meta">All accounts</span></div>
         <div class="allocation-bar" role="img" aria-label="${description}">${assets.filter(e=>e.value>0).map(e=>`<span class="allocation-segment" style="flex:${e.value};background:${e.color}" title="${e.label} · ${percent(weight(e.value,d.total))}"></span>`).join('')}</div>
         <div class="allocation-legend">${assets.map(e=>`<div class="allocation-stat"><div class="legend-label"><span class="legend-dot" style="background:${e.color}"></span>${e.label}</div><span class="legend-percent money">${percent(weight(e.value,d.total))}</span><div class="legend-value money">${money(e.value)}</div></div>`).join('')}</div>
-        ${rows.length?`<div class="stock-breakdown"><div class="stock-breakdown-heading"><h3>Portfolio breakdown</h3><span>% of portfolio</span></div><div class="allocation-weights">${parts.map(p=>{const cells=`<span class="legend-label"><span class="legend-dot" style="background:${p.color}" aria-hidden="true"></span>${esc(p.label)}</span><span class="weight-track" aria-hidden="true" style="--weight-color:${p.color}"><i style="width:${Math.max(0,Math.min(100,p.pct))}%"></i></span><span class="money">${percent(p.pct)}</span>`;if(!p.holding)return `<div class="allocation-weight">${cells}</div>`;const target=holdingTarget(p.holding);return `${target.open} class="allocation-weight" aria-label="${p.label}, ${percent(p.pct)} of portfolio, view holding detail">${cells}${target.close}`;}).join('')}</div></div>`:'<p class="allocation-note">No stock holdings. Your portfolio is held in cash.</p>'}`;
+        ${d.rows.length?'':'<p class="allocation-note">No stock holdings. Your portfolio is held in cash.</p>'}`;
     }
     function moverSummary(rows) {
       const gainers=rows.filter(h=>h.dayValue>0),decliners=rows.filter(h=>h.dayValue<0);
@@ -313,36 +311,38 @@
     function renderHoldings() {
       const d=data(),rows=[...d.rows,{symbol:'Cash',value:d.cash,isCash:true}].sort((a,b)=>b.value-a.value);
       $('#holdings-list').innerHTML=rows.map(h=>{
-        if(h.isCash) return `<button class="holding-row portfolio-holding" data-action="cash" aria-expanded="${state.cashOpen}" aria-controls="cash-accounts"><span class="holding-summary"><span class="holding-identity"><span class="holding-symbol"><span class="legend-dot cash" aria-hidden="true"></span>Cash</span><span class="holding-meta">Uninvested</span></span><span class="holding-end"><span class="holding-value money">${money(d.cash)}</span><span class="holding-meta">${state.cashOpen?'Hide':'By'} account ${state.cashOpen?'⌃':'⌄'}</span></span></span></button><div class="cash-accounts" id="cash-accounts" ${state.cashOpen?'':'hidden'}>${accounts.map((name,i)=>`<div class="cash-account"><span>${name}</span><span class="money">${money(d.cashByAccount[i])}</span></div>`).join('')}</div>`;
+        if(h.isCash) return `<button class="holding-row portfolio-holding" data-action="cash" aria-label="Cash, ${money(d.cash)}, ${percent(weight(d.cash,d.total))} of portfolio, ${state.cashOpen?'hide':'view'} cash by account" aria-expanded="${state.cashOpen}" aria-controls="cash-accounts"><span class="holding-summary">${holdingIcon(h,d.total)}<span class="holding-identity"><span class="holding-symbol">Cash</span><span class="holding-meta">Uninvested</span></span><span class="holding-end"><span class="holding-value money">${money(d.cash)}</span><span class="holding-meta">${state.cashOpen?'Hide':'By'} account ${state.cashOpen?'⌃':'⌄'}</span></span></span></button><div class="cash-accounts" id="cash-accounts" ${state.cashOpen?'':'hidden'}>${accounts.map((name,i)=>`<div class="cash-account"><span>${name}</span><span class="money">${money(d.cashByAccount[i])}</span></div>`).join('')}</div>`;
         const ret=h.gain,pct=h.cost>0?ret/h.cost*100:0,target=holdingTarget(h);
-        return `${target.open} class="holding-row portfolio-holding" aria-label="${h.symbol}, ${h.shares} shares, ${money(h.value)}, view holding detail"><span class="holding-summary"><span class="holding-identity"><span class="holding-symbol"><span class="legend-dot" style="background:${h.color}" aria-hidden="true"></span>${h.symbol}</span><span class="holding-meta">${h.shares} shares</span></span><span class="holding-end"><span class="holding-value money">${money(h.value)}</span><span class="holding-return money ${tone(ret)}" style="display:block">${money(ret,true)} · ${percent(pct,true)}</span></span></span>${target.close}`;
+        return `${target.open} class="holding-row portfolio-holding" aria-label="${h.symbol}, ${h.shares} shares, ${money(h.value)}, ${percent(weight(h.value,d.total))} of portfolio, view holding detail"><span class="holding-summary">${holdingIcon(h,d.total)}<span class="holding-identity"><span class="holding-symbol">${h.symbol}</span><span class="holding-meta">${h.shares} shares</span></span><span class="holding-end"><span class="holding-value money">${money(h.value)}</span><span class="holding-return money ${tone(ret)}" style="display:block">${money(ret,true)} · ${percent(pct,true)}</span></span></span>${target.close}`;
       }).join('');
     }
+    // 1W and 1M are intraday bars, so their readout names the hour too.
     function chartDate(h,i) {
-      const date=new Date(+new Date(h.c.start)+(+new Date(h.c.end)-+new Date(h.c.start))*i/63);
-      return date.toLocaleString('en-US',state.range==='1D'?{hour:'numeric',minute:'2-digit'}:{month:'short',day:'numeric',year:['1Y','All'].includes(state.range)?'numeric':undefined});
+      const intraday=state.range==='1W'||state.range==='1M';
+      return new Date(h.times[i]).toLocaleString('en-US',state.range==='1D'?{hour:'numeric',minute:'2-digit'}:{month:'short',day:'numeric',year:['1Y','All'].includes(state.range)?'numeric':undefined,hour:intraday?'numeric':undefined,minute:intraday?'2-digit':undefined});
     }
     function renderChart() {
       const chart=$('#chart');if(!chart)return;
-      const h=history(data()),min=Math.min(...h.points),max=Math.max(...h.points),spread=max-min||Math.max(max*.1,1);
-      const ys=h.points.map(p=>max===min?65:112-(p-min)/spread*93),xs=h.points.map((_,i)=>i*342/63),path=ys.map((y,i)=>`${i?'L':'M'}${xs[i].toFixed(2)},${y.toFixed(2)}`).join(' ');
+      const h=history(data()),wrap=chart.parentElement,width=wrap.clientWidth||344,last=h.points.length-1;
+      const c=pocChart.render({points:h.points,times:h.times,range:state.range,width,fontScale:state.fontScale/100,fillId:'growth-fill'});
+      wrap.style.height=c.height+'px';chart.setAttribute('viewBox',`0 0 ${width} ${c.height}`);
       chart.setAttribute('aria-label',`Illustrative ${state.range} portfolio value, ${money(h.start)} to ${money(data().total)}. Use left and right arrow keys to inspect.`);
-      chart.innerHTML=`<defs><linearGradient id="growth-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".12"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs><path d="M0 28H342M0 70H342M0 112H342" fill="none" stroke="var(--line)" stroke-width=".7" stroke-dasharray="2 4"/><path d="${path} L342,125 L0,125 Z" fill="url(#growth-fill)"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="342" cy="${ys[63]}" r="3" fill="var(--accent)"/><g id="chart-cursor" visibility="hidden"><line y1="0" y2="125" stroke="var(--muted)" stroke-dasharray="2 3"/><circle r="4" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/></g>`;
-      $('#chart-axis').innerHTML=[0,32,63].map(i=>`<span>${chartDate(h,i)}</span>`).join('');
-      let index=63;
+      chart.innerHTML=c.svg;
+      let index=last;
       const inspect=i=>{
-        index=Math.max(0,Math.min(63,i));const cursor=$('#chart-cursor'),line=cursor.querySelector('line'),dot=cursor.querySelector('circle');cursor.setAttribute('visibility','visible');line.setAttribute('x1',xs[index]);line.setAttribute('x2',xs[index]);dot.setAttribute('cx',xs[index]);dot.setAttribute('cy',ys[index]);
-        const tip=$('#chart-tooltip');tip.innerHTML=`<span style="color:var(--secondary)">${chartDate(h,index)}</span><br><span class="money">${money(h.points[index])}</span>`;tip.style.opacity=1;tip.style.left=Math.max(0,Math.min(chart.clientWidth-tip.offsetWidth,xs[index]/342*chart.clientWidth-60))+'px';
+        index=Math.max(0,Math.min(last,i));const cursor=$('#chart-cursor'),line=cursor.querySelector('line'),dot=cursor.querySelector('circle');cursor.setAttribute('visibility','visible');line.setAttribute('x1',c.xs[index]);line.setAttribute('x2',c.xs[index]);dot.setAttribute('cx',c.xs[index]);dot.setAttribute('cy',c.ys[index]);
+        const tip=$('#chart-tooltip');tip.innerHTML=`<span style="color:var(--secondary)">${chartDate(h,index)}</span><br><span class="money">${money(h.points[index])}</span>`;tip.style.opacity=1;tip.style.left=Math.max(0,Math.min(c.plotW-tip.offsetWidth,c.xs[index]-60))+'px';
       };
       const hide=()=>{ $('#chart-cursor').setAttribute('visibility','hidden');$('#chart-tooltip').style.opacity=0; };
-      chart.onpointermove=e=>inspect(Math.round((e.clientX-chart.getBoundingClientRect().left)/chart.clientWidth*63));chart.onpointerleave=hide;
-      chart.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();inspect(e.key==='Home'?0:e.key==='End'?63:index+(e.key==='ArrowLeft'?-1:1));}};chart.onblur=hide;
+      chart.onpointermove=e=>inspect(Math.round((e.clientX-chart.getBoundingClientRect().left)/c.plotW*last));chart.onpointerleave=hide;
+      chart.onkeydown=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();inspect(e.key==='Home'?0:e.key==='End'?last:index+(e.key==='ArrowLeft'?-1:1));}};chart.onblur=hide;
     }
     function fitMoney() { requestAnimationFrame(()=>document.querySelectorAll('.hero-value').forEach(el=>{el.style.removeProperty('font-size');while(el.scrollWidth>el.clientWidth&&parseFloat(getComputedStyle(el).fontSize)>22)el.style.fontSize=(parseFloat(getComputedStyle(el).fontSize)-1)+'px';})); }
     function setFontScale(value) {
       const n=Number(value);state.fontScale=Number.isFinite(n)?Math.max(100,Math.min(140,Math.round(n/5)*5)):115;
       $('#phone').style.setProperty('--font-scale',state.fontScale/100);$('#font-scale').value=state.fontScale;$('#font-scale-value').value=state.fontScale+'%';$('#font-scale').setAttribute('aria-valuetext',state.fontScale+' percent');fitMoney();
       if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}
+      renderChart();
     }
     let sheetOpener=null;
     function pair(label,value,cls='money') { return `<div class="detail-pair"><span>${label}</span><span class="${cls}">${value}</span></div>`; }
@@ -391,5 +391,6 @@
     function updateNavigation() { const s=$('#screen'),h=s.querySelector('.page-heading'); $('#navigation').classList.toggle('collapsed',!!h&&h.getBoundingClientRect().bottom<=s.getBoundingClientRect().top+1); }
     $('#screen').addEventListener('scroll',updateNavigation,{passive:true});
   </script>
+  <script src="poc-navigation.js"></script>
 </body>
 </html>

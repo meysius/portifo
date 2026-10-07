@@ -124,6 +124,7 @@
     @media(prefers-reduced-motion:no-preference) { .page-heading { animation:arrive .35s ease both; }.sheet { animation:sheet-in .2s ease both; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } @keyframes sheet-in { from { transform:translateY(25px); opacity:.5; } to { transform:translateY(0); opacity:1; } } }
   </style>
   <link rel="stylesheet" href="focus.css">
+  <link rel="stylesheet" href="poc-embed.css">
 </head>
 <body>
   <div class="workbench">
@@ -348,5 +349,6 @@
     function updateNavigation() { const s=$('#screen'),h=s.querySelector('.page-heading'); $('#navigation').classList.toggle('collapsed',!!h&&h.getBoundingClientRect().bottom<=s.getBoundingClientRect().top+1); }
     $('#screen').addEventListener('scroll',updateNavigation,{passive:true});
   </script>
+  <script src="poc-navigation.js"></script>
 </body>
 </html>

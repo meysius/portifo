@@ -103,6 +103,7 @@
     @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; } }
   </style>
   <link rel="stylesheet" href="focus.css">
+  <link rel="stylesheet" href="poc-embed.css">
 </head>
 <body>
   <div class="workbench">
@@ -350,5 +351,6 @@
     if(Object.hasOwn(currencies,params.get('currency')))state.currency=params.get('currency');
     selectScenario(scenarios.some(s=>s.id===params.get('state'))?params.get('state'):'balanced');
   </script>
+  <script src="poc-navigation.js"></script>
 </body>
 </html>

@@ -1,30 +1,34 @@
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { HistoryPoint, HistoryRange } from "../api/market";
+import { AXIS_H, PLOT_BOTTOM, PLOT_H, plotY, timeAxis, valueAxis } from "../lib/chartAxis";
 import { fmtCcy } from "../lib/fx";
+import TimeGrid from "./TimeGrid";
+import ValueGrid from "./ValueGrid";
 
-// Portfolio's value over time, from design-poc/portfolio-overview.html: a
-// cobalt line over a faint wash, three dashed guides, the latest value as a
-// dot, and a readout on demand (drag, hover, or arrow keys). Points are spaced
-// by index, not by time, so nights and weekends take no width.
+// Portfolio's value over time, from design-poc/portfolio-overview.html and
+// drawn the Apple Stocks way (see lib/chartAxis): the range picker above, a
+// cobalt line over a wash, stretched from the range's low to its high over
+// trading time only, a value scale at the right, a time scale beneath, the
+// latest value as a dot, and a readout on demand (drag, hover, or arrow keys).
 
-const GROWTH_RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "1Y", "All"];
+const GROWTH_RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "All"];
+const CHART_H = PLOT_H + AXIS_H;
 
-// The study draws into a 342 × 125 viewBox stretched over a 100px plot. These
-// are its y coordinates, scaled to pixels.
-const H = 100;
-const SY = H / 125;
-const GUIDES = [28, 70, 112].map((y) => y * SY);
-const BOTTOM = 112 * SY;
-const SPAN = 93 * SY;
-const FLAT = 65 * SY;
-
+// 1W and 1M are intraday bars, so their readout names the hour too.
 function growthLabel(iso: string, range: HistoryRange) {
+  const intraday = range === "1W" || range === "1M";
   return new Date(iso).toLocaleString(
     "en-US",
     range === "1D"
       ? { hour: "numeric", minute: "2-digit" }
-      : { month: "short", day: "numeric", year: range === "1Y" || range === "All" ? "numeric" : undefined },
+      : {
+          month: "short",
+          day: "numeric",
+          year: range === "1Y" || range === "All" ? "numeric" : undefined,
+          hour: intraday ? "numeric" : undefined,
+          minute: intraday ? "2-digit" : undefined,
+        },
   );
 }
 
@@ -62,8 +66,10 @@ export default function GrowthChart({
   const values = points.map((p) => p.close);
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const xs = points.map((_, i) => (ready ? (i * width) / last : 0));
-  const ys = values.map((v) => (max === min ? FLAT : BOTTOM - ((v - min) / (max - min)) * SPAN));
+  const scale = valueAxis(min, max);
+  const plotW = width - scale.width;
+  const xs = points.map((_, i) => (ready ? (i * plotW) / last : 0));
+  const ys = values.map((v) => plotY(v, min, max));
   const path = ready ? xs.map((x, i) => `${i ? "L" : "M"}${x.toFixed(2)},${ys[i].toFixed(2)}`).join(" ") : "";
   const at = cursor != null && cursor < n ? cursor : null;
 
@@ -71,13 +77,13 @@ export default function GrowthChart({
   useLayoutEffect(() => {
     const tip = tipRef.current;
     if (!tip || at == null) return;
-    tip.style.left = `${Math.max(0, Math.min(width - tip.offsetWidth, xs[at] - 60))}px`;
+    tip.style.left = `${Math.max(0, Math.min(plotW - tip.offsetWidth, xs[at] - 60))}px`;
   });
 
   const inspect = (i: number) => ready && setCursor(Math.max(0, Math.min(last, i)));
   const pick = (e: ReactPointerEvent) => {
     if (!wrapRef.current) return;
-    inspect(Math.round(((e.clientX - wrapRef.current.getBoundingClientRect().left) / width) * last));
+    inspect(Math.round(((e.clientX - wrapRef.current.getBoundingClientRect().left) / plotW) * last));
   };
   const hide = () => setCursor(null);
   const onKey = (e: KeyboardEvent) => {
@@ -87,11 +93,27 @@ export default function GrowthChart({
     inspect(e.key === "Home" ? 0 : e.key === "End" ? last : from + (e.key === "ArrowLeft" ? -1 : 1));
   };
 
-  const axis = ready ? [0, Math.round(last / 2), last] : [];
+  const stamps = points.map((p) => new Date(p.date).getTime());
+  const times = ready ? timeAxis(stamps, xs, range, width) : [];
 
   return (
     <>
-      <div ref={wrapRef} className="po-chart-wrap">
+      <div className="po-chart-controls" role="group" aria-label="Portfolio history range">
+        {GROWTH_RANGES.map((r) => (
+          <button
+            key={r}
+            type="button"
+            className="po-chart-range"
+            aria-pressed={r === range}
+            onClick={() => onRange(r)}
+          >
+            {r}
+          </button>
+        ))}
+      </div>
+
+      {/* Sized up front, so nothing below jumps while a range loads. */}
+      <div ref={wrapRef} className="po-chart-wrap" style={{ height: CHART_H }}>
         <div ref={tipRef} className="po-chart-tooltip" style={{ opacity: at != null ? 1 : 0 }}>
           {at != null && (
             <>
@@ -101,12 +123,16 @@ export default function GrowthChart({
             </>
           )}
         </div>
-        {!ready && failed && <div className="po-chart-empty">Not enough history for this range</div>}
+        {!ready && failed && (
+          <div className="po-chart-empty" style={{ height: PLOT_H }}>
+            Not enough history for this range
+          </div>
+        )}
         {width > 0 && (
           <svg
             className="po-chart-svg"
             width={width}
-            height={H}
+            height={CHART_H}
             tabIndex={0}
             role="img"
             aria-label={
@@ -124,52 +150,41 @@ export default function GrowthChart({
           >
             <defs>
               <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--ds-accent)" stopOpacity=".12" />
-                <stop offset="100%" stopColor="var(--ds-accent)" stopOpacity="0" />
+                <stop offset="0%" stopColor="var(--ds-accent)" stopOpacity=".24" />
+                <stop offset="100%" stopColor="var(--ds-accent)" stopOpacity=".02" />
               </linearGradient>
             </defs>
-            <path
-              d={GUIDES.map((y) => `M0 ${y}H${width}`).join("")}
-              fill="none"
-              stroke="var(--ds-line)"
-              strokeWidth={0.56}
-              strokeDasharray="2 4"
-            />
+            <ValueGrid ticks={scale.ticks} width={width} plotW={plotW} />
+            <TimeGrid ticks={times} />
             {ready && (
               <>
-                <path d={`${path} L${width},${H} L0,${H} Z`} fill={`url(#${gradId})`} />
+                <path d={`${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`} fill={`url(#${gradId})`} />
                 <path
                   d={path}
                   fill="none"
                   stroke="var(--ds-accent)"
-                  strokeWidth={1.6}
+                  strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
                 <circle cx={xs[last]} cy={ys[last]} r={3} fill="var(--ds-accent)" />
                 {at != null && (
                   <g>
-                    <line x1={xs[at]} x2={xs[at]} y1={0} y2={H} stroke="var(--ds-muted)" strokeDasharray="2 3" />
-                    <circle cx={xs[at]} cy={ys[at]} r={4} fill="var(--ds-accent)" stroke="var(--ds-bg)" strokeWidth={2} />
+                    <line x1={xs[at]} x2={xs[at]} y1={0} y2={PLOT_H} stroke="var(--ds-muted)" strokeDasharray="2 3" />
+                    <circle
+                      cx={xs[at]}
+                      cy={ys[at]}
+                      r={4}
+                      fill="var(--ds-accent)"
+                      stroke="var(--ds-bg)"
+                      strokeWidth={2}
+                    />
                   </g>
                 )}
               </>
             )}
           </svg>
         )}
-      </div>
-
-      {/* Holds its line while loading, so the range strip never jumps. */}
-      <div className="po-chart-axis">
-        {ready ? axis.map((i) => <span key={i}>{growthLabel(points[i].date, range)}</span>) : <span>{" "}</span>}
-      </div>
-
-      <div className="po-chart-controls" role="group" aria-label="Portfolio history range">
-        {GROWTH_RANGES.map((r) => (
-          <button key={r} type="button" className="po-chart-range" aria-pressed={r === range} onClick={() => onRange(r)}>
-            {r}
-          </button>
-        ))}
       </div>
     </>
   );

@@ -2633,11 +2633,11 @@ ion-toast {
 }
 
 
-/* The plot lets a vertical swipe scroll the page; a horizontal one scrubs. */
+/* The plot lets a vertical swipe scroll the page; a horizontal one scrubs.
+   Its height is set inline, from lib/chartAxis. */
 .hd-chart {
   position: relative;
-  height: 94px;
-  margin-top: 16px;
+  margin-bottom: 20px;
   touch-action: pan-y;
   user-select: none;
   -webkit-user-select: none;
@@ -2666,41 +2666,34 @@ ion-toast {
 
 .hd-chart-empty {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
   display: grid;
   place-items: center;
   font-size: var(--ds-fs-10);
   color: var(--ds-muted);
 }
 
-.hd-chart-axis {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 6px;
-  font-family: var(--font-mono);
-  font-size: var(--ds-fs-8);
-  color: var(--ds-muted);
-}
-
+/* Above the plot, as in Apple Stocks. Every range reads in the primary ink;
+   the chosen one is bold on a neutral pill, so the line keeps the accent. */
 .hd-chart-controls {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 12px 0 14px;
+  padding: 16px 0 12px;
 }
 
 .hd-range {
-  min-width: 35px;
+  min-width: 38px;
   min-height: 30px;
   border-radius: 6px;
-  font-size: var(--ds-fs-10);
-  font-weight: 600;
-  color: var(--ds-secondary);
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+  color: var(--ds-text);
 }
 
 .hd-range[aria-pressed="true"] {
-  background: var(--ds-accent-tint);
-  color: var(--ds-accent);
+  font-weight: 700;
+  background: var(--ds-line);
 }
 
 .hd-chart-ext {
@@ -3549,11 +3542,21 @@ ion-modal.ds-sheet {
   color: var(--ds-muted);
 }
 
+/* Its height is set inline, from lib/chartAxis. */
 .po-chart-wrap {
   position: relative;
-  height: 100px;
   user-select: none;
   -webkit-user-select: none;
+}
+
+/* Both scales of GrowthChart and HoldingChart: the values at the right, the
+   times beneath. Primary ink at reading size, as Apple sets them; only the
+   guides are faint. CHAR_W in lib/chartAxis.ts assumes this face and size. */
+.chart-axis-label {
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-10);
+  fill: var(--ds-text);
+  pointer-events: none;
 }
 
 /* A vertical swipe scrolls the page; a horizontal one inspects. */
@@ -3586,41 +3589,34 @@ ion-modal.ds-sheet {
 
 .po-chart-empty {
   position: absolute;
-  inset: 0;
+  inset: 0 0 auto;
   display: grid;
   place-items: center;
   font-size: var(--ds-fs-10);
   color: var(--ds-muted);
 }
 
-.po-chart-axis {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  font-family: var(--font-mono);
-  font-size: var(--ds-fs-8);
-  color: var(--ds-muted);
-}
-
+/* Above the plot, laid out and styled as Holding Detail's (.hd-range):
+   packed to the left, not spread across the width. */
 .po-chart-controls {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
   gap: 4px;
-  padding-top: 9px;
+  padding: 4px 0 12px;
 }
 
 .po-page .po-chart-range {
-  flex: 1;
-  min-height: 32px;
+  min-width: 38px;
+  min-height: 30px;
   border-radius: 6px;
-  font-size: var(--ds-fs-10);
-  font-weight: 600;
-  color: var(--ds-secondary);
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+  color: var(--ds-text);
 }
 
 .po-page .po-chart-range[aria-pressed="true"] {
-  color: var(--ds-accent);
-  background: var(--ds-accent-tint);
+  font-weight: 700;
+  background: var(--ds-line);
 }
 
 /* ── sections ────────────────────────────────────────────────────────────── */
@@ -3714,10 +3710,6 @@ ion-modal.ds-sheet {
   background: var(--ds-accent);
 }
 
-.po-legend-dot.cash {
-  background: var(--ds-cash);
-}
-
 .po-page .po-legend-percent {
   display: block;
   margin-bottom: 5px;
@@ -3737,83 +3729,6 @@ ion-modal.ds-sheet {
   font-size: var(--ds-fs-9);
   line-height: 1.5;
   color: var(--ds-muted);
-}
-
-.po-breakdown-list {
-  margin-top: 18px;
-  padding-top: 15px;
-  border-top: 1px solid var(--ds-line);
-}
-
-.po-breakdown-list-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.po-page .po-breakdown-list-heading h3 {
-  font-size: var(--ds-fs-10);
-  font-weight: 500;
-  color: var(--ds-secondary);
-}
-
-.po-breakdown-list-heading span {
-  font-size: var(--ds-fs-9);
-  color: var(--ds-muted);
-}
-
-.po-allocation-weights {
-  display: grid;
-  gap: 4px;
-}
-
-/* Rows bleed their highlight 10px into the gutter, so their content stays on
-   the text edge. */
-.po-page :is(.po-allocation-weight, .po-holding-row) {
-  width: calc(100% + 20px);
-  margin-inline: -10px;
-  padding-inline: 10px;
-  border-radius: 0;
-  text-align: left;
-  color: var(--ds-text);
-}
-
-.po-page .po-allocation-weight {
-  display: grid;
-  grid-template-columns: 65px minmax(0, 1fr) 55px;
-  align-items: center;
-  gap: 12px;
-  min-height: 30px;
-  padding-block: 4px;
-  font-size: var(--ds-fs-10);
-}
-
-.po-allocation-weight .po-legend-label {
-  margin: 0;
-  font-weight: 500;
-  color: var(--ds-text);
-}
-
-.po-allocation-weight .money {
-  text-align: right;
-}
-
-.po-weight-track {
-  display: block;
-  min-width: 0;
-  height: 5px;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--ds-line);
-}
-
-.po-weight-track i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--weight-color, var(--ds-accent));
 }
 
 /* ── today's movers ──────────────────────────────────────────────────────── */
@@ -3946,7 +3861,15 @@ ion-modal.ds-sheet {
   padding-top: 22px;
 }
 
+/* Rows bleed their highlight 10px into the gutter, so their content stays on
+   the text edge. */
 .po-page .po-holding-row {
+  width: calc(100% + 20px);
+  margin-inline: -10px;
+  padding-inline: 10px;
+  border-radius: 0;
+  text-align: left;
+  color: var(--ds-text);
   display: flex;
   align-items: center;
   gap: 11px;
@@ -3971,10 +3894,39 @@ ion-modal.ds-sheet {
   font-weight: 600;
 }
 
-.po-holding-symbol .po-legend-dot {
-  display: inline-block;
-  margin-right: 7px;
-  vertical-align: middle;
+/* A row's share of the whole portfolio, cash included: filled clockwise from
+   twelve o'clock around the exact percentage. Sized with the type, as in the
+   study. */
+.po-weight-ring {
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: calc(44px * var(--ds-font-scale));
+  height: calc(44px * var(--ds-font-scale));
+}
+
+.po-weight-ring svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.po-weight-ring-track {
+  stroke: var(--ds-line);
+}
+
+.po-weight-ring-progress {
+  stroke: var(--weight-color);
+}
+
+.po-page .po-weight-ring-label {
+  font-size: var(--ds-fs-10);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.4px;
+  color: var(--ds-secondary);
 }
 
 .po-holding-meta {
@@ -4091,12 +4043,12 @@ ion-modal.ds-sheet {
 }
 
 /* ── feedback ────────────────────────────────────────────────────────────── */
-.po-page :is(.po-holding-row, button.po-allocation-weight, .po-mover-column):is(:active, :focus-visible) {
+.po-page :is(.po-holding-row, .po-mover-column):is(:active, :focus-visible) {
   background: var(--ds-subtle);
 }
 
 @media (hover: hover) {
-  .po-page :is(.po-holding-row, button.po-allocation-weight, .po-mover-column):hover {
+  .po-page :is(.po-holding-row, .po-mover-column):hover {
     background: var(--ds-subtle);
   }
 }

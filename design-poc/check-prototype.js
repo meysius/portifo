@@ -29,7 +29,7 @@
           assert(!document.querySelector('[data-lot]'), `${key}: closed position has lots`);
           assert(screen.textContent.includes('Realized gain'), `${key}: wrong closed hero`);
           assert(document.querySelector('.market .metric-main').textContent === money(d.price), `${key}: closed symbol's current price is missing`);
-          assert(document.querySelector('#chart path') && document.querySelectorAll('[data-range]').length === 6, `${key}: closed holding price chart and ranges are missing`);
+          assert(document.querySelector('#chart path') && document.querySelectorAll('[data-range]').length === 7, `${key}: closed holding price chart and ranges are missing`);
           assert(!document.querySelector('.today-return'), `${key}: closed holding has an invented daily position return`);
           assert(!document.querySelector('.hero').textContent.includes('$0.00'), `${key}: closed headline shows a zero position value`);
         } else if (!scenario.unknown && d.price !== null) {

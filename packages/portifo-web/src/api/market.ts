@@ -29,7 +29,8 @@ export type FxRatesResponse = {
   asOf: string;
 };
 
-export type HistoryPoint = { date: string; close: number };
+// Volume is shares traded in the bar; the portfolio series has none.
+export type HistoryPoint = { date: string; close: number; volume?: number };
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
 
 export type SymbolResult = {

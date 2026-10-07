@@ -1,0 +1,14 @@
+/* Shared navigation affordance; the layout overrides below are embed-only. */
+.controls > .companion-link { display:flex;align-items:center;gap:8px;margin-top:20px;color:#204ba9;font-size:11px;text-decoration:none; }
+.controls > .companion-link:hover { text-decoration:underline; }
+.poc-embedded .connected-ledger-link { width:calc(100% - 46px);margin:0 23px 23px; }
+.poc-embedded body { background:transparent; }
+.poc-embedded .workbench { padding:0;max-width:none; }
+.poc-embedded :is(.desk-header,.rail,.annotation,.desk-footer,.device-caption) { display:none; }
+.poc-embedded .workspace { display:block;padding:0; }
+.poc-embedded .phone-wrap { width:100%; }
+.poc-embedded .phone { width:100%;height:100dvh;border:0;border-radius:0;padding-top:0; }
+.poc-embedded .status { display:none; }
+.poc-embedded .navigation { top:0; }
+.poc-embedded .navigation.pushed { top:auto; }
+.poc-embedded .sheet.create { inset:0;padding-top:0; }

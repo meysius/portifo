@@ -29,8 +29,9 @@ import { cashValue } from "../lib/positions";
 //      underneath without colouring the balance itself.
 //   2. The journey — the value over time; its change opens a sheet separating
 //      money added from investment gain.
-//   3. The parts — stocks vs cash, each stock's share, today's movers, and the
-//      holdings ledger (shares, value, total return).
+//   3. The parts — stocks vs cash, the holdings ledger (each row's share of
+//      the whole as a ring, then shares, value, total return), and last,
+//      today's movers.
 //
 // Always the whole portfolio, every account together. Figures are in the
 // display currency; a holding's share is always of the whole, cash included.
@@ -64,6 +65,41 @@ const tone = (n: number) => (n > 1e-9 ? "positive" : n < -1e-9 ? "negative" : ""
 const weight = (value: number, total: number) => (total > 0 ? (value / total) * 100 : 0);
 const percent = (n: number) => `${n < 0 ? "−" : ""}${Math.abs(n).toFixed(1)}%`;
 const sharesLabel = (n: number) => `${fmtShares(n)} ${n === 1 ? "share" : "shares"}`;
+
+// The ring's circumference in its 44-unit box (r = 19).
+const RING_C = 2 * Math.PI * 19;
+
+// A ledger row's share of the whole portfolio, cash included: a ring filled
+// clockwise from twelve o'clock around the exact percentage. A closed
+// position holds nothing, so it gets the bare track, which keeps its symbol
+// in line with the rows above.
+function WeightRing({ share, color }: { share?: number; color?: string }) {
+  const arc = share == null ? 0 : (Math.max(0, Math.min(100, share)) / 100) * RING_C;
+  return (
+    <span
+      className="po-weight-ring"
+      style={{ "--weight-color": color } as CSSProperties}
+      title={share == null ? undefined : `${percent(share)} of portfolio`}
+      aria-hidden="true"
+    >
+      <svg viewBox="0 0 44 44" fill="none">
+        <circle className="po-weight-ring-track" cx="22" cy="22" r="19" strokeWidth="2.5" />
+        {arc > 0 && (
+          <circle
+            className="po-weight-ring-progress"
+            cx="22"
+            cy="22"
+            r="19"
+            strokeWidth="2.5"
+            strokeDasharray={`${arc} ${RING_C}`}
+            transform="rotate(-90 22 22)"
+          />
+        )}
+      </svg>
+      {share != null && <span className="po-weight-ring-label money">{percent(share)}</span>}
+    </span>
+  );
+}
 
 const icon = (body: ReactNode, size = 20) => (
   <svg
@@ -418,61 +454,135 @@ function HoldingsPage() {
                   </>
                 );
               })()}
-              {rows.length > 0 ? (
-                <div className="po-breakdown-list">
-                  <div className="po-breakdown-list-heading">
-                    <h3>Portfolio breakdown</h3>
-                    <span>% of portfolio</span>
-                  </div>
-                  {/* Every holding and cash, ranked together, so the list
-                      accounts for the whole total. Cash has no holding page
-                      to open, so its row is not a control. */}
-                  <div className="po-allocation-weights">
-                    {[
-                      ...rows.map((r) => ({ key: r.symbol, label: r.symbol, value: r.value, color: r.color })),
-                      ...(Math.abs(cash) >= 0.005
-                        ? [{ key: "", label: "Cash", value: cash, color: "var(--ds-cash)" }]
-                        : []),
-                    ]
-                      .sort((a, b) => b.value - a.value)
-                      .map((w) => {
-                        const share = weight(w.value, total);
-                        const cells = (
-                          <>
-                            <span className="po-legend-label">
-                              <span className="po-legend-dot" style={{ background: w.color }} aria-hidden="true" />
-                              {w.label}
-                            </span>
-                            <span
-                              className="po-weight-track"
-                              aria-hidden="true"
-                              style={{ "--weight-color": w.color } as CSSProperties}
-                            >
-                              <i style={{ width: `${Math.max(0, Math.min(100, share))}%` }} />
-                            </span>
-                            <span className="money">{percent(share)}</span>
-                          </>
-                        );
-                        return w.key ? (
-                          <button
-                            key={w.key}
-                            type="button"
-                            className="po-allocation-weight"
-                            aria-label={`${w.label}, ${percent(share)} of portfolio, view holding detail`}
-                            onClick={() => openHolding(w.key)}
-                          >
-                            {cells}
-                          </button>
-                        ) : (
-                          <div key="cash" className="po-allocation-weight">
-                            {cells}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              ) : (
+              {rows.length === 0 && (
                 <p className="po-allocation-note">No stock holdings. Your portfolio is held in cash.</p>
+              )}
+            </section>
+
+            <section className="po-section po-holdings" aria-label="All holdings">
+              <div className="po-section-heading">
+                <h2>
+                  Holdings <span className="meta">{rows.length}</span>
+                </h2>
+              </div>
+              <div className="po-list-caption">
+                <span>Holding / shares</span>
+                <span>Value / total return</span>
+              </div>
+              <div>
+                {ledger.map((item) => {
+                  if (item.kind === "cash") {
+                    return (
+                      <div key="cash">
+                        <button
+                          type="button"
+                          className="po-holding-row"
+                          aria-label={`Cash, ${fmtCcy(cash, ccy)}, ${percent(weight(cash, total))} of portfolio, ${cashOpen ? "hide" : "view"} cash by account`}
+                          aria-expanded={cashOpen}
+                          aria-controls="po-cash-accounts"
+                          onClick={() => setCashOpen((o) => !o)}
+                        >
+                          <span className="po-holding-summary">
+                            <WeightRing share={weight(cash, total)} color="var(--ds-cash)" />
+                            <span className="po-holding-identity">
+                              <span className="po-holding-symbol">Cash</span>
+                              <span className="po-holding-meta">Uninvested</span>
+                            </span>
+                            <span className="po-holding-end">
+                              <span className="po-holding-value money">{fmtCcy(cash, ccy)}</span>
+                              <span className="po-holding-meta">
+                                {cashOpen ? "Hide" : "By"} account {cashOpen ? "⌃" : "⌄"}
+                              </span>
+                            </span>
+                          </span>
+                        </button>
+                        <div className="po-cash-accounts" id="po-cash-accounts" hidden={!cashOpen}>
+                          {cashByAccount.length > 0 ? (
+                            cashByAccount.map((a) => (
+                              <div className="po-cash-account" key={a.id}>
+                                <span>{a.name}</span>
+                                <span className="money">{fmtCcy(a.value, ccy)}</span>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="po-cash-account">
+                              <span>No cash balances</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }
+                  const r = item.row;
+                  return (
+                    <button
+                      key={r.symbol}
+                      type="button"
+                      className="po-holding-row"
+                      aria-label={`${r.symbol}, ${sharesLabel(r.shares)}, ${fmtCcy(r.value, ccy)}, ${percent(weight(r.value, total))} of portfolio, view holding detail`}
+                      onClick={() => openHolding(r.symbol)}
+                    >
+                      <span className="po-holding-summary">
+                        <WeightRing share={weight(r.value, total)} color={r.color} />
+                        <span className="po-holding-identity">
+                          <span className="po-holding-symbol">{r.symbol}</span>
+                          <span className="po-holding-meta">{sharesLabel(r.shares)}</span>
+                        </span>
+                        <span className="po-holding-end">
+                          <span className="po-holding-value money">{fmtCcy(r.value, ccy)}</span>
+                          {r.gain != null ? (
+                            <span className={`po-holding-return money ${tone(r.gain)}`}>
+                              {fmtSignedCcy(r.gain, ccy)}
+                              {r.gainPct != null && ` · ${fmtSignedPct(r.gainPct)}`}
+                            </span>
+                          ) : (
+                            <span className="po-holding-return secondary">
+                              {loading.market ? " " : "At cost · no quote"}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Every share sold: no value to rank, so after the ledger, with
+                  the realized result where the return would be. */}
+              {closed.length > 0 && (
+                <>
+                  <div className="po-list-caption po-closed-caption">
+                    <span>Closed / last sale</span>
+                    <span>Realized return</span>
+                  </div>
+                  {closed.map((c) => (
+                    <button
+                      key={c.symbol}
+                      type="button"
+                      className="po-holding-row"
+                      aria-label={`${c.symbol}, closed, realized ${fmtSignedCcy(c.realized, ccy)}, view holding detail`}
+                      onClick={() => openHolding(c.symbol)}
+                    >
+                      <span className="po-holding-summary">
+                        <WeightRing />
+                        <span className="po-holding-identity">
+                          <span className="po-holding-symbol">{c.symbol}</span>
+                          <span className="po-holding-meta">
+                            {c.lastSale ? `Sold ${fmtDay(parseDay(c.lastSale))}` : "Closed"}
+                          </span>
+                        </span>
+                        <span className="po-holding-end">
+                          <span className={`po-holding-value money ${tone(c.realized)}`}>
+                            {fmtSignedCcy(c.realized, ccy)}
+                          </span>
+                          <span className={`po-holding-return money ${tone(c.realized)}`}>
+                            {fmtSignedPct(c.realizedPct)}
+                          </span>
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </>
               )}
             </section>
 
@@ -529,135 +639,6 @@ function HoldingsPage() {
                         : "Today’s prices are unavailable right now."
                       : "No price changes in your holdings today."}
                 </p>
-              )}
-            </section>
-
-            <section className="po-section po-holdings" aria-label="All holdings">
-              <div className="po-section-heading">
-                <h2>
-                  Holdings <span className="meta">{rows.length}</span>
-                </h2>
-              </div>
-              <div className="po-list-caption">
-                <span>Holding / shares</span>
-                <span>Value / total return</span>
-              </div>
-              <div>
-                {ledger.map((item) => {
-                  if (item.kind === "cash") {
-                    return (
-                      <div key="cash">
-                        <button
-                          type="button"
-                          className="po-holding-row"
-                          aria-expanded={cashOpen}
-                          aria-controls="po-cash-accounts"
-                          onClick={() => setCashOpen((o) => !o)}
-                        >
-                          <span className="po-holding-summary">
-                            <span className="po-holding-identity">
-                              <span className="po-holding-symbol">
-                                <span className="po-legend-dot cash" aria-hidden="true" />
-                                Cash
-                              </span>
-                              <span className="po-holding-meta">Uninvested</span>
-                            </span>
-                            <span className="po-holding-end">
-                              <span className="po-holding-value money">{fmtCcy(cash, ccy)}</span>
-                              <span className="po-holding-meta">
-                                {cashOpen ? "Hide" : "By"} account {cashOpen ? "⌃" : "⌄"}
-                              </span>
-                            </span>
-                          </span>
-                        </button>
-                        <div className="po-cash-accounts" id="po-cash-accounts" hidden={!cashOpen}>
-                          {cashByAccount.length > 0 ? (
-                            cashByAccount.map((a) => (
-                              <div className="po-cash-account" key={a.id}>
-                                <span>{a.name}</span>
-                                <span className="money">{fmtCcy(a.value, ccy)}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="po-cash-account">
-                              <span>No cash balances</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  }
-                  const r = item.row;
-                  return (
-                    <button
-                      key={r.symbol}
-                      type="button"
-                      className="po-holding-row"
-                      aria-label={`${r.symbol}, ${sharesLabel(r.shares)}, ${fmtCcy(r.value, ccy)}, view holding detail`}
-                      onClick={() => openHolding(r.symbol)}
-                    >
-                      <span className="po-holding-summary">
-                        <span className="po-holding-identity">
-                          <span className="po-holding-symbol">
-                            <span className="po-legend-dot" style={{ background: r.color }} aria-hidden="true" />
-                            {r.symbol}
-                          </span>
-                          <span className="po-holding-meta">{sharesLabel(r.shares)}</span>
-                        </span>
-                        <span className="po-holding-end">
-                          <span className="po-holding-value money">{fmtCcy(r.value, ccy)}</span>
-                          {r.gain != null ? (
-                            <span className={`po-holding-return money ${tone(r.gain)}`}>
-                              {fmtSignedCcy(r.gain, ccy)}
-                              {r.gainPct != null && ` · ${fmtSignedPct(r.gainPct)}`}
-                            </span>
-                          ) : (
-                            <span className="po-holding-return secondary">
-                              {loading.market ? " " : "At cost · no quote"}
-                            </span>
-                          )}
-                        </span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Every share sold: no value to rank, so after the ledger, with
-                  the realized result where the return would be. */}
-              {closed.length > 0 && (
-                <>
-                  <div className="po-list-caption po-closed-caption">
-                    <span>Closed / last sale</span>
-                    <span>Realized return</span>
-                  </div>
-                  {closed.map((c) => (
-                    <button
-                      key={c.symbol}
-                      type="button"
-                      className="po-holding-row"
-                      aria-label={`${c.symbol}, closed, realized ${fmtSignedCcy(c.realized, ccy)}, view holding detail`}
-                      onClick={() => openHolding(c.symbol)}
-                    >
-                      <span className="po-holding-summary">
-                        <span className="po-holding-identity">
-                          <span className="po-holding-symbol">{c.symbol}</span>
-                          <span className="po-holding-meta">
-                            {c.lastSale ? `Sold ${fmtDay(parseDay(c.lastSale))}` : "Closed"}
-                          </span>
-                        </span>
-                        <span className="po-holding-end">
-                          <span className={`po-holding-value money ${tone(c.realized)}`}>
-                            {fmtSignedCcy(c.realized, ccy)}
-                          </span>
-                          <span className={`po-holding-return money ${tone(c.realized)}`}>
-                            {fmtSignedPct(c.realizedPct)}
-                          </span>
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </>
               )}
             </section>
           </>
