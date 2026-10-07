@@ -56,7 +56,9 @@ const NO_GROWTH: Growth = { points: [], netDeposits: 0, estimated: [] };
 // range redraws at once while the fresh one loads.
 const growthCache = new Map<string, Growth>();
 
+// The five breakdown hues, by rank; any holding past them takes the neutral.
 const HOLD_COLORS = [1, 2, 3, 4, 5].map((i) => `var(--ds-hold-${i})`);
+const HOLD_OTHER = "var(--ds-hold-other)";
 
 const tone = (n: number) => (n > 1e-9 ? "positive" : n < -1e-9 ? "negative" : "");
 const weight = (value: number, total: number) => (total > 0 ? (value / total) * 100 : 0);
@@ -214,7 +216,7 @@ function HoldingsPage() {
   const colorOf = new Map(
     [...openAggs]
       .sort((a, b) => valueOf(b.symbol, b.totalShares, b.avgCost, b.currency) - valueOf(a.symbol, a.totalShares, a.avgCost, a.currency))
-      .map((t, i) => [t.symbol, HOLD_COLORS[i % HOLD_COLORS.length]]),
+      .map((t, i) => [t.symbol, HOLD_COLORS[i] ?? HOLD_OTHER]),
   );
 
   const rows: Row[] = [];
@@ -243,7 +245,7 @@ function HoldingsPage() {
         gain,
         gainPct,
         day,
-        color: colorOf.get(t.symbol) ?? HOLD_COLORS[0],
+        color: colorOf.get(t.symbol) ?? HOLD_OTHER,
       });
     } else {
       const realized = t.realizedPL;

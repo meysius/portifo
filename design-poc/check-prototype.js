@@ -28,6 +28,14 @@
           assert(!document.querySelector('#actions [data-action="sell"]'), `${key}: closed position has Sell`);
           assert(!document.querySelector('[data-lot]'), `${key}: closed position has lots`);
           assert(screen.textContent.includes('Realized gain'), `${key}: wrong closed hero`);
+          assert(document.querySelector('.market .metric-main').textContent === money(d.price), `${key}: closed symbol's current price is missing`);
+          assert(document.querySelector('#chart path') && document.querySelectorAll('[data-range]').length === 6, `${key}: closed holding price chart and ranges are missing`);
+          assert(!document.querySelector('.today-return'), `${key}: closed holding has an invented daily position return`);
+          assert(!document.querySelector('.hero').textContent.includes('$0.00'), `${key}: closed headline shows a zero position value`);
+        } else if (!scenario.unknown && d.price !== null) {
+          assert(document.querySelector('.hero .today-return'), `${key}: today's position return is not grouped with the hero`);
+          assert(document.querySelector('.market .metric-label').textContent.startsWith('Share price'), `${key}: share price does not lead the market section`);
+          assert(!document.querySelector('.market').textContent.includes('Today’s return'), `${key}: position return is still in the market section`);
         }
         if (scenario.id === 'missing') {
           assert(!document.querySelector('.market'), `${key}: missing quote has market figures`);
@@ -42,6 +50,12 @@
   state.id = 'multi'; state.theme = 'light'; state.expanded.clear(); render();
   assert(totals(data()).shares === 250, 'Multi-account shares wrong');
   assert(Math.abs(totals(data()).cost - 23762.25) < 0.001, 'Multi-account cost wrong');
+  state.id = 'closed'; state.range = '1M'; render();
+  const closedChart = document.querySelector('#chart').innerHTML;
+  document.querySelector('[data-range="1Y"]').click();
+  assert(state.range === '1Y' && document.querySelector('#chart').innerHTML !== closedChart, 'Closed holding chart range did not update');
+  assert(document.querySelector('#chart').getAttribute('aria-label').includes('1Y NVDA'), 'Chart accessible label did not follow the selected range');
+  assert(document.querySelector('.hero-value').textContent === '+$4,600.00', 'Market chart changed historical realized gain');
   state.id = 'loss'; state.lossVariant = 'gain'; render();
   assert(screen.textContent.includes('+1,332%'), 'Four-digit percentage is incorrectly formatted');
   state.lossVariant = 'loss'; render();

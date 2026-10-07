@@ -13,6 +13,7 @@ import {
   removeMember as apiRemoveMember,
   listAccounts,
   createAccount as apiCreateAccount,
+  renameAccount as apiRenameAccount,
   setBalance as apiSetBalance,
   listTransactions,
   createTransaction as apiCreateTransaction,
@@ -81,6 +82,7 @@ interface PortfolioDataContextValue {
   updateTransaction(id: string, input: NewTransaction): Promise<Transaction>;
   deleteTransaction(id: string): Promise<void>;
   createAccount(input: NewAccount): Promise<AccountDto>;
+  renameAccount(accountId: string, name: string): Promise<AccountDto>;
   setBalance(accountId: string, currency: string, balance: number, date: string): Promise<AccountDto>;
   // Derived, memoized off accounts/transactions.
   tickerAggregates: TickerAgg[];
@@ -338,6 +340,16 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
     [refreshAccounts],
   );
 
+  // Transactions carry the account's name as read, so they refetch too.
+  const renameAccountFn = useCallback(
+    async (accountId: string, name: string) => {
+      const account = await apiRenameAccount(accountId, name);
+      await Promise.all([refreshTransactions({ silent: true }), refreshAccounts({ silent: true })]);
+      return account;
+    },
+    [refreshTransactions, refreshAccounts],
+  );
+
   // A balance update writes (or rewrites) a ledger row, so both lists move.
   const setBalanceFn = useCallback(
     async (accountId: string, currency: string, balance: number, date: string) => {
@@ -396,6 +408,7 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
     updateTransaction: updateTransactionFn,
     deleteTransaction: deleteTransactionFn,
     createAccount: createAccountFn,
+    renameAccount: renameAccountFn,
     setBalance: setBalanceFn,
     tickerAggregates,
     realizedPLByTx,

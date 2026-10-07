@@ -1,37 +1,39 @@
-import { IonButton, IonButtons, IonContent, IonHeader, IonModal, IonToolbar } from "@ionic/react";
+import { IonModal } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useToast } from "../context/ToastContext";
-import PickerSheet from "./PickerSheet";
-import type { PickerOption } from "./PickerSheet";
-import { ChevronDownIcon, CrossIcon } from "./ds";
 import { CURRENCIES } from "../lib/currencies";
 import { useDisplayCurrency } from "../lib/displayCurrency";
-import { cleanDecimal, todayIso } from "../lib/forms";
+import { todayIso } from "../lib/forms";
 
-type CashRow = { key: number; currency: string; amount: string };
+type Row = { key: number; currency: string };
 
 const listFormat = new Intl.ListFormat(undefined, { type: "conjunction" });
 
-// fmtCcy's narrow symbols print CAD and AUD as a bare "$", which can't tell a
-// mixed-currency summary apart — the full symbol does ("$12,500.00 and CA$800.00").
-const fmtDistinct = (amount: number, currency: string) =>
-  amount.toLocaleString("en-US", { style: "currency", currency, currencyDisplay: "symbol" });
+const PLUS = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+const CROSS = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="m6 6 12 12M18 6 6 18" />
+  </svg>
+);
 
-// The sheet has no title: the name field is the heading, set the way the
-// account's own page title will read, so the account is seen being named.
-// Cash is the one optional extra, one row per currency — each row saves
-// through Set balance, so it lands in the ledger exactly as setting that
-// currency's balance later from the account would.
+// New account, from design-poc/accounts.html: a focused full-screen form, like
+// the transaction wizard. A name is enough; opening cash is optional, one row
+// per currency. Each balance saves through Set balance, so it lands in the
+// ledger exactly as setting that currency's balance from the account later
+// would: a deposit (or a withdrawal, for a negative balance) dated today.
 function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { accounts, createAccount, setBalance } = usePortfolioData();
   const { showToast } = useToast();
   const [displayCurrency] = useDisplayCurrency();
   const [name, setName] = useState("");
-  const [rows, setRows] = useState<CashRow[]>([{ key: 0, currency: displayCurrency, amount: "" }]);
-  // The row whose currency chip opened the picker.
-  const [pickerRow, setPickerRow] = useState<number | null>(null);
+  const [rows, setRows] = useState<Row[]>([{ key: 0, currency: displayCurrency }]);
+  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const amountRefs = useRef(new Map<number, HTMLInputElement>());
@@ -46,177 +48,205 @@ function AddAccountModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => 
   }, [rows]);
 
   const trimmed = name.trim();
-  // Same case-insensitive rule the server enforces, caught before Save.
+  // The server's rule, caught before Create: unique regardless of case.
   const taken = accounts.find((a) => a.name.toLowerCase() === trimmed.toLowerCase());
-  const isValid = trimmed.length > 0 && !taken;
-  // Only rows with a positive amount are saved; an empty row is just skipped.
-  const filled = rows
-    .map((r) => ({ currency: r.currency, amount: Number(r.amount) }))
-    .filter((r) => Number.isFinite(r.amount) && r.amount > 0);
   const unused = CURRENCIES.filter((c) => !rows.some((r) => r.currency === c.code));
 
-  const updateRow = (key: number, patch: Partial<CashRow>) =>
-    setRows((prev) => prev.map((r) => (r.key === key ? { ...r, ...patch } : r)));
-
-  const addRow = () => {
-    if (unused.length === 0) return;
-    const key = nextKey.current++;
-    focusKey.current = key;
-    setRows((prev) => [...prev, { key, currency: unused[0].code, amount: "" }]);
-  };
-
-  const removeRow = (key: number) => setRows((prev) => prev.filter((r) => r.key !== key));
-
-  // A currency already on another row is left out, so no two rows can share one.
-  const pickerOptions: PickerOption[] = CURRENCIES.filter(
-    (c) => !rows.some((r) => r.key !== pickerRow && r.currency === c.code),
-  ).map((c) => ({ value: c.code, label: c.code, sublabel: c.name }));
-
-  const handleClose = () => {
+  const reset = () => {
     setName("");
-    setRows([{ key: 0, currency: displayCurrency, amount: "" }]);
+    setRows([{ key: 0, currency: displayCurrency }]);
+    setError("");
     setSaving(false);
+  };
+  const close = () => {
+    reset();
     onClose();
   };
 
-  const handleSave = async (e?: FormEvent) => {
-    e?.preventDefault();
-    if (!isValid || saving) return;
+  const addRow = () => {
+    if (!unused.length) return;
+    const key = nextKey.current++;
+    focusKey.current = key;
+    setRows((prev) => [...prev, { key, currency: unused[0].code }]);
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!trimmed) {
+      setError("Please give this account a name.");
+      nameRef.current?.focus();
+      return;
+    }
+    if (taken) {
+      setError(`You already have an account named ${taken.name}.`);
+      return;
+    }
+    if (trimmed.length > 60) {
+      setError("Use 60 characters or fewer for the account name.");
+      return;
+    }
+    const entered: { currency: string; amount: number }[] = [];
+    for (const row of rows) {
+      const input = amountRefs.current.get(row.key);
+      if (!input) continue;
+      if (input.validity.badInput) {
+        setError("Enter a valid cash balance below one trillion.");
+        return;
+      }
+      if (input.value === "") continue;
+      const amount = Number(input.value);
+      if (!Number.isFinite(amount) || Math.abs(amount) >= 1e12) {
+        setError("Enter a valid cash balance below one trillion.");
+        return;
+      }
+      // A zero balance is no balance: nothing to record.
+      if (amount !== 0) entered.push({ currency: row.currency, amount });
+    }
+    if (saving) return;
     setSaving(true);
+    setError("");
     let accountId: string;
     try {
       accountId = (await createAccount({ name: trimmed })).id;
     } catch (err) {
-      showToast(err instanceof Error ? err.message : "Failed to create account", { color: "danger" });
+      setError(err instanceof Error ? err.message : "Couldn’t create the account. Try again.");
       setSaving(false);
       return;
     }
     // One at a time: each balance write also refreshes the account's ledger.
     const failed: string[] = [];
-    for (const row of filled) {
+    for (const row of entered) {
       try {
         await setBalance(accountId, row.currency, row.amount, todayIso());
       } catch {
         failed.push(row.currency);
       }
     }
-    if (failed.length > 0) {
-      showToast(
-        `${trimmed} was created without its ${listFormat.format(failed)} cash. Set the balance from the account.`,
-        { color: "danger" },
-      );
-    } else {
-      showToast("Account created");
-    }
-    handleClose();
+    showToast(
+      failed.length
+        ? `${trimmed} was created without its ${listFormat.format(failed)} cash. Set the balance from the account.`
+        : "Account created",
+      failed.length ? { color: "danger" } : undefined,
+    );
+    close();
   };
 
   return (
-    <IonModal isOpen={isOpen} onDidDismiss={handleClose} onDidPresent={() => nameRef.current?.focus()}>
-      <IonHeader>
-        <IonToolbar>
-          <IonButtons slot="start">
-            <IonButton onClick={handleClose}>Cancel</IonButton>
-          </IonButtons>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent>
-        <form className="acct-form" onSubmit={handleSave}>
-          <input
-            ref={nameRef}
-            className={`acct-name${taken ? " taken" : ""}`}
-            aria-label="Account name"
-            aria-invalid={!!taken}
-            placeholder="Account name"
-            autoCapitalize="words"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            enterKeyHint="next"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter") return;
-              e.preventDefault();
-              amountRefs.current.get(rows[0].key)?.focus();
-            }}
-          />
-          <p className={`wiz-hint${taken ? " loss" : ""}`}>
-            {taken ? `You already have an account named ${taken.name}.` : "The broker, bank or wallet that holds the money."}
-          </p>
-
-          <div className="acct-cash" role="group" aria-labelledby="acct-cash-label">
-            <span id="acct-cash-label" className="wiz-field-label">
-              {rows.length > 1 ? "Cash balances" : "Cash balance"}
-            </span>
-            {rows.map((row) => (
-              <div key={row.key} className={`wiz-field acct-cash-row${rows.length > 1 ? " removable" : ""}`}>
+    <IonModal
+      isOpen={isOpen}
+      onDidDismiss={close}
+      onDidPresent={() => nameRef.current?.focus()}
+      className="ds-screen ac-create-modal"
+      aria-labelledby="ac-create-title"
+    >
+      <div className="ac-create">
+        <header className="ac-form-navigation">
+          <button type="button" className="ac-cancel" onClick={close}>
+            Cancel
+          </button>
+          <h2 id="ac-create-title">New account</h2>
+          <span className="ac-form-navigation-spacer" aria-hidden="true" />
+        </header>
+        <form className="ac-form" noValidate onSubmit={submit}>
+          <div className="ac-form-body">
+            <p className="ac-form-kicker">A new place for your money</p>
+            <h3>Make it your own.</h3>
+            <p className="ac-form-intro">
+              Add the broker, bank or wallet you already use.
+              <br />
+              No connection or login needed.
+            </p>
+            <label className="ds-field-label" htmlFor="ac-account-name">
+              Account name
+            </label>
+            <input
+              ref={nameRef}
+              id="ac-account-name"
+              className="ds-field ac-name-field"
+              placeholder="e.g. My TFSA"
+              maxLength={60}
+              autoCapitalize="words"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
+              aria-invalid={!!taken}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError("");
+              }}
+            />
+            <div className="ac-cash-heading">
+              <h4>Opening cash</h4>
+              <span className="ac-optional">Optional</span>
+            </div>
+            {rows.map((row, i) => (
+              <div className="ac-balance-entry" key={row.key}>
                 <input
                   ref={(el) => {
                     if (el) amountRefs.current.set(row.key, el);
                     else amountRefs.current.delete(row.key);
                   }}
-                  aria-label={`Cash balance in ${row.currency}`}
-                  inputMode="decimal"
-                  enterKeyHint="done"
+                  className="ds-field"
+                  type="number"
+                  step="0.01"
                   placeholder="0.00"
-                  value={row.amount}
-                  onChange={(e) => updateRow(row.key, { amount: cleanDecimal(e.target.value) })}
+                  aria-label={`Opening cash balance ${i + 1}`}
+                  onChange={() => setError("")}
                 />
+                <select
+                  className="ds-field"
+                  aria-label={`Cash currency ${i + 1}`}
+                  value={row.currency}
+                  onChange={(e) =>
+                    setRows((prev) => prev.map((r) => (r.key === row.key ? { ...r, currency: e.target.value } : r)))
+                  }
+                >
+                  {/* A currency on another row is left out, so no two rows share one. */}
+                  {CURRENCIES.filter((c) => c.code === row.currency || !rows.some((r) => r.currency === c.code)).map(
+                    (c) => (
+                      <option key={c.code} value={c.code}>
+                        {c.code}
+                      </option>
+                    ),
+                  )}
+                </select>
                 <button
                   type="button"
-                  className="filter-chip on"
-                  aria-label={`Currency: ${row.currency}`}
-                  onClick={() => setPickerRow(row.key)}
+                  className="ac-remove-balance"
+                  aria-label={`Remove cash balance ${i + 1}`}
+                  onClick={() => setRows((prev) => prev.filter((r) => r.key !== row.key))}
                 >
-                  {row.currency}
-                  <ChevronDownIcon />
+                  {CROSS}
                 </button>
-                {rows.length > 1 && (
-                  <button
-                    type="button"
-                    className="acct-cash-remove"
-                    aria-label={`Remove ${row.currency}`}
-                    onClick={() => removeRow(row.key)}
-                  >
-                    <CrossIcon />
-                  </button>
-                )}
               </div>
             ))}
             {unused.length > 0 && (
-              <button type="button" className="filter-chip acct-cash-add" onClick={addRow}>
-                + Add currency
+              <button type="button" className="ac-add-currency" onClick={addRow}>
+                {PLUS}
+                Add currency
               </button>
             )}
+            <p className="ac-form-hint">
+              Leave blank if you’re only tracking investments.
+              <br />
+              You can set cash balances later from the account.
+            </p>
+            {(error || taken) && (
+              <p className="ds-form-error" role="alert">
+                {error || `You already have an account named ${taken?.name}.`}
+              </p>
+            )}
           </div>
-          <p className="wiz-hint">
-            {filled.length === 0
-              ? "Optional. You can set it later from the account."
-              : `Saves ${filled.length === 1 ? "a deposit" : "deposits"} of ${listFormat.format(
-                  filled.map((r) => fmtDistinct(r.amount, r.currency)),
-                )}, dated today.`}
-          </p>
-
-          <div className="btn-stack">
-            <button type="submit" className="btn btn-primary" disabled={!isValid || saving}>
-              Create Account
+          <footer className="ac-form-footer">
+            <button type="submit" className="ds-action" disabled={!trimmed || !!taken || saving}>
+              Create account
             </button>
-          </div>
+            <p>Opening cash is recorded as a deposit, dated today.</p>
+          </footer>
         </form>
-
-        <PickerSheet
-          mode="static"
-          isOpen={pickerRow != null}
-          title="Currency"
-          selected={rows.find((r) => r.key === pickerRow)?.currency}
-          onClose={() => setPickerRow(null)}
-          onSelect={(currency) => {
-            if (pickerRow != null) updateRow(pickerRow, { currency });
-          }}
-          options={pickerOptions}
-        />
-      </IonContent>
+      </div>
     </IonModal>
   );
 }

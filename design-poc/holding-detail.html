@@ -74,16 +74,17 @@
     .hero-value { font-size:27px; letter-spacing:-1.2px; line-height:1.25; font-weight:500; }
     .hero-value.compact { font-size:23px; }
     .hero-return { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:10px; font-size:12px; }
+    .today-return { display:flex; align-items:baseline; flex-wrap:wrap; gap:8px; margin-top:12px; font-size:calc(11px * var(--font-scale)); }
     .return-label { font-family:'Public Sans',sans-serif; color:var(--secondary); font-size:11px; }
     .positive { color:var(--positive); }.negative { color:var(--negative); }
     .return-percent { padding:3px 5px; border-radius:4px; font-size:10px; letter-spacing:-.2px; }
     .return-percent.positive { background:var(--positive-bg); }.return-percent.negative { background:var(--negative-bg); }
     .market { margin:0 23px; border-top:1px solid var(--line); padding-top:17px; }
-    .market-numbers { display:grid; grid-template-columns:1.05fr 1fr; gap:16px; }
+    .market-numbers { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:10px 16px; }
+    .quote-stamp { color:var(--secondary); font-size:calc(9px * var(--font-scale)); text-align:right; line-height:1.7; margin-left:auto; }
     .metric-label { font-size:11px; color:var(--secondary); margin-bottom:6px; }
     .metric-main { font-size:16px; font-weight:500; letter-spacing:-.6px; }
     .metric-foot { font-size:10px; margin-top:4px; display:flex; align-items:center; gap:5px; }
-    .live-dot { width:5px; height:5px; border-radius:50%; background:var(--positive); }
     .chart-wrap { height:94px; margin-top:16px; position:relative; }
     .chart-svg { width:100%; height:100%; overflow:visible; touch-action:pan-y; cursor:crosshair; }
     .chart-tooltip { position:absolute; top:0; left:0; pointer-events:none; background:var(--bg); border:1px solid var(--line); border-radius:5px; font-size:9px; padding:4px 7px; color:var(--text); opacity:0; z-index:1; }
@@ -209,6 +210,7 @@
     @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; }.status { display:none; }.navigation { height:50px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.actions { padding-bottom:max(25px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
     @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
   </style>
+  <link rel="stylesheet" href="focus.css">
 </head>
 <body>
   <div class="workbench">
@@ -248,7 +250,7 @@
       <aside class="annotation">
         <div class="annotation-title">The hierarchy <span>01 — 03</span></div>
         <div class="design-note"><span class="number">01 / YOUR MONEY</span><h3>Value, not the ticker price.</h3><p>The biggest number answers “what is my position worth?” Overall gain sits directly underneath, with colour reserved for the return.</p></div>
-        <div class="design-note"><span class="number">02 / THE CONTEXT</span><h3>Today, then the market.</h3><p>Today’s impact on your shares comes before the share price. A quiet, optional history chart gives context without becoming the main story.</p></div>
+        <div class="design-note"><span class="number">02 / THE CONTEXT</span><h3>Your return. The market’s price.</h3><p>Today’s position return belongs with your holding value. Share price leads the market section and its history chart—even after you’ve sold every share.</p></div>
         <div class="design-note"><span class="number">03 / THE OWNERSHIP</span><h3>Depth, without repetition.</h3><p>A compact position ledger leads into accounts. Expand an account in place; tap a purchase to push its transaction detail. No competing destinations.</p></div>
         <div class="state-note"><h3 id="state-note-title">Multiple accounts</h3><p id="state-note-text"></p><div class="variant-switch" id="variants"></div></div>
       </aside>
@@ -271,7 +273,7 @@
       {id:'simple',label:'One account, one purchase',note:'The everyday case: one position ledger and one purchase row. The account is identified once; identical value and return figures are not repeated.', symbol:'NVDA',name:'NVIDIA Corporation',exchange:'NASDAQ',currency:'USD',price:139.08,change:3.42,age:'8m',accounts:[account('Individual brokerage',[lot('Feb 04, 2025',32,82.4,'8m')])]},
       {id:'multi',label:'Several accounts, many lots',note:'Three accounts, eight open purchases. Account value and gain are visible immediately. Cost and purchases are revealed in place, so a large holding remains scannable.',symbol:'NVDA',name:'NVIDIA Corporation',exchange:'NASDAQ',currency:'USD',price:139.08,change:3.42,age:'1y 2m',accounts:[account('Individual brokerage',[lot('Mar 04, 2024',40,76.25,'1y 7m'),lot('Nov 12, 2024',50,93.1,'11m'),lot('Mar 19, 2025',30,105.4,'7m')]),account('Tax-free savings',[lot('May 08, 2024',25,82.4,'1y 5m'),lot('Jan 16, 2025',35,99.15,'9m'),lot('Apr 02, 2025',20,115.6,'6m')]),account('Retirement savings',[lot('Dec 02, 2024',30,94.6,'10m'),lot('Feb 21, 2025',20,110.75,'8m')])]},
       {id:'partial',label:'Partially sold',note:'Unrealized return stays with the open position. A separate “Already realized” section tells the sold-shares story, without mixing two different return percentages. The purchase rows explicitly show remaining shares.',symbol:'NVDA',name:'NVIDIA Corporation',exchange:'NASDAQ',currency:'USD',price:139.08,change:3.42,age:'1y 2m',accounts:[account('Individual brokerage',[lot('Mar 04, 2024',30,76.25,'1y 7m'),lot('Nov 12, 2024',37.5,93.1,'11m'),lot('Mar 19, 2025',22.5,105.4,'7m')],{pl:1183.25,cost:2716.75,shares:30,age:'10m',date:'Jun 12, 2025',price:130})]},
-      {id:'closed',label:'Closed position',note:'The headline becomes realized gain, not a $0 position value. Account-level realized results remain visible. There are no open lots, no Sell action, and no dependency on a live quote. “Buy again” is always available.',symbol:'NVDA',name:'NVIDIA Corporation',exchange:'NASDAQ',currency:'USD',price:null,change:null,age:'1y 4m',closed:true,accounts:[account('Individual brokerage',[],{pl:3287.5,cost:7262.5,shares:100,age:'1y 4m',date:'Jul 18, 2025',price:105.5}),account('Tax-free savings',[],{pl:1312.5,cost:3962.5,shares:50,age:'11m',date:'Jul 18, 2025',price:105.5})]},
+      {id:'closed',label:'Closed position',note:'The headline becomes realized gain, not a $0 position value. The symbol’s current share price and history stay available, independently of ownership. No open lots, invented daily position return, or Sell action; “Buy again” remains available.',symbol:'NVDA',name:'NVIDIA Corporation',exchange:'NASDAQ',currency:'USD',price:139.08,change:3.42,age:'1y 4m',closed:true,accounts:[account('Individual brokerage',[],{pl:3287.5,cost:7262.5,shares:100,age:'1y 4m',date:'Jul 18, 2025',price:105.5}),account('Tax-free savings',[],{pl:1312.5,cost:3962.5,shares:50,age:'11m',date:'Jul 18, 2025',price:105.5})]},
       {id:'missing',label:'Quote loading / unavailable',note:'Known ownership figures remain useful. Market value, today’s move and unrealized return are not calculated without a quote. Loading and unavailable are distinct; unavailable offers an explicit retry.',symbol:'NVDA',name:'NVIDIA Corporation',exchange:'NASDAQ',currency:'USD',price:null,change:null,age:'8m',accounts:[account('Individual brokerage',[lot('Feb 04, 2025',32,82.4,'8m')])]},
       {id:'loss',label:'Losses & large returns',note:'Losses use a true minus sign and restrained red. The headline value remains neutral. The variants stress-test −87% and +1,332%; only four-digit percentages lose their decimal place.',symbol:'RIVN',name:'Rivian Automotive, Inc.',exchange:'NASDAQ',currency:'USD',price:10.66,change:-.82,age:'3y 4m',accounts:[account('Individual brokerage',[lot('Jun 04, 2022',100,82,'3y 4m')])]},
       {id:'cad',label:'Non-USD security',note:'CAD stays visible in navigation, the headline label and the footer. All figures use the security’s native currency consistently; display-currency conversion is deliberately omitted to keep the ledger unambiguous.',symbol:'SHOP',name:'Shopify Inc.',exchange:'TSX',currency:'CAD',price:167.32,change:2.48,age:'1y 1m',accounts:[account('Tax-free savings',[lot('Sep 04, 2024',40,96.5,'1y 1m')])]},
@@ -347,9 +349,9 @@
         let hero='';
         if(d.closed) hero=`<div class="hero-label">Realized gain · ${d.currency}<span class="badge">Closed</span></div><div class="hero-value money ${tone(t.realized)}">${money(t.realized,true)}</div><div class="hero-return"><span class="money return-percent ${tone(t.realized)}">${pct(t.realized/t.realizedCost*100)}</span><span class="return-label">Return on sold shares</span></div>`;
         else if(d.price===null) hero=`<div class="hero-label">Position value · ${d.currency}</div><div class="hero-unavailable">${state.quoteMode==='loading'?'Getting the latest quote…':'Value unavailable'}</div><p class="hero-subtext">${number(t.shares)} shares held · ${money(t.cost)} invested</p>`;
-        else hero=`<div class="hero-label">Position value · ${d.currency}</div><div class="hero-value money ${money(t.value).length>12?'compact':''}">${money(t.value)}</div>${returnHTML(t.pl,t.cost)}`;
-        screen.innerHTML=heading(d)+`<section class="hero" aria-label="Position summary">${hero}</section>`+(d.closed?'':d.price===null?quoteNote():marketHTML(d,t))+positionHTML(d,t)+accountsHTML(d,t)+(t.sold&&!d.closed?realizedHTML(d,t):'')+`<div class="footer-note">All amounts in ${d.currency} · Average-cost accounting${d.price!==null?'<br>Illustrative quote & price history · Oct 03, 2025, 10:24 AM ET':''}</div>`;
-        if(d.price!==null&&!d.closed) renderChart();
+        else hero=`<div class="hero-label">Position value · ${d.currency}</div><div class="hero-value money ${money(t.value).length>12?'compact':''}">${money(t.value)}</div>${returnHTML(t.pl,t.cost)}${todayReturnHTML(d,t)}`;
+        screen.innerHTML=heading(d)+`<section class="hero" aria-label="Position summary">${hero}</section>`+(d.price===null?quoteNote():marketHTML(d))+positionHTML(d,t)+accountsHTML(d,t)+(t.sold&&!d.closed?realizedHTML(d,t):'')+`<div class="footer-note">All amounts in ${d.currency} · Average-cost accounting${d.price!==null?'<br>Illustrative quote & price history · Oct 03, 2025, 10:24 AM ET':''}</div>`;
+        if(d.price!==null) renderChart();
       }
       if(reset) screen.scrollTop=0;
       $('#navigation').classList.toggle('collapsed',screen.scrollTop>42);
@@ -358,9 +360,14 @@
     function quoteNote() {
       return state.quoteMode==='loading'?`<div class="quote-note loading" role="status"><span class="spinner" aria-hidden="true"></span><div><strong>Loading market data</strong>Your shares and cost are available below. Value and returns will appear when a quote arrives.</div></div>`:`<div class="quote-note" role="status"><strong>We couldn’t get a current quote</strong>Market value, today’s change and unrealized return are unavailable. Your purchase details are still here.<button class="text-link" data-action="retry">Try again <span aria-hidden="true">↻</span></button></div>`;
     }
-    function marketHTML(d,t) {
-      const day=t.shares*d.change, dayPct=d.change/(d.price-d.change)*100;
-      return `<section class="market" aria-label="Today and share price"><div class="market-numbers"><div><div class="metric-label">Today’s return</div><div class="metric-main money ${tone(day)}">${money(day,true)}</div><div class="metric-foot money ${tone(day)}">${pct(dayPct)}</div></div><div><div class="metric-label">Share price</div><div class="metric-main money">${money(d.price)}</div><div class="metric-foot" style="color:var(--secondary)"><span class="live-dot"></span>At 10:24 AM ET · Demo</div></div></div><div class="chart-wrap"><div class="chart-tooltip" id="chart-tooltip"></div><svg class="chart-svg" id="chart" viewBox="0 0 342 94" preserveAspectRatio="none" role="img" aria-label="Illustrative ${state.range} share price history"></svg></div><div class="chart-axis" id="chart-axis"></div><div class="chart-controls" aria-label="Price history range">${['1D','1W','1M','3M','1Y','All'].map(r=>`<button class="chart-range ${r===state.range?'active':''}" data-range="${r}" aria-pressed="${r===state.range}">${r}</button>`).join('')}<a class="external-chart" href="https://finance.yahoo.com/quote/${d.symbol==='SHOP'?'SHOP.TO':esc(d.symbol)}/" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(d.symbol)} chart on Yahoo Finance in a new tab">${icons.outward}</a></div></section>`;
+    function todayReturnHTML(d,t) {
+      if(d.closed||d.change===null||!t.shares)return '';
+      const day=t.shares*d.change,dayPct=d.change/(d.price-d.change)*100;
+      return `<div class="today-return" aria-label="Today’s position return"><span class="return-label">Today’s return</span><span class="money ${tone(day)}">${money(day,true)}</span><span class="money ${tone(day)}">${pct(dayPct)}</span></div>`;
+    }
+    function marketHTML(d) {
+      const dayPct=d.change===null?null:d.change/(d.price-d.change)*100;
+      return `<section class="market" aria-label="Share price and history"><div class="market-numbers"><div><div class="metric-label">Share price · ${d.currency}</div><div class="metric-main money">${money(d.price)}</div>${dayPct===null?'':`<div class="metric-foot money ${tone(d.change)}" aria-label="Today’s change per share">${money(d.change,true)} · ${pct(dayPct)}</div>`}</div><div class="quote-stamp">At 10:24 AM ET<br>Illustrative quote</div></div><div class="chart-wrap"><div class="chart-tooltip" id="chart-tooltip"></div><svg class="chart-svg" id="chart" viewBox="0 0 342 94" preserveAspectRatio="none" role="img" aria-label="Illustrative ${state.range} share price history"></svg></div><div class="chart-axis" id="chart-axis"></div><div class="chart-controls" aria-label="Price history range">${['1D','1W','1M','3M','1Y','All'].map(r=>`<button class="chart-range ${r===state.range?'active':''}" data-range="${r}" aria-pressed="${r===state.range}">${r}</button>`).join('')}<a class="external-chart" href="https://finance.yahoo.com/quote/${d.symbol==='SHOP'?'SHOP.TO':esc(d.symbol)}/" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(d.symbol)} chart on Yahoo Finance in a new tab">${icons.outward}</a></div></section>`;
     }
     function positionHTML(d,t) {
       if(d.closed) return `<section class="section"><div class="section-heading"><h2>Position closed</h2><span class="meta">No shares held</span></div><div class="position-grid">${metric('Shares sold',number(t.sold))}${metric('Cost of sold shares',money(t.realizedCost))}${metric('Avg. holding period','1y 2m')}${metric('Last sale','Jul 18, 2025')}</div></section>`;
@@ -402,6 +409,7 @@
     function renderChart() {
       const chart=$('#chart');if(!chart)return;
       const d=data(),points=chartPoints(d),min=Math.min(...points),max=Math.max(...points),ys=points.map(p=>82-(p-min)/(max-min)*67),xs=points.map((_,i)=>i*342/65),path=ys.map((y,i)=>`${i?'L':'M'}${xs[i].toFixed(1)},${y.toFixed(1)}`).join(' ');
+      chart.setAttribute('aria-label',`Illustrative ${state.range} ${d.symbol} share price history`);
       chart.innerHTML=`<defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity=".1"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs><path d="M0 28H342M0 61H342" fill="none" stroke="var(--line)" stroke-width=".7" stroke-dasharray="2 4"/><path d="${path} L342,94 L0,94 Z" fill="url(#chart-fill)"/><path d="${path}" fill="none" stroke="var(--accent)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="342" cy="${ys[65]}" r="3" fill="var(--accent)"/><g id="chart-cursor" visibility="hidden"><line x1="0" y1="0" x2="0" y2="94" stroke="var(--muted)" stroke-dasharray="2 3"/><circle r="3.5" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/></g>`;
       $('#chart-axis').innerHTML=chartLabels[state.range].map(esc).map(x=>`<span>${x}</span>`).join('');
       chart.onpointermove=e=>{

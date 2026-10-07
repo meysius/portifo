@@ -1,0 +1,35 @@
+/* Shared field focus for every study. Keep the indicator inside the control,
+   so scroll containers never crop it and focus never changes field geometry.
+   Buttons, radios and sliders retain their keyboard focus outlines. */
+.phone :is(input:not(:is([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])), select, textarea):focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* An underline field stays an underline; don't draw a rectangle around it. */
+.phone input.name-field:focus {
+  box-shadow: inset 0 -1px 0 var(--accent);
+}
+
+/* Search is one control. Highlight its shell, not a second box around text. */
+.phone .search-field:focus-within {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.phone .search-field input:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* These are financial entries, not desktop steppers. Arrow-key stepping and
+   the native number input's validation are unaffected. */
+.phone input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.phone input[type="number"]::-webkit-inner-spin-button,
+.phone input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

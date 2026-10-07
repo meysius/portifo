@@ -92,6 +92,7 @@ export class PortfolioController implements SWController {
     router.post("/portfolio/leave", this.leavePortfolio);
     router.get("/accounts", this.listAccounts);
     router.post("/accounts", this.createAccount);
+    router.patch("/accounts/:id", this.renameAccount);
     router.patch("/accounts/:id/balances/:currency", this.setBalance);
     router.get("/portfolio/history", this.getPortfolioHistory);
     router.get("/transactions", this.listTransactions);
@@ -441,6 +442,45 @@ export class PortfolioController implements SWController {
 
     const account = await this.portfolioService.createAccount({ portfolioId, name });
     res.status(201).json(await toAccountDto(account, this.portfolioService));
+  };
+
+  // Body: { name }. Same rules as creating one: trimmed, non-empty, and unique
+  // in the portfolio regardless of case (the account itself excepted, so a
+  // change of case alone is allowed).
+  private renameAccount = async (req: Request, res: Response): Promise<void> => {
+    const user = await this.authenticate(req);
+    if (!user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const portfolioId = await this.resolvePortfolioId(req, user.id);
+    if (!portfolioId) {
+      res.status(400).json({ error: "No portfolio found for user" });
+      return;
+    }
+
+    const accountId = String(req.params.id);
+    const account = await this.portfolioService.getAccountById(accountId);
+    if (!account || account.portfolioId !== portfolioId) {
+      res.status(404).json({ error: "Account not found" });
+      return;
+    }
+
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    if (!name || name.length > 255) {
+      res.status(400).json({ error: "Invalid account payload" });
+      return;
+    }
+
+    const others = await this.portfolioService.listAccountsByPortfolio(portfolioId);
+    if (others.some((other) => other.id !== accountId && other.name.toLowerCase() === name.toLowerCase())) {
+      res.status(400).json({ error: `An account named "${name}" already exists` });
+      return;
+    }
+
+    const renamed = await this.portfolioService.renameAccount(accountId, name);
+    res.json(await toAccountDto(renamed, this.portfolioService));
   };
 
   // Body: { balance, date } — `date` is the client's today, so the balancing

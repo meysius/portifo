@@ -75,6 +75,20 @@ export async function createAccount(input: NewAccount): Promise<AccountDto> {
   return res.json();
 }
 
+// Unique in the portfolio regardless of case; the server says so if not.
+export async function renameAccount(accountId: string, name: string): Promise<AccountDto> {
+  const res = await apiFetch(`/accounts/${accountId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? "Failed to rename account");
+  }
+  return res.json();
+}
+
 // Saves the difference as a deposit/withdraw dated `date` (the user's today);
 // a second update the same day rewrites that row instead of adding another.
 export async function setBalance(accountId: string, currency: string, balance: number, date: string): Promise<AccountDto> {

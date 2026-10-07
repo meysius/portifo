@@ -34,15 +34,20 @@
   --ds-action: #245ce8;
   --ds-action-ink: #ffffff;
   --ds-focus: #7597ff;
-  /* Cash's share of the portfolio, beside the accent's stocks. */
-  --ds-cash: #a4c8b9;
-  /* Stock breakdown: one hue per holding, assigned by rank of value. The
-     studies use the same five in both themes. */
-  --ds-hold-1: #426be3;
-  --ds-hold-2: #9968cf;
-  --ds-hold-3: #da9b3d;
-  --ds-hold-4: #379b9c;
-  --ds-hold-5: #df7d69;
+  /* Cash: the neutral slate. It is money not invested, not a return, so it
+     wears neither the stocks' accent nor the gain green. */
+  --ds-cash: var(--ds-muted);
+  /* Breakdown: one hue per holding by rank of value — the "Tuned" set from
+     design-poc/portfolio-overview.html, stepped per theme and validated with
+     the dataviz checks (adjacent CVD ΔE 16.8 light / 16.3 dark, normal vision
+     22.2 / 21.9), each >= 15 from the accent, gain and loss colours. Past the
+     fifth a holding takes the quiet neutral, never a recycled hue. */
+  --ds-hold-1: #00a7ab;
+  --ds-hold-2: #d67523;
+  --ds-hold-3: #9b74d9;
+  --ds-hold-4: #cf9c00;
+  --ds-hold-5: #db6ea5;
+  --ds-hold-other: #c3c9d3;
   /* Transaction kinds. A buy wears the accent and a deposit the positive
      pair; a sale and a withdrawal get their own quiet hues, so no money
      leaving reads as a loss. */
@@ -63,6 +68,7 @@
   --ds-fs-14: calc(14px * var(--ds-font-scale));
   --ds-fs-15: calc(15px * var(--ds-font-scale));
   --ds-fs-16: calc(16px * var(--ds-font-scale));
+  --ds-fs-18: calc(18px * var(--ds-font-scale));
   --ds-fs-21: calc(21px * var(--ds-font-scale));
   --ds-fs-22: calc(22px * var(--ds-font-scale));
   --ds-fs-23: calc(23px * var(--ds-font-scale));
@@ -84,7 +90,11 @@
   --ds-positive-bg: #1c302a;
   --ds-negative-bg: #352429;
   --ds-action: #426fea;
-  --ds-cash: #77ae99;
+  --ds-hold-2: #c16300;
+  --ds-hold-3: #8f68cb;
+  --ds-hold-4: #b88a00;
+  --ds-hold-5: #c0558d;
+  --ds-hold-other: #44505f;
   --ds-sell: #c1a0e7;
   --ds-sell-bg: #2c253a;
   --ds-withdraw: #d7b371;

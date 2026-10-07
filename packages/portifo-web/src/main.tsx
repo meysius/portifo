@@ -35,6 +35,7 @@ import "./theme/variables.css";
 import "./theme/ds.css";
 
 import "./index.css";
+import "./theme/focus.css";
 import App from "./App.tsx";
 import { initTheme } from "./lib/theme";
 import { initPreventEdgeSwipeBack } from "./lib/preventEdgeSwipeBack";

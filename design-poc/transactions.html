@@ -168,6 +168,7 @@
     @media(max-width:370px) { .page-heading,.date-group { padding-left:18px; padding-right:18px; }.transaction-row { gap:8px; }.transaction-icon { width:29px; }.transaction-end .money { font-size:calc(10px * var(--font-scale)); } }
     @media(prefers-reduced-motion:no-preference) { .page-heading { animation:arrive .35s ease both; }.sheet { animation:sheet-in .2s ease both; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } @keyframes sheet-in { from { transform:translateY(25px); opacity:.5; } to { transform:translateY(0); opacity:1; } } }
   </style>
+  <link rel="stylesheet" href="focus.css">
 </head>
 <body>
   <div class="workbench">
@@ -192,6 +193,7 @@
           </div>
           <a class="companion-link" href="portfolio-overview.html">Portfolio overview study <span aria-hidden="true">↗</span></a>
           <a class="companion-link" href="holding-detail.html">Holding detail study <span aria-hidden="true">↗</span></a>
+          <a class="companion-link" href="accounts.html">Accounts study <span aria-hidden="true">↗</span></a>
         </div>
       </aside>
       <main class="phone-wrap">
@@ -565,7 +567,7 @@
     }
     function openSettings(opener) { sheet('Appearance',`<p class="sheet-notice">Use the same quiet palette in either light or dark.</p><div class="sheet-types" style="grid-template-columns:1fr 1fr">${['light','dark'].map(t=>`<button class="sheet-type ${state.theme===t?'active':''}" data-mobile-theme="${t}" aria-pressed="${state.theme===t}">${t==='light'?'Light':'Dark'}</button>`).join('')}</div><label for="mobile-font">Text size</label><input id="mobile-font" type="range" min="100" max="140" step="5" value="${state.fontScale}" aria-valuetext="${state.fontScale} percent"><button class="action secondary" data-command="close">Done</button>`,opener); }
     $('#add-transaction').innerHTML=icons.plus;
-    $('#tab-bar').innerHTML=`<a class="tab" href="portfolio-overview.html">${icons.portfolio}<span>Portfolio</span></a><button class="tab" data-command="accounts">${icons.accounts}<span>Accounts</span></button><button class="tab active" aria-current="page" data-command="top">${icons.transactions}<span>Transactions</span></button><button class="tab" data-command="settings">${icons.filter}<span>Settings</span></button><div class="home-indicator" aria-hidden="true"></div>`;
+    $('#tab-bar').innerHTML=`<a class="tab" href="portfolio-overview.html">${icons.portfolio}<span>Portfolio</span></a><a class="tab" href="accounts.html">${icons.accounts}<span>Accounts</span></a><button class="tab active" aria-current="page" data-command="top">${icons.transactions}<span>Transactions</span></button><button class="tab" data-command="settings">${icons.filter}<span>Settings</span></button><div class="home-indicator" aria-hidden="true"></div>`;
     $('#font-scale').addEventListener('input',e=>{state.fontScale=Number(e.target.value);updateControls();});
     $('#font-scale-reset').addEventListener('click',()=>{state.fontScale=115;updateControls();});
     document.addEventListener('click',e=>{

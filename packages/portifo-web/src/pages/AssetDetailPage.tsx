@@ -15,6 +15,7 @@ import type { RouteComponentProps } from "react-router-dom";
 import HoldingChart from "../components/HoldingChart";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
+import { BACK_ICON } from "../lib/backIcon";
 import { convert, fmtAge, fmtCcy, fmtDay, fmtShares, fmtSignedCcy, fmtSignedPct, parseDay } from "../lib/fx";
 import type { AccountPosition, Lot, TickerAgg } from "../lib/positions";
 
@@ -50,10 +51,6 @@ const fmtEtDay = (d: Date) => d.toLocaleDateString("en-US", { ...ET, month: "sho
 const fmtEtStamp = (d: Date) =>
   `${d.toLocaleDateString("en-US", { ...ET, month: "short", day: "2-digit", year: "numeric" })}, ${fmtEtTime(d)}`;
 
-// The study's back chevron. Raw markup, not URL-encoded: ionicons reads a
-// `;utf8,` SVG data URL by parsing the string as HTML.
-const BACK_ICON =
-  'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m14 5-7 7 7 7"/></svg>';
 
 const Chevron = () => (
   <svg

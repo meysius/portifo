@@ -45,6 +45,12 @@ export class PortfolioService {
     return this.portfolioRepo.getAccountById(id);
   }
 
+  // Transactions hold the account's id and read its name back on every list,
+  // so a rename is this one row: nothing in the ledger needs rewriting.
+  async renameAccount(id: string, name: string): Promise<AccountsSelect> {
+    return this.portfolioRepo.renameAccount(id, name);
+  }
+
   async listAccountsByPortfolio(portfolioId: string): Promise<AccountsSelect[]> {
     return this.portfolioRepo.listAccountsByPortfolio(portfolioId);
   }

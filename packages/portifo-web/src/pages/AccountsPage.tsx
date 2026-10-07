@@ -1,70 +1,73 @@
-import {
-  IonAvatar,
-  IonContent,
-  IonHeader,
-  IonItem,
-  IonLabel,
-  IonList,
-  IonPage,
-  IonRefresher,
-  IonRefresherContent,
-  IonSpinner,
-  IonTitle,
-  IonToolbar,
-} from "@ionic/react";
-import { useEffect, useState } from "react";
+import { IonContent, IonPage, IonRefresher, IonRefresherContent } from "@ionic/react";
 import type { RefresherEventDetail } from "@ionic/react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { useHistory } from "react-router-dom";
+import AddAccountModal from "../components/AddAccountModal";
+import StickyTitleBar from "../components/StickyTitleBar";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
-import AddAccountModal from "../components/AddAccountModal";
-import {
-  CashGlyphIcon,
-  ChevronRightIcon,
-  EmptyState,
-  FolderGlyphIcon,
-  LedgerIcon,
-  PlusIcon,
-} from "../components/ds";
-import { convert, fmtCcy } from "../lib/fx";
 import { useDisplayCurrency } from "../lib/displayCurrency";
+import { convert, fmtCcy } from "../lib/fx";
+import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 
-// Accounts tab (design-system Lists section): same .row anatomy as Holdings —
-// glyph, name + what it holds, one converted total on the right, and the
-// Fields chevron since each row opens an Account Detail page. One list: every
-// account can hold both shares and cash, so there are no type sections.
+// The Accounts tab, from design-poc/accounts.html: your accounts, not another
+// dashboard. One generic icon, the name, and the account's total value — the
+// transactions ledger's 60px rows, 10px gaps and 32px glyphs. An account
+// pushes its own page, one level deeper.
+
+const icon = (body: ReactNode, size = 20) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {body}
+  </svg>
+);
+const PLUS = icon(<path d="M12 5v14M5 12h14" />);
+const ACCOUNT = icon(
+  <>
+    <rect x="3" y="5" width="18" height="14" rx="3" />
+    <path d="M3 10h18M7 15h3" />
+  </>,
+);
+
+// An unusually long total shrinks half a pixel at a time, never below 10px;
+// the font scale still sets every ordinary row.
+function AccountValue({ text }: { text: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.removeProperty("font-size");
+    let size = parseFloat(getComputedStyle(el).fontSize);
+    while (el.scrollWidth > el.clientWidth + 1 && size > 10) el.style.fontSize = `${(size -= 0.5)}px`;
+  });
+  return (
+    <span ref={ref} className="ac-account-value money">
+      {text}
+    </span>
+  );
+}
+
 function AccountsPage() {
   const history = useHistory();
   const { tabBase } = useTabBase();
-  const {
-    accounts,
-    loading,
-    refreshAccounts,
-    refreshTransactions,
-    refreshMarket,
-    openPositionsFor,
-    quotes,
-    fxRates,
-    tickerAggregates,
-    hasActivity,
-  } = usePortfolioData();
-  const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [displayCurrency] = useDisplayCurrency();
+  const { accounts, loading, refreshAccounts, refreshTransactions, refreshMarket, openPositionsFor, quotes, fxRates, tickerAggregates } =
+    usePortfolioData();
+  const [ccy] = useDisplayCurrency();
+  const [addOpen, setAddOpen] = useState(false);
+  const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
 
-  // Account totals are mark-to-market — make sure quotes for every open
-  // symbol are loaded even when this tab is visited before Holdings.
+  // Totals are at market, so quotes for every open symbol are loaded even when
+  // this tab is visited before Portfolio.
   const symbolsKey = tickerAggregates
     .filter((t) => !t.closed)
     .map((t) => t.symbol)
     .join(",");
-
   useEffect(() => {
     if (symbolsKey) refreshMarket(symbolsKey.split(","));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbolsKey]);
 
-  // Each total is holdings at market plus cash, so a pull refetches all three
-  // inputs — the ledger, the balances and the quotes — not just the accounts.
+  // A pull refetches all three inputs of a total: ledger, balances and quotes.
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     try {
       await Promise.all([
@@ -77,101 +80,78 @@ function AccountsPage() {
     }
   };
 
-  // Total account value: holdings at market (falling back to cost basis when
-  // no quote is loaded) plus the account's own cash, converted for display —
-  // the same number its Account Detail hero shows.
-  const accountTotal = (accountName: string, balances: { currency: string; balance: number }[]) => {
-    const positions = openPositionsFor(accountName);
-    let total = balances.reduce((sum, b) => sum + convert(b.balance, b.currency, displayCurrency, fxRates), 0);
-    for (const position of positions) {
-      const quote = quotes[position.symbol];
-      total += quote
-        ? convert(quote.price * position.shares, quote.currency, displayCurrency, fxRates)
-        : position.costByCurrency.reduce((sum, [ccy, amt]) => sum + convert(amt, ccy, displayCurrency, fxRates), 0);
+  // Holdings at market (at cost while a quote is missing) plus the account's
+  // own cash, in the display currency: the same figure its page leads with.
+  const totalOf = (name: string, balances: { currency: string; balance: number }[]) => {
+    let total = balances.reduce((sum, b) => sum + convert(b.balance, b.currency, ccy, fxRates), 0);
+    for (const p of openPositionsFor(name)) {
+      const q = quotes[p.symbol];
+      total += q
+        ? convert(q.price * p.shares, q.currency, ccy, fxRates)
+        : p.costByCurrency.reduce((sum, [c, amount]) => sum + convert(amount, c, ccy, fxRates), 0);
     }
     return total;
   };
 
-  return (
-    <IonPage className="tab-root-page">
-      <IonHeader translucent>
-        <IonToolbar>
-          <IonTitle>Accounts</IonTitle>
-        </IonToolbar>
-      </IonHeader>
+  const ready = !loading.accounts || accounts.length > 0;
 
-      <IonContent fullscreen>
+  return (
+    <IonPage className="tab-root-page ds-screen ac-page">
+      <StickyTitleBar title="Accounts" shown={away} />
+      <IonContent scrollEvents onIonScroll={onIonScroll}>
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
         </IonRefresher>
 
-        <IonHeader collapse="condense">
-          <IonToolbar>
-            <IonTitle size="large">Accounts</IonTitle>
-            <button
-              type="button"
-              slot="end"
-              className="add-fab"
-              aria-label="Add account"
-              onClick={() => setAddAccountOpen(true)}
-            >
-              <PlusIcon />
-            </button>
-          </IonToolbar>
-        </IonHeader>
+        <div className="ac-heading" ref={headingRef}>
+          <h1>Accounts</h1>
+          <button type="button" className="ds-icon-button" aria-label="Add account" onClick={() => setAddOpen(true)}>
+            {PLUS}
+          </button>
+        </div>
 
-        {loading.accounts && accounts.length === 0 && (
-          <div className="chart-loading">
-            <IonSpinner name="crescent" />
-          </div>
-        )}
-
-        {!loading.accounts && !hasActivity && (
-          <EmptyState
-            icon={<LedgerIcon />}
-            title="No activity yet"
-            body="Your account is ready. Record a transaction or set a cash balance to see it here."
-            ctaLabel="Add Your First Transaction"
-            onCta={() => history.push(`${tabBase}/add-transaction`)}
-          />
-        )}
-
-        {hasActivity && accounts.length > 0 && (
-          <IonList inset>
-            {accounts.map((account) => {
-              const holdingCount = openPositionsFor(account.name).length;
-              const currencies = account.balances.map((b) => b.currency);
-              return (
-                <IonItem key={account.id} button detail={false} onClick={() => history.push(`${tabBase}/account/${account.id}`)}>
-                  {/* The glyph says what the account mostly holds — there is
-                      no account type behind it any more. */}
-                  <IonAvatar slot="start" className={holdingCount > 0 ? "glyph glyph-stock" : "glyph glyph-cash"}>
-                    {holdingCount > 0 ? <FolderGlyphIcon /> : <CashGlyphIcon />}
-                  </IonAvatar>
-                  <IonLabel>
-                    <h2>{account.name}</h2>
-                    <p>
-                      {holdingCount > 0
-                        ? `${holdingCount} holding${holdingCount === 1 ? "" : "s"}`
-                        : currencies.length > 0
-                          ? "Cash only"
-                          : "Empty"}
-                    </p>
-                  </IonLabel>
-                  <IonLabel slot="end">
-                    <h2>{fmtCcy(accountTotal(account.name, account.balances), displayCurrency)}</h2>
-                    {currencies.length > 0 && <p>{currencies.join(" · ")} cash</p>}
-                  </IonLabel>
-                  <span slot="end" className="row-chevron" aria-hidden="true">
-                    <ChevronRightIcon />
+        {accounts.length > 0 && (
+          <>
+            <div className="ac-account-list">
+              {accounts.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  className="ac-account-row"
+                  onClick={() => history.push(`${tabBase}/account/${a.id}`)}
+                >
+                  <span className="ac-account-icon">{ACCOUNT}</span>
+                  <span className="ac-account-body">
+                    <span className="ac-account-name">{a.name}</span>
                   </span>
-                </IonItem>
-              );
-            })}
-          </IonList>
+                  <AccountValue text={fmtCcy(totalOf(a.name, a.balances), ccy)} />
+                </button>
+              ))}
+            </div>
+            <p className="ac-list-footer">
+              Total account values in {ccy}
+              <br />
+              Manually tracked
+            </p>
+          </>
         )}
 
-        <AddAccountModal isOpen={addAccountOpen} onClose={() => setAddAccountOpen(false)} />
+        {ready && accounts.length === 0 && (
+          <section className="ac-empty">
+            <div className="ac-empty-symbol">{ACCOUNT}</div>
+            <h2>A place for your portfolio.</h2>
+            <p>
+              Start with your brokerage, bank or wallet.
+              <br />
+              Bring the rest together, one account at a time.
+            </p>
+            <button type="button" className="ds-action" onClick={() => setAddOpen(true)}>
+              Add your first account
+            </button>
+          </section>
+        )}
+
+        <AddAccountModal isOpen={addOpen} onClose={() => setAddOpen(false)} />
       </IonContent>
     </IonPage>
   );

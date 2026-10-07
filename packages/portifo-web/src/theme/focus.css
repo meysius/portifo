@@ -1,0 +1,45 @@
+/* Keep field focus inside its border, not outside the scrollable sheet.
+   Action controls, radios and sliders retain their :focus-visible outlines. */
+:where(.ds-screen, .hd-page) :is(input:not(:is([type="checkbox"], [type="radio"], [type="range"], [type="hidden"])), select, textarea):focus {
+  outline: none;
+  border-color: var(--ds-accent);
+  box-shadow: inset 0 0 0 1px var(--ds-accent);
+}
+
+/* Highlight the whole search/text control, never a second box inside it. */
+:is(.tl-search-field, .wiz-inline):focus-within {
+  border-color: var(--ds-accent);
+  box-shadow: inset 0 0 0 1px var(--ds-accent);
+}
+:is(.tl-search-field, .wiz-inline, .wiz-field) input:focus {
+  outline: none;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* The existing account and transaction figure fields use a bottom rule.
+   Strengthen that rule inward without adding a surrounding rectangle. */
+.wiz-field:focus-within {
+  border-bottom-color: var(--ds-accent);
+  box-shadow: inset 0 -1px 0 var(--ds-accent);
+}
+input.acct-name:focus {
+  outline: none;
+  border-bottom-color: var(--ds-accent);
+  box-shadow: inset 0 -1px 0 var(--ds-accent);
+}
+input.acct-name.taken {
+  border-bottom-color: var(--ds-negative);
+  box-shadow: inset 0 -1px 0 var(--ds-negative);
+}
+
+/* Hide desktop spinner chrome; keep native validation and arrow-key input. */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

@@ -3208,7 +3208,7 @@ ion-toast {
   color: var(--ds-negative);
 }
 
-.ds-screen :is(h1, h2, h3) {
+.ds-screen :is(h1, h2, h3, h4) {
   margin: 0;
   line-height: normal;
 }
@@ -3254,6 +3254,107 @@ ion-toast {
   .ds-sticky-bar {
     transition: none;
   }
+}
+
+/* ── controls and forms ────────────────────────────────────────────────────
+   The studies' shared form language (accounts.html first): a 32px tinted
+   icon button (quiet: bare, secondary ink), a recessed field with its label
+   above, the error line, the full-width action, and a row of options. Field
+   focus lives in theme/focus.css. */
+.ds-screen .ds-icon-button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.ds-screen .ds-icon-button.quiet {
+  color: var(--ds-secondary);
+  background: none;
+}
+
+.ds-field-label {
+  display: block;
+  margin: 18px 0 8px;
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
+}
+
+.ds-screen .ds-field {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--ds-line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: var(--ds-fs-12);
+  color: var(--ds-text);
+  background: var(--ds-subtle);
+}
+
+.ds-screen .ds-field[type="number"] {
+  font-family: var(--font-mono);
+}
+
+.ds-screen .ds-field:disabled {
+  opacity: 1;
+  color: var(--ds-secondary);
+}
+
+.ds-form-error {
+  margin: 12px 0 0;
+  font-size: var(--ds-fs-11);
+  line-height: 1.6;
+  color: var(--ds-negative);
+}
+
+.ds-screen .ds-action {
+  display: block;
+  width: 100%;
+  min-height: 45px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: var(--ds-fs-13);
+  font-weight: 600;
+  text-align: center;
+  color: var(--ds-action-ink);
+  background: var(--ds-action);
+}
+
+.ds-screen .ds-action.secondary {
+  margin-top: 8px;
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.ds-screen .ds-action:disabled {
+  color: var(--ds-muted);
+  background: var(--ds-subtle);
+  cursor: not-allowed;
+}
+
+.ds-sheet-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.ds-screen .ds-sheet-option {
+  padding: 12px 5px;
+  border-radius: 7px;
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
+  background: var(--ds-subtle);
+}
+
+.ds-screen .ds-sheet-option.active {
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
 }
 
 /* Content settling in on first paint. */
@@ -4530,6 +4631,584 @@ ion-modal.ds-sheet {
   }
 }
 
+/* ---------- Accounts ----------
+   design-poc/accounts.html: the list, an account's own page, and its forms
+   (new account, rename, a cash balance). Scoped to .ac-page and its sheets;
+   reads only --ds-* tokens. */
+
+/* ── heading ─────────────────────────────────────────────────────────────── */
+/* The list's heading is the first thing on the page, so it clears the status
+   bar itself; an account's sits under its Back bar. */
+.ac-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: calc(16px + var(--ion-safe-area-top, 0px)) var(--ds-gutter) 0;
+}
+
+.ac-detail-page .ac-heading {
+  padding-top: 12px;
+}
+
+.ac-page .ac-heading h1 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-23);
+  font-weight: 650;
+  letter-spacing: -0.8px;
+  line-height: 1.25;
+}
+
+/* ── the list ────────────────────────────────────────────────────────────── */
+.ac-account-list {
+  margin-top: 17px;
+  padding: 0 var(--ds-gutter);
+}
+
+/* The transactions ledger's rows: 60px, 10px gaps, 32px glyphs, a highlight
+   that bleeds 10px into the gutter. */
+.ac-page .ac-account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% + 20px);
+  min-height: 60px;
+  margin-inline: -10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--ds-line);
+  text-align: left;
+  color: var(--ds-text);
+}
+
+.ac-page .ac-account-row:last-child {
+  border-bottom: 0;
+}
+
+.ac-account-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  color: var(--ds-secondary);
+  background: var(--ds-subtle);
+}
+
+.ac-account-icon.cash {
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.ac-account-body {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.ac-account-name {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: var(--ds-fs-12);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ac-page .ac-account-value {
+  display: block;
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 48%;
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+  text-align: right;
+}
+
+.ac-row-chevron {
+  color: var(--ds-muted);
+}
+
+.ac-list-footer,
+.ac-footer-note {
+  margin: 0;
+  padding: 17px var(--ds-gutter) 24px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.7;
+  text-align: center;
+  color: var(--ds-muted);
+}
+
+/* ── an account ──────────────────────────────────────────────────────────── */
+/* The Back bar: Holding detail's (50px, Back at 15, title at 16), with the
+   title and hairline fading in once the heading has scrolled under it. */
+.ac-page ion-header.ac-detail-header::before {
+  background: var(--ds-bg);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.ac-page ion-header.ac-detail-header::after {
+  opacity: 0;
+  background: var(--ds-line);
+}
+
+.ac-page ion-header.ac-detail-header.collapsed::after {
+  opacity: 1;
+}
+
+.ac-detail-header ion-toolbar {
+  --min-height: 50px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --padding-start: 13px;
+  --padding-end: 19px;
+}
+
+.ac-detail-header ion-back-button {
+  --color: var(--ds-accent);
+  --icon-font-size: 22px;
+  --icon-margin-start: 0;
+  --icon-margin-end: 2px;
+  --padding-start: 0;
+  --padding-end: 0;
+  font-family: var(--font-body);
+  font-size: var(--ds-fs-15);
+  font-weight: 400;
+  letter-spacing: 0;
+  max-width: 140px;
+}
+
+.ac-detail-header ion-title {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-16);
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ds-text);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.ac-detail-header.collapsed ion-title {
+  opacity: 1;
+}
+
+.ac-subtitle {
+  margin: 6px var(--ds-gutter) 0;
+  font-size: var(--ds-fs-10);
+  line-height: 1.6;
+  color: var(--ds-secondary);
+}
+
+.ac-hero {
+  padding: 24px var(--ds-gutter) 23px;
+}
+
+.ac-hero-label {
+  margin-bottom: 9px;
+  font-size: var(--ds-fs-12);
+  color: var(--ds-secondary);
+}
+
+.ac-hero-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Wraps rather than shrinks, and never wider than the screen allows. */
+.ac-page .ac-hero-value {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: min(var(--ds-fs-27), 9vw);
+  font-weight: 500;
+  letter-spacing: -1.2px;
+  line-height: 1.3;
+}
+
+.ac-page .ac-currency-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 32px;
+  padding: 7px 9px;
+  border-radius: 7px;
+  font-size: var(--ds-fs-10);
+  color: var(--ds-secondary);
+  background: var(--ds-subtle);
+}
+
+.ac-balance-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 0 var(--ds-gutter) 23px;
+  padding-top: 17px;
+  border-top: 1px solid var(--ds-line);
+}
+
+.ac-balance-split > div {
+  min-width: 0;
+}
+
+.ac-balance-split > div + div {
+  padding-left: 17px;
+  border-left: 1px solid var(--ds-line);
+}
+
+.ac-metric-label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: var(--ds-fs-10);
+  color: var(--ds-secondary);
+}
+
+.ac-page .ac-balance-split .money {
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: var(--ds-fs-13);
+}
+
+.ac-section {
+  padding: 18px var(--ds-gutter);
+  border-top: 6px solid var(--ds-subtle);
+}
+
+.ac-section-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.ac-page .ac-section-heading h2 {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-16);
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+
+.ac-section-heading .meta {
+  font-size: var(--ds-fs-10);
+  color: var(--ds-muted);
+}
+
+.ac-page :is(.ac-holding-row, .ac-cash-row) {
+  display: block;
+  width: calc(100% + 20px);
+  margin-inline: -10px;
+  padding: 15px 10px;
+  border-bottom: 1px solid var(--ds-line);
+  text-align: left;
+  color: var(--ds-text);
+}
+
+.ac-page :is(.ac-holding-row, .ac-cash-row):last-child {
+  border-bottom: 0;
+}
+
+.ac-holding-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ac-holding-symbol {
+  font-size: var(--ds-fs-12);
+  font-weight: 600;
+}
+
+.ac-page .ac-holding-value {
+  font-size: var(--ds-fs-12);
+  font-weight: 500;
+}
+
+.ac-holding-meta {
+  display: block;
+  margin-top: 5px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.6;
+  color: var(--ds-secondary);
+}
+
+.ac-holding-return {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.6;
+}
+
+.ac-holding-return > span:first-child {
+  color: var(--ds-secondary);
+}
+
+.ac-page .ac-cash-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ac-cash-identity {
+  flex: 1;
+  min-width: 0;
+}
+
+.ac-page .ac-cash-row .money {
+  min-width: 0;
+  max-width: 48%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: var(--ds-fs-12);
+}
+
+.ac-cash-note {
+  margin: 10px 0 0;
+  font-size: var(--ds-fs-10);
+  line-height: 1.7;
+  color: var(--ds-secondary);
+}
+
+/* ── nothing yet ─────────────────────────────────────────────────────────── */
+.ac-empty {
+  padding: 56px var(--ds-gutter);
+  text-align: center;
+}
+
+.ac-empty-symbol {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 23px;
+  border-radius: 18px;
+  color: var(--ds-muted);
+  background: var(--ds-subtle);
+}
+
+.ac-page .ac-empty h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-22);
+  font-weight: 550;
+  letter-spacing: -0.8px;
+}
+
+.ac-empty p {
+  margin: 0;
+  font-size: var(--ds-fs-11);
+  line-height: 1.8;
+  color: var(--ds-secondary);
+}
+
+/* ── new account: a focused full-screen task, like the transaction wizard ── */
+ion-modal.ac-create-modal {
+  --background: var(--ds-bg);
+}
+
+.ac-create {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--ion-safe-area-top, 0px) var(--ds-gutter) 0;
+  background: var(--ds-bg);
+}
+
+.ac-form-navigation {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  margin: 0 calc(-1 * var(--ds-gutter));
+  padding: 0 var(--ds-gutter);
+  border-bottom: 1px solid var(--ds-line);
+}
+
+.ac-create .ac-form-navigation h2 {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-13);
+  font-weight: 600;
+}
+
+.ac-create .ac-cancel {
+  padding: 12px 0;
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
+}
+
+.ac-form-navigation-spacer {
+  width: 40px;
+}
+
+.ac-form {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.ac-form-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px 2px 20px;
+}
+
+.ac-form-kicker {
+  margin: 0 0 9px;
+  font-size: var(--ds-fs-9);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ds-accent);
+}
+
+.ac-create .ac-form-body h3 {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-23);
+  font-weight: 600;
+  letter-spacing: -0.7px;
+}
+
+.ac-form-intro {
+  margin: 0 0 24px;
+  font-size: var(--ds-fs-11);
+  line-height: 1.7;
+  color: var(--ds-secondary);
+}
+
+/* The name is an underline, not a box — at focus too. */
+.ac-create .ds-field.ac-name-field {
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid var(--ds-line);
+  border-radius: 0;
+  font-size: var(--ds-fs-18);
+  font-weight: 550;
+  background: none;
+}
+
+.ac-create input.ac-name-field:focus {
+  border-color: var(--ds-accent);
+  box-shadow: inset 0 -1px 0 var(--ds-accent);
+}
+
+.ac-name-field::placeholder {
+  color: var(--ds-muted);
+}
+
+.ac-cash-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 28px 0 13px;
+}
+
+.ac-cash-heading h4 {
+  margin: 0;
+  font-size: var(--ds-fs-12);
+  font-weight: 600;
+}
+
+.ac-optional {
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+.ac-balance-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 78px 26px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+
+.ac-create .ac-balance-entry .ds-field {
+  padding: 11px 9px;
+}
+
+.ac-create .ac-balance-entry select.ds-field {
+  font-size: var(--ds-fs-11);
+}
+
+.ac-create .ac-remove-balance {
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  color: var(--ds-muted);
+}
+
+.ac-create .ac-add-currency {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 0;
+  font-size: var(--ds-fs-11);
+  color: var(--ds-accent);
+}
+
+.ac-form-hint {
+  margin: 8px 0;
+  font-size: var(--ds-fs-10);
+  line-height: 1.8;
+  color: var(--ds-secondary);
+}
+
+.ac-form-footer {
+  flex-shrink: 0;
+  padding: 12px 0 max(24px, var(--ion-safe-area-bottom, 0px));
+  border-top: 1px solid var(--ds-line);
+  background: var(--ds-bg);
+}
+
+.ac-create .ac-form-footer .ds-action {
+  margin: 0;
+}
+
+.ac-form-footer p {
+  margin: 10px 0 0;
+  font-size: var(--ds-fs-9);
+  line-height: 1.6;
+  text-align: center;
+  color: var(--ds-muted);
+}
+
+/* ── feedback ────────────────────────────────────────────────────────────── */
+.ac-page :is(.ac-account-row, .ac-holding-row, .ac-cash-row):is(:active, :focus-visible) {
+  background: var(--ds-subtle);
+}
+
+@media (hover: hover) {
+  .ac-page :is(.ac-account-row, .ac-holding-row, .ac-cash-row):hover {
+    background: var(--ds-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ac-heading {
+    animation: ds-arrive 0.35s ease both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ac-detail-header ion-title {
+    transition: none;
+  }
+}
+
 /* ---------- add-transaction wizard (POC) ---------- */
 
 /* One question per screen: progress, the answers so far as crumbs, the
@@ -4822,98 +5501,4 @@ ion-modal.ds-sheet {
    below replaces, so it sits above it with the field's own bottom spacing. */
 .wiz-total.wiz-current {
   margin: 0 var(--gutter) 22px;
-}
-
-/* ---------- new account sheet ---------- */
-
-/* No sheet title: the name field is the heading, set exactly as .ph-large sets
-   the account's own page title (24px/700 display, on the gutter), so the
-   account reads as named while it is typed. The cash field below is the
-   wizard's figure field, with the currency chip in its one-tap slot. */
-.acct-form {
-  padding-top: 20px;
-}
-
-.acct-name {
-  display: block;
-  width: calc(100% - 2 * var(--gutter));
-  margin: 0 var(--gutter);
-  padding: 2px 0 8px;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  outline: 0;
-  background: transparent;
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
-  line-height: 1.2;
-  color: var(--fg-1);
-}
-
-.acct-name::placeholder {
-  color: var(--fg-3);
-}
-
-.acct-name:focus {
-  border-bottom-color: var(--signal);
-  box-shadow: 0 1px 0 var(--signal);
-}
-
-.acct-name.taken {
-  border-bottom-color: var(--loss);
-  box-shadow: 0 1px 0 var(--loss);
-}
-
-.acct-form .acct-name + .wiz-hint {
-  margin: 10px var(--gutter) 0;
-}
-
-/* Cash is one labelled group of figure rows, one per currency: the label is
-   said once above the stack, and each row is the wizard's field minus its own
-   label. A × appears only once there is more than one row to choose from. */
-.acct-cash {
-  margin-top: 30px;
-}
-
-.acct-cash > .wiz-field-label {
-  display: block;
-  margin: 0 var(--gutter) 2px;
-}
-
-.acct-cash-row.removable {
-  grid-template-columns: 1fr auto auto;
-}
-
-/* The figure stays the row's subject: it shares the row with the chip and
-   steps down from the wizard's 28px so the name above remains the heading. */
-.acct-cash-row input {
-  font-size: 24px;
-}
-
-.acct-cash-remove {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 34px;
-  margin-inline-end: -8px;
-  border: 0;
-  background: transparent;
-  color: var(--fg-3);
-  cursor: pointer;
-}
-
-.acct-cash-remove svg {
-  width: 11px;
-  height: 11px;
-}
-
-.acct-cash-add {
-  margin: 2px var(--gutter) 0;
-}
-
-.acct-cash + .wiz-hint {
-  margin: 12px var(--gutter) 0;
 }

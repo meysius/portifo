@@ -15,6 +15,7 @@ import {
 export interface PortfolioRepo {
   createAccount(accountData: AccountsInsert): Promise<AccountsSelect>;
   getAccountById(id: string): Promise<AccountsSelect | undefined>;
+  renameAccount(id: string, name: string): Promise<AccountsSelect>;
   listAccountsByPortfolio(portfolioId: string): Promise<AccountsSelect[]>;
 
   getCurrencyBalance(accountId: string, currency: string): Promise<CurrencyBalancesSelect | undefined>;
@@ -38,6 +39,11 @@ export class DrizzlePortfolioRepo implements PortfolioRepo {
 
   async getAccountById(id: string): Promise<AccountsSelect | undefined> {
     const result = await this.db.select().from(accounts).where(eq(accounts.id, id));
+    return result[0];
+  }
+
+  async renameAccount(id: string, name: string): Promise<AccountsSelect> {
+    const result = await this.db.update(accounts).set({ name }).where(eq(accounts.id, id)).returning();
     return result[0];
   }
 

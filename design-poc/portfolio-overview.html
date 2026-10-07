@@ -44,17 +44,13 @@
     .phone-wrap { width:390px; }
     /* Extend row highlights into the gutter without shifting aligned content. */
     .phone { --row-inset:10px; --row-radius:0; }
-    .phone { --bg:#fff; --subtle:#f8f9fc; --text:#162239; --secondary:#657084; --muted:#929baa; --line:#e9edf3; --accent:#245ce8; --accent-tint:#edf2ff; --positive:#16734b; --negative:#b44145; --positive-bg:#edf8f2; --negative-bg:#fff1f1; --font-scale:1.15; --cash:#a4c8b9; color-scheme:light; width:390px; height:844px; background:var(--bg); color:var(--text); border:1px solid #d8dce2; border-radius:38px; position:relative; overflow:hidden; display:flex; flex-direction:column; isolation:isolate; }
-    .phone.dark { --bg:#121820; --subtle:#19212c; --text:#eef2f8; --secondary:#9aa8ba; --muted:#708094; --line:#27313f; --accent:#81a5ff; --accent-tint:#202f4d; --positive:#72d3a6; --negative:#fb9297; --positive-bg:#1c302a; --negative-bg:#352429; --cash:#77ae99; color-scheme:dark; border-color:#333e4b; }
-    /* Breakdown colours, compared with the rail's Colours control.
-       Holdings take slots by value rank; Cash is its own colour.
-       Tuned: validated with the dataviz six checks per mode (adjacent CVD ΔE 16.8 light / 16.3 dark,
-       normal-vision 22.2 / 21.9), each >= 15 from the accent, gain and loss colours; Cash is the neutral slate. */
-    .phone { --hold-1:#426be3; --hold-2:#9968cf; --hold-3:#da9b3d; --hold-4:#379b9c; --hold-5:#df7d69; }
-    .phone[data-palette="tuned"] { --hold-1:#00a7ab; --hold-2:#d67523; --hold-3:#9b74d9; --hold-4:#cf9c00; --hold-5:#db6ea5; --cash:#929baa; }
-    .phone.dark[data-palette="tuned"] { --hold-1:#00a7ab; --hold-2:#c16300; --hold-3:#8f68cb; --hold-4:#b88a00; --hold-5:#c0558d; --cash:#708094; }
-    .phone[data-palette="mono"] { --hold-1:var(--accent); --hold-2:var(--accent); --hold-3:var(--accent); --hold-4:var(--accent); --hold-5:var(--accent); --cash:#929baa; }
-    .phone.dark[data-palette="mono"] { --cash:#708094; }
+    .phone { --bg:#fff; --subtle:#f8f9fc; --text:#162239; --secondary:#657084; --muted:#929baa; --line:#e9edf3; --accent:#245ce8; --accent-tint:#edf2ff; --positive:#16734b; --negative:#b44145; --positive-bg:#edf8f2; --negative-bg:#fff1f1; --font-scale:1.15; --cash:#929baa; color-scheme:light; width:390px; height:844px; background:var(--bg); color:var(--text); border:1px solid #d8dce2; border-radius:38px; position:relative; overflow:hidden; display:flex; flex-direction:column; isolation:isolate; }
+    .phone.dark { --bg:#121820; --subtle:#19212c; --text:#eef2f8; --secondary:#9aa8ba; --muted:#708094; --line:#27313f; --accent:#81a5ff; --accent-tint:#202f4d; --positive:#72d3a6; --negative:#fb9297; --positive-bg:#1c302a; --negative-bg:#352429; --cash:#708094; color-scheme:dark; border-color:#333e4b; }
+    /* Breakdown colours: holdings take slots by value rank; Cash is the neutral slate. Validated with the dataviz
+       six checks per mode (adjacent CVD ΔE 16.8 light / 16.3 dark, normal-vision 22.2 / 21.9), each >= 15 from the
+       accent, gain and loss colours. A sixth holding would take a quiet neutral (#c3c9d3 / #44505f), never a recycled hue. */
+    .phone { --hold-1:#00a7ab; --hold-2:#d67523; --hold-3:#9b74d9; --hold-4:#cf9c00; --hold-5:#db6ea5; }
+    .phone.dark { --hold-2:#c16300; --hold-3:#8f68cb; --hold-4:#b88a00; --hold-5:#c0558d; }
     .status { height:47px; padding:17px 27px 8px; flex-shrink:0; display:flex; align-items:center; justify-content:space-between; font-family:Inter,sans-serif; font-size:14px; font-weight:650; }
     .status-icons { display:flex; align-items:center; gap:6px; }
     /* The sticky bar, the same on every page: on a tab root it is absent at rest and fades in, with the page's
@@ -78,8 +74,8 @@
     .chart-wrap { height:100px; position:relative; }.chart-svg { width:100%; height:100%; overflow:visible; touch-action:pan-y; cursor:crosshair; }
     .chart-tooltip { position:absolute; left:0; top:0; pointer-events:none; background:var(--bg); border:1px solid var(--line); border-radius:6px; font-size:calc(9px * var(--font-scale)); padding:5px 8px; color:var(--text); opacity:0; z-index:1; line-height:1.7; }
     .chart-axis { display:flex; justify-content:space-between; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:calc(8px * var(--font-scale)); margin-top:8px; }
-    .chart-controls { display:flex; justify-content:space-between; gap:4px; padding-top:9px; }
-    .chart-range { flex:1; min-height:32px; border-radius:6px; background:none; color:var(--secondary); font-size:calc(10px * var(--font-scale)); font-weight:600; }.chart-range.active { background:var(--accent-tint); color:var(--accent); }
+    .chart-controls { display:flex; align-items:center; gap:4px; padding-top:9px; }
+    .chart-range { min-width:35px; min-height:30px; border-radius:6px; background:none; color:var(--secondary); font-size:calc(10px * var(--font-scale)); font-weight:600; }.chart-range.active { background:var(--accent-tint); color:var(--accent); }
     .section { padding:17px 23px; border-top:6px solid var(--subtle); }
     .section-heading { display:flex; justify-content:space-between; gap:10px; align-items:center; margin-bottom:13px; }
     .section-heading h2 { font-family:Inter,sans-serif; font-weight:600; font-size:calc(16px * var(--font-scale)); letter-spacing:-.4px; margin:0; }
@@ -151,6 +147,7 @@
     @media(max-width:600px) { body { background:#fff; }.workbench { padding:0; }.desk-header,.rail,.annotation,.desk-footer,.device-caption { display:none; }.workspace { display:block; padding:0; }.phone-wrap { width:100%; }.phone { width:100%; height:100dvh; border:0; border-radius:0; padding-top:env(safe-area-inset-top); }.status { display:none; }.navigation { top:0; height:50px; padding-top:env(safe-area-inset-top); box-sizing:content-box; }.tab-bar { padding-bottom:max(16px,env(safe-area-inset-bottom)); }.home-indicator { display:none; } }
     @media(prefers-reduced-motion:no-preference) { .hero,.growth,.allocation { animation:arrive .4s ease both; }.growth { animation-delay:.05s; }.allocation { animation-delay:.1s; } @keyframes arrive { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } } }
   </style>
+  <link rel="stylesheet" href="focus.css">
 </head>
 <body>
   <div class="workbench">
@@ -168,14 +165,13 @@
         <div class="controls">
           <span class="control-label">Appearance</span>
           <div class="theme-control" aria-label="Theme"><button class="active" data-theme="light" aria-pressed="true">Light</button><button data-theme="dark" aria-pressed="false">Dark</button></div>
-          <span class="control-label">Breakdown colours</span>
-          <div class="theme-control" aria-label="Breakdown colours"><button data-palette="tuned">Tuned</button><button data-palette="mono">One colour</button><button data-palette="original">Original</button></div>
           <div class="font-control">
             <div class="font-control-heading"><label class="control-label" for="font-scale">Preview font size</label><output id="font-scale-value" for="font-scale">115%</output></div>
             <input class="font-scale-slider" id="font-scale" type="range" min="100" max="140" step="5" value="115" aria-valuetext="115 percent">
             <div class="font-control-footer"><span>100% original · 140% larger</span><button class="font-reset" id="font-scale-reset">Reset</button></div>
           </div>
           <a class="companion-link" href="holding-detail.html">Holding detail study <span aria-hidden="true">↗</span></a>
+          <a class="companion-link" href="accounts.html">Accounts study <span aria-hidden="true">↗</span></a>
         </div>
       </aside>
       <main class="phone-wrap">
@@ -227,7 +223,7 @@
       {id:'cash',label:'Cash only',note:'Cash is a real portfolio balance, not an empty state. A flat value chart and account breakdown remain available; there are no invented investment returns.'},
       {id:'empty',label:'Getting started',note:'No balance is shown before an account is added. An honest empty state replaces charts and allocations. The setup flow is illustrative and saves nothing.'}
     ];
-    const state = {id:'balanced',theme:'light',palette:'tuned',scope:'all',range:'1Y',cashOpen:false,fontScale:115};
+    const state = {id:'balanced',theme:'light',scope:'all',range:'1Y',cashOpen:false,fontScale:115};
     const ranges = ['1D','1W','1M','3M','1Y','All'];
     const historyConfig = {
       '1D':{start:'2025-10-03T09:30:00',end:'2025-10-03T10:24:00',ratio:.992,flow:0},
@@ -263,13 +259,11 @@
       $('#state-list').innerHTML=scenarios.map((s,i)=>`<button class="state-option ${state.id===s.id?'active':''}" data-state="${s.id}" aria-pressed="${state.id===s.id}"><span>${String(i+1).padStart(2,'0')}</span>${s.label}</button>`).join('');
       document.querySelectorAll('[data-theme]').forEach(b=>{b.classList.toggle('active',b.dataset.theme===state.theme);b.setAttribute('aria-pressed',b.dataset.theme===state.theme);});
       $('#phone').classList.toggle('dark',state.theme==='dark');
-      document.querySelectorAll('button[data-palette]').forEach(b=>{b.classList.toggle('active',b.dataset.palette===state.palette);b.setAttribute('aria-pressed',b.dataset.palette===state.palette);});
-      $('#phone').dataset.palette=state.palette;
       const scenario=scenarios.find(s=>s.id===state.id);$('#state-note-title').textContent=scenario.label;$('#state-note-text').textContent=scenario.note;
     }
     function render(reset=true) {
       const d=data();updateControls();
-      $('#tab-bar').innerHTML=['portfolio','accounts','activity','settings'].map(tab=>`<button class="tab ${tab==='portfolio'?'active':''}" data-tab="${tab}" ${tab==='portfolio'?'aria-current="page"':''}>${icons[tab]}<span>${tab[0].toUpperCase()+tab.slice(1)}</span></button>`).join('')+'<div class="home-indicator" aria-hidden="true"></div>';
+      $('#tab-bar').innerHTML=['portfolio','accounts','activity','settings'].map(tab=>tab==='accounts'?`<a class="tab" href="accounts.html?theme=${state.theme}&font=${state.fontScale}">${icons.accounts}<span>Accounts</span></a>`:`<button class="tab ${tab==='portfolio'?'active':''}" data-tab="${tab}" ${tab==='portfolio'?'aria-current="page"':''}>${icons[tab]}<span>${tab[0].toUpperCase()+tab.slice(1)}</span></button>`).join('')+'<div class="home-indicator" aria-hidden="true"></div>';
       let html=`<div class="page-heading"><h1>Portfolio</h1></div>`;
       if(state.id==='empty') html+=`<div class="empty-state"><div class="empty-symbol">${icons.portfolio}</div><h2>A place for your portfolio.</h2><p>Add your first account, then your cash and holdings. We’ll bring the whole picture together here.</p><button class="action" data-action="add">Add your first account</button></div>`;
       else html+=`<section class="hero" aria-label="Portfolio value"><div class="hero-label">Total portfolio value</div><div class="hero-value money">${money(d.total)}</div><div class="hero-return"><span class="money ${d.day===0?'':tone(d.day)}">${money(d.day,true)}</span><span class="money return-percent ${d.day===0?'':tone(d.day)}">${percent(d.day/(d.total-d.day)*100,true)}</span><span class="return-label">Today</span></div></section>
@@ -365,7 +359,6 @@
       if(e.target.classList.contains('overlay')){closeSheet();return;}
       const b=e.target.closest('button');if(!b)return;
       if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;state.scope='all';render();return;}
-      if(b.dataset.palette){state.palette=b.dataset.palette;updateControls();return;}
       if(b.dataset.theme){state.theme=b.dataset.theme;updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}return;}
       if(b.dataset.range){state.range=b.dataset.range;document.querySelectorAll('[data-range]').forEach(el=>{el.classList.toggle('active',el.dataset.range===state.range);el.setAttribute('aria-pressed',el.dataset.range===state.range);});const h=history(data());$('.period-change').innerHTML=money(h.change,true)+' <span style="color:var(--muted)">ⓘ</span>';$('.period-change').className='period-change money '+tone(h.change);renderChart();return;}
       if(b.dataset.holding){const d=data(),h=d.rows.find(h=>h.symbol===b.dataset.holding);openSheet(h.symbol,`<p class="sheet-notice">${h.name} · ${h.symbol==='VTI'?'NYSE Arca / ETF':'NASDAQ'}<br>${state.scope==='all'?'Across all accounts':accounts[Number(state.scope)]}</p><div class="hero-label">Position value · USD</div><div class="hero-value money">${money(h.value)}</div>${pair('Shares held',String(h.shares))}${pair('Share price',money(h.price))}${pair('Total cost',money(h.cost))}${pair('Unrealized return',money(h.gain,true),'money '+tone(h.gain))}${pair('Today’s position change',money(h.dayValue,true),'money '+tone(h.dayValue))}${pair('Today’s price change',percent(dailyPercent(h),true),'money '+tone(h.dayValue))}<p class="sheet-notice">Read-only holding preview. The full holding-detail study is available for NVIDIA in the all-accounts invested portfolio.</p>`,b);fitMoney();return;}
@@ -392,7 +385,6 @@
     const params=new URLSearchParams(location.search);
     if(scenarios.some(s=>s.id===params.get('state')))state.id=params.get('state');
     if(params.get('theme')==='dark')state.theme='dark';
-    if(['tuned','mono','original'].includes(params.get('palette')))state.palette=params.get('palette');
     if(ranges.includes(params.get('range')))state.range=params.get('range');
     setFontScale(params.has('font')?params.get('font'):115);render();document.fonts.ready.then(fitMoney);
     window.addEventListener('resize',fitMoney);
