@@ -33,6 +33,10 @@ export type FxRatesResponse = {
 export type HistoryPoint = { date: string; close: number; volume?: number };
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
 
+// A moving average read off at one of a range's bars (same dates as
+// getHistory's); bars without a full window behind them have no point.
+export type IndicatorPoint = { date: string; value: number };
+
 export type SymbolResult = {
   symbol: string;
   name?: string;
@@ -58,6 +62,15 @@ export async function getFxRates(base: string, symbols: string[]): Promise<FxRat
 export async function getHistory(symbol: string, range: HistoryRange): Promise<HistoryPoint[]> {
   const res = await apiFetch(`/market/history?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`);
   if (!res.ok) throw new Error("Failed to fetch history");
+  return res.json();
+}
+
+// The `window`-day simple moving average of daily closes, for 3M and longer.
+export async function getSma(symbol: string, range: HistoryRange, window: number): Promise<IndicatorPoint[]> {
+  const res = await apiFetch(
+    `/market/sma?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&window=${window}`,
+  );
+  if (!res.ok) throw new Error("Failed to fetch moving average");
   return res.json();
 }
 

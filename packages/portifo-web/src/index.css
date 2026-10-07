@@ -2706,6 +2706,85 @@ ion-toast {
   color: var(--ds-secondary);
 }
 
+/* Indicator toggles, under the volume strip. Each chip is its lines' legend:
+   a swatch of their colours, a name and, when on, a value at the scrubbed or
+   latest bar. Off, it reads in the secondary ink with a muted swatch. */
+.hd-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -8px 0 20px;
+}
+
+.hd-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--ds-line);
+  border-radius: 6px;
+  font-size: var(--ds-fs-10);
+  font-weight: 500;
+  color: var(--ds-secondary);
+}
+
+.hd-indicator[aria-pressed="true"] {
+  color: var(--ds-text);
+}
+
+.hd-indicator:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.hd-indicator-swatch {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ds-muted);
+}
+
+.hd-indicator[aria-pressed="true"] .hd-indicator-swatch {
+  background: var(--ds-indicator);
+}
+
+/* The bands' upper half, outermost on top, as the chart stacks them. */
+.hd-indicator-bands {
+  display: grid;
+  gap: 2px;
+  width: 12px;
+}
+
+.hd-indicator-bands span {
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ds-muted);
+}
+
+.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(1) {
+  background: var(--ds-band-15);
+}
+
+.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(2) {
+  background: var(--ds-band-10);
+}
+
+.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(3) {
+  background: var(--ds-band-5);
+}
+
+.hd-indicator-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.hd-indicator-note {
+  font-size: var(--ds-fs-10);
+  color: var(--ds-muted);
+}
+
 /* ── sections ────────────────────────────────────────────────────────────── */
 .hd-section {
   padding: 21px var(--ds-gutter);

@@ -10,6 +10,10 @@ function isHistoryRange(value: unknown): value is HistoryRange {
   return HISTORY_RANGES.includes(value as HistoryRange);
 }
 
+// Long ranges only: drawn under a month of hourly bars, a 200-day average is
+// a near-flat line that says little.
+const INDICATOR_RANGES: readonly HistoryRange[] = ["3M", "6M", "1Y", "2Y", "5Y", "All"];
+
 function parseSymbols(raw: unknown): string[] {
   return String(raw ?? "")
     .split(",")
@@ -29,6 +33,7 @@ export class MarketController implements SWController {
     router.get("/market/quotes", this.getQuotes);
     router.get("/market/fx", this.getFx);
     router.get("/market/history", this.getHistory);
+    router.get("/market/sma", this.getSma);
     router.get("/market/search", this.searchSymbols);
   }
 
@@ -90,6 +95,29 @@ export class MarketController implements SWController {
     } catch (err) {
       this.logger.error("MarketController.getHistory failed");
       res.status(502).json({ error: "Failed to fetch history" });
+    }
+  };
+
+  private getSma = async (req: Request, res: Response): Promise<void> => {
+    if (!(await this.authenticate(req))) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const symbol = String(req.query.symbol ?? "").toUpperCase();
+    const range = req.query.range;
+    const window = Number(req.query.window ?? 200);
+    const validWindow = Number.isInteger(window) && window >= 2 && window <= 250;
+    if (!symbol || !isHistoryRange(range) || !INDICATOR_RANGES.includes(range) || !validWindow) {
+      res.status(400).json({ error: "Invalid indicator query" });
+      return;
+    }
+
+    try {
+      res.json(await this.marketService.getSma(symbol, range, window));
+    } catch (err) {
+      this.logger.error("MarketController.getSma failed");
+      res.status(502).json({ error: "Failed to fetch indicator" });
     }
   };
 

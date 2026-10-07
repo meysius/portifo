@@ -32,6 +32,9 @@ function toIso(t: unknown): string | undefined {
 export type HistoryPoint = { date: string; close: number; volume?: number };
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
 
+// A moving average read off at one of a range's bars.
+export type IndicatorPoint = { date: string; value: number };
+
 export type SymbolResult = {
   symbol: string;
   name?: string;
@@ -42,6 +45,44 @@ export type SymbolResult = {
 // Yahoo currency-pair tickers are quoted as "<FROM><TO>=X" = units of TO per 1 FROM,
 // so "<base><target>=X" already gives exactly the "1 base = N target" rate we want.
 export const fxSymbol = (base: string, target: string) => `${base}${target}=X`;
+
+// Where each range starts and how finely it is sampled.
+function historyWindow(range: HistoryRange): { period1: Date; interval: "5m" | "15m" | "1h" | "1d" | "1wk" } {
+  const period1 = new Date();
+  switch (range) {
+    case "1D":
+      // The last SESSION, not the last 24h — on a weekend or holiday the last
+      // 24h is empty. Five days covers any closure; getHistory makes the cut.
+      period1.setDate(period1.getDate() - 5);
+      return { period1, interval: "5m" };
+    case "1W":
+      period1.setDate(period1.getDate() - 7);
+      return { period1, interval: "15m" };
+    case "1M":
+      // Hourly, as Apple Stocks draws a month: daily closes give ~21 points,
+      // which read as a jagged polyline at this width.
+      period1.setMonth(period1.getMonth() - 1);
+      return { period1, interval: "1h" };
+    case "3M":
+      period1.setMonth(period1.getMonth() - 3);
+      return { period1, interval: "1d" };
+    case "6M":
+      period1.setMonth(period1.getMonth() - 6);
+      return { period1, interval: "1d" };
+    case "1Y":
+      period1.setFullYear(period1.getFullYear() - 1);
+      return { period1, interval: "1d" };
+    case "2Y":
+      period1.setFullYear(period1.getFullYear() - 2);
+      return { period1, interval: "1wk" };
+    case "5Y":
+      period1.setFullYear(period1.getFullYear() - 5);
+      return { period1, interval: "1wk" };
+    case "All":
+      period1.setFullYear(period1.getFullYear() - 10);
+      return { period1, interval: "1wk" };
+  }
+}
 
 export class MarketService {
   private readonly client = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
@@ -90,55 +131,11 @@ export class MarketService {
   }
 
   async getHistory(symbol: string, range: HistoryRange): Promise<HistoryPoint[]> {
-    const period2 = new Date();
-    const period1 = new Date(period2);
-    let interval: "5m" | "15m" | "1h" | "1d" | "1wk" = "1d";
-    switch (range) {
-      case "1D":
-        // The last SESSION, not the last 24h — on a weekend or holiday the last
-        // 24h is empty. Five days covers any closure; the cut happens below.
-        period1.setDate(period1.getDate() - 5);
-        interval = "5m";
-        break;
-      case "1W":
-        period1.setDate(period1.getDate() - 7);
-        interval = "15m";
-        break;
-      case "1M":
-        // Hourly, as Apple Stocks draws a month: daily closes give ~21 points,
-        // which read as a jagged polyline at this width.
-        period1.setMonth(period1.getMonth() - 1);
-        interval = "1h";
-        break;
-      case "3M":
-        period1.setMonth(period1.getMonth() - 3);
-        interval = "1d";
-        break;
-      case "6M":
-        period1.setMonth(period1.getMonth() - 6);
-        interval = "1d";
-        break;
-      case "1Y":
-        period1.setFullYear(period1.getFullYear() - 1);
-        interval = "1d";
-        break;
-      case "2Y":
-        period1.setFullYear(period1.getFullYear() - 2);
-        interval = "1wk";
-        break;
-      case "5Y":
-        period1.setFullYear(period1.getFullYear() - 5);
-        interval = "1wk";
-        break;
-      case "All":
-        period1.setFullYear(period1.getFullYear() - 10);
-        interval = "1wk";
-        break;
-    }
+    const { period1, interval } = historyWindow(range);
     // Regular hours only: the chart's reference lines (prev close, today's
     // change) are regular-session figures, so extended-hours bars would end
     // the line somewhere the readout does not.
-    const result = await this.client.chart(symbol, { period1, period2, interval, includePrePost: false });
+    const result = await this.client.chart(symbol, { period1, period2: new Date(), interval, includePrePost: false });
     const points: HistoryPoint[] = result.quotes
       .filter((q) => q.close != null)
       .map((q) => ({ date: q.date.toISOString(), close: q.close as number, volume: q.volume ?? 0 }));
@@ -150,6 +147,38 @@ export class MarketService {
     let start = ts.length - 1;
     while (start > 0 && ts[start] - ts[start - 1] <= 2 * 3_600_000) start--;
     return points.slice(start);
+  }
+
+  // The `window`-day simple moving average of daily closes, read off at each
+  // of the range's bars: a daily bar takes its own day's average, a weekly bar
+  // that of its last session. The daily series starts early enough (7 calendar
+  // days to 5 sessions, plus slack for holidays) that the range's first bar
+  // already has a full window behind it; a bar without one gets no point, so
+  // a young listing's line starts late.
+  async getSma(symbol: string, range: HistoryRange, window: number): Promise<IndicatorPoint[]> {
+    const from = historyWindow(range).period1;
+    from.setDate(from.getDate() - Math.ceil((window * 7) / 5) - 21);
+    const [bars, daily] = await Promise.all([
+      this.getHistory(symbol, range),
+      this.client.chart(symbol, { period1: from, period2: new Date(), interval: "1d", includePrePost: false }),
+    ]);
+    const closes = daily.quotes
+      .filter((q) => q.close != null)
+      .map((q) => ({ t: q.date.getTime(), close: q.close as number }));
+    const points: IndicatorPoint[] = [];
+    let sum = 0;
+    let n = 0; // sessions folded into the sum so far
+    bars.forEach((bar, i) => {
+      // A bar spans up to the next bar's start; the last one, to now.
+      const end = i + 1 < bars.length ? new Date(bars[i + 1].date).getTime() : Infinity;
+      while (n < closes.length && closes[n].t < end) {
+        sum += closes[n].close;
+        if (n >= window) sum -= closes[n - window].close;
+        n++;
+      }
+      if (n >= window) points.push({ date: bar.date, value: sum / window });
+    });
+    return points;
   }
 
   // Historical counterpart to getFxRates — same "<base><target>=X" symbol, just
