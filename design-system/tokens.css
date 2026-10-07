@@ -1,0 +1,99 @@
+/* Portifo — generated from tokens.json by build.mjs; don't edit. */
+@font-face {
+  font-family: "Inter";
+  src: url("fonts/inter-var.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Public Sans";
+  src: url("fonts/public-sans-var.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/jetbrains-mono-var.woff2") format("woff2");
+  font-weight: 400 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-display: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-body: "Public Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --ds-gutter: 23px;
+  --ds-bg: #ffffff;
+  --ds-subtle: #f8f9fc;
+  --ds-text: #162239;
+  --ds-secondary: #657084;
+  --ds-muted: #929baa;
+  --ds-line: #e9edf3;
+  --ds-accent: #245ce8;
+  --ds-accent-tint: #edf2ff;
+  --ds-positive: #16734b;
+  --ds-negative: #b44145;
+  --ds-positive-bg: #edf8f2;
+  --ds-negative-bg: #fff1f1;
+  --ds-action: #245ce8;
+  --ds-action-ink: #ffffff;
+  --ds-focus: #7597ff;
+  --ds-cash: var(--ds-muted);
+  --ds-hold-1: #00a7ab;
+  --ds-hold-2: #d67523;
+  --ds-hold-3: #9b74d9;
+  --ds-hold-4: #cf9c00;
+  --ds-hold-5: #db6ea5;
+  --ds-hold-other: #c3c9d3;
+  --ds-sell: #8663ae;
+  --ds-sell-bg: #f4effa;
+  --ds-withdraw: #946b2e;
+  --ds-withdraw-bg: #fbf5e9;
+  --ds-indicator: #d67523;
+  --ds-band-5: #008f94;
+  --ds-band-10: #ad8100;
+  --ds-band-15: #c9558f;
+  --ion-tab-bar-background: #ffffff;
+  --ion-tab-bar-color: #8e949c;
+  --ion-tab-bar-color-selected: #16181d;
+  --signal: #2e56e8;
+  --ion-border-color: rgba(16, 20, 30, 0.1);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ds-bg: #121820;
+  --ds-subtle: #19212c;
+  --ds-text: #eef2f8;
+  --ds-secondary: #9aa8ba;
+  --ds-muted: #708094;
+  --ds-line: #27313f;
+  --ds-accent: #81a5ff;
+  --ds-accent-tint: #202f4d;
+  --ds-positive: #72d3a6;
+  --ds-negative: #fb9297;
+  --ds-positive-bg: #1c302a;
+  --ds-negative-bg: #352429;
+  --ds-action: #426fea;
+  --ds-hold-1: #00a7ab;
+  --ds-hold-2: #c16300;
+  --ds-hold-3: #8f68cb;
+  --ds-hold-4: #b88a00;
+  --ds-hold-5: #c0558d;
+  --ds-hold-other: #44505f;
+  --ds-sell: #c1a0e7;
+  --ds-sell-bg: #2c253a;
+  --ds-withdraw: #d7b371;
+  --ds-withdraw-bg: #312b20;
+  --ds-band-5: #00a7ab;
+  --ds-band-10: #b88a00;
+  --ds-band-15: #c0558d;
+  --ion-tab-bar-background: #1d2124;
+  --ion-tab-bar-color: #656b70;
+  --ion-tab-bar-color-selected: #ecefef;
+  --signal: #7e97ff;
+  --ion-border-color: rgba(230, 233, 230, 0.09);
+}

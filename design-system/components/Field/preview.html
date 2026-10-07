@@ -1,0 +1,23 @@
+<!-- @dsCard group="Forms" height=560 -->
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Field — preview</title><link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../bundle.css"><script src="../../preview.js"></script>
+</head>
+<body>
+<div class="pv">
+  <div class="pv-col"><span class="pv-cap">States</span><div class="pv-phone" style="padding:0 var(--ds-gutter) 20px">
+    <label class="ds-field-label" for="f1">Account name</label><input id="f1" class="ds-field" value="Joint brokerage">
+    <label class="ds-field-label" for="f2">Current cash balance (focused)</label><input id="f2" class="ds-field focus" type="number" placeholder="0.00" value="9120.40">
+    <label class="ds-field-label" for="f3">Currency (disabled)</label><select id="f3" class="ds-field" disabled><option>CAD</option></select>
+    <label class="ds-field-label" for="f4">Account name</label><input id="f4" class="ds-field" value="">
+    <p class="ds-form-error" role="alert">Enter an account name, up to 60 characters.</p>
+  </div></div>
+  <div class="pv-col"><span class="pv-cap">Search and underline</span><div class="pv-phone" style="padding:20px var(--ds-gutter)">
+    <div class="tl-search-field"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" aria-label="Search symbols" placeholder="Find a symbol or company…"></div>
+    <div class="tl-search-field focus"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" aria-label="Search symbols" value="nvd"></div>
+    <label class="ds-field-label" for="f5">Account name (underline field)</label><input id="f5" class="ds-field ac-name-field" placeholder="e.g. My TFSA">
+    <label class="ds-field-label" for="f6">Focused</label><input id="f6" class="ds-field ac-name-field focus" value="Family RESP">
+  </div></div>
+</div>
+</body>
+</html>

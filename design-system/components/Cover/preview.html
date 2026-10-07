@@ -1,0 +1,58 @@
+<!-- @dsCard height=288 -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Portifo</title>
+<style>
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--ds-bg); color: var(--ds-text); font-family: var(--font-body); overflow: hidden; }
+  .cover { position: relative; width: 960px; height: 288px; overflow: hidden; }
+  .art { position: absolute; top: 0; left: 480px; width: 480px; height: 288px; }
+  .art svg { display: block; width: 480px; height: 288px; }
+  .action { fill: var(--ds-action); }
+  .ink { fill: var(--ds-text); }
+  .gain { fill: var(--ds-positive); }
+  .tint { fill: var(--ds-accent-tint); }
+  .sheet { rx: 22px; }
+  .btn { rx: 10px; }
+  .ring-track { fill: none; stroke: var(--ds-text); }
+  .ring-arc { fill: none; stroke: var(--ds-bg); stroke-linecap: butt; }
+  .ring-track.small { stroke: var(--ds-secondary); }
+  .words { position: absolute; left: 40px; bottom: 36px; max-width: 440px; }
+  .name { margin: 0; font-family: var(--font-display); font-size: 104px; line-height: 0.92; font-weight: 650; letter-spacing: -0.03em; color: var(--ds-text); }
+  .tag { margin: 12px 0 0 4px; font-size: 14px; line-height: 20px; color: var(--ds-secondary); }
+</style>
+<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../bundle.css"><script src="../../preview.js"></script>
+</head>
+<body>
+<div class="cover">
+<div class="art" aria-hidden="true">
+<svg viewBox="0 0 480 288" width="480" height="288">
+<!--
+  blocks      ds-action 230×240 (the filled-button cobalt, the identity's main hue, largest) · ds-text 234×150 bleeding off the top and right (the deep navy ink) · ds-positive 101×101 (gain, the app icon's green) · ds-accent-tint 110×101 bleeding right (the tint relief) — about 38% of 960×288
+  arrangement one tall cobalt slab with satellites stacked on its right, ds-gutter (23px) apart, the slab's bottom ds-gutter above the edge
+  pattern     weight rings, from the Portfolio ledger's "share of the whole, filled clockwise from twelve o'clock": one large ring cut out of the slab in ds-bg over a ds-text track, three small ones on the ink block in ds-bg over ds-secondary
+  scales      gaps ds-gutter 23px; slab corners 22px (the sheet radius), satellites 10px (the button radius); ring stroke 2.5/19 of the radius, as in the app's 44-unit ring
+-->
+<rect class="action sheet" x="16" y="24" width="230" height="240" rx="22"/>
+<rect class="ink btn" x="269" y="-10" width="234" height="150" rx="10"/>
+<rect class="gain btn" x="269" y="163" width="101" height="101" rx="10"/>
+<rect class="tint btn" x="393" y="163" width="110" height="101" rx="10"/>
+<circle class="ring-track" cx="131" cy="144" r="76" stroke-width="10"/>
+<circle class="ring-arc" cx="131" cy="144" r="76" stroke-width="10" stroke-dasharray="296.1 477.5" transform="rotate(-90 131 144)"/>
+<circle class="ring-track small" cx="310" cy="88" r="19" stroke-width="2.5"/>
+<circle class="ring-arc" cx="310" cy="88" r="19" stroke-width="2.5" stroke-dasharray="29.1 119.4" transform="rotate(-90 310 88)"/>
+<circle class="ring-track small" cx="364" cy="88" r="19" stroke-width="2.5"/>
+<circle class="ring-arc" cx="364" cy="88" r="19" stroke-width="2.5" stroke-dasharray="69.3 119.4" transform="rotate(-90 364 88)"/>
+<circle class="ring-track small" cx="418" cy="88" r="19" stroke-width="2.5"/>
+<circle class="ring-arc" cx="418" cy="88" r="19" stroke-width="2.5" stroke-dasharray="97.9 119.4" transform="rotate(-90 418 88)"/>
+</svg>
+</div>
+<div class="words">
+<h1 class="name">Portifo</h1>
+<p class="tag">Flat and quiet, cobalt to act, every figure in mono.</p>
+</div>
+</div>
+</body>
+</html>
