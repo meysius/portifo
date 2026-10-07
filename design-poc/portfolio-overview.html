@@ -122,6 +122,16 @@
     .mover-symbol { display:block; position:absolute; bottom:0; left:0; right:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:calc(9px * var(--font-scale)); line-height:1.4; font-weight:600; }
     .movers-empty { margin:13px 0 0; padding:14px; background:var(--subtle); border-radius:8px; color:var(--secondary); font-size:calc(11px * var(--font-scale)); line-height:1.7; }
     .cash-accounts { padding:0 0 4px; border-bottom:1px solid var(--line); }.cash-account { padding:12px 0; display:flex; justify-content:space-between; gap:8px; font-size:calc(10px * var(--font-scale)); line-height:1.6; }.cash-account span:first-child { color:var(--secondary); }
+    /* Closed positions fold into one row under the ledger, totalling their realized return. They hold no share of the
+       portfolio, so they take no ring: the sales open beneath it on its own text edge, as the cash accounts do. */
+    .closed-toggle { width:calc(100% + 2 * var(--row-inset)); margin-inline:calc(-1 * var(--row-inset)); padding:15px var(--row-inset); display:flex; align-items:center; gap:11px; background:none; color:var(--text); text-align:left; border-bottom:1px solid var(--line); }
+    .closed-toggle[aria-expanded="true"] { border-bottom-color:transparent; }
+    .closed-count { margin-left:6px; color:var(--muted); font-weight:400; }
+    .closed-list { border-bottom:1px solid var(--line); }
+    .closed-row { width:calc(100% + 2 * var(--row-inset)); margin-inline:calc(-1 * var(--row-inset)); padding:12px var(--row-inset); display:flex; align-items:center; gap:11px; background:none; color:var(--text); text-align:left; border-top:1px solid var(--line); }
+    .closed-toggle:hover,.closed-toggle:focus-visible,.closed-row:hover,.closed-row:focus-visible { background:var(--subtle); }
+    .closed-realized { font-size:calc(11px * var(--font-scale)); font-weight:500; }
+    .closed-row .holding-return { margin-top:5px; }
     .tab-bar { border-top:1px solid var(--line); background:var(--bg); flex-shrink:0; display:flex; padding:10px 12px 24px; position:relative; }
     .tab { color:var(--muted); background:none; flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; text-decoration:none; font-size:calc(9px * var(--font-scale)); padding:3px; }.tab.active { color:var(--accent); }
     .home-indicator { width:120px; height:4px; border-radius:3px; background:var(--text); position:absolute; bottom:7px; left:50%; transform:translateX(-50%); opacity:.9; }
@@ -184,7 +194,7 @@
         <div class="annotation-title">The hierarchy <span>01 — 03</span></div>
         <div class="design-note"><span class="number">01 / THE WHOLE</span><h3>Your money, together.</h3><p>Cash and investments add up to one quiet headline. Today’s move sits underneath, without colouring the balance itself.</p></div>
         <div class="design-note"><span class="number">02 / THE JOURNEY</span><h3>Growth, with context.</h3><p>A cobalt value chart tracks the portfolio over time. The period’s value change includes deposits; the detail sheet separates those flows from investment gains.</p></div>
-        <div class="design-note"><span class="number">03 / THE PARTS</span><h3>From balance to breakdown.</h3><p>Stocks and cash show the broad allocation. Today’s movers chart up to five of the strongest daily percentage changes around a shared zero line. In the holdings ledger, each coloured ring traces its share of the whole portfolio, with the exact percentage in the centre, alongside shares, value and returns.</p></div>
+        <div class="design-note"><span class="number">03 / THE PARTS</span><h3>From balance to breakdown.</h3><p>Stocks and cash show the broad allocation. Today’s movers chart up to five of the strongest daily percentage changes around a shared zero line. In the holdings ledger, each coloured ring traces its share of the whole portfolio, with the exact percentage in the centre, alongside shares, value and returns. Positions you’ve sold in full fold into one Closed row beneath it, totalling their realized return; open it to see each sale.</p></div>
         <div class="state-note"><h3 id="state-note-title"></h3><p id="state-note-text"></p></div>
       </aside>
     </div>
@@ -213,13 +223,21 @@
       {symbol:'VTI',name:'Vanguard Total Stock Market ETF',price:307.6,shares:[10,25,25],cost:[2791.6666667,6979.16666665,6979.16666665],day:1.0833333333,color:'var(--hold-4)'},
       {symbol:'AMZN',name:'Amazon.com, Inc.',price:211.4384615385,shares:[35,20,10],cost:[6569.23076923,3753.84615385,1876.92307692],day:1.3769230769,color:'var(--hold-5)'}
     ];
+    // Every share sold, most recent sale first; cost is that of the sold shares.
+    const closedPositions = [
+      {symbol:'QQQ',name:'Invesco QQQ Trust',exchange:'NASDAQ',sold:'Sep 12, 2025',shares:30,cost:14250,proceeds:16668.4},
+      {symbol:'TSLA',name:'Tesla, Inc.',exchange:'NASDAQ',sold:'Aug 22, 2025',shares:18,cost:5830,proceeds:5217.25},
+      {symbol:'META',name:'Meta Platforms, Inc.',exchange:'NASDAQ',sold:'Jun 03, 2025',shares:12,cost:7400,proceeds:9305.1},
+      {symbol:'AMD',name:'Advanced Micro Devices, Inc.',exchange:'NASDAQ',sold:'Feb 14, 2025',shares:30,cost:4120,proceeds:3735.8},
+      {symbol:'GOOGL',name:'Alphabet Inc.',exchange:'NASDAQ',sold:'Nov 20, 2024',shares:35,cost:6010,proceeds:6750.55}
+    ];
     const scenarios = [
-      {id:'balanced',label:'Invested portfolio',note:'Five holdings and cash across three accounts. NVIDIA’s 250 shares link to the existing multi-account study.'},
+      {id:'balanced',label:'Invested portfolio',note:'Five holdings and cash across three accounts, plus five positions sold in full. NVIDIA’s 250 shares link to the existing multi-account study.'},
       {id:'down',label:'A down day',note:'The balance stays neutral; negative returns use the same restrained red as holding detail. Today’s loss does not erase the portfolio’s longer-term gains.'},
       {id:'cash',label:'Cash only',note:'Cash is a real portfolio balance, not an empty state. A flat value chart and account breakdown remain available; there are no invented investment returns.'},
       {id:'empty',label:'Getting started',note:'No balance is shown before an account is added. An honest empty state replaces charts and allocations. The setup flow is illustrative and saves nothing.'}
     ];
-    const state = {id:'balanced',theme:'light',range:'1Y',cashOpen:false,fontScale:115};
+    const state = {id:'balanced',theme:'light',range:'1Y',cashOpen:false,closedOpen:false,fontScale:115};
     const ranges = ['1D','1W','1M','3M','6M','1Y','All'];
     const historyConfig = {
       '1D':{start:'2025-10-03T09:30:00',end:'2025-10-03T10:24:00',ratio:.992,flow:0},
@@ -238,7 +256,8 @@
       });
       const cashByAccount=state.id==='empty'?[0,0,0]:[6750,4500,3750];
       const cash=sum(cashByAccount),stocks=rows.reduce((n,h)=>n+h.value,0),day=rows.reduce((n,h)=>n+h.dayValue,0),cost=rows.reduce((n,h)=>n+h.cost,0);
-      return {rows,cashByAccount,cash,stocks,total:stocks+cash,day,cost,gain:stocks-cost};
+      const closed=rows.length?closedPositions.map(c=>({...c,realized:c.proceeds-c.cost})):[];
+      return {rows,closed,cashByAccount,cash,stocks,total:stocks+cash,day,cost,gain:stocks-cost};
     }
     function history(d) {
       const c=historyConfig[state.range],cashOnly=!d.rows.length;
@@ -314,7 +333,13 @@
         if(h.isCash) return `<button class="holding-row portfolio-holding" data-action="cash" aria-label="Cash, ${money(d.cash)}, ${percent(weight(d.cash,d.total))} of portfolio, ${state.cashOpen?'hide':'view'} cash by account" aria-expanded="${state.cashOpen}" aria-controls="cash-accounts"><span class="holding-summary">${holdingIcon(h,d.total)}<span class="holding-identity"><span class="holding-symbol">Cash</span><span class="holding-meta">Uninvested</span></span><span class="holding-end"><span class="holding-value money">${money(d.cash)}</span><span class="holding-meta">${state.cashOpen?'Hide':'By'} account ${state.cashOpen?'⌃':'⌄'}</span></span></span></button><div class="cash-accounts" id="cash-accounts" ${state.cashOpen?'':'hidden'}>${accounts.map((name,i)=>`<div class="cash-account"><span>${name}</span><span class="money">${money(d.cashByAccount[i])}</span></div>`).join('')}</div>`;
         const ret=h.gain,pct=h.cost>0?ret/h.cost*100:0,target=holdingTarget(h);
         return `${target.open} class="holding-row portfolio-holding" aria-label="${h.symbol}, ${h.shares} shares, ${money(h.value)}, ${percent(weight(h.value,d.total))} of portfolio, view holding detail"><span class="holding-summary">${holdingIcon(h,d.total)}<span class="holding-identity"><span class="holding-symbol">${h.symbol}</span><span class="holding-meta">${h.shares} shares</span></span><span class="holding-end"><span class="holding-value money">${money(h.value)}</span><span class="holding-return money ${tone(ret)}" style="display:block">${money(ret,true)} · ${percent(pct,true)}</span></span></span>${target.close}`;
-      }).join('');
+      }).join('')+closedHTML(d);
+    }
+    function closedHTML(d) {
+      if(!d.closed.length)return '';
+      const realized=d.closed.reduce((n,c)=>n+c.realized,0),open=state.closedOpen;
+      return `<button class="closed-toggle" data-action="closed" aria-label="Closed positions, ${d.closed.length}, realized return ${money(realized,true)}, ${open?'hide':'show'} sold positions" aria-expanded="${open}" aria-controls="closed-list"><span class="holding-identity"><span class="holding-symbol">Closed positions<span class="closed-count">${d.closed.length}</span></span><span class="holding-meta" style="display:block">Realized return</span></span><span class="holding-end"><span class="holding-value money ${tone(realized)}" style="display:block">${money(realized,true)}</span><span class="holding-meta" style="display:block">${open?'Hide ⌃':'Show all ⌄'}</span></span></button>
+        <div class="closed-list" id="closed-list" ${open?'':'hidden'}>${d.closed.map(c=>{const pct=c.realized/c.cost*100;return `<button class="closed-row" data-closed="${c.symbol}" aria-label="${c.symbol}, closed, sold ${c.sold}, realized ${money(c.realized,true)}, ${percent(pct,true)}, view details"><span class="holding-identity"><span class="holding-symbol">${c.symbol}</span><span class="holding-meta" style="display:block">Sold ${c.sold}</span></span><span class="holding-end"><span class="closed-realized money ${tone(c.realized)}" style="display:block">${money(c.realized,true)}</span><span class="holding-return money ${tone(c.realized)}" style="display:block">${percent(pct,true)}</span></span></button>`;}).join('')}</div>`;
     }
     // 1W and 1M are intraday bars, so their readout names the hour too.
     function chartDate(h,i) {
@@ -357,10 +382,11 @@
     document.addEventListener('click',e=>{
       if(e.target.classList.contains('overlay')){closeSheet();return;}
       const b=e.target.closest('button');if(!b)return;
-      if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;render();return;}
+      if(b.dataset.state){closeSheet();state.id=b.dataset.state;state.cashOpen=false;state.closedOpen=false;render();return;}
       if(b.dataset.theme){state.theme=b.dataset.theme;updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}return;}
       if(b.dataset.range){state.range=b.dataset.range;document.querySelectorAll('[data-range]').forEach(el=>{el.classList.toggle('active',el.dataset.range===state.range);el.setAttribute('aria-pressed',el.dataset.range===state.range);});const h=history(data());$('.period-change').innerHTML=money(h.change,true)+' <span style="color:var(--muted)">ⓘ</span>';$('.period-change').className='period-change money '+tone(h.change);renderChart();return;}
       if(b.dataset.holding){const d=data(),h=d.rows.find(h=>h.symbol===b.dataset.holding);openSheet(h.symbol,`<p class="sheet-notice">${h.name} · ${h.symbol==='VTI'?'NYSE Arca / ETF':'NASDAQ'}<br>Across all accounts</p><div class="hero-label">Position value · USD</div><div class="hero-value money">${money(h.value)}</div>${pair('Shares held',String(h.shares))}${pair('Share price',money(h.price))}${pair('Total cost',money(h.cost))}${pair('Unrealized return',money(h.gain,true),'money '+tone(h.gain))}${pair('Today’s position change',money(h.dayValue,true),'money '+tone(h.dayValue))}${pair('Today’s price change',percent(dailyPercent(h),true),'money '+tone(h.dayValue))}<p class="sheet-notice">Read-only holding preview. The full holding-detail study is available for NVIDIA in the all-accounts invested portfolio.</p>`,b);fitMoney();return;}
+      if(b.dataset.closed){const c=data().closed.find(c=>c.symbol===b.dataset.closed);openSheet(c.symbol,`<p class="sheet-notice">${c.name} · ${c.exchange}<br>Closed · all shares sold</p><div class="hero-label">Realized return · USD</div><div class="hero-value money ${tone(c.realized)}">${money(c.realized,true)}</div>${pair('Return on cost',percent(c.realized/c.cost*100,true),'money '+tone(c.realized))}${pair('Shares sold',String(c.shares))}${pair('Cost of sold shares',money(c.cost))}${pair('Sale proceeds',money(c.proceeds))}${pair('Last sale',c.sold,'')}<p class="sheet-notice">Read-only preview. The holding-detail study shows the full closed-position screen.</p>`,b);fitMoney();return;}
       if(b.dataset.tab){const tab=b.dataset.tab;if(tab==='portfolio'){$('#screen').scrollTo({top:0,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});return;}
         const bodies={activity:'<p class="sheet-notice">Activity is outside this overview study. Portfolio history is illustrative, not a transaction ledger.</p><button class="action" data-action="performance">Explore portfolio growth</button>',settings:`<p class="sheet-notice">Display currency: USD. This study uses the same light and dark palettes as holding detail.</p><button class="action" data-action="toggle-theme">Switch to ${state.theme==='light'?'dark':'light'} appearance</button>`};openSheet(tab[0].toUpperCase()+tab.slice(1),bodies[tab],b);return;
       }
@@ -368,6 +394,7 @@
         case 'close':closeSheet();break;
         case 'performance':showPerformance(b);break;
         case 'cash':state.cashOpen=!state.cashOpen;renderHoldings();$('[data-action="cash"]').focus({preventScroll:true});break;
+        case 'closed':state.closedOpen=!state.closedOpen;renderHoldings();$('[data-action="closed"]').focus({preventScroll:true});break;
         case 'toggle-theme':state.theme=state.theme==='light'?'dark':'light';updateControls();if($('#holdings-list')){renderAllocation();renderMovers();renderHoldings();}closeSheet();break;
         case 'add':openSheet('Add to portfolio',`<p class="sheet-notice">Start with an account, then add its cash and stock purchases. Portifo tracks your investments; it doesn’t place trades.</p><button class="holding-row" data-action="setup"><span class="holding-identity"><span class="holding-symbol">Add an account</span><span class="holding-meta" style="display:block">Brokerage, savings or retirement</span></span><span aria-hidden="true">›</span></button><p class="sheet-notice">Design preview only. Nothing is connected or saved.</p>`,b);break;
         case 'setup':$('.sheet').innerHTML=`<div class="sheet-grabber" aria-hidden="true"></div><div class="sheet-header"><h2 id="sheet-title">Your first account</h2><button class="close-sheet" data-action="close" aria-label="Close dialog">${icons.close}</button></div><p class="sheet-notice">Account creation is outside this study. Explore a populated sample to see how cash and investments come together.</p><button class="action" data-action="sample">Explore sample portfolio</button>`;$('.sheet .action').focus();break;
@@ -385,6 +412,7 @@
     if(scenarios.some(s=>s.id===params.get('state')))state.id=params.get('state');
     if(params.get('theme')==='dark')state.theme='dark';
     if(ranges.includes(params.get('range')))state.range=params.get('range');
+    if(params.get('closed')==='open')state.closedOpen=true;
     setFontScale(params.has('font')?params.get('font'):115);render();document.fonts.ready.then(fitMoney);
     window.addEventListener('resize',fitMoney);
     // The sticky bar shows once the page heading has scrolled under the top of the screen.

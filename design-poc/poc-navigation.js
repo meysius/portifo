@@ -65,7 +65,7 @@
         if(document.querySelector('.sheet'))closeSheet();
         if(page==='holding'){window.connectedHolding=null;state.expanded.clear();state.range='1M';}
         if(page==='transactions'){state.scope='all';state.type='all';state.symbol='all';}
-        if(page==='portfolio')state.cashOpen=false;
+        if(page==='portfolio'){state.cashOpen=false;state.closedOpen=false;}
         state.id=id;render();
       }
     },

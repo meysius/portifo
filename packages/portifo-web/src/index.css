@@ -3857,10 +3857,6 @@ ion-modal.ds-sheet {
   color: var(--ds-muted);
 }
 
-.po-closed-caption {
-  padding-top: 22px;
-}
-
 /* Rows bleed their highlight 10px into the gutter, so their content stays on
    the text edge. */
 .po-page .po-holding-row {
@@ -3955,6 +3951,28 @@ ion-modal.ds-sheet {
 
 .po-holding-return.secondary {
   color: var(--ds-secondary);
+}
+
+/* Closed positions: one row under the ledger with their realized total, and
+   the sales beneath it, shorter than a holding and a size quieter. */
+.po-closed-count {
+  margin-left: 6px;
+  font-weight: 400;
+  color: var(--ds-muted);
+}
+
+.po-page .po-closed-row {
+  padding-block: 12px;
+}
+
+.po-closed-realized {
+  display: block;
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+}
+
+.po-closed-row .po-holding-return {
+  margin-top: 5px;
 }
 
 .po-cash-accounts {

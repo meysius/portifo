@@ -70,16 +70,14 @@ const sharesLabel = (n: number) => `${fmtShares(n)} ${n === 1 ? "share" : "share
 const RING_C = 2 * Math.PI * 19;
 
 // A ledger row's share of the whole portfolio, cash included: a ring filled
-// clockwise from twelve o'clock around the exact percentage. A closed
-// position holds nothing, so it gets the bare track, which keeps its symbol
-// in line with the rows above.
-function WeightRing({ share, color }: { share?: number; color?: string }) {
-  const arc = share == null ? 0 : (Math.max(0, Math.min(100, share)) / 100) * RING_C;
+// clockwise from twelve o'clock around the exact percentage.
+function WeightRing({ share, color }: { share: number; color: string }) {
+  const arc = (Math.max(0, Math.min(100, share)) / 100) * RING_C;
   return (
     <span
       className="po-weight-ring"
       style={{ "--weight-color": color } as CSSProperties}
-      title={share == null ? undefined : `${percent(share)} of portfolio`}
+      title={`${percent(share)} of portfolio`}
       aria-hidden="true"
     >
       <svg viewBox="0 0 44 44" fill="none">
@@ -96,7 +94,7 @@ function WeightRing({ share, color }: { share?: number; color?: string }) {
           />
         )}
       </svg>
-      {share != null && <span className="po-weight-ring-label money">{percent(share)}</span>}
+      <span className="po-weight-ring-label money">{percent(share)}</span>
     </span>
   );
 }
@@ -180,6 +178,7 @@ function HoldingsPage() {
 
   const [range, setRange] = useState<HistoryRange>("1Y");
   const [cashOpen, setCashOpen] = useState(false);
+  const [closedOpen, setClosedOpen] = useState(false);
   const [growthOpen, setGrowthOpen] = useState(false);
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
   const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
@@ -301,6 +300,7 @@ function HoldingsPage() {
   }
   rows.sort((a, b) => b.value - a.value);
   closed.sort((a, b) => (b.lastSale ?? "").localeCompare(a.lastSale ?? ""));
+  const realizedTotal = closed.reduce((n, c) => n + c.realized, 0);
 
   const balancesOf = (a: (typeof accounts)[number]) =>
     Object.fromEntries(a.balances.map((b) => [b.currency, b.balance] as const));
@@ -547,24 +547,41 @@ function HoldingsPage() {
                 })}
               </div>
 
-              {/* Every share sold: no value to rank, so after the ledger, with
-                  the realized result where the return would be. */}
+              {/* Every share sold: no share of the portfolio, so no ring. One
+                  row under the ledger totals their realized return; the sales
+                  open beneath it on its own text edge, as the cash accounts do. */}
               {closed.length > 0 && (
                 <>
-                  <div className="po-list-caption po-closed-caption">
-                    <span>Closed / last sale</span>
-                    <span>Realized return</span>
-                  </div>
-                  {closed.map((c) => (
-                    <button
-                      key={c.symbol}
-                      type="button"
-                      className="po-holding-row"
-                      aria-label={`${c.symbol}, closed, realized ${fmtSignedCcy(c.realized, ccy)}, view holding detail`}
-                      onClick={() => openHolding(c.symbol)}
-                    >
-                      <span className="po-holding-summary">
-                        <WeightRing />
+                  <button
+                    type="button"
+                    className="po-holding-row po-closed-toggle"
+                    aria-label={`Closed positions, ${closed.length}, realized return ${fmtSignedCcy(realizedTotal, ccy)}, ${closedOpen ? "hide" : "show"} sold positions`}
+                    aria-expanded={closedOpen}
+                    aria-controls="po-closed-list"
+                    onClick={() => setClosedOpen((o) => !o)}
+                  >
+                    <span className="po-holding-identity">
+                      <span className="po-holding-symbol">
+                        Closed positions<span className="po-closed-count">{closed.length}</span>
+                      </span>
+                      <span className="po-holding-meta">Realized return</span>
+                    </span>
+                    <span className="po-holding-end">
+                      <span className={`po-holding-value money ${tone(realizedTotal)}`}>
+                        {fmtSignedCcy(realizedTotal, ccy)}
+                      </span>
+                      <span className="po-holding-meta">{closedOpen ? "Hide ⌃" : "Show all ⌄"}</span>
+                    </span>
+                  </button>
+                  <div id="po-closed-list" hidden={!closedOpen}>
+                    {closed.map((c) => (
+                      <button
+                        key={c.symbol}
+                        type="button"
+                        className="po-holding-row po-closed-row"
+                        aria-label={`${c.symbol}, closed, ${c.lastSale ? `sold ${fmtDay(parseDay(c.lastSale))}, ` : ""}realized ${fmtSignedCcy(c.realized, ccy)}, ${fmtSignedPct(c.realizedPct)}, view holding detail`}
+                        onClick={() => openHolding(c.symbol)}
+                      >
                         <span className="po-holding-identity">
                           <span className="po-holding-symbol">{c.symbol}</span>
                           <span className="po-holding-meta">
@@ -572,16 +589,16 @@ function HoldingsPage() {
                           </span>
                         </span>
                         <span className="po-holding-end">
-                          <span className={`po-holding-value money ${tone(c.realized)}`}>
+                          <span className={`po-closed-realized money ${tone(c.realized)}`}>
                             {fmtSignedCcy(c.realized, ccy)}
                           </span>
                           <span className={`po-holding-return money ${tone(c.realized)}`}>
                             {fmtSignedPct(c.realizedPct)}
                           </span>
                         </span>
-                      </span>
-                    </button>
-                  ))}
+                      </button>
+                    ))}
+                  </div>
                 </>
               )}
             </section>
