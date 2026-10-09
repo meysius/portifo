@@ -8,7 +8,7 @@ In Portfolio's Holdings section, one per open position, then one Cash row, then 
 ## What you provide
 - The weight: the position's share of the whole portfolio, cash included, and its breakdown colour by rank (`ds-hold-1`…`ds-hold-5`, then `ds-hold-other`; cash `ds-cash`).
 - Symbol, share count ("250 shares"), value, and the total return as amount · percentage.
-- For cash: "Cash", "Uninvested", and a "By account" toggle that lists each account's cash under the row.
+- For cash: "Cash", "Uninvested", the cash total, and the currencies it is held in, largest first ("CAD · USD"). Tapping it pushes the Cash page (where the cash is, by currency and by account).
 - For closed positions: the count and the summed realized return; expanded, each sale is a shorter row without a ring ("Sold Sep 30").
 
 ## Rules
@@ -21,4 +21,4 @@ In Portfolio's Holdings section, one per open position, then one Cash row, then 
 - One `ds-line` hairline under each row; none under the last.
 - The whole row is the button. Give it an `aria-label` that reads the row as a sentence when its parts don't.
 
-Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.po-holding-row`, `.po-weight-ring`, `.po-closed-row`, `.po-cash-account`).
+Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.po-holding-row`, `.po-weight-ring`, `.po-closed-row`).

@@ -20,6 +20,7 @@ The running app (`packages/portifo-web`) is the source of truth. The values here
 - Empty states are warm, short and point at the next step: "Your story starts here." then "Bought your first shares? Moved some cash? Add a transaction to start your record." When filters hide everything: "No matching transactions" and "Your other records are still here."
 - Use typographic punctuation: curly apostrophes (won’t, today’s), a true minus sign (−$1,200.00, −3.4%), × for shares × price ("12 shares × $142.50"), and a middle dot to join facts ("Today · Oct 3", "All amounts in USD · Average-cost accounting").
 - Signed figures always carry their sign: "+$3,402.10 · +12.2%". Percentages show one decimal.
+- Money in more than one currency: a balance sits beside its currency code ("CAD", then "$8,300.00"), and a converted figure starts with "≈" and ends with the display currency's code ("≈ $5,818.03 USD"). "$" alone is US, Canadian or Australian dollars.
 - Dates: "Today · Oct 3", then "Sep 30"; add the year only when it isn't this year.
 - No emoji, no exclamation marks, no "Oops".
 
@@ -109,7 +110,7 @@ Corner radii, also literal in the code:
 Every screen is one of four kinds; the next section, Screen anatomy, lists each one's parts in order. In short:
 
 - **Tab root** (Portfolio, Transactions, Accounts, Settings): page heading at the top, the sticky bar appears once it scrolls away, tab bar at the bottom.
-- **Pushed page** (a holding, an account): Back bar labelled with the tab's name, the page title below it as a large heading, no tab bar. A primary pair of actions (Buy / Sell) may take the tab bar's place.
+- **Pushed page** (a holding, an account, the cash): Back bar labelled with the tab's name, the page title below it as a large heading, no tab bar. A primary pair of actions (Buy / Sell) may take the tab bar's place.
 - **Full-screen task** (new account, the add-transaction wizard): a top bar with Cancel, one question with a kicker, the fields, and a footer with the one action.
 - **Bottom sheet**: grabber, title and round close button, then content that hugs its height up to 90% of the screen.
 
@@ -142,9 +143,9 @@ Every screen is one of four kinds; the next section, Screen anatomy, lists each 
 
 ## What uses this system
 
-On `ds-*` tokens: Portfolio, Holding detail, Transactions (list, filter and detail sheets), Accounts (list, account page, new account, rename, cash balance, display currency).
+On `ds-*` tokens: Portfolio, Holding detail, Cash (all the cash, by currency and by account), Transactions (list, filter and detail sheets), Accounts (list, account page, new account, rename, cash balance, display currency).
 
-Still on the first system's tokens (`theme/variables.css`: `--surface`, `--fg-1…3`, `--signal`): the tab bar, Settings, Manage portfolio, Login, Onboarding, the add-transaction wizard, Cash detail, Transaction detail, a holding's transaction list, and the older pickers (PickerSheet, DateSheet, ActionSheetModal, including the portfolio switcher). Build new screens with `ds-*` only. When you move one of these over, rebuild it from the components here rather than re-tinting it.
+Still on the first system's tokens (`theme/variables.css`: `--surface`, `--fg-1…3`, `--signal`): the tab bar, Settings, Manage portfolio, Login, Onboarding, the add-transaction wizard, Transaction detail, a holding's transaction list, and the older pickers (PickerSheet, DateSheet, ActionSheetModal, including the portfolio switcher). Build new screens with `ds-*` only. When you move one of these over, rebuild it from the components here rather than re-tinting it.
 
 ## This folder
 

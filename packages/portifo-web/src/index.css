@@ -4054,28 +4054,6 @@ ion-modal.ds-sheet {
   margin-top: 5px;
 }
 
-.po-cash-accounts {
-  padding: 0 0 4px;
-  border-bottom: 1px solid var(--ds-line);
-}
-
-.po-cash-accounts[hidden] {
-  display: none;
-}
-
-.po-cash-account {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 12px 0;
-  font-size: var(--ds-fs-10);
-  line-height: 1.6;
-}
-
-.po-cash-account span:first-child {
-  color: var(--ds-secondary);
-}
-
 /* ── an empty portfolio ──────────────────────────────────────────────────── */
 .po-empty {
   padding: 60px var(--ds-gutter);
@@ -5042,6 +5020,70 @@ ion-modal.ds-sheet {
   color: var(--ds-secondary);
 }
 
+/* ── all the cash (CashDetailPage) ───────────────────────────────────────── */
+/* An account's page, reused: the same Back bar, heading, hero, sections and
+   cash rows, with a balance's conversion under it and each account named
+   above its own currencies. */
+.cash-page .ac-section-heading h2 .meta {
+  margin-left: 5px;
+}
+
+.cash-end {
+  flex-shrink: 0;
+  min-width: 0;
+  max-width: 55%;
+  text-align: right;
+}
+
+.cash-page .cash-end .money {
+  display: block;
+  max-width: none;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  font-size: var(--ds-fs-12);
+  font-weight: 500;
+}
+
+.cash-page .cash-end .cash-note,
+.cash-page .cash-note {
+  margin-top: 5px;
+  font-size: var(--ds-fs-9);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--ds-secondary);
+}
+
+/* Accounts are parted by the full-bleed hairline under their last balance,
+   like every other row; only the very last balance has none. */
+.cash-page .cash-account .ac-cash-row:last-child {
+  border-bottom: 1px solid var(--ds-line);
+}
+
+.cash-page .cash-account:last-child .ac-cash-row:last-child {
+  border-bottom: 0;
+}
+
+.cash-account-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding: 15px 0 2px;
+}
+
+.cash-account-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: var(--ds-fs-11);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.cash-page .cash-account-heading .cash-note {
+  margin-top: 0;
+}
+
 /* ── nothing yet ─────────────────────────────────────────────────────────── */
 .ac-empty {
   padding: 56px var(--ds-gutter);
@@ -5249,12 +5291,13 @@ ion-modal.ac-create-modal {
 }
 
 /* ── feedback ────────────────────────────────────────────────────────────── */
-.ac-page :is(.ac-account-row, .ac-holding-row, .ac-cash-row):is(:active, :focus-visible) {
+/* A currency total on the Cash page is a fact, not a control. */
+.ac-page :is(.ac-account-row, .ac-holding-row, .ac-cash-row):not(.cash-static):is(:active, :focus-visible) {
   background: var(--ds-subtle);
 }
 
 @media (hover: hover) {
-  .ac-page :is(.ac-account-row, .ac-holding-row, .ac-cash-row):hover {
+  .ac-page :is(.ac-account-row, .ac-holding-row, .ac-cash-row):not(.cash-static):hover {
     background: var(--ds-subtle);
   }
 }

@@ -494,3 +494,14 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .ds-sticky-bar, .ds-back-title { transition: none; }
 }
+
+/* The Cash page (CashDetailPage): a balance's conversion under it, and each
+   account named above its own currencies. */
+.cash-end { flex-shrink: 0; min-width: 0; max-width: 55%; text-align: right; }
+.cash-end .money { display: block; overflow-wrap: anywhere; font-size: var(--ds-fs-12); font-weight: 500; }
+.cash-end .cash-note, .cash-note { margin-top: 5px; font-size: var(--ds-fs-9); font-weight: 400; line-height: 1.6; color: var(--ds-secondary); }
+.cash-account .ds-row:last-child { border-bottom: 1px solid var(--ds-line); }
+.cash-account:last-child .ds-row:last-child { border-bottom: 0; }
+.cash-account-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 10px; padding: 15px 0 2px; }
+.cash-account-name { min-width: 0; overflow-wrap: anywhere; font-size: var(--ds-fs-11); font-weight: 600; line-height: 1.4; }
+.cash-account-heading .cash-note { margin-top: 0; }

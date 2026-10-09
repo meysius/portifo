@@ -177,14 +177,10 @@ function HoldingsPage() {
   const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
 
   const [range, setRange] = useState<HistoryRange>("1Y");
-  const [cashOpen, setCashOpen] = useState(false);
   const [closedOpen, setClosedOpen] = useState(false);
   const [growthOpen, setGrowthOpen] = useState(false);
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
   const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
-
-  // Another portfolio's cash has other accounts.
-  useEffect(() => setCashOpen(false), [activePortfolio?.id]);
 
   const openAggs = tickerAggregates.filter((t) => !t.closed);
   const openSymbols = openAggs.map((t) => t.symbol);
@@ -302,12 +298,12 @@ function HoldingsPage() {
   closed.sort((a, b) => (b.lastSale ?? "").localeCompare(a.lastSale ?? ""));
   const realizedTotal = closed.reduce((n, c) => n + c.realized, 0);
 
-  const balancesOf = (a: (typeof accounts)[number]) =>
-    Object.fromEntries(a.balances.map((b) => [b.currency, b.balance] as const));
   const cash = cashValue(cashByCurrency, ccy, fxRates);
-  const cashByAccount = accounts
-    .map((a) => ({ id: a.id, name: a.name, value: cashValue(balancesOf(a), ccy, fxRates) }))
-    .filter((a) => Math.abs(a.value) >= 0.005);
+  // The currencies the cash is held in, largest first.
+  const cashCurrencies = Object.entries(cashByCurrency)
+    .filter(([, amount]) => Math.abs(amount) >= 0.005)
+    .sort(([a, x], [b, y]) => convert(y, b, ccy, fxRates) - convert(x, a, ccy, fxRates))
+    .map(([currency]) => currency);
   const stocks = rows.reduce((s, r) => s + r.value, 0);
   const total = stocks + cash;
 
@@ -473,44 +469,25 @@ function HoldingsPage() {
                 {ledger.map((item) => {
                   if (item.kind === "cash") {
                     return (
-                      <div key="cash">
-                        <button
-                          type="button"
-                          className="po-holding-row"
-                          aria-label={`Cash, ${fmtCcy(cash, ccy)}, ${percent(weight(cash, total))} of portfolio, ${cashOpen ? "hide" : "view"} cash by account`}
-                          aria-expanded={cashOpen}
-                          aria-controls="po-cash-accounts"
-                          onClick={() => setCashOpen((o) => !o)}
-                        >
-                          <span className="po-holding-summary">
-                            <WeightRing share={weight(cash, total)} color="var(--ds-cash)" />
-                            <span className="po-holding-identity">
-                              <span className="po-holding-symbol">Cash</span>
-                              <span className="po-holding-meta">Uninvested</span>
-                            </span>
-                            <span className="po-holding-end">
-                              <span className="po-holding-value money">{fmtCcy(cash, ccy)}</span>
-                              <span className="po-holding-meta">
-                                {cashOpen ? "Hide" : "By"} account {cashOpen ? "⌃" : "⌄"}
-                              </span>
-                            </span>
+                      <button
+                        key="cash"
+                        type="button"
+                        className="po-holding-row"
+                        aria-label={`Cash, ${fmtCcy(cash, ccy)}, ${percent(weight(cash, total))} of portfolio${cashCurrencies.length ? `, in ${cashCurrencies.join(", ")}` : ""}, view cash by account and currency`}
+                        onClick={() => history.push(`${tabBase}/cash`)}
+                      >
+                        <span className="po-holding-summary">
+                          <WeightRing share={weight(cash, total)} color="var(--ds-cash)" />
+                          <span className="po-holding-identity">
+                            <span className="po-holding-symbol">Cash</span>
+                            <span className="po-holding-meta">Uninvested</span>
                           </span>
-                        </button>
-                        <div className="po-cash-accounts" id="po-cash-accounts" hidden={!cashOpen}>
-                          {cashByAccount.length > 0 ? (
-                            cashByAccount.map((a) => (
-                              <div className="po-cash-account" key={a.id}>
-                                <span>{a.name}</span>
-                                <span className="money">{fmtCcy(a.value, ccy)}</span>
-                              </div>
-                            ))
-                          ) : (
-                            <div className="po-cash-account">
-                              <span>No cash balances</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                          <span className="po-holding-end">
+                            <span className="po-holding-value money">{fmtCcy(cash, ccy)}</span>
+                            <span className="po-holding-meta">{cashCurrencies.join(" · ") || "No balances"}</span>
+                          </span>
+                        </span>
+                      </button>
                     );
                   }
                   const r = item.row;
@@ -549,7 +526,7 @@ function HoldingsPage() {
 
               {/* Every share sold: no share of the portfolio, so no ring. One
                   row under the ledger totals their realized return; the sales
-                  open beneath it on its own text edge, as the cash accounts do. */}
+                  open beneath it on its own text edge. */}
               {closed.length > 0 && (
                 <>
                   <button

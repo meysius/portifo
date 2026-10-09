@@ -17,7 +17,7 @@ Tab roots support pull to refresh.
 
 ## Pushed page
 
-A holding, an account: anything opened from a row with a right chevron. The tab bar is hidden for as long as the pushed page is on screen.
+A holding, an account, the cash: anything opened from a row with a right chevron. The tab bar is hidden for as long as the pushed page is on screen.
 
 1. **Back bar** (`BackBar`). 50px, opaque `ds-bg`. On the left, the Back link: a 22px chevron and the **tab's** name ("Portfolio", "Accounts"), in `back-link` and `ds-accent`, at most 140px wide. Never a bare chevron, and never the word "Back". On the right, at most one quiet `IconButton` (Rename). At rest the bar has no title and no hairline; once the large heading scrolls under it, the title fades in centred in `bar-title` and the `ds-line` hairline appears. Collapsed, it matches the sticky bar.
 2. **Page heading** under the bar, 12px down: the page title in `page-title` (a symbol, an account name), then one subtitle line in `ds-secondary` joined with middle dots ("3 holdings · Manually tracked" on an account; the company name · its exchange on a holding).
