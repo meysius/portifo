@@ -39,7 +39,7 @@ Anything quick: picking one option, a short form (Rename account, Set cash balan
 1. **Grabber**, 34×4px `ds-line`, centred.
 2. **Header**: the sheet's title in `sheet-title` on the left; a 30px round close button (`ds-secondary` × on `ds-subtle`) on the right. Title it with what you are choosing or doing: "Filter by type", "Display currency", "Rename account".
 3. **Content**, choosing from one of:
-   - a list of options with a radio, a description and a count (`OptionList`), with one button at the bottom saying what will happen ("Show 12 records");
+   - a list of options with a radio mark, a description and a count that apply on tap and close the sheet (`OptionList`);
    - a grid of short options that apply on tap and close the sheet (`OptionGrid`);
    - fields, notices and one `ds-action` (`Field`, `Button`);
    - a figure and label/value rows describing one record (`DetailRows`).

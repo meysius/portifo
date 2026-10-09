@@ -16,7 +16,7 @@ The running app (`packages/portifo-web`) is the source of truth. The values here
 - Sentence case everywhere: page titles, buttons, sheet titles, labels ("Filter by transaction type", "Save changes", "Total account value"). The only uppercase text is the tab labels and small eyebrow labels ("FILTER HISTORY").
 - Name things the way the person thinks of them: "Cash deposit", "Buy NVDA", "Manually tracked", "Uninvested".
 - Explain consequences in one plain sentence under the control, not in a tooltip: "This won’t change your holdings or cash balances." "Set the current balance, not the amount of a deposit." "Negative balances are supported. Saving records the difference as a deposit or withdrawal, dated today."
-- Buttons say what happens: "Save balance", "Show 12 records", "Add your first transaction", "Clear filters", "Buy again".
+- Buttons say what happens: "Save balance", "Create account", "Add your first transaction", "Clear filters", "Buy again".
 - Empty states are warm, short and point at the next step: "Your story starts here." then "Bought your first shares? Moved some cash? Add a transaction to start your record." When filters hide everything: "No matching transactions" and "Your other records are still here."
 - Use typographic punctuation: curly apostrophes (won’t, today’s), a true minus sign (−$1,200.00, −3.4%), × for shares × price ("12 shares × $142.50"), and a middle dot to join facts ("Today · Oct 3", "All amounts in USD · Average-cost accounting").
 - Signed figures always carry their sign: "+$3,402.10 · +12.2%". Percentages show one decimal.
@@ -34,7 +34,7 @@ Use only `ds-*` tokens on new work. Each pair below has been checked for contras
 - **The filled button** is `ds-action` with `ds-action-ink`. Don't use `ds-accent` as a fill: it is lightened for text in dark mode.
 - **Gain and loss.** `ds-positive`/`ds-negative` colour the figure; `ds-positive-bg`/`ds-negative-bg` sit under a return percentage only (the return pill). `ds-negative` is also the form error colour.
 - **Transaction kinds.** Buy: `ds-accent` on `ds-accent-tint`. Sell: `ds-sell` on `ds-sell-bg`. Deposit: `ds-positive` on `ds-positive-bg`. Withdraw: `ds-withdraw` on `ds-withdraw-bg`. These appear only in the 32px kind icon, never as text colour.
-- **Breakdown.** Holdings take `ds-hold-1` … `ds-hold-5` by rank of value (largest first), never by asset type. Past the fifth they all take `ds-hold-other`. Cash is `ds-cash`. These colour marks only (bar segments, rings, dots), always next to a text label.
+- **Breakdown.** Holdings take `ds-hold-1` … `ds-hold-5` by rank of value (largest first), never by asset type. Past the fifth they all take `ds-hold-other`. Cash is `ds-cash`. These colour marks only (bar segments, rings, dots), always next to a text label. The [expense-tracking POC](patterns/expense-tracking.md) reuses this palette with stable category identities across months; spending changes stay neutral, not gain/loss coloured.
 - **Chart indicators.** The 200-day average is `ds-indicator`; its ±5/10/15% bands are `ds-band-5`, `ds-band-10`, `ds-band-15`.
 - **Dark mode** is the same token names with dark values. The app switches it with the `ion-palette-dark` class on the root element.
 
@@ -52,7 +52,7 @@ In code, write sizes as `var(--ds-fs-N)`, where N is the 100% size (8, 9, 10, 11
 | --- | --- | --- |
 | Page title | `page-title` | 23 → 27.6px, Inter 650 |
 | Hero figure | `hero-figure` | 27 → 32.4px, mono 500 |
-| Sheet title | `sheet-title` | 21 → 25.2px, Inter 700 |
+| Sheet title | `sheet-title` | 18 → 21.6px, Inter 600 |
 | Empty-state headline | `empty-title` | 22 → 26.4px, Inter 550 |
 | Section title, bar title | `section-title`, `bar-title` | 16 → 19.2px, Inter 600 |
 | Back link | `back-link` | 15 → 18px, Public Sans 400 |
@@ -81,7 +81,7 @@ The source has only one spacing token. These are the recurring values, as writte
 | 52px | A full-screen task's top bar |
 | 60px min | Ledger and account rows (10px padding, 10px gap) |
 | 15px block padding | Holding rows (11px gap) |
-| 55px min | Options in a sheet (13px × 11px padding, 5px apart) |
+| 44px min | Options in a sheet (8px × 11px padding, 3px apart) |
 | 45px | Button height |
 | 32px | Icon buttons and row glyphs |
 | 16px + safe area | Tab-root heading top padding; 12px under a Back bar |

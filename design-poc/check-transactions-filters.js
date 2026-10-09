@@ -4,11 +4,9 @@
   let checks = 0;
   const assert = (ok, message) => { checks++; if (!ok) failures.push(message); };
   const saved = { ...state };
-  const choose = value => {
-    const input = [...document.querySelectorAll('#filter-options input')].find(el => el.value === value);
-    input.click();
-  };
-  const apply = () => document.querySelector('#filter-form').requestSubmit();
+  const option = value => [...document.querySelectorAll('#filter-options .filter-option')].find(el => el.dataset.filterValue === value);
+  const choose = value => option(value).click();
+  const countOf = value => option(value).querySelector('.filter-option-count').textContent;
   const open = key => document.querySelector(`[data-filter="${key}"]`).click();
   const reset = () => { Object.assign(state, { id: 'mixed', scope: 'all', symbol: 'all', type: 'all' }); render(); };
   try {
@@ -19,29 +17,32 @@
     assert(!document.querySelector('#period-button, #period-select'), 'Period dropdown is removed');
     assert(!document.querySelector('.flow-summary, .page-subtitle, .export-button'), 'Removed summary, subtitle and export are absent');
     open('symbol');
+    assert(document.activeElement === option('all'), 'Focus starts on the current choice');
     const search = document.querySelector('#symbol-search');
     search.value = 'nvidia'; search.dispatchEvent(new Event('input', { bubbles: true }));
-    assert(document.querySelectorAll('#filter-options input').length === 2, 'Company search returns NVIDIA and All symbols');
+    assert(document.querySelectorAll('#filter-options .filter-option').length === 2, 'Company search returns NVIDIA and All symbols');
+    assert(!document.querySelector('#apply-filter, .filter-apply'), 'No confirm button');
+    assert(countOf('NVDA') === '2', 'Each option previews its record count');
     choose('NVDA');
-    assert(document.querySelector('#apply-filter').textContent === 'Show 2 records', 'Draft previews record count');
-    assert(state.symbol === 'all', 'Selecting does not apply before confirmation');
-    apply();
-    assert(state.symbol === 'NVDA' && visibleRows().length === 2, 'Symbol filter applies');
+    assert(state.symbol === 'NVDA' && visibleRows().length === 2, 'Tapping an option applies it');
+    assert(!document.querySelector('.sheet'), 'Tapping an option closes the sheet');
     assert(document.activeElement.dataset.filter === 'symbol', 'Focus returns to replaced filter chip');
     assert(document.querySelector('[data-filter="symbol"]').classList.contains('is-active'), 'Selected filter is highlighted');
-    open('type'); choose('withdrawal');
-    assert(document.querySelector('#apply-filter').textContent === 'Show 0 records', 'Conflicting filters preview zero results');
+    open('type');
+    assert(countOf('withdrawal') === '0', 'Conflicting filters preview zero results');
     closeSheet();
-    assert(state.type === 'all', 'Cancel discards draft');
-    open('type'); choose('withdrawal'); apply();
+    assert(state.type === 'all', 'Closing without a choice changes nothing');
+    open('type'); choose('withdrawal');
     assert(visibleRows().length === 0 && document.querySelector('.empty-state'), 'Conflicting filters show empty state');
     document.querySelector('#clear-history-filters').click();
     assert(visibleRows().length === 12, 'Clear all restores the full history');
     assert(document.querySelector('#clear-history-filters').hidden, 'Reset hides clear action');
-    open('scope'); choose('1'); apply();
+    open('scope'); choose('1');
     assert(state.scope === '1' && visibleRows().length === 4, 'Account filter applies');
     assert(document.querySelector('[data-filter="scope"]').textContent.includes('Tax-free savings'), 'Account chip shows the chosen account');
-    open('scope'); choose('0'); apply();
+    open('scope');
+    assert(document.querySelector('#filter-options .is-chosen')?.dataset.filterValue === '1' && option('1').getAttribute('aria-pressed') === 'true', 'Reopening marks the current choice');
+    choose('0');
     assert(document.querySelector('[data-filter="scope"]').textContent.includes('Brokerage'), 'Account chip follows a new choice');
     assert(visibleRows().length === 6, 'Changing the account updates records');
     reset();
@@ -57,8 +58,8 @@
     for (const id of ['mixed', 'trades', 'cash', 'empty']) {
       Object.assign(state, { id, scope: 'all', symbol: 'all', type: 'all' }); render();
       open('symbol');
-      assert(document.querySelector('input[value="all"]'), `${id}: All symbols is always available`);
-      if (id === 'cash' || id === 'empty') assert(document.querySelectorAll('#filter-options input').length === 1, `${id}: no unrelated symbols`);
+      assert(option('all'), `${id}: All symbols is always available`);
+      if (id === 'cash' || id === 'empty') assert(document.querySelectorAll('#filter-options .filter-option').length === 1, `${id}: no unrelated symbols`);
       closeSheet();
     }
     reset();
@@ -70,7 +71,7 @@
       for (const key of ['symbol', 'type', 'scope']) {
         open(key);
         assert(document.querySelector('.sheet').scrollWidth <= document.querySelector('.sheet').clientWidth, `${theme}/${fontScale}/${key}: picker does not overflow`);
-        assert(document.querySelector('#apply-filter').getClientRects().length, `${theme}/${fontScale}/${key}: apply button visible`);
+        assert(document.querySelector('#filter-options .is-chosen')?.getClientRects().length, `${theme}/${fontScale}/${key}: current choice visible`);
         closeSheet();
       }
     }

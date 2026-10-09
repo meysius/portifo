@@ -1,7 +1,7 @@
 import { IonContent, IonModal, IonPage, IonRefresher, IonRefresherContent } from "@ionic/react";
 import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useHistory } from "react-router-dom";
 import type { Transaction, TransactionType } from "../api/portfolio";
 import StickyTitleBar from "../components/StickyTitleBar";
@@ -152,7 +152,6 @@ function TransactionsPage() {
   // while it slides away.
   const [filterOpen, setFilterOpen] = useState(false);
   const [filterKey, setFilterKey] = useState<FilterKey>("symbol");
-  const [draftValue, setDraftValue] = useState("all");
   const [query, setQuery] = useState("");
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -219,14 +218,14 @@ function TransactionsPage() {
   };
 
   const openFilter = (key: FilterKey) => {
-    setDraftValue(filters[key]);
     setQuery("");
     setFilterKey(key);
     setFilterOpen(true);
   };
-  const applyFilter = (e: FormEvent) => {
-    e.preventDefault();
-    setFilters((f) => ({ ...f, [filterKey]: draftValue }));
+  // Picking an option applies it and closes the sheet; each option already
+  // shows how many records it leaves.
+  const chooseFilter = (value: string) => {
+    setFilters((f) => ({ ...f, [filterKey]: value }));
     setFilterOpen(false);
   };
   const openDetail = (id: string) => {
@@ -246,7 +245,6 @@ function TransactionsPage() {
   const shownOptions = options(filterKey).filter(
     ([v, l, d]) => v === "all" || `${l} ${d}`.toLowerCase().includes(query.trim().toLowerCase()),
   );
-  const draftCount = visible({ ...filters, [filterKey]: draftValue }).length;
 
   const detail = transactions.find((t) => t.id === detailId) ?? null;
   const ready = !loading.transactions || transactions.length > 0;
@@ -392,56 +390,50 @@ function TransactionsPage() {
               onClose={() => setFilterOpen(false)}
             />
             <p className="tl-filter-intro">{FILTER_INTRO[filterKey]}</p>
-            <form onSubmit={applyFilter}>
-              {filterKey === "symbol" && (
-                <div className="tl-search-field">
-                  {ICONS.search}
-                  <input
-                    type="search"
-                    aria-label="Search symbols"
-                    placeholder="Find a symbol or company…"
-                    autoComplete="off"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                </div>
+            {filterKey === "symbol" && (
+              <div className="tl-search-field">
+                {ICONS.search}
+                <input
+                  type="search"
+                  aria-label="Search symbols"
+                  placeholder="Find a symbol or company…"
+                  autoComplete="off"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </div>
+            )}
+            <div className="tl-filter-options" role="group" aria-labelledby="tl-filter-title">
+              {shownOptions.map(([value, label, about]) => {
+                const count = visible({ ...filters, [filterKey]: value }).length;
+                const chosen = value === filters[filterKey];
+                return (
+                  <button
+                    type="button"
+                    className={`tl-filter-option${chosen ? " is-chosen" : ""}`}
+                    key={value}
+                    aria-pressed={chosen}
+                    onClick={() => chooseFilter(value)}
+                  >
+                    <span className="tl-filter-option-mark" aria-hidden="true" />
+                    <span className="tl-filter-option-copy">
+                      <span className="tl-filter-option-title">{label}</span>
+                      <span className="tl-filter-option-detail">{about}</span>
+                    </span>
+                    <span className="tl-filter-option-count" aria-label={`${count} matching records`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+              {shownOptions.length === 1 && query.trim() !== "" && (
+                <p className="tl-filter-search-empty" role="status">
+                  No symbols found.
+                  <br />
+                  Try a ticker or company name.
+                </p>
               )}
-              <div className="tl-filter-options" role="radiogroup" aria-labelledby="tl-filter-title">
-                {shownOptions.map(([value, label, about]) => {
-                  const count = visible({ ...filters, [filterKey]: value }).length;
-                  return (
-                    <label className="tl-filter-option" key={value}>
-                      <input
-                        type="radio"
-                        name="tl-filter-value"
-                        value={value}
-                        checked={value === draftValue}
-                        onChange={() => setDraftValue(value)}
-                      />
-                      <span className="tl-filter-option-copy">
-                        <span className="tl-filter-option-title">{label}</span>
-                        <span className="tl-filter-option-detail">{about}</span>
-                      </span>
-                      <span className="tl-filter-option-count" aria-label={`${count} matching records`}>
-                        {count}
-                      </span>
-                    </label>
-                  );
-                })}
-                {shownOptions.length === 1 && query.trim() !== "" && (
-                  <p className="tl-filter-search-empty" role="status">
-                    No symbols found.
-                    <br />
-                    Try a ticker or company name.
-                  </p>
-                )}
-              </div>
-              <div className="tl-filter-apply">
-                <button type="submit" className="tl-action" aria-live="polite">
-                  Show {records(draftCount)}
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
         </IonModal>
 

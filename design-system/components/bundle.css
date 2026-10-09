@@ -347,7 +347,7 @@ button {
 .ds-sheet-body { padding: 12px var(--ds-gutter) 31px; }
 .ds-sheet-grabber { width: 34px; height: 4px; margin: 0 auto 19px; border-radius: 5px; background: var(--ds-line); }
 .ds-sheet-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 18px; }
-.ds-sheet-header h2 { font-family: var(--font-display); font-size: var(--ds-fs-21); font-weight: 700; letter-spacing: -0.7px; }
+.ds-sheet-header h2 { font-family: var(--font-display); font-size: var(--ds-fs-18); font-weight: 600; letter-spacing: -0.5px; }
 .ds-close-sheet { display: grid; flex-shrink: 0; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: var(--ds-secondary); background: var(--ds-subtle); }
 .ds-sheet-notice { margin: 16px 0; font-size: var(--ds-fs-11); line-height: 1.8; color: var(--ds-secondary); }
 
@@ -357,29 +357,32 @@ button {
 .ds-sheet-option.active { color: var(--ds-accent); background: var(--ds-accent-tint); }
 
 /* option list */
-.tl-filter-intro { margin: -6px 0 16px; font-size: var(--ds-fs-11); line-height: 1.7; color: var(--ds-secondary); }
+.tl-filter-intro { margin: -6px 0 12px; font-size: var(--ds-fs-11); line-height: 1.7; color: var(--ds-secondary); }
 .tl-filter-option {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
-  min-height: 55px;
-  margin: 0 0 5px;
-  padding: 13px 11px;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 3px;
+  padding: 8px 11px;
   border: 1px solid transparent;
   border-radius: 10px;
   font-size: var(--ds-fs-10);
+  text-align: left;
   color: var(--ds-text);
   cursor: pointer;
 }
-.tl-filter-option:has(input:checked) { border-color: var(--ds-accent); background: var(--ds-accent-tint); }
-.tl-filter-option input { flex-shrink: 0; width: 17px; height: 17px; margin: 0; padding: 0; accent-color: var(--ds-accent); }
+.tl-filter-option.is-chosen { border-color: var(--ds-accent); background: var(--ds-accent-tint); }
+.tl-filter-option:not(.is-chosen):active { background: var(--ds-subtle); }
+.tl-filter-option:focus-visible { outline-offset: -3px; }
+.tl-filter-option-mark { flex-shrink: 0; box-sizing: border-box; width: 17px; height: 17px; border: 1.5px solid var(--ds-muted); border-radius: 50%; }
+.tl-filter-option.is-chosen .tl-filter-option-mark { padding: 2.5px; border-color: var(--ds-accent); background: var(--ds-accent); background-clip: content-box; }
 .tl-filter-option-copy { flex: 1; min-width: 0; }
 .tl-filter-option-title { display: block; overflow-wrap: anywhere; font-size: var(--ds-fs-12); font-weight: 550; }
-.tl-filter-option-detail { display: block; margin-top: 4px; font-size: var(--ds-fs-9); line-height: 1.5; color: var(--ds-secondary); }
+.tl-filter-option-detail { display: block; margin-top: 2px; font-size: var(--ds-fs-9); line-height: 1.4; color: var(--ds-secondary); }
 .tl-filter-option-count { font-family: var(--font-mono); font-size: var(--ds-fs-10); color: var(--ds-muted); }
-.tl-filter-apply { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--ds-line); }
-.tl-filter-apply .ds-action { margin: 0; }
 
 /* ── fields ────────────────────────────────────────────────────────────── */
 .ds-field-label { display: block; margin: 18px 0 8px; font-size: var(--ds-fs-11); color: var(--ds-secondary); }

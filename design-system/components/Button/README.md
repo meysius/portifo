@@ -3,7 +3,7 @@
 The full-width action at the end of a form, sheet or empty state, plus the smaller text and icon actions.
 
 ## When to use
-- **Primary** (`ds-action`): the one thing the view is for: "Save changes", "Save balance", "Create account", "Show 21 records", "Add your first transaction". One per view.
+- **Primary** (`ds-action`): the one thing the view is for: "Save changes", "Save balance", "Create account", "Add your first transaction". One per view. A pick-one sheet (`OptionList`, `OptionGrid`) has none: tapping an option applies it.
 - **Secondary** (`.secondary`): a second, safer path next to a primary, or the single action of an empty state that only undoes something ("Clear filters").
 - **Text action**: small in-place actions that don't leave the view: "Clear all", "Add currency", "Show all".
 - **Icon button**: a page heading's add action (accent on tint) or a Back bar's quiet edit (secondary ink, no fill). Always with an `aria-label`.

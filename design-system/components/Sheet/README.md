@@ -17,7 +17,7 @@ Use a full-screen task instead when the job needs several steps or more than a f
 - Ground `ds-bg`, top corners 22px, no shadow; the screen behind dims with 40% black.
 - Hugs its content up to 90% of the screen, then scrolls. Padding 12px top, `ds-gutter` sides, 31px bottom (or the home-indicator inset, whichever is larger).
 - Grabber: 34×4px `ds-line`, radius 5px, centred, 19px above the header.
-- Header: title in `sheet-title` (Inter 700, `--ds-fs-21`, −0.7px) on the left; a 30px round close button on the right (`ds-secondary` × at 14px on `ds-subtle`, labelled "Close dialog"). 18px below the header.
+- Header: title in `sheet-title` (Inter 600, `--ds-fs-18`, −0.5px) on the left; a 30px round close button on the right (`ds-secondary` × at 14px on `ds-subtle`, labelled "Close dialog"). 18px below the header.
 - Notices (`ds-sheet-notice`): `--ds-fs-11`, line-height 1.8, `ds-secondary`, 16px above and below. One or two sentences about consequences: "This won’t change your holdings or cash balances."
 - At most one filled `Button`, full width, last. Swiping down, the close button and tapping the backdrop all dismiss it.
 

@@ -73,15 +73,14 @@
     .search-field input { width:100%; min-width:0; height:38px; background:none; border:0; outline-offset:0; color:var(--text); font-size:calc(11px * var(--font-scale)); }
     .search-field input::placeholder { color:var(--secondary); }.search-field:focus-within { border-color:var(--accent); }
     .sheet .filter-search { margin:0 0 12px; padding:0 11px; }.sheet .filter-search input { border:0; background:none; padding:11px 0; }
-    .filter-intro { margin:-6px 0 16px; color:var(--secondary); font-size:calc(11px * var(--font-scale)); line-height:1.7; }
+    .filter-intro { margin:-6px 0 12px; color:var(--secondary); font-size:calc(11px * var(--font-scale)); line-height:1.7; }
     .filter-options { max-height:min(360px,43dvh); overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
-    .sheet .filter-option { display:flex; align-items:center; gap:11px; position:relative; margin:0 0 5px; padding:13px 11px; min-height:55px; border:1px solid transparent; border-radius:10px; cursor:pointer; color:var(--text); }
-    .filter-option:hover { background:var(--subtle); }.filter-option:has(input:checked) { background:var(--accent-tint); border-color:var(--accent); }
-    .sheet .filter-option input { width:17px; height:17px; padding:0; margin:0; flex-shrink:0; accent-color:var(--accent); }
+    .sheet .filter-option { display:flex; align-items:center; gap:10px; position:relative; width:100%; margin:0 0 3px; padding:8px 11px; min-height:44px; border:1px solid transparent; border-radius:10px; cursor:pointer; color:var(--text); background:none; text-align:left; }
+    .sheet .filter-option:not(.is-chosen):is(:hover,:active) { background:var(--subtle); }.sheet .filter-option.is-chosen { background:var(--accent-tint); border-color:var(--accent); }.sheet .filter-option:focus-visible { outline-offset:-3px; }
+    .filter-option-mark { flex-shrink:0; box-sizing:border-box; width:17px; height:17px; border:1.5px solid var(--muted); border-radius:50%; }.filter-option.is-chosen .filter-option-mark { padding:2.5px; border-color:var(--accent); background:var(--accent); background-clip:content-box; }
     .filter-option-copy { flex:1; min-width:0; }.filter-option-title { display:block; font-size:calc(12px * var(--font-scale)); font-weight:550; overflow-wrap:anywhere; }
-    .filter-option-detail { display:block; margin-top:4px; color:var(--secondary); font-size:calc(9px * var(--font-scale)); line-height:1.5; }
+    .filter-option-detail { display:block; margin-top:2px; color:var(--secondary); font-size:calc(9px * var(--font-scale)); line-height:1.4; }
     .filter-option-count { font-family:'JetBrains Mono',monospace; color:var(--muted); font-size:calc(10px * var(--font-scale)); }
-    .filter-apply { border-top:1px solid var(--line); padding-top:14px; margin-top:14px; }.filter-apply .action { margin:0; }
     .filter-search-empty { padding:22px 10px; color:var(--secondary); text-align:center; font-size:calc(11px * var(--font-scale)); line-height:1.7; }
     .ledger-heading { display:flex; justify-content:flex-end; align-items:center; gap:8px; padding:10px 23px; border-bottom:4px solid var(--subtle); }
     .result-count { color:var(--muted); font-size:calc(9px * var(--font-scale)); }
@@ -107,7 +106,7 @@
     .desk-footer { display:flex; justify-content:space-between; color:var(--desk-muted); font-size:10px; margin-top:33px; padding-top:19px; border-top:1px solid var(--desk-line); line-height:1.7; gap:25px; }
     .overlay { position:absolute; inset:0; z-index:10; display:flex; align-items:flex-end; background:#0006; }
     .sheet { background:var(--bg); width:100%; border-radius:22px 22px 0 0; padding:12px 23px 31px; max-height:90%; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
-    .sheet-grabber { width:34px; height:4px; background:var(--line); border-radius:5px; margin:0 auto 19px; }.sheet-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:18px; }.sheet-header h2 { font-family:Inter,sans-serif; font-size:calc(21px * var(--font-scale)); letter-spacing:-.7px; margin:0; }.close-sheet { background:var(--subtle); color:var(--secondary); border-radius:50%; width:30px; height:30px; display:grid; place-items:center; flex-shrink:0; }
+    .sheet-grabber { width:34px; height:4px; background:var(--line); border-radius:5px; margin:0 auto 19px; }.sheet-header { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:18px; }.sheet-header h2 { font-family:Inter,sans-serif; font-size:calc(18px * var(--font-scale)); font-weight:600; letter-spacing:-.5px; margin:0; }.close-sheet { background:var(--subtle); color:var(--secondary); border-radius:50%; width:30px; height:30px; display:grid; place-items:center; flex-shrink:0; }
     .sheet-notice { font-size:calc(11px * var(--font-scale)); color:var(--secondary); line-height:1.8; margin:16px 0; }
     .sheet label { display:block; font-size:calc(10px * var(--font-scale)); color:var(--secondary); margin:16px 0 7px; }
     .sheet input { width:100%; border:1px solid var(--line); background:var(--subtle); color:var(--text); padding:11px; border-radius:8px; min-width:0; font-size:calc(12px * var(--font-scale)); }
@@ -224,7 +223,7 @@
     const state = {id:'mixed',theme:'light',fontScale:115,scope:'all',type:'all',symbol:'all'};
     // Each scenario keeps its own temporary records. There is intentionally no persistence or brokerage integration.
     const records = Object.fromEntries(scenarios.map(s=>[s.id,s.id==='empty'?[]:seed.filter(t=>s.id==='mixed'||(s.id==='trades'?['buy','sell']:['deposit','withdrawal']).includes(t.type)).map(t=>({...t}))]));
-    let sheetOpener=null, filterDraft=null;
+    let sheetOpener=null, filterKey=null;
     const isTrade = t => ['buy','sell'].includes(t.type);
     const cashImpact = t => {
       const gross = isTrade(t)?t.shares*t.price:t.amount;
@@ -275,7 +274,7 @@
     function closeSheet() {
       $('#overlay-root').innerHTML='';['#screen','#tab-bar','.rail'].forEach(s=>$(s).inert=false);
       if(sheetOpener?.isConnected)sheetOpener.focus({preventScroll:true});else if(sheetOpener?.dataset.filter)$(`[data-filter="${sheetOpener.dataset.filter}"]`)?.focus({preventScroll:true});else $('#add-transaction').focus({preventScroll:true});
-      filterDraft=null;
+      filterKey=null;
     }
     const pair = (label,value,mono=false) => `<div class="detail-pair"><span>${esc(label)}</span><span${mono?' class="money"':''}>${esc(value)}</span></div>`;
     function detailBody(t) {
@@ -294,22 +293,18 @@
       if(key==='type')return [['all','All types','Trades & cash movements'],...Object.entries(labels).map(([v,l])=>[v,l,v==='buy'?'Shares purchased':v==='sell'?'Shares sold':v==='deposit'?'Cash added to an account':'Cash moved out of an account'])];
       return [['all','All accounts','Your complete portfolio'],...accounts.map((a,i)=>[String(i),a,'Manually tracked account'])];
     }
+    // Tapping an option applies it and closes the sheet; each option already shows its count.
     function openFilter(key,opener) {
-      filterDraft={key,value:state[key]};
+      filterKey=key;
       const name={symbol:'symbol',type:'transaction type',scope:'account'}[key];
-      sheet(`Filter by ${name}`,`<p class="filter-intro">${key==='symbol'?'Choose a security. Cash movements appear under All symbols.':key==='type'?'Choose the kind of move you want to see.':'Choose an account to narrow your history.'}</p><form id="filter-form">${key==='symbol'?`<div class="search-field filter-search">${icons.search}<input id="symbol-search" type="search" aria-label="Search symbols" placeholder="Find a symbol or company…" autocomplete="off"></div>`:''}<div class="filter-options" id="filter-options" role="radiogroup" aria-labelledby="sheet-title"></div><div class="filter-apply"><button class="action" id="apply-filter" type="submit" aria-live="polite"></button></div></form>`,opener);
+      sheet(`Filter by ${name}`,`<p class="filter-intro">${key==='symbol'?'Choose a security. Cash movements appear under All symbols.':key==='type'?'Choose the kind of move you want to see.':'Choose an account to narrow your history.'}</p>${key==='symbol'?`<div class="search-field filter-search">${icons.search}<input id="symbol-search" type="search" aria-label="Search symbols" placeholder="Find a symbol or company…" autocomplete="off"></div>`:''}<div class="filter-options" id="filter-options" role="group" aria-labelledby="sheet-title"></div>`,opener);
       renderFilterOptions();
-      $('#filter-options input:checked')?.focus({preventScroll:true});
+      $('#filter-options .is-chosen')?.focus({preventScroll:true});
     }
     function renderFilterOptions() {
-      const {key,value}=filterDraft,query=($('#symbol-search')?.value||'').trim().toLowerCase();
+      const key=filterKey,value=state[key],query=($('#symbol-search')?.value||'').trim().toLowerCase();
       const options=filterOptions(key).filter(([v,l,d])=>v==='all'||`${l} ${d}`.toLowerCase().includes(query));
-      $('#filter-options').innerHTML=options.map(([v,l,d])=>`<label class="filter-option"><input type="radio" name="filter-value" value="${esc(v)}" ${v===value?'checked':''}><span class="filter-option-copy"><span class="filter-option-title">${esc(l)}</span><span class="filter-option-detail">${esc(d)}</span></span><span class="filter-option-count" aria-label="${visibleRows({...state,[key]:v}).length} matching records">${visibleRows({...state,[key]:v}).length}</span></label>`).join('')+(options.length===1&&query?'<p class="filter-search-empty" role="status">No symbols found.<br>Try a ticker or company name.</p>':'');
-      updateFilterPreview();
-    }
-    function updateFilterPreview() {
-      const count=visibleRows({...state,[filterDraft.key]:filterDraft.value}).length;
-      $('#apply-filter').textContent=`Show ${count} ${count===1?'record':'records'}`;
+      $('#filter-options').innerHTML=options.map(([v,l,d])=>`<button type="button" class="filter-option${v===value?' is-chosen':''}" data-filter-value="${esc(v)}" aria-pressed="${v===value}"><span class="filter-option-mark" aria-hidden="true"></span><span class="filter-option-copy"><span class="filter-option-title">${esc(l)}</span><span class="filter-option-detail">${esc(d)}</span></span><span class="filter-option-count" aria-label="${visibleRows({...state,[key]:v}).length} matching records">${visibleRows({...state,[key]:v}).length}</span></button>`).join('')+(options.length===1&&query?'<p class="filter-search-empty" role="status">No symbols found.<br>Try a ticker or company name.</p>':'');
     }
     function openSettings(opener) { sheet('Appearance',`<p class="sheet-notice">Use the same quiet palette in either light or dark.</p><div class="sheet-types" style="grid-template-columns:1fr 1fr">${['light','dark'].map(t=>`<button class="sheet-type ${state.theme===t?'active':''}" data-mobile-theme="${t}" aria-pressed="${state.theme===t}">${t==='light'?'Light':'Dark'}</button>`).join('')}</div><label for="mobile-font">Text size</label><input id="mobile-font" type="range" min="100" max="140" step="5" value="${state.fontScale}" aria-valuetext="${state.fontScale} percent"><button class="action secondary" data-command="close">Done</button>`,opener); }
     $('#add-transaction').innerHTML=icons.plus;
@@ -321,6 +316,7 @@
       if(b.dataset.state) { state.id=b.dataset.state;state.scope='all';state.type='all';state.symbol='all';$('#screen').scrollTop=0;render(); }
       if(b.dataset.theme) { state.theme=b.dataset.theme;updateControls(); }
       if(b.dataset.filter) openFilter(b.dataset.filter,b);
+      if(b.dataset.filterValue!==undefined&&filterKey) { state[filterKey]=b.dataset.filterValue;render();closeSheet(); }
       if(b.dataset.transaction) showDetail(b.dataset.transaction,b);
       if(b.dataset.mobileTheme) { state.theme=b.dataset.mobileTheme;updateControls();document.querySelectorAll('[data-mobile-theme]').forEach(el=>{el.classList.toggle('active',el.dataset.mobileTheme===state.theme);el.setAttribute('aria-pressed',el.dataset.mobileTheme===state.theme);}); }
       switch(b.dataset.command) {
@@ -328,11 +324,7 @@
         case 'settings':openSettings(b);break;case 'top':$('#screen').scrollTop=0;break;
       }
     });
-    document.addEventListener('change',e=>{if(e.target.name==='filter-value'&&filterDraft){filterDraft.value=e.target.value;updateFilterPreview();}});
     document.addEventListener('input',e=>{if(e.target.id==='symbol-search')renderFilterOptions();if(e.target.id==='mobile-font'){state.fontScale=Number(e.target.value);e.target.setAttribute('aria-valuetext',state.fontScale+' percent');updateControls();}});
-    document.addEventListener('submit',e=>{
-      if(e.target.id==='filter-form'){e.preventDefault();state[filterDraft.key]=filterDraft.value;render();closeSheet();}
-    });
     $('#overlay-root').addEventListener('click',e=>{if(e.target.classList.contains('overlay'))closeSheet();});
     document.addEventListener('keydown',e=>{
       const dialog=$('.sheet');if(!dialog)return;

@@ -3475,9 +3475,9 @@ ion-modal.ds-sheet {
 
 .ds-sheet .ds-sheet-header h2 {
   font-family: var(--font-display);
-  font-size: var(--ds-fs-21);
-  font-weight: 700;
-  letter-spacing: -0.7px;
+  font-size: var(--ds-fs-18);
+  font-weight: 600;
+  letter-spacing: -0.5px;
 }
 
 .ds-sheet .ds-close-sheet {
@@ -4470,7 +4470,7 @@ ion-modal.ds-sheet {
 
 /* ── filter sheet ────────────────────────────────────────────────────────── */
 .tl-filter-intro {
-  margin: -6px 0 16px;
+  margin: -6px 0 12px;
   font-size: var(--ds-fs-11);
   line-height: 1.7;
   color: var(--ds-secondary);
@@ -4520,33 +4520,50 @@ ion-modal.ds-sheet {
   overscroll-behavior: contain;
 }
 
+/* Each option is a button: tapping it applies the filter and closes the
+   sheet. The leading mark is drawn, not a native radio, so arrow keys don't
+   apply a choice. */
 .tl-filter-option {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 11px;
-  min-height: 55px;
-  margin: 0 0 5px;
-  padding: 13px 11px;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin: 0 0 3px;
+  padding: 8px 11px;
   border: 1px solid transparent;
   border-radius: 10px;
   font-size: var(--ds-fs-10);
+  text-align: left;
   color: var(--ds-text);
   cursor: pointer;
 }
 
-.tl-filter-option:has(input:checked) {
+.tl-filter-option.is-chosen {
   border-color: var(--ds-accent);
   background: var(--ds-accent-tint);
 }
 
-.tl-filter-option input {
+/* The list scrolls, which would clip an outline drawn outside the option. */
+.tl-filter-option:focus-visible {
+  outline-offset: -3px;
+}
+
+.tl-filter-option-mark {
   flex-shrink: 0;
+  box-sizing: border-box;
   width: 17px;
   height: 17px;
-  margin: 0;
-  padding: 0;
-  accent-color: var(--ds-accent);
+  border: 1.5px solid var(--ds-muted);
+  border-radius: 50%;
+}
+
+.tl-filter-option.is-chosen .tl-filter-option-mark {
+  padding: 2.5px;
+  border-color: var(--ds-accent);
+  background: var(--ds-accent);
+  background-clip: content-box;
 }
 
 .tl-filter-option-copy {
@@ -4563,9 +4580,9 @@ ion-modal.ds-sheet {
 
 .tl-filter-option-detail {
   display: block;
-  margin-top: 4px;
+  margin-top: 2px;
   font-size: var(--ds-fs-9);
-  line-height: 1.5;
+  line-height: 1.4;
   color: var(--ds-secondary);
 }
 
@@ -4582,16 +4599,6 @@ ion-modal.ds-sheet {
   line-height: 1.7;
   text-align: center;
   color: var(--ds-secondary);
-}
-
-.tl-filter-apply {
-  margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid var(--ds-line);
-}
-
-.ds-screen .tl-filter-apply .tl-action {
-  margin: 0;
 }
 
 /* ── detail sheet ────────────────────────────────────────────────────────── */
@@ -4640,13 +4647,14 @@ ion-modal.ds-sheet {
 }
 
 /* ── feedback ────────────────────────────────────────────────────────────── */
-.tl-page .tl-row:is(:active, :focus-visible) {
+.tl-page .tl-row:is(:active, :focus-visible),
+.tl-filter-option:not(.is-chosen):active {
   background: var(--ds-subtle);
 }
 
 @media (hover: hover) {
   .tl-page .tl-row:hover,
-  .tl-filter-option:hover {
+  .tl-filter-option:not(.is-chosen):hover {
     background: var(--ds-subtle);
   }
 
