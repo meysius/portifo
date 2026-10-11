@@ -2840,8 +2840,7 @@ ion-toast {
   margin-top: 12px;
 }
 
-.hd-account-toggle,
-.hd-account-head {
+.hd-account-toggle {
   display: block;
   width: 100%;
   padding: 13px 14px;
@@ -2851,8 +2850,7 @@ ion-toast {
   border-radius: 11px;
 }
 
-.hd-account-toggle[aria-expanded="true"],
-.hd-account-head {
+.hd-account-toggle[aria-expanded="true"] {
   border-radius: 11px 11px 0 0;
 }
 
@@ -2937,10 +2935,6 @@ ion-toast {
 
 .hd-account-detail[hidden] {
   display: none;
-}
-
-.hd-account.single .hd-account-detail {
-  padding-top: 0;
 }
 
 .hd-account-stats {
@@ -3038,23 +3032,6 @@ ion-toast {
   margin-top: 4px;
   font-size: var(--ds-fs-9);
   color: var(--ds-secondary);
-}
-
-.hd-lot.compact .hd-lot-date {
-  font-size: var(--ds-fs-12);
-}
-
-.hd-lot.compact .hd-lot-meta {
-  font-size: var(--ds-fs-10);
-}
-
-.hd-lot.compact .hd-lot-end .money {
-  font-size: var(--ds-fs-11);
-}
-
-.hd-lot-details {
-  font-size: var(--ds-fs-11);
-  color: var(--ds-accent);
 }
 
 .hd-accounting-note {

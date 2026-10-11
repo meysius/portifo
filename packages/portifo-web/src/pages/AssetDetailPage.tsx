@@ -134,20 +134,18 @@ function LotRow({
   lot,
   price,
   ccy,
-  compact,
   onOpen,
 }: {
   lot: Lot;
   price: number | null;
   ccy: string;
-  compact?: boolean;
   onOpen: () => void;
 }) {
   const pl = price != null ? (price - lot.pricePerShare) * lot.shares : null;
   return (
     <button
       type="button"
-      className={compact ? "hd-lot compact" : "hd-lot"}
+      className="hd-lot"
       onClick={onOpen}
       aria-label={`Purchase on ${fmtDay(parseDay(lot.date))}, ${fmtShares(lot.shares)} shares, view transaction`}
     >
@@ -170,27 +168,6 @@ function LotRow({
             <small>Cost basis</small>
           </div>
         )}
-      </div>
-    </button>
-  );
-}
-
-// The only purchase in the only account: the hero already carries its value
-// and return, so the row names it and opens it — nothing more.
-function OnlyLotRow({ lot, onOpen }: { lot: Lot; onOpen: () => void }) {
-  return (
-    <button
-      type="button"
-      className="hd-lot compact"
-      onClick={onOpen}
-      aria-label={`View purchase transaction on ${fmtDay(parseDay(lot.date))}`}
-    >
-      <div>
-        <div className="hd-lot-date">{fmtDay(parseDay(lot.date))}</div>
-        <div className="hd-lot-meta">Original purchase · Held {fmtAge(lot.ageYears)}</div>
-      </div>
-      <div className="hd-lot-end">
-        <span className="hd-lot-details">Details</span>
       </div>
     </button>
   );
@@ -354,7 +331,6 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const quoteLoading = !quote && loading.market;
   const accounts = agg.perAccount;
   const openAccounts = accounts.filter((a) => a.shares > 1e-9);
-  const single = accounts.length === 1 && !agg.closed;
   const newestFirst = (lots: Lot[]) => [...lots].sort((a, b) => b.date.localeCompare(a.date));
   const company = [quote?.shortName, quote?.exchange].filter(Boolean);
   const quoteTime = quote?.marketTime ? new Date(quote.marketTime) : null;
@@ -438,147 +414,111 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   );
 
   // ── Where it is held ───────────────────────────────────────────────────────
-  let holdings: ReactNode;
-  if (single) {
-    // One account: identified once, its purchases listed open beneath it.
-    const a = accounts[0];
-    const lots = newestFirst(a.lots);
-    holdings = (
-      <section className="hd-section">
-        <SectionHeading title="Held in" />
-        <div className="hd-account single">
-          <div className="hd-account-head">
-            <div className="hd-account-name">{a.account}</div>
-            <div className="hd-account-meta">
-              {lots.length === 1 ? "One purchase" : `${lots.length} open purchases`}
-            </div>
-          </div>
-          <div className="hd-account-detail">
-            <div className="hd-purchases">
-              <div className="hd-lots-heading">
-                <span>{lots.length === 1 ? "Purchase" : "Open purchases"}</span>
-                <span>{lots.length === 1 ? "Read-only" : price == null ? "Cost basis" : "Unrealized return"}</span>
-              </div>
-              {lots.length === 1 ? (
-                <OnlyLotRow lot={lots[0]} onOpen={() => openTx(lots[0].txId)} />
-              ) : (
-                lots.map((l) => (
-                  <LotRow key={l.txId} lot={l} price={price} ccy={ccy} compact onOpen={() => openTx(l.txId)} />
-                ))
-              )}
-              <AccountingNote lots={lots} />
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  } else {
-    // Several accounts (or a closed position): value and gain visible at once,
-    // cost and purchases revealed in place.
-    const worth = (a: AccountPosition) =>
-      a.shares > 1e-9 ? (price != null ? a.shares * price : a.costBasis) : -Infinity;
-    const sorted = [...accounts].sort((a, b) => worth(b) - worth(a) || b.realizedPL - a.realizedPL);
-    holdings = (
-      <section className="hd-section">
-        <SectionHeading
-          title={agg.closed ? "Realized by account" : "Accounts"}
-          meta={plural(sorted.length, "account")}
-        />
-        {sorted.map((a) => {
-          const open = expanded.has(a.account);
-          const exited = a.shares <= 1e-9;
-          const lots = newestFirst(a.lots);
-          const value = price != null ? a.shares * price : null;
-          const pl = value != null ? value - a.costBasis : null;
-          const detailId = `hd-acct-${a.account.replace(/\W+/g, "-")}`;
-          return (
-            <div className="hd-account" key={a.account}>
-              <button
-                type="button"
-                className="hd-account-toggle"
-                aria-expanded={open}
-                aria-controls={detailId}
-                onClick={() => toggle(a.account)}
-              >
-                <span className="hd-account-title">
-                  <span className="hd-account-identity">
-                    <span className="hd-account-name">{a.account}</span>
-                    <span className="hd-account-meta">
-                      {exited
-                        ? `${fmtShares(a.realizedShares)} shares sold · Closed`
-                        : `${fmtShares(a.shares)} shares · ${plural(lots.length, "purchase")}`}
+  // Every account uses the same summary and expandable purchase ledger,
+  // regardless of how many accounts or purchases the holding has.
+  const worth = (a: AccountPosition) =>
+    a.shares > 1e-9 ? (price != null ? a.shares * price : a.costBasis) : -Infinity;
+  const sorted = [...accounts].sort((a, b) => worth(b) - worth(a) || b.realizedPL - a.realizedPL);
+  const holdings = (
+    <section className="hd-section">
+      <SectionHeading
+        title={agg.closed ? "Realized by account" : "Accounts"}
+        meta={plural(sorted.length, "account")}
+      />
+      {sorted.map((a) => {
+        const open = expanded.has(a.account);
+        const exited = a.shares <= 1e-9;
+        const lots = newestFirst(a.lots);
+        const value = price != null ? a.shares * price : null;
+        const pl = value != null ? value - a.costBasis : null;
+        const detailId = `hd-acct-${a.account.replace(/\W+/g, "-")}`;
+        return (
+          <div className="hd-account" key={a.account}>
+            <button
+              type="button"
+              className="hd-account-toggle"
+              aria-expanded={open}
+              aria-controls={detailId}
+              onClick={() => toggle(a.account)}
+            >
+              <span className="hd-account-title">
+                <span className="hd-account-identity">
+                  <span className="hd-account-name">{a.account}</span>
+                  <span className="hd-account-meta">
+                    {exited
+                      ? `${fmtShares(a.realizedShares)} shares sold · Closed`
+                      : `${fmtShares(a.shares)} shares · ${plural(lots.length, "purchase")}`}
+                  </span>
+                </span>
+                <span className="hd-disclosure" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </span>
+              </span>
+              <span className="hd-account-value">
+                {exited ? (
+                  <>
+                    <span className={`money ${tone(a.realizedPL)}`}>{fmtSignedCcy(a.realizedPL, ccy)}</span>
+                    <span className={`money hd-account-gain ${tone(a.realizedPL)}`}>
+                      {fmtSignedPct(pctOf(a.realizedPL, a.realizedCostBasis))}
                     </span>
-                  </span>
-                  <span className="hd-disclosure" aria-hidden="true">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m6 9 6 6 6-6" />
-                    </svg>
-                  </span>
-                </span>
-                <span className="hd-account-value">
-                  {exited ? (
-                    <>
-                      <span className={`money ${tone(a.realizedPL)}`}>{fmtSignedCcy(a.realizedPL, ccy)}</span>
-                      <span className={`money hd-account-gain ${tone(a.realizedPL)}`}>
-                        {fmtSignedPct(pctOf(a.realizedPL, a.realizedCostBasis))}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="money">{fmtCcy(value ?? a.costBasis, ccy)}</span>
-                      <span className={`money hd-account-gain ${pl != null ? tone(pl) : ""}`}>
-                        {pl != null
-                          ? `${fmtSignedCcy(pl, ccy)} · ${fmtSignedPct(pctOf(pl, a.costBasis))}`
-                          : "Cost basis"}
-                      </span>
-                    </>
-                  )}
-                </span>
-              </button>
-              <div id={detailId} className="hd-account-detail" hidden={!open}>
-                {open &&
-                  (exited ? (
-                    <>
-                      <div className="hd-account-stats">
-                        <Metric label="Cost of sold shares" value={fmtCcy(a.realizedCostBasis, ccy)} />
-                        <Metric label="Avg. holding period" value={fmtAge(a.realizedAgeYears)} />
+                  </>
+                ) : (
+                  <>
+                    <span className="money">{fmtCcy(value ?? a.costBasis, ccy)}</span>
+                    <span className={`money hd-account-gain ${pl != null ? tone(pl) : ""}`}>
+                      {pl != null
+                        ? `${fmtSignedCcy(pl, ccy)} · ${fmtSignedPct(pctOf(pl, a.costBasis))}`
+                        : "Cost basis"}
+                    </span>
+                  </>
+                )}
+              </span>
+            </button>
+            <div id={detailId} className="hd-account-detail" hidden={!open}>
+              {open &&
+                (exited ? (
+                  <>
+                    <div className="hd-account-stats">
+                      <Metric label="Cost of sold shares" value={fmtCcy(a.realizedCostBasis, ccy)} />
+                      <Metric label="Avg. holding period" value={fmtAge(a.realizedAgeYears)} />
+                    </div>
+                    <TextLink onClick={() => openHistory({ account: a.account })}>
+                      View transactions <Chevron />
+                    </TextLink>
+                  </>
+                ) : (
+                  <>
+                    <div className="hd-account-stats">
+                      <Metric label="Avg. cost/share" value={fmtCcy(a.avgCost, ccy)} />
+                      <Metric label="Cost" value={fmtCcy(a.costBasis, ccy)} />
+                      <Metric label="Avg. age" value={fmtAge(a.avgAgeYears)} />
+                    </div>
+                    {a.realizedShares > 1e-9 && (
+                      <div className="hd-realized-note">
+                        Already realized{" "}
+                        <span className={`money ${tone(a.realizedPL)}`}>{fmtSignedCcy(a.realizedPL, ccy)}</span>
                       </div>
-                      <TextLink onClick={() => openHistory({ account: a.account })}>
-                        View transactions <Chevron />
-                      </TextLink>
-                    </>
-                  ) : (
-                    <>
-                      <div className="hd-account-stats">
-                        <Metric label="Avg. cost/share" value={fmtCcy(a.avgCost, ccy)} />
-                        <Metric label="Cost" value={fmtCcy(a.costBasis, ccy)} />
-                        <Metric label="Avg. age" value={fmtAge(a.avgAgeYears)} />
+                    )}
+                    <div className="hd-purchases">
+                      <div className="hd-lots-heading">
+                        <span>{plural(lots.length, "open purchase")}</span>
+                        <span>{price == null ? "Cost basis" : "Unrealized return"}</span>
                       </div>
-                      {a.realizedShares > 1e-9 && (
-                        <div className="hd-realized-note">
-                          Already realized{" "}
-                          <span className={`money ${tone(a.realizedPL)}`}>{fmtSignedCcy(a.realizedPL, ccy)}</span>
-                        </div>
-                      )}
-                      <div className="hd-purchases">
-                        <div className="hd-lots-heading">
-                          <span>{plural(lots.length, "open purchase")}</span>
-                          <span>{price == null ? "Cost basis" : "Unrealized return"}</span>
-                        </div>
-                        {lots.map((l) => (
-                          <LotRow key={l.txId} lot={l} price={price} ccy={ccy} onOpen={() => openTx(l.txId)} />
-                        ))}
-                        <AccountingNote lots={lots} />
-                      </div>
-                    </>
-                  ))}
-              </div>
+                      {lots.map((l) => (
+                        <LotRow key={l.txId} lot={l} price={price} ccy={ccy} onOpen={() => openTx(l.txId)} />
+                      ))}
+                      <AccountingNote lots={lots} />
+                    </div>
+                  </>
+                ))}
             </div>
-          );
-        })}
-      </section>
-    );
-  }
+          </div>
+        );
+      })}
+    </section>
+  );
 
   // ── Already realized, on a position that is still open ─────────────────────
   // Kept apart from the open position's return: two different percentages on

@@ -19,6 +19,13 @@ For every group below the hero: Holdings, Breakdown, Today’s movers, Position,
 - End a page with a footer note in `row-meta`, centred, `ds-muted`, saying what the figures are: "All amounts in USD · Average-cost accounting", "Total account values in USD · Manually tracked".
 - Don't put a primary button inside a section. Text actions ("Show all", "Add currency") are fine.
 
+## Holding detail account breakdown
+- Use the same **Accounts** section for one or several accounts, with the account count in the heading meta. A fully closed holding uses **Realized by account**.
+- Every account starts collapsed and uses the same full-width summary button: account name, shares and purchase count (or shares sold and Closed), disclosure, value and return. Tapping expands its details in place.
+- Active account details show average cost/share, cost basis, average age, any previously realized return, and open purchases newest first.
+- Every purchase uses the same row, even the only purchase in the only account: date, remaining shares × original price, and unrealized return in money and percentage. Without a quote, show cost basis instead. The whole row opens its transaction; don't substitute a special Details-only row.
+- After partial sales, label reduced share counts as remaining and explain proportional drawdown below the purchases. Exited account details show cost of sold shares, average holding period, and View transactions.
+
 ## Drift
 Section padding is 17px on Portfolio, 18px on an account and 21px on a holding; heading-to-content is 13px, 4px and 17px. Converge on one value per case when next touched.
 
