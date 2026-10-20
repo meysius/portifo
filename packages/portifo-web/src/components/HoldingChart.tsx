@@ -114,7 +114,8 @@ const cache = new Map<string, Pt[]>();
 // The average by bar time, keyed the same way.
 const smaCache = new Map<string, Map<number, number>>();
 
-export default function HoldingChart({ symbol, ccy }: { symbol: string; ccy: string }) {
+// `reloadKey` changes on the page's pull to refresh: the range is fetched again.
+export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: string; ccy: string; reloadKey?: number }) {
   const [range, setRange] = useState<HistoryRange>("1M");
   const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1M`) ?? null);
   const [failed, setFailed] = useState(false);
@@ -157,7 +158,7 @@ export default function HoldingChart({ symbol, ccy }: { symbol: string; ccy: str
     return () => {
       live = false;
     };
-  }, [symbol, range]);
+  }, [symbol, range, reloadKey]);
 
   const smaFits = SMA_RANGES.has(range);
   // The bands are drawn around the average, so either toggle draws its line.
@@ -180,7 +181,7 @@ export default function HoldingChart({ symbol, ccy }: { symbol: string; ccy: str
     return () => {
       live = false;
     };
-  }, [symbol, range, smaShown]);
+  }, [symbol, range, smaShown, reloadKey]);
 
   const toggle = (key: string, on: boolean, set: (on: boolean) => void) => {
     writePref(key, !on);

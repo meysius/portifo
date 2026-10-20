@@ -24,6 +24,8 @@ A holding, an account, the cash: anything opened from a row with a right chevron
 3. **Hero**, then **Sections**, then a **footer note**, as on a tab root.
 4. **Bottom actions** (`BottomActions`), only where the page has a main pair of actions: Buy and Sell sit where the tab bar was, in thumb reach.
 
+A holding's page supports pull to refresh, as tab roots do: it refetches the share price, the ledger and the chart's range.
+
 ## Full-screen task
 
 Creating something that needs more than one field: a new account, the add-transaction wizard. It covers the tabs completely.

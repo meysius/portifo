@@ -5,9 +5,12 @@ import {
   IonFooter,
   IonHeader,
   IonPage,
+  IonRefresher,
+  IonRefresherContent,
   IonTitle,
   IonToolbar,
 } from "@ionic/react";
+import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useHistory } from "react-router-dom";
@@ -239,15 +242,29 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const history = useHistory();
   const { tabBase, tabLabel } = useTabBase();
   const symbol = match.params.symbol;
-  const { tickerAggregates, transactions, quotes, fxRates, loading, refreshMarket } = usePortfolioData();
+  const { tickerAggregates, transactions, quotes, fxRates, loading, refreshMarket, refreshTransactions } =
+    usePortfolioData();
   const agg = tickerAggregates.find((t) => t.symbol === symbol);
   const quote = quotes[symbol];
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
+  // Counts pulls to refresh, so the chart refetches its range on each.
+  const [pulls, setPulls] = useState(0);
 
   useEffect(() => {
     if (!quotes[symbol]) refreshMarket([symbol]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol]);
+
+  // A pull refetches what the page is made of: the quote (and the rates that
+  // convert it), the ledger, and the chart's range.
+  const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
+    setPulls((n) => n + 1);
+    try {
+      await Promise.all([refreshMarket([symbol]), refreshTransactions({ silent: true })]);
+    } finally {
+      e.detail.complete();
+    }
+  };
 
   const lastSell = useMemo(
     () =>
@@ -367,7 +384,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
             </div>
           )}
         </div>
-        <HoldingChart symbol={symbol} ccy={quote.currency} />
+        <HoldingChart symbol={symbol} ccy={quote.currency} reloadKey={pulls} />
       </section>
     );
   } else if (!agg.closed) {
@@ -550,6 +567,9 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
       {header}
 
       <IonContent fullscreen>
+        <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
+          <IonRefresherContent />
+        </IonRefresher>
         {largeTitle}
         {/* Reserves its line while the quote loads, so nothing below jumps. */}
         {(company.length > 0 || quoteLoading) && (
