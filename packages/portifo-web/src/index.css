@@ -2484,7 +2484,33 @@ ion-toast {
   padding: 12px var(--ds-gutter) 0;
 }
 
+/* The symbol, then the share price at the line's end, sharing a baseline.
+   The title's inner wrapper (in its shadow root) hugs its content, so the row
+   takes the title's width as a container instead. */
+.ios .hd-page ion-title.title-large {
+  container-type: inline-size;
+}
+
+.hd-title-row {
+  width: 100cqw;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hd-page .hd-title-price {
+  font-size: var(--ds-fs-16);
+  font-weight: 500;
+  letter-spacing: -0.6px;
+}
+
+/* The company, then when the price was set, under the price. */
 .hd-company {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: 4px;
   padding: 0 var(--ds-gutter);
   font-size: var(--ds-fs-12);
@@ -2543,18 +2569,20 @@ ion-toast {
 }
 
 .hd-return-label {
-  font-size: var(--ds-fs-11);
+  font-size: var(--ds-fs-10);
   color: var(--ds-secondary);
 }
 
-/* Today's return on the shares held, under the overall return. */
-.hd-today-return {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+/* Today's return, then the unrealized one: rows of one table, so amounts,
+   pills and labels each share a column. */
+.hd-hero-returns {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  justify-items: start;
   gap: 8px;
-  margin-top: 12px;
-  font-size: var(--ds-fs-11);
+  margin-top: 10px;
+  font-size: var(--ds-fs-12);
 }
 
 /* A return's percentage, on its own tint. */
@@ -2589,47 +2617,23 @@ ion-toast {
   color: var(--ds-secondary);
 }
 
-/* ── market: the share price, its move today, the chart ──────────────────── */
+/* ── market: the price history ───────────────────────────────────────────── */
 .hd-market {
   margin: 0 var(--ds-gutter);
   padding-top: 17px;
   border-top: 1px solid var(--ds-line);
 }
 
-.hd-market-numbers {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 10px 16px;
-}
-
 .hd-quote-stamp {
-  margin-left: auto;
-  font-size: var(--ds-fs-9);
-  line-height: 1.7;
-  text-align: right;
-  color: var(--ds-secondary);
+  flex-shrink: 0;
+  font-size: var(--ds-fs-10);
+  white-space: nowrap;
 }
 
 .hd-metric-label {
   margin-bottom: 6px;
   font-size: var(--ds-fs-11);
   color: var(--ds-secondary);
-}
-
-.hd-page .hd-metric-main {
-  font-size: var(--ds-fs-16);
-  font-weight: 500;
-  letter-spacing: -0.6px;
-}
-
-.hd-metric-foot {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 4px;
-  font-size: var(--ds-fs-10);
 }
 
 

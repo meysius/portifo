@@ -75,6 +75,8 @@ button {
   padding: calc(16px + var(--safe-top)) var(--ds-gutter) 0;
 }
 .ds-heading.pushed { padding-top: 12px; }
+.ds-heading.quoted { align-items: baseline; gap: 12px; }
+.ds-heading-price { font-size: var(--ds-fs-16); font-weight: 500; letter-spacing: -0.6px; }
 .ds-heading h1 {
   min-width: 0;
   overflow-wrap: anywhere;
@@ -87,8 +89,9 @@ button {
 .po-title { display: inline; text-align: left; }
 .po-title svg { display: inline-block; margin-left: 6px; vertical-align: 0.05em; color: var(--ds-muted); }
 .ac-subtitle { margin: 6px var(--ds-gutter) 0; font-size: var(--ds-fs-10); line-height: 1.6; color: var(--ds-secondary); }
-.hd-company { margin-top: 4px; padding: 0 var(--ds-gutter); font-size: var(--ds-fs-12); line-height: 1.6; color: var(--ds-secondary); }
+.hd-company { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 4px; padding: 0 var(--ds-gutter); font-size: var(--ds-fs-12); line-height: 1.6; color: var(--ds-secondary); }
 .hd-company .dot { padding: 0 5px; color: var(--ds-muted); }
+.hd-quote-stamp { flex-shrink: 0; font-size: var(--ds-fs-10); white-space: nowrap; }
 
 /* ── icon button ───────────────────────────────────────────────────────── */
 .ds-icon-button {
@@ -221,7 +224,7 @@ button {
 .ds-hero-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .ds-hero-return { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; font-size: var(--ds-fs-12); }
 .ds-return-label { font-size: var(--ds-fs-10); color: var(--ds-secondary); }
-.ds-today-return { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; margin-top: 12px; font-size: var(--ds-fs-11); }
+.ds-hero-returns { display: grid; grid-template-columns: auto auto 1fr; align-items: center; justify-items: start; gap: 8px; margin-top: 10px; font-size: var(--ds-fs-12); }
 .ds-pill { padding: 3px 5px; border-radius: 4px; font-size: var(--ds-fs-10); letter-spacing: -0.2px; background: var(--ds-subtle); }
 .ds-pill.positive { background: var(--ds-positive-bg); }
 .ds-pill.negative { background: var(--ds-negative-bg); }

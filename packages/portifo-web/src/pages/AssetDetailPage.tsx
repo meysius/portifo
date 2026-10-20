@@ -24,10 +24,12 @@ import type { AccountPosition, Lot, TickerAgg } from "../lib/positions";
 
 // The holding screen, built from design-poc/holding-detail.html, in the
 // second design system (theme/ds.css). Read top to bottom:
-//   1. Your money — what the position is worth, the unrealized return, and
-//      today's return on the shares held.
-//   2. The market — the share price and its move today, then a quiet
-//      price-history chart.
+//   0. The symbol — its name, and beside it the share price with the time of
+//      the quote, as a Stocks watchlist row shows them: the price belongs to
+//      the symbol, not to ownership.
+//   1. Your money — what the position is worth, then its returns as two rows
+//      of one table: today's, then the unrealized one.
+//   2. The market — a quiet price-history chart.
 //   3. The ownership — a compact position ledger, then the accounts it is
 //      held in; an account expands in place to its open purchases, and a
 //      purchase pushes its transaction.
@@ -103,6 +105,19 @@ function Metric({ label, value, className = "" }: { label: string; value: ReactN
 
 function ReturnPill({ value, base }: { value: number; base: number }) {
   return <span className={`money hd-pill ${tone(value)}`}>{fmtSignedPct(pctOf(value, base))}</span>;
+}
+
+// A return under the headline figure: the amount, its percentage on a pill,
+// then what it measures. Rows sit in one grid, so their amounts, pills and
+// labels line up in columns.
+function ReturnRow({ amount, value, pct, label }: { amount: string; value: number; pct: number; label: string }) {
+  return (
+    <>
+      <span className={`money ${tone(value)}`}>{amount}</span>
+      <span className={`money hd-pill ${tone(value)}`}>{fmtSignedPct(pct)}</span>
+      <span className="hd-return-label">{label}</span>
+    </>
+  );
 }
 
 function SectionHeading({ title, meta }: { title: string; meta?: string }) {
@@ -218,22 +233,20 @@ function Hero({
   }
   const value = price * agg.totalShares;
   const pl = value - agg.costBasis;
+  // Today first, as on Portfolio's hero; then since the shares were bought.
   return (
     <section className="hd-hero" aria-label="Position summary">
       <div className="hd-hero-label">Position value · {ccy}</div>
       <HeroValue text={fmtCcy(value, ccy)} />
-      <div className="hd-hero-return">
-        <span className={`money ${tone(pl)}`}>{fmtSignedCcy(pl, ccy)}</span>
-        <ReturnPill value={pl} base={agg.costBasis} />
-        <span className="hd-return-label">Unrealized return</span>
+      <div className="hd-hero-returns">
+        {day && <ReturnRow amount={fmtSignedCcy(day.value, ccy)} value={day.value} pct={day.pct} label="Today" />}
+        <ReturnRow
+          amount={fmtSignedCcy(pl, ccy)}
+          value={pl}
+          pct={pctOf(pl, agg.costBasis)}
+          label="Unrealized return"
+        />
       </div>
-      {day && (
-        <div className="hd-today-return" aria-label="Today’s position return">
-          <span className="hd-return-label">Today’s return</span>
-          <span className={`money ${tone(day.value)}`}>{fmtSignedCcy(day.value, ccy)}</span>
-          <span className={`money ${tone(day.value)}`}>{fmtSignedPct(day.pct)}</span>
-        </div>
-      )}
     </section>
   );
 }
@@ -299,10 +312,16 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
       </IonToolbar>
     </IonHeader>
   );
-  const largeTitle = (
+  // The share price, when there is one, ends the title's line.
+  const largeTitle = (end?: ReactNode) => (
     <IonHeader collapse="condense">
       <IonToolbar>
-        <IonTitle size="large">{symbol}</IonTitle>
+        <IonTitle size="large">
+          <div className="hd-title-row">
+            {symbol}
+            {end}
+          </div>
+        </IonTitle>
       </IonToolbar>
     </IonHeader>
   );
@@ -312,7 +331,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
       <IonPage className="hd-page">
         {header}
         <IonContent fullscreen>
-          {largeTitle}
+          {largeTitle()}
           {/* Until the ledger has loaded, "not found" would be a guess. */}
           {!loading.transactions && (
             <div className="hd-empty">
@@ -359,31 +378,23 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
       ? { value: change * agg.totalShares, pct: quote.changePercent }
       : null;
 
-  // ── The market: the share price, its move today, the chart ────────────────
-  // The price belongs to the symbol, so a closed position keeps it; without a
-  // quote, a closed position simply has no market section.
+  // When the share price was set: a time while the market is open, else the
+  // session it closed. Today's move lives in the hero, on the shares held, so
+  // the price line doesn't repeat it.
+  const quoteStamp =
+    price != null && quoteTime
+      ? quote?.marketState === "REGULAR"
+        ? `At ${fmtEtTime(quoteTime)}`
+        : `At close · ${fmtEtDay(quoteTime)}`
+      : null;
+
+  // ── The market: the price history ─────────────────────────────────────────
+  // The price belongs to the symbol, so a closed position keeps its chart;
+  // without a quote, a closed position simply has no market section.
   let market: ReactNode = null;
   if (quote && price != null) {
-    const open = quote.marketState === "REGULAR";
     market = (
-      <section className="hd-market" aria-label="Share price and history">
-        <div className="hd-market-numbers">
-          <div>
-            <div className="hd-metric-label">Share price · {ccy}</div>
-            <div className="hd-metric-main money">{fmtCcy(price, ccy)}</div>
-            <div className={`hd-metric-foot money ${tone(change)}`} aria-label="Today’s change per share">
-              {fmtSignedCcy(change, ccy)} · {fmtSignedPct(quote.changePercent)}
-            </div>
-          </div>
-          {/* The study's live dot is gone; whether the market is open is said in words. */}
-          {quoteTime && (
-            <div className="hd-quote-stamp">
-              {open ? `At ${fmtEtTime(quoteTime)}` : `At close · ${fmtEtDay(quoteTime)}`}
-              <br />
-              {open ? "Market open" : "Market closed"}
-            </div>
-          )}
-        </div>
+      <section className="hd-market" aria-label="Share price history">
         <HoldingChart symbol={symbol} ccy={quote.currency} reloadKey={pulls} />
       </section>
     );
@@ -570,18 +581,21 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
         </IonRefresher>
-        {largeTitle}
+        {largeTitle(price != null && <span className="hd-title-price money">{fmtCcy(price, ccy)}</span>)}
         {/* Reserves its line while the quote loads, so nothing below jumps. */}
-        {(company.length > 0 || quoteLoading) && (
+        {(company.length > 0 || quoteLoading || quoteStamp) && (
           <div className="hd-company">
-            {company.length > 0
-              ? company.map((part, i) => (
-                  <span key={i}>
-                    {i > 0 && <span className="dot">·</span>}
-                    {part}
-                  </span>
-                ))
-              : " "}
+            <span>
+              {company.length > 0
+                ? company.map((part, i) => (
+                    <span key={i}>
+                      {i > 0 && <span className="dot">·</span>}
+                      {part}
+                    </span>
+                  ))
+                : " "}
+            </span>
+            {quoteStamp && <span className="hd-quote-stamp">{quoteStamp}</span>}
           </div>
         )}
 
