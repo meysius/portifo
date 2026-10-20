@@ -16,8 +16,5 @@ With a holding's price chart (and the portfolio's value chart, which shares the 
 - Each chip is its lines' legend: a 12px swatch, the name, then the value in mono.
 - Disabled chips (range too short) drop to 45% opacity, with the note beside them in `ds-muted`.
 - The plot itself: a vertical swipe scrolls the page, a horizontal one scrubs.
-- 1D draws the last session as 5-minute candles in place of the line. The time scale spans the session's full hours, so the day fills in from the left as it trades. A candle that closed at or above its open is `ds-positive`, one that closed below it `ds-negative`: a 1px wick from high to low, a body 70% of its slot (at most 9px, at least 1px tall). Volume stays `ds-muted` beneath.
-- 1D is live: while the market is open and the chart is on screen, it refreshes every 5 seconds, and the share price and returns above it move with it. Candles redraw in place, without animation. Closed, it checks once a minute.
-- Scrubbing a candle shows its close, currency and start time, then its open, high and low on a second line in mono `ds-secondary` ("O 340.10 H 340.50 L 339.90").
 
 Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.hd-chart-controls`, `.hd-range`, `.hd-indicator*`) and `src/components/HoldingChart.tsx`.

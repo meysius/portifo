@@ -34,7 +34,6 @@ export class MarketController implements SWController {
     router.get("/market/fx", this.getFx);
     router.get("/market/history", this.getHistory);
     router.get("/market/sma", this.getSma);
-    router.get("/market/intraday", this.getIntraday);
     router.get("/market/search", this.searchSymbols);
   }
 
@@ -119,27 +118,6 @@ export class MarketController implements SWController {
     } catch (err) {
       this.logger.error("MarketController.getSma failed");
       res.status(502).json({ error: "Failed to fetch indicator" });
-    }
-  };
-
-  private getIntraday = async (req: Request, res: Response): Promise<void> => {
-    if (!(await this.authenticate(req))) {
-      res.status(401).json({ error: "Not authenticated" });
-      return;
-    }
-
-    const symbol = String(req.query.symbol ?? "").toUpperCase();
-    const since = req.query.since ? new Date(String(req.query.since)) : undefined;
-    if (!symbol || (since && Number.isNaN(since.getTime()))) {
-      res.status(400).json({ error: "Invalid intraday query" });
-      return;
-    }
-
-    try {
-      res.json(await this.marketService.getIntraday(symbol, since));
-    } catch (err) {
-      this.logger.error("MarketController.getIntraday failed");
-      res.status(502).json({ error: "Failed to fetch intraday candles" });
     }
   };
 

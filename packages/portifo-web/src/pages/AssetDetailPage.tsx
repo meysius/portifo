@@ -17,7 +17,6 @@ import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { BACK_ICON } from "../lib/backIcon";
 import { convert, fmtAge, fmtCcy, fmtDay, fmtShares, fmtSignedCcy, fmtSignedPct, parseDay } from "../lib/fx";
-import type { Quote } from "../api/market";
 import type { AccountPosition, Lot, TickerAgg } from "../lib/positions";
 
 // The holding screen, built from design-poc/holding-detail.html, in the
@@ -242,12 +241,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   const symbol = match.params.symbol;
   const { tickerAggregates, transactions, quotes, fxRates, loading, refreshMarket } = usePortfolioData();
   const agg = tickerAggregates.find((t) => t.symbol === symbol);
-  // The 1D chart's polls bring fresher quotes than the shared one; they stay
-  // with this page rather than ripple through every screen every few seconds.
-  const [liveQuote, setLiveQuote] = useState<Quote | null>(null);
-  const shared = quotes[symbol];
-  const quote =
-    liveQuote && (!shared || (liveQuote.marketTime ?? "") > (shared.marketTime ?? "")) ? liveQuote : shared;
+  const quote = quotes[symbol];
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
@@ -373,7 +367,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
             </div>
           )}
         </div>
-        <HoldingChart symbol={symbol} ccy={quote.currency} onQuote={setLiveQuote} />
+        <HoldingChart symbol={symbol} ccy={quote.currency} />
       </section>
     );
   } else if (!agg.closed) {

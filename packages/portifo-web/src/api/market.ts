@@ -37,13 +37,6 @@ export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y"
 // getHistory's); bars without a full window behind them have no point.
 export type IndicatorPoint = { date: string; value: number };
 
-// One 5-minute candle, dated at the start of its slot.
-export type Candle = { date: string; open: number; high: number; low: number; close: number; volume: number };
-
-// The last regular session as candles, bounded by the session's own hours,
-// with the quote struck alongside them.
-export type Intraday = { start: string; end: string; candles: Candle[]; quote: Quote | null };
-
 export type SymbolResult = {
   symbol: string;
   name?: string;
@@ -78,16 +71,6 @@ export async function getSma(symbol: string, range: HistoryRange, window: number
     `/market/sma?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&window=${window}`,
   );
   if (!res.ok) throw new Error("Failed to fetch moving average");
-  return res.json();
-}
-
-// The last session's candles; with `since`, only those from that candle on
-// (the one still forming included), for a poll that tops up what it has.
-export async function getIntraday(symbol: string, since?: string): Promise<Intraday> {
-  const res = await apiFetch(
-    `/market/intraday?symbol=${encodeURIComponent(symbol)}${since ? `&since=${encodeURIComponent(since)}` : ""}`,
-  );
-  if (!res.ok) throw new Error("Failed to fetch intraday candles");
   return res.json();
 }
 

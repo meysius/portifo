@@ -35,32 +35,6 @@ export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y"
 // A moving average read off at one of a range's bars.
 export type IndicatorPoint = { date: string; value: number };
 
-// One 5-minute candle, dated at the start of its slot.
-export type Candle = { date: string; open: number; high: number; low: number; close: number; volume: number };
-
-// The last regular session as candles, bounded by the session's own hours
-// (so a chart can lay out the whole day before it has traded), with the
-// quote struck alongside them.
-export type Intraday = { start: string; end: string; candles: Candle[]; quote: Quote | null };
-
-const CANDLE_MS = 5 * 60_000;
-// How long one Yahoo read serves every poll of a symbol. A failed read is
-// held longer, so a refusing Yahoo isn't asked again by every poll.
-const INTRADAY_TTL_MS = 4_000;
-const INTRADAY_BACKOFF_MS = 30_000;
-
-// The regular sessions a chart covers, oldest first. The schema promises
-// Dates, but the array form (sent without pre/post hours) arrives as epoch
-// seconds.
-function sessionsOf(tradingPeriods: unknown): { start: number; end: number }[] {
-  const list: any[] = Array.isArray(tradingPeriods) ? tradingPeriods : ((tradingPeriods as any)?.regular ?? []);
-  const ms = (v: unknown) => (v instanceof Date ? v.getTime() : Number(v) * 1000);
-  return list
-    .flat()
-    .map((p) => ({ start: ms(p?.start), end: ms(p?.end) }))
-    .filter((s) => s.end > s.start);
-}
-
 export type SymbolResult = {
   symbol: string;
   name?: string;
@@ -112,7 +86,6 @@ function historyWindow(range: HistoryRange): { period1: Date; interval: "5m" | "
 
 export class MarketService {
   private readonly client = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
-  private readonly intraday = new Map<string, { until: number; data: Promise<Intraday> }>();
 
   constructor(private readonly logger: SWLogger) {}
 
@@ -174,73 +147,6 @@ export class MarketService {
     let start = ts.length - 1;
     while (start > 0 && ts[start] - ts[start - 1] <= 2 * 3_600_000) start--;
     return points.slice(start);
-  }
-
-  // The last session's candles, polled while a market is open: one Yahoo
-  // read per symbol serves every caller for a few seconds. `since` trims the
-  // reply to the candles from that one on, the one still forming included.
-  async getIntraday(symbol: string, since?: Date): Promise<Intraday> {
-    let hit = this.intraday.get(symbol);
-    if (!hit || hit.until <= Date.now()) {
-      const entry = { until: Date.now() + INTRADAY_TTL_MS, data: this.readIntraday(symbol) };
-      entry.data.catch(() => {
-        entry.until = Date.now() + INTRADAY_BACKOFF_MS;
-      });
-      this.intraday.set(symbol, entry);
-      hit = entry;
-    }
-    const day = await hit.data;
-    if (!since) return day;
-    const from = since.getTime();
-    return { ...day, candles: day.candles.filter((c) => new Date(c.date).getTime() >= from) };
-  }
-
-  private async readIntraday(symbol: string): Promise<Intraday> {
-    const period1 = new Date();
-    // As for 1D history: five days reach back past any closure.
-    period1.setDate(period1.getDate() - 5);
-    const [chart, quotes] = await Promise.all([
-      this.client.chart(symbol, { period1, period2: new Date(), interval: "5m", includePrePost: false }),
-      this.getQuotes([symbol]).catch(() => []),
-    ]);
-    const rows = chart.quotes.filter((q) => q.open != null && q.high != null && q.low != null && q.close != null);
-    const lastT = rows.length ? rows[rows.length - 1].date.getTime() : Date.now();
-    // The session the latest row falls in. Without Yahoo's hours, the rows
-    // since the last overnight gap stand in for it.
-    let session = sessionsOf(chart.meta.tradingPeriods).findLast((s) => s.start <= lastT);
-    if (!session) {
-      let i = rows.length - 1;
-      while (i > 0 && rows[i].date.getTime() - rows[i - 1].date.getTime() <= 2 * 3_600_000) i--;
-      session = { start: rows[i]?.date.getTime() ?? lastT, end: lastT + CANDLE_MS };
-    }
-    const slots = Math.max(1, Math.round((session.end - session.start) / CANDLE_MS));
-
-    const candles: Candle[] = [];
-    for (const q of rows) {
-      const t = q.date.getTime();
-      if (t < session.start) continue;
-      // The closing auction, stamped at the bell, belongs to the last slot.
-      const slot = Math.min(Math.floor((t - session.start) / CANDLE_MS), slots - 1);
-      const date = new Date(session.start + slot * CANDLE_MS).toISOString();
-      const [open, high, low, close] = [q.open, q.high, q.low, q.close] as number[];
-      const last = candles[candles.length - 1];
-      if (last?.date === date) {
-        // Yahoo trails the forming bar with a row of the live price, stamped
-        // at its own time rather than the slot's: fold it in.
-        last.high = Math.max(last.high, high);
-        last.low = Math.min(last.low, low);
-        last.close = close;
-        last.volume += q.volume ?? 0;
-      } else {
-        candles.push({ date, open, high, low, close, volume: q.volume ?? 0 });
-      }
-    }
-    return {
-      start: new Date(session.start).toISOString(),
-      end: new Date(session.end).toISOString(),
-      candles,
-      quote: quotes[0] ?? null,
-    };
   }
 
   // The `window`-day simple moving average of daily closes, read off at each

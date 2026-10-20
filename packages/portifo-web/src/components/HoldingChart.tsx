@@ -1,10 +1,9 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { getHistory, getSma } from "../api/market";
-import type { HistoryPoint, HistoryRange, Quote } from "../api/market";
-import { CHART_H, PLOT_BOTTOM, PLOT_H, plotY, timeAxis, valueAxis, volumePath } from "../lib/chartAxis";
+import type { HistoryPoint, HistoryRange } from "../api/market";
+import { AXIS_H, PLOT_BOTTOM, PLOT_H, plotY, timeAxis, valueAxis } from "../lib/chartAxis";
 import { fmtCcy, fmtDay, fmtSignedPct, yahooQuoteUrl } from "../lib/fx";
-import CandleChart from "./CandleChart";
 import TimeGrid from "./TimeGrid";
 import ValueGrid from "./ValueGrid";
 
@@ -13,9 +12,7 @@ import ValueGrid from "./ValueGrid";
 // low to its high over trading time only, a price scale at the right, a time
 // scale beneath, the volume traded under that, the latest close as a dot, a
 // scrub readout on demand. The full chart is one tap away at Yahoo (the
-// outward arrow), which already supplies our prices. 1D is the exception:
-// the session as live 5-minute candles (CandleChart), whose quotes it hands
-// up through `onQuote`.
+// outward arrow), which already supplies our prices.
 //
 // Under the chart sit two indicator toggles: the 200-day moving average, and
 // that average inside bands 5, 10 and 15% either side of it. Both draw on 3M
@@ -37,6 +34,10 @@ const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
 
 // Price and shares traded per bar.
 type Pt = { t: number; p: number; v: number };
+
+const VOLUME_GAP = 8;
+const VOLUME_H = 18;
+const CHART_H = PLOT_H + AXIS_H + VOLUME_GAP + VOLUME_H;
 
 const SMA_WINDOW = 200;
 const SMA_RANGES = new Set<HistoryRange>(["3M", "6M", "1Y", "All"]);
@@ -89,21 +90,31 @@ function tipLabel(t: number, range: HistoryRange) {
   return fmtDay(new Date(t));
 }
 
+// Grey strokes rising from the strip's floor, scaled to the range's busiest
+// bar, as Apple shows them. Bars nearer than 3px are summed, so a decade of
+// weeks reads as a texture rather than a solid block.
+function volumePath(xs: number[], s: Pt[]) {
+  const bars: { x: number; v: number }[] = [];
+  xs.forEach((x, i) => {
+    const bar = bars[bars.length - 1];
+    if (bar && x - bar.x < 3) bar.v += s[i].v;
+    else bars.push({ x, v: s[i].v });
+  });
+  const max = Math.max(...bars.map((b) => b.v));
+  if (!(max > 0)) return "";
+  return bars
+    .filter((b) => b.v > 0)
+    .map((b) => `M${b.x.toFixed(1)} ${CHART_H}v-${Math.max(1, (b.v / max) * VOLUME_H).toFixed(1)}`)
+    .join("");
+}
+
 // Last-fetched series per symbol+range, so flipping back to a range (or pushing
 // the same holding again) redraws at once.
 const cache = new Map<string, Pt[]>();
 // The average by bar time, keyed the same way.
 const smaCache = new Map<string, Map<number, number>>();
 
-export default function HoldingChart({
-  symbol,
-  ccy,
-  onQuote,
-}: {
-  symbol: string;
-  ccy: string;
-  onQuote?: (quote: Quote) => void;
-}) {
+export default function HoldingChart({ symbol, ccy }: { symbol: string; ccy: string }) {
   const [range, setRange] = useState<HistoryRange>("1M");
   const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1M`) ?? null);
   const [failed, setFailed] = useState(false);
@@ -127,8 +138,6 @@ export default function HoldingChart({
   }, []);
 
   useEffect(() => {
-    // Candles fetch their own.
-    if (range === "1D") return;
     const key = `${symbol}|${range}`;
     let live = true;
     setScrub(null);
@@ -222,7 +231,7 @@ export default function HoldingChart({
         };
       });
     }
-    volume = volumePath(xs, s.map((p) => p.v));
+    volume = volumePath(xs, s);
   }
   const stamps = s.map((p) => p.t);
   const times = ready ? timeAxis(stamps, xs, range, width) : [];
@@ -273,108 +282,102 @@ export default function HoldingChart({
 
       {/* Sized up front, so nothing below jumps while a range loads. */}
       <div ref={wrapRef} className="hd-chart" style={{ height: CHART_H }}>
-        {range === "1D" ? (
-          <CandleChart symbol={symbol} ccy={ccy} width={width} onQuote={onQuote} />
-        ) : (
-          <>
-            {/* Slides with the cursor but never leaves the plot: at the left edge it
-                hangs right of the cursor, at the right edge left of it. */}
-            {ready && scrub != null && (
-              <div
-                className="hd-chart-tip"
-                style={{ left: xs[scrub], transform: `translateX(-${(xs[scrub] / plotW) * 100}%)` }}
-              >
-                {fmtCcy(s[scrub].p, ccy)} · {ccy} · {tipLabel(s[scrub].t, range)}
-              </div>
-            )}
-            {!ready && failed && (
-              <div className="hd-chart-empty" style={{ height: PLOT_H }}>
-                Price history unavailable
-              </div>
-            )}
-            {width > 0 && (
-              <svg
-                width={width}
-                height={CHART_H}
-                role="img"
-                aria-label={`${symbol} share price, ${RANGE_WORD[range]}${
-                  bandPaths.length ? ", with its 200-day average and bands" : smaPath ? ", with its 200-day average" : ""
-                }`}
-                onPointerDown={pick}
-                onPointerMove={pick}
-                onPointerUp={(e) => e.pointerType !== "mouse" && release()}
-                onPointerCancel={release}
-                onPointerLeave={release}
-              >
-                <defs>
-                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--ds-accent)" stopOpacity=".24" />
-                    <stop offset="100%" stopColor="var(--ds-accent)" stopOpacity=".02" />
-                  </linearGradient>
-                </defs>
-                <ValueGrid ticks={scale.ticks} width={width} plotW={plotW} />
-                <TimeGrid ticks={times} />
-                {volume && <path d={volume} fill="none" stroke="var(--ds-muted)" strokeWidth={1.5} />}
-                {ready && (
-                  <>
-                    {/* The bands' tints replace the price's fill, rather than mix with it. */}
-                    {bandPaths.length ? (
-                      bandPaths.map((b) => (
-                        <g key={b.color}>
-                          <path d={b.zone} fill={b.color} fillOpacity={0.08} />
-                          <path d={b.lines} fill="none" stroke={b.color} strokeWidth={1} strokeLinejoin="round" />
-                        </g>
-                      ))
-                    ) : (
-                      <path d={`${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`} fill={`url(#${gradId})`} />
-                    )}
-                    {smaPath && (
-                      <path
-                        d={smaPath}
-                        fill="none"
-                        stroke="var(--ds-indicator)"
-                        strokeWidth={1.5}
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    )}
-                    <path
-                      d={path}
-                      fill="none"
-                      stroke="var(--ds-accent)"
-                      strokeWidth={2}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <circle cx={xs[last]} cy={ys[last]} r={3} fill="var(--ds-accent)" />
-                    {scrub != null && (
-                      <g>
-                        <line
-                          x1={xs[scrub]}
-                          x2={xs[scrub]}
-                          y1={0}
-                          y2={PLOT_H}
-                          stroke="var(--ds-muted)"
-                          strokeDasharray="2 3"
-                        />
-                        {smaYs[scrub] != null && (
-                          <circle cx={xs[scrub]} cy={smaYs[scrub]} r={2.5} fill="var(--ds-indicator)" />
-                        )}
-                        <circle
-                          cx={xs[scrub]}
-                          cy={ys[scrub]}
-                          r={3.5}
-                          fill="var(--ds-accent)"
-                          stroke="var(--ds-bg)"
-                          strokeWidth={2}
-                        />
-                      </g>
-                    )}
-                  </>
+        {/* Slides with the cursor but never leaves the plot: at the left edge it
+            hangs right of the cursor, at the right edge left of it. */}
+        {ready && scrub != null && (
+          <div
+            className="hd-chart-tip"
+            style={{ left: xs[scrub], transform: `translateX(-${(xs[scrub] / plotW) * 100}%)` }}
+          >
+            {fmtCcy(s[scrub].p, ccy)} · {ccy} · {tipLabel(s[scrub].t, range)}
+          </div>
+        )}
+        {!ready && failed && (
+          <div className="hd-chart-empty" style={{ height: PLOT_H }}>
+            Price history unavailable
+          </div>
+        )}
+        {width > 0 && (
+          <svg
+            width={width}
+            height={CHART_H}
+            role="img"
+            aria-label={`${symbol} share price, ${RANGE_WORD[range]}${
+              bandPaths.length ? ", with its 200-day average and bands" : smaPath ? ", with its 200-day average" : ""
+            }`}
+            onPointerDown={pick}
+            onPointerMove={pick}
+            onPointerUp={(e) => e.pointerType !== "mouse" && release()}
+            onPointerCancel={release}
+            onPointerLeave={release}
+          >
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--ds-accent)" stopOpacity=".24" />
+                <stop offset="100%" stopColor="var(--ds-accent)" stopOpacity=".02" />
+              </linearGradient>
+            </defs>
+            <ValueGrid ticks={scale.ticks} width={width} plotW={plotW} />
+            <TimeGrid ticks={times} />
+            {volume && <path d={volume} fill="none" stroke="var(--ds-muted)" strokeWidth={1.5} />}
+            {ready && (
+              <>
+                {/* The bands' tints replace the price's fill, rather than mix with it. */}
+                {bandPaths.length ? (
+                  bandPaths.map((b) => (
+                    <g key={b.color}>
+                      <path d={b.zone} fill={b.color} fillOpacity={0.08} />
+                      <path d={b.lines} fill="none" stroke={b.color} strokeWidth={1} strokeLinejoin="round" />
+                    </g>
+                  ))
+                ) : (
+                  <path d={`${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`} fill={`url(#${gradId})`} />
                 )}
-              </svg>
+                {smaPath && (
+                  <path
+                    d={smaPath}
+                    fill="none"
+                    stroke="var(--ds-indicator)"
+                    strokeWidth={1.5}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
+                <path
+                  d={path}
+                  fill="none"
+                  stroke="var(--ds-accent)"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <circle cx={xs[last]} cy={ys[last]} r={3} fill="var(--ds-accent)" />
+                {scrub != null && (
+                  <g>
+                    <line
+                      x1={xs[scrub]}
+                      x2={xs[scrub]}
+                      y1={0}
+                      y2={PLOT_H}
+                      stroke="var(--ds-muted)"
+                      strokeDasharray="2 3"
+                    />
+                    {smaYs[scrub] != null && (
+                      <circle cx={xs[scrub]} cy={smaYs[scrub]} r={2.5} fill="var(--ds-indicator)" />
+                    )}
+                    <circle
+                      cx={xs[scrub]}
+                      cy={ys[scrub]}
+                      r={3.5}
+                      fill="var(--ds-accent)"
+                      stroke="var(--ds-bg)"
+                      strokeWidth={2}
+                    />
+                  </g>
+                )}
+              </>
             )}
-          </>
+          </svg>
         )}
       </div>
 

@@ -2664,13 +2664,6 @@ ion-toast {
   pointer-events: none;
 }
 
-/* A 1D candle's open, high and low, under its close. */
-.hd-chart-tip-ohlc {
-  display: block;
-  margin-top: 2px;
-  color: var(--ds-secondary);
-}
-
 .hd-chart-empty {
   position: absolute;
   inset: 0 0 auto;
