@@ -19,6 +19,11 @@ export const PLOT_BOTTOM = PLOT_H - 1;
 export const AXIS_H = 24; // the time labels' row, under the plot
 const BANDS = 4;
 
+// A holding's charts add the volume traded under the time labels.
+const VOLUME_GAP = 8;
+const VOLUME_H = 18;
+export const CHART_H = PLOT_H + AXIS_H + VOLUME_GAP + VOLUME_H;
+
 // Both axes' labels are JetBrains Mono at --ds-fs-10 (10px × 1.2), which
 // advances 0.6em a character.
 const CHAR_W = 7.2;
@@ -37,6 +42,24 @@ function axisFormatter(hi: number, step: number) {
   const digits = Math.min(unit > 1 ? 2 : 4, Math.max(0, Math.ceil(-Math.log10(step / unit))));
   return (v: number) =>
     (v / unit).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits }) + suffix;
+}
+
+// Grey strokes rising from the strip's floor, scaled to the range's busiest
+// bar, as Apple shows them. Bars nearer than 3px are summed, so a decade of
+// weeks reads as a texture rather than a solid block.
+export function volumePath(xs: number[], volumes: number[]) {
+  const bars: { x: number; v: number }[] = [];
+  xs.forEach((x, i) => {
+    const bar = bars[bars.length - 1];
+    if (bar && x - bar.x < 3) bar.v += volumes[i];
+    else bars.push({ x, v: volumes[i] });
+  });
+  const max = Math.max(...bars.map((b) => b.v));
+  if (!(max > 0)) return "";
+  return bars
+    .filter((b) => b.v > 0)
+    .map((b) => `M${b.x.toFixed(1)} ${CHART_H}v-${Math.max(1, (b.v / max) * VOLUME_H).toFixed(1)}`)
+    .join("");
 }
 
 export function plotY(v: number, lo: number, hi: number) {
