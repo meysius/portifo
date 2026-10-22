@@ -16,14 +16,15 @@ import ValueGrid from "./ValueGrid";
 //
 // Under the chart sits one indicator toggle: the 200-day moving average inside
 // bands 5, 10 and 15% either side of it. It draws on 3M and longer only (under
-// a month of hourly bars the average is a near-flat line that says little),
-// and only the lines the price crosses in the range, so the scale stretches no
-// further than it must. The average is a dashed ink line; the bands above it
+// a month of hourly bars the average is a near-flat line that says little).
+// The average is always drawn, but of the bands only those the price crosses
+// in the range, so the scale stretches no further than it must. The average
+// is a dashed ink line; the bands above it
 // are teal and those below orange, their zones tinted deeper the farther out,
 // and each line is named at its right end. The chip doubles
 // as the legend, reading how far the price sits from the average at the
-// scrubbed or latest bar; when no line is crossed, a note beside it says
-// which lines the price stayed between. A scrub reads every drawn line beside
+// scrubbed or latest bar; when the price crosses no line, not even the
+// average, a note beside it says which lines it stayed between. A scrub reads every drawn line beside
 // the crosshair, in the order they cross it, the price slotted in where it sits.
 
 const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "All"];
@@ -239,13 +240,15 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   const ready = s.length > 1 && width > 0;
   const smaByTime = bandsShown && sma?.key === `${symbol}|${range}` ? sma.byTime : null;
   const avg = smaByTime ? s.map((p) => smaByTime.get(p.t)) : [];
-  // The lines the price crosses: those between its farthest below the average
-  // and its farthest above. It moves continuously, so it crosses each of them.
+  // The average always, as what the bands are measured from, and the bands
+  // the price crosses: those between its farthest below the average and its
+  // farthest above. It moves continuously, so it crosses each of them.
   const devs = s.flatMap((p, i) => (avg[i] == null ? [] : [p.p / avg[i] - 1]));
   const devLo = Math.min(...devs);
   const devHi = Math.max(...devs);
-  const levels = LEVELS.filter(({ f }) => f >= devLo && f <= devHi);
-  const stayed = devs.length && !levels.length ? stayedNote(devLo, devHi) : null;
+  const crosses = ({ f }: { f: number }) => f >= devLo && f <= devHi;
+  const levels = devs.length ? LEVELS.filter((l) => !l.f || crosses(l)) : [];
+  const stayed = devs.length && !LEVELS.some(crosses) ? stayedNote(devLo, devHi) : null;
 
   const last = s.length - 1;
   let path = "";
@@ -280,15 +283,19 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
         .map((run) => `M${trace(run, f).join("L")}`)
         .join(" "),
     }));
-    zones = levels.slice(1).map((inner, i) => {
+    // A zone is tinted only between neighbouring lines that are both drawn:
+    // the average can stand apart from the bands the price reached.
+    zones = levels.slice(1).flatMap((inner, i) => {
+      const upper = levels[i];
+      if (LEVELS.indexOf(inner) - LEVELS.indexOf(upper) !== 1) return [];
       // Neighbours never straddle the average, which lies between them.
-      const outer = Math.abs(levels[i].f) > Math.abs(inner.f) ? levels[i] : inner;
+      const outer = Math.abs(upper.f) > Math.abs(inner.f) ? upper : inner;
       return {
         f: outer.f,
         color: outer.color,
         tint: outer.tint,
         d: runs(avg)
-          .map((run) => `M${[...trace(run, levels[i].f), ...trace(run, inner.f).reverse()].join("L")}Z`)
+          .map((run) => `M${[...trace(run, upper.f), ...trace(run, inner.f).reverse()].join("L")}Z`)
           .join(" "),
       };
     });
@@ -412,7 +419,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             height={CHART_H}
             role="img"
             aria-label={`${symbol} share price, ${RANGE_WORD[range]}${
-              lines.length ? ", with the bands about its 200-day average that it crosses" : ""
+              lines.length ? ", with its 200-day average and the bands about it that it crosses" : ""
             }`}
             onPointerDown={pick}
             onPointerMove={pick}
