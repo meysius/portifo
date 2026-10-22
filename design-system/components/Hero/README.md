@@ -3,12 +3,12 @@
 A screen's one headline amount: a label, the figure, and how it has moved.
 
 ## When to use
-Once per screen, directly under the page heading, when the screen is about one amount: the portfolio's total, a holding's position value, an account's total, a transaction in its sheet. A screen without a single headline amount has no hero.
+Once per screen, directly under the page heading, when the screen is about one amount: the portfolio's total, a holding's position value, an account's total, a watched symbol's share price, a transaction in its sheet. A screen without a single headline amount has no hero.
 
 ## What you provide
-- A label naming the figure, with its currency when it isn't obvious: "Total portfolio value", "Position value · USD", "Total account value", "Realized gain · USD".
+- A label naming the figure, with its currency when it isn't obvious: "Total portfolio value", "Position value · USD", "Total account value", "Realized gain · USD", "Share price · CAD".
 - The figure, formatted with the display currency.
-- Optionally the return: a signed amount, its percentage in a `ReturnPill`, and what it measures ("Today", "Unrealized return", "Return on sold shares").
+- Optionally the return: a signed amount, its percentage in a `ReturnPill`, and what it measures ("Today", "Unrealized return", "Return on sold shares"). On a watched symbol, "Today" is the move per share.
 - Optionally a second return in the same form. A holding shows two: "Today", then "Unrealized return".
 - Optionally a badge in the label ("Closed"), a loading spinner ("Loading prices"), or a currency chip that opens the display-currency sheet.
 

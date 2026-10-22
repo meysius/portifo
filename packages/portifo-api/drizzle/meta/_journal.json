@@ -36,6 +36,13 @@
       "when": 1790993414827,
       "tag": "0004_curvy_human_torch",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792634540369,
+      "tag": "0005_common_puma",
+      "breakpoints": true
     }
   ]
 }

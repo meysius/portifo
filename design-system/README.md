@@ -109,8 +109,8 @@ Corner radii, also literal in the code:
 
 Every screen is one of four kinds; the next section, Screen anatomy, lists each one's parts in order. In short:
 
-- **Tab root** (Portfolio, Transactions, Accounts, Settings): page heading at the top, the sticky bar appears once it scrolls away, tab bar at the bottom.
-- **Pushed page** (a holding, an account, the cash): Back bar labelled with the tab's name, the page title below it as a large heading, no tab bar. A primary pair of actions (Buy / Sell) may take the tab bar's place.
+- **Tab root** (Portfolio, Transactions, Accounts, Watchlist, Settings): page heading at the top, the sticky bar appears once it scrolls away, tab bar at the bottom.
+- **Pushed page** (a holding, an account, the cash, a watched symbol): Back bar labelled with the tab's name, the page title below it as a large heading, no tab bar. A primary pair of actions (Buy / Sell) may take the tab bar's place.
 - **Full-screen task** (new account, the add-transaction wizard): a top bar with Cancel, one question with a kicker, the fields, and a footer with the one action.
 - **Bottom sheet**: grabber, title and round close button, then content that hugs its height up to 90% of the screen.
 
@@ -143,7 +143,7 @@ Every screen is one of four kinds; the next section, Screen anatomy, lists each 
 
 ## What uses this system
 
-On `ds-*` tokens: Portfolio, Holding detail, Cash (all the cash, by currency and by account), Transactions (list, filter and detail sheets), Accounts (list, account page, new account, rename, cash balance, display currency).
+On `ds-*` tokens: Portfolio, Holding detail, Cash (all the cash, by currency and by account), Transactions (list, filter and detail sheets), Accounts (list, account page, new account, rename, cash balance, display currency), Watchlist (the list with its search, and a watched symbol's page).
 
 Still on the first system's tokens (`theme/variables.css`: `--surface`, `--fg-1…3`, `--signal`): the tab bar, Settings, Manage portfolio, Login, Onboarding, the add-transaction wizard, Transaction detail, a holding's transaction list, and the older pickers (PickerSheet, DateSheet, ActionSheetModal, including the portfolio switcher). Build new screens with `ds-*` only. When you move one of these over, rebuild it from the components here rather than re-tinting it.
 

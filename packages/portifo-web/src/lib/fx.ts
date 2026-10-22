@@ -111,6 +111,13 @@ export function fmtSignedPct(n: number): string {
   return (n < 0 ? "−" : "+") + s + "%";
 }
 
+// Quote times are shown in the exchange's clock, as the study does.
+const ET: Intl.DateTimeFormatOptions = { timeZone: "America/New_York" };
+export const fmtEtTime = (d: Date) => `${d.toLocaleTimeString("en-US", { ...ET, hour: "numeric", minute: "2-digit" })} ET`;
+export const fmtEtDay = (d: Date) => d.toLocaleDateString("en-US", { ...ET, month: "short", day: "2-digit" });
+export const fmtEtStamp = (d: Date) =>
+  `${d.toLocaleDateString("en-US", { ...ET, month: "short", day: "2-digit", year: "numeric" })}, ${fmtEtTime(d)}`;
+
 // "Oct 02, 2026" — 2-digit day so a column of dates lines up.
 export function fmtDay(d: Date): string {
   return d.toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric" });

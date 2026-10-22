@@ -19,7 +19,19 @@ import HoldingChart from "../components/HoldingChart";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { BACK_ICON } from "../lib/backIcon";
-import { convert, fmtAge, fmtCcy, fmtDay, fmtShares, fmtSignedCcy, fmtSignedPct, parseDay } from "../lib/fx";
+import {
+  convert,
+  fmtAge,
+  fmtCcy,
+  fmtDay,
+  fmtEtDay,
+  fmtEtStamp,
+  fmtEtTime,
+  fmtShares,
+  fmtSignedCcy,
+  fmtSignedPct,
+  parseDay,
+} from "../lib/fx";
 import type { AccountPosition, Lot, TickerAgg } from "../lib/positions";
 
 // The holding screen, built from design-poc/holding-detail.html, in the
@@ -50,14 +62,6 @@ const tone = (n: number) => (n > 1e-9 ? "positive" : n < -1e-9 ? "negative" : ""
 const pctOf = (n: number, base: number) => (base > 1e-9 ? (n / base) * 100 : 0);
 const shrunk = (l: Lot) => Math.abs(l.shares - l.origShares) > 1e-6;
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-
-// Quote times are shown in the exchange's clock, as the study does.
-const ET: Intl.DateTimeFormatOptions = { timeZone: "America/New_York" };
-const fmtEtTime = (d: Date) => `${d.toLocaleTimeString("en-US", { ...ET, hour: "numeric", minute: "2-digit" })} ET`;
-const fmtEtDay = (d: Date) => d.toLocaleDateString("en-US", { ...ET, month: "short", day: "2-digit" });
-const fmtEtStamp = (d: Date) =>
-  `${d.toLocaleDateString("en-US", { ...ET, month: "short", day: "2-digit", year: "numeric" })}, ${fmtEtTime(d)}`;
-
 
 const Chevron = () => (
   <svg

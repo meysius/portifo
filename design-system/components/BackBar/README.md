@@ -3,12 +3,12 @@
 A pushed page's top bar: the Back link on the left, the page title fading in at the centre once you scroll.
 
 ## When to use
-On every page pushed from a row (a holding, an account). Never on a tab root, a full-screen task or a sheet.
+On every page pushed from a row (a holding, an account, a watched symbol). Never on a tab root, a full-screen task or a sheet.
 
 ## What you provide
-- The tab's name for the Back label (`tabLabel` from `TabBaseContext`: "Portfolio", "Transactions", "Accounts", "Settings").
+- The tab's name for the Back label (`tabLabel` from `TabBaseContext`: "Portfolio", "Transactions", "Accounts", "Watchlist", "Settings").
 - The page title, the same string as the large heading under the bar.
-- Optionally one quiet `IconButton` on the right (Rename account).
+- Optionally one quiet `IconButton` on the right (Rename account; on a watched symbol, ✓ to take it off the watchlist and + to put it back, with `aria-pressed` and an `aria-label` that says what a tap does).
 
 ## Rules
 - Back = a 22px chevron (2px stroke) plus the tab's name, in `ds-accent`, `back-link` (Public Sans 400, `--ds-fs-15`), at most 140px wide. Never a bare chevron and never the word "Back".

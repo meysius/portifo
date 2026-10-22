@@ -5295,6 +5295,247 @@ ion-modal.ac-create-modal {
   }
 }
 
+/* ---------- Watchlist ----------
+   The symbols a person follows: a search field under the heading whose
+   results replace the list while it holds a query, and Portfolio's
+   holding-row metrics for each symbol. A row pushes the symbol's page, which
+   borrows the holding page's .hd-* classes. Scoped to .wl-page and
+   .wl-symbol-page; reads only --ds-* tokens. */
+
+/* ── heading and search ──────────────────────────────────────────────────── */
+/* The first thing on the page, so it clears the status bar itself. */
+.wl-heading {
+  padding: calc(16px + var(--ion-safe-area-top, 0px)) var(--ds-gutter) 0;
+}
+
+.wl-page .wl-heading h1 {
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-23);
+  font-weight: 650;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+}
+
+.wl-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px var(--ds-gutter) 0;
+}
+
+.wl-search .tl-search-field {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+
+.wl-page .wl-cancel {
+  flex-shrink: 0;
+  min-height: 38px;
+  font-size: var(--ds-fs-12);
+  color: var(--ds-accent);
+}
+
+/* ── the list, and search results ────────────────────────────────────────── */
+.wl-list {
+  margin-top: 8px;
+  padding: 0 var(--ds-gutter);
+}
+
+.wl-caption {
+  display: flex;
+  justify-content: space-between;
+  padding: 13px 0 2px;
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+/* Portfolio's holding rows: 15px block padding, 11px gap, a highlight that
+   bleeds 10px into the gutter. */
+.wl-page .wl-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: calc(100% + 20px);
+  margin-inline: -10px;
+  padding: 15px 10px;
+  border-bottom: 1px solid var(--ds-line);
+  text-align: left;
+  color: var(--ds-text);
+}
+
+.wl-page .wl-row:last-child {
+  border-bottom: 0;
+}
+
+.wl-identity {
+  display: block;
+  flex: 1;
+  min-width: 0;
+}
+
+.wl-symbol {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: var(--ds-fs-12);
+  font-weight: 600;
+}
+
+.wl-meta {
+  display: block;
+  margin-top: 5px;
+  overflow-wrap: anywhere;
+  font-size: var(--ds-fs-9);
+  line-height: 1.4;
+  color: var(--ds-secondary);
+}
+
+.wl-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  max-width: 50%;
+}
+
+/* The code sits beside the price: "$" alone is US, Canadian or Australian. */
+.wl-price {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+}
+
+.wl-ccy {
+  font-size: var(--ds-fs-9);
+  font-weight: 500;
+  color: var(--ds-muted);
+}
+
+.wl-page .wl-price .money {
+  font-size: var(--ds-fs-12);
+  font-weight: 500;
+}
+
+.wl-page .wl-move {
+  margin-top: 6px;
+  font-size: var(--ds-fs-9);
+}
+
+.wl-no-quote {
+  flex-shrink: 0;
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+/* A result's mark: a tinted + while it can be added, a bare check once it's
+   on the list. */
+.wl-toggle {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--ds-accent);
+  background: var(--ds-accent-tint);
+}
+
+.wl-toggle.on {
+  background: none;
+}
+
+.wl-status {
+  margin: 0;
+  padding: 24px var(--ds-gutter);
+  font-size: var(--ds-fs-11);
+  line-height: 1.8;
+  text-align: center;
+  color: var(--ds-secondary);
+}
+
+.wl-status:empty {
+  display: none;
+}
+
+.wl-footer {
+  margin: 0;
+  padding: 17px var(--ds-gutter) 24px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.7;
+  text-align: center;
+  color: var(--ds-muted);
+}
+
+/* ── nothing yet ─────────────────────────────────────────────────────────── */
+.wl-empty {
+  padding: 56px var(--ds-gutter);
+  text-align: center;
+}
+
+.wl-empty-symbol {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 23px;
+  border-radius: 18px;
+  color: var(--ds-muted);
+  background: var(--ds-subtle);
+}
+
+.wl-page .wl-empty h2 {
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+  font-size: var(--ds-fs-22);
+  font-weight: 550;
+  letter-spacing: -0.8px;
+}
+
+.wl-empty p {
+  margin: 0;
+  font-size: var(--ds-fs-11);
+  line-height: 1.8;
+  color: var(--ds-secondary);
+}
+
+/* ── a symbol's page: the holding page's .hd-* anatomy, plus these ───────── */
+/* The Back bar's one quiet icon button: a check while the symbol is on the
+   watchlist, a + once it's off. */
+.wl-symbol-page .wl-watch-button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  color: var(--ds-secondary);
+}
+
+/* Without a quote the note follows the company line, where the hero would be. */
+.wl-symbol-page .wl-symbol-note {
+  margin-top: 27px;
+}
+
+.wl-symbol-note .hd-text-link {
+  margin-top: 12px;
+}
+
+/* ── feedback ────────────────────────────────────────────────────────────── */
+.wl-page .wl-row:is(:active, :focus-visible) {
+  background: var(--ds-subtle);
+}
+
+@media (hover: hover) {
+  .wl-page .wl-row:hover {
+    background: var(--ds-subtle);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wl-heading {
+    animation: ds-arrive 0.35s ease both;
+  }
+}
+
 /* ---------- add-transaction wizard (POC) ---------- */
 
 /* One question per screen: progress, the answers so far as crumbs, the

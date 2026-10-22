@@ -12,6 +12,7 @@ At the top of every tab root, and directly under the Back bar on a pushed page. 
   - or, on Portfolio, the title itself as a button with a 16px muted `chevron-down`: tapping the portfolio's name switches portfolios.
 - On a pushed page, optionally one subtitle line under the title.
 - On a holding, the share price at the end of the title line and, at the end of the subtitle line, when it was set ("At 2:17 PM ET" while the market is open, "At close · Oct 17" otherwise).
+- On a watched symbol, only the stamp: its share price is that page's hero figure, since there is no position for the hero to be about.
 
 ## Rules
 - Title in `page-title`: Inter 650, `--ds-fs-23` (27.6px), −0.8px, line-height 1.2 (1.25 on an account). Long names wrap; they never shrink or truncate.

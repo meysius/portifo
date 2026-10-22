@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => {
         "/portfolio": { target: apiTarget, changeOrigin: true },
         "/market": { target: apiTarget, changeOrigin: true },
         "/push": { target: apiTarget, changeOrigin: true },
+        "/watchlist": { target: apiTarget, changeOrigin: true },
       },
     },
   };

@@ -4,6 +4,8 @@ import HoldingsPage from "./pages/HoldingsPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import AccountsPage from "./pages/AccountsPage";
 import SettingsPage from "./pages/SettingsPage";
+import WatchlistPage from "./pages/WatchlistPage";
+import WatchlistSymbolPage from "./pages/WatchlistSymbolPage";
 import ManagePortfolioPage from "./pages/ManagePortfolioPage";
 import AddMemberPage from "./pages/AddMemberPage";
 import AssetDetailPage from "./pages/AssetDetailPage";
@@ -14,6 +16,7 @@ import AddTransactionPage from "./pages/AddTransactionPage";
 import AddTransactionWizardPage from "./pages/AddTransactionWizardPage";
 import TransactionDetailPage from "./pages/TransactionDetailPage";
 import { TabBaseProvider } from "./context/TabBaseContext";
+import { WatchlistProvider } from "./context/WatchlistContext";
 import { useOutletAnimated } from "./lib/swipeBack";
 
 // Tab icons copied 1:1 from docs/new-design-system/ guidelines.html's tab-bar specimen
@@ -54,6 +57,12 @@ const ICONS = {
       <path d="M15 12.2h3.2" strokeLinecap="round" />
     </svg>
   ),
+  watchlist: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M2.5 12C4.5 8 8 5.5 12 5.5s7.5 2.5 9.5 6.5c-2 4-5.5 6.5-9.5 6.5S4.5 16 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
   settings: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.99l1.004.828c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a7.688 7.688 0 0 1 0-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
@@ -63,7 +72,7 @@ const ICONS = {
 };
 
 // Each tab gets its own nested IonRouterOutlet (rather than one flat outlet
-// shared by all four tab roots) so that every route a tab can push — detail
+// shared by all five tab roots) so that every route a tab can push — detail
 // pages included — lives in that same outlet. Ionic keeps a nested outlet's
 // visibility in sync with the *current URL*; a route pushed outside a tab's
 // own outlet stays hidden for the whole interactive swipe-back gesture and
@@ -130,6 +139,18 @@ function TransactionsStack() {
   );
 }
 
+function WatchlistStack() {
+  const animated = useOutletAnimated();
+  return (
+    <TabBaseProvider tabBase="/tabs/watchlist" tabLabel="Watchlist">
+      <IonRouterOutlet animated={animated}>
+        <Route exact path="/tabs/watchlist" component={WatchlistPage} />
+        <Route exact path="/tabs/watchlist/symbol/:symbol" component={WatchlistSymbolPage} />
+      </IonRouterOutlet>
+    </TabBaseProvider>
+  );
+}
+
 function SettingsStack() {
   const animated = useOutletAnimated();
   return (
@@ -159,37 +180,47 @@ function Tabs() {
   // shouldn't exist yet. CSS keyed off `ion-page-hidden` (which Ionic only
   // toggles once the transition actually completes) stays in sync with
   // what's visually on screen instead of the URL.
+  //
+  // The watchlist sits above the tabs: switching tabs remounts a tab's stack,
+  // and the list shouldn't reload (and flash empty) every time it does.
   return (
-    <IonTabs>
-      <IonRouterOutlet animated={animated}>
-        <Route path="/tabs/portfolio" render={() => <PortfolioStack />} />
-        <Route path="/tabs/transactions" render={() => <TransactionsStack />} />
-        <Route path="/tabs/accounts" render={() => <AccountsStack />} />
-        <Route path="/tabs/settings" render={() => <SettingsStack />} />
-        <Route exact path="/tabs">
-          <Redirect to="/tabs/portfolio" />
-        </Route>
-      </IonRouterOutlet>
+    <WatchlistProvider>
+      <IonTabs>
+        <IonRouterOutlet animated={animated}>
+          <Route path="/tabs/portfolio" render={() => <PortfolioStack />} />
+          <Route path="/tabs/transactions" render={() => <TransactionsStack />} />
+          <Route path="/tabs/accounts" render={() => <AccountsStack />} />
+          <Route path="/tabs/watchlist" render={() => <WatchlistStack />} />
+          <Route path="/tabs/settings" render={() => <SettingsStack />} />
+          <Route exact path="/tabs">
+            <Redirect to="/tabs/portfolio" />
+          </Route>
+        </IonRouterOutlet>
 
-      <IonTabBar slot="bottom">
-        <IonTabButton tab="portfolio" href="/tabs/portfolio">
-          <span className="tab-icon">{ICONS.portfolio}</span>
-          <IonLabel>Portfolio</IonLabel>
-        </IonTabButton>
-        <IonTabButton tab="transactions" href="/tabs/transactions">
-          <span className="tab-icon">{ICONS.transactions}</span>
-          <IonLabel>Transactions</IonLabel>
-        </IonTabButton>
-        <IonTabButton tab="accounts" href="/tabs/accounts">
-          <span className="tab-icon">{ICONS.accounts}</span>
-          <IonLabel>Accounts</IonLabel>
-        </IonTabButton>
-        <IonTabButton tab="settings" href="/tabs/settings">
-          <span className="tab-icon">{ICONS.settings}</span>
-          <IonLabel>Settings</IonLabel>
-        </IonTabButton>
-      </IonTabBar>
-    </IonTabs>
+        <IonTabBar slot="bottom">
+          <IonTabButton tab="portfolio" href="/tabs/portfolio">
+            <span className="tab-icon">{ICONS.portfolio}</span>
+            <IonLabel>Portfolio</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="transactions" href="/tabs/transactions">
+            <span className="tab-icon">{ICONS.transactions}</span>
+            <IonLabel>Transactions</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="accounts" href="/tabs/accounts">
+            <span className="tab-icon">{ICONS.accounts}</span>
+            <IonLabel>Accounts</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="watchlist" href="/tabs/watchlist">
+            <span className="tab-icon">{ICONS.watchlist}</span>
+            <IonLabel>Watchlist</IonLabel>
+          </IonTabButton>
+          <IonTabButton tab="settings" href="/tabs/settings">
+            <span className="tab-icon">{ICONS.settings}</span>
+            <IonLabel>Settings</IonLabel>
+          </IonTabButton>
+        </IonTabBar>
+      </IonTabs>
+    </WatchlistProvider>
   );
 }
 

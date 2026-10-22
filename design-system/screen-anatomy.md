@@ -4,27 +4,29 @@ Every Portifo screen is one of four kinds. Build a new screen by picking its kin
 
 ## Tab root
 
-Portfolio, Transactions, Accounts, Settings. The tab bar is visible.
+Portfolio, Transactions, Accounts, Watchlist, Settings. The tab bar is visible.
 
-1. **Page heading** (`PageHeading`). The title in `page-title`, 16px below the status bar (`calc(16px + safe-area-top)`), on the gutter. At most one trailing control: a 32px `IconButton` for the screen's add action (Transactions, Accounts), or the title itself as a switcher with a muted `chevron-down` (Portfolio's name switches portfolios). No back link, no bar, no hairline at rest.
+1. **Page heading** (`PageHeading`). The title in `page-title`, 16px below the status bar (`calc(16px + safe-area-top)`), on the gutter. At most one trailing control: a 32px `IconButton` for the screen's add action (Transactions, Accounts), or the title itself as a switcher with a muted `chevron-down` (Portfolio's name switches portfolios). Watchlist has none: its search field, directly under the heading, is how symbols are added. No back link, no bar, no hairline at rest.
 2. **Sticky bar** (`StickyBar`). Absent at rest. Once the heading has scrolled under the top edge, a 50px `ds-bg` bar fades in with the same title centred in `bar-title` over a `ds-line` hairline. It has no buttons.
 3. **Hero** (`Hero`), when the screen has a headline figure: label, figure, return.
 4. **Sections** (`Section`), each starting with the 6px `ds-subtle` band and an h2 in `section-title` with optional `meta` on the right.
 5. **Footer note**, centred `row-meta` in `ds-muted`, saying what the numbers are ("All amounts in USD · Average-cost accounting").
-6. **Tab bar** (`TabBar`). Four tabs, always in this order: Portfolio, Transactions, Accounts, Settings.
+6. **Tab bar** (`TabBar`). Five tabs, always in this order: Portfolio, Transactions, Accounts, Watchlist, Settings.
 
 Tab roots support pull to refresh.
 
 ## Pushed page
 
-A holding, an account, the cash: anything opened from a row with a right chevron. The tab bar is hidden for as long as the pushed page is on screen.
+A holding, an account, the cash, a watched symbol: anything opened from a row that pushes. The tab bar is hidden for as long as the pushed page is on screen.
 
-1. **Back bar** (`BackBar`). 50px, opaque `ds-bg`. On the left, the Back link: a 22px chevron and the **tab's** name ("Portfolio", "Accounts"), in `back-link` and `ds-accent`, at most 140px wide. Never a bare chevron, and never the word "Back". On the right, at most one quiet `IconButton` (Rename). At rest the bar has no title and no hairline; once the large heading scrolls under it, the title fades in centred in `bar-title` and the `ds-line` hairline appears. Collapsed, it matches the sticky bar.
-2. **Page heading** under the bar, 12px down: the page title in `page-title` (a symbol, an account name), then one subtitle line in `ds-secondary` joined with middle dots ("3 holdings · Manually tracked" on an account; the company name · its exchange on a holding). A holding's share price ends the title line, and the time of its quote ends the subtitle line.
+1. **Back bar** (`BackBar`). 50px, opaque `ds-bg`. On the left, the Back link: a 22px chevron and the **tab's** name ("Portfolio", "Accounts"), in `back-link` and `ds-accent`, at most 140px wide. Never a bare chevron, and never the word "Back". On the right, at most one quiet `IconButton` (Rename on an account; on a watched symbol, a ✓ that takes it off the watchlist, which turns into a + to put it back). At rest the bar has no title and no hairline; once the large heading scrolls under it, the title fades in centred in `bar-title` and the `ds-line` hairline appears. Collapsed, it matches the sticky bar.
+2. **Page heading** under the bar, 12px down: the page title in `page-title` (a symbol, an account name), then one subtitle line in `ds-secondary` joined with middle dots ("3 holdings · Manually tracked" on an account; the company name · its exchange on a holding). A holding's share price ends the title line, and the time of its quote ends the subtitle line. A watched symbol has no position, so its share price is the hero figure instead and the title line is the symbol alone; the quote time still ends the subtitle line.
 3. **Hero**, then **Sections**, then a **footer note**, as on a tab root.
 4. **Bottom actions** (`BottomActions`), only where the page has a main pair of actions: Buy and Sell sit where the tab bar was, in thumb reach.
 
-A holding's page supports pull to refresh, as tab roots do: it refetches the share price, the ledger and the chart's range.
+A holding's page supports pull to refresh, as tab roots do: it refetches the share price, the ledger and the chart's range. A watched symbol's page does the same for its price and chart.
+
+A watched symbol's page is the holding page without the ownership: heading, then a hero of "Share price · USD" with today's move, the same price chart, a "Latest session" `MetricGrid` (open, previous close, day low, day high, volume), and the footer note. It has no Buy / Sell.
 
 ## Full-screen task
 

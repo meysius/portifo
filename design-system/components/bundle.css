@@ -337,6 +337,32 @@ button {
 .w3 { --weight-color: var(--ds-hold-3); }
 .wcash { --weight-color: var(--ds-cash); }
 
+/* watchlist row: a holding row without the ring; price with its currency code */
+.wl-caption { display: flex; justify-content: space-between; padding: 13px 0 2px; font-size: var(--ds-fs-9); color: var(--ds-muted); }
+.wl-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: calc(100% + 20px);
+  margin-inline: -10px;
+  padding: 15px 10px;
+  border-bottom: 1px solid var(--ds-line);
+  text-align: left;
+  color: var(--ds-text);
+}
+.wl-row:last-child { border-bottom: 0; }
+.wl-identity { display: block; flex: 1; min-width: 0; }
+.wl-symbol { display: block; overflow-wrap: anywhere; font-size: var(--ds-fs-12); font-weight: 600; }
+.wl-meta { display: block; margin-top: 5px; overflow-wrap: anywhere; font-size: var(--ds-fs-9); line-height: 1.4; color: var(--ds-secondary); }
+.wl-end { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; max-width: 50%; }
+.wl-price { display: flex; align-items: baseline; gap: 5px; }
+.wl-ccy { font-size: var(--ds-fs-9); font-weight: 500; color: var(--ds-muted); }
+.wl-price .money { font-size: var(--ds-fs-12); font-weight: 500; }
+.wl-move { margin-top: 6px; font-size: var(--ds-fs-9); }
+.wl-no-quote { flex-shrink: 0; font-size: var(--ds-fs-9); color: var(--ds-muted); }
+.wl-toggle { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px; color: var(--ds-accent); background: var(--ds-accent-tint); }
+.wl-toggle.on { background: none; }
+
 /* key / value rows */
 .ds-pair { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--ds-line); font-size: var(--ds-fs-11); }
 .ds-pair span:first-child { color: var(--ds-secondary); }

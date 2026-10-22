@@ -4,11 +4,13 @@ import { Config } from '@/setup/config';
 import * as identitySchema from "@/domain/identity/identity.schema";
 import * as portfolioSchema from "@/domain/portfolio/portfolio.schema";
 import * as pushSchema from "@/domain/push/push.schema";
+import * as watchlistSchema from "@/domain/watchlist/watchlist.schema";
 
 export const schema = {
   ...identitySchema,
   ...portfolioSchema,
   ...pushSchema,
+  ...watchlistSchema,
 };
 
 export type Schema = typeof schema;

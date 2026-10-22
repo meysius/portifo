@@ -11,11 +11,14 @@ import { PortfolioService } from "@/domain/portfolio/portfolio.service";
 import { MarketService } from "@/domain/market/market.service";
 import { DrizzlePushRepo } from "@/domain/push/push.repo";
 import { PushService } from "@/domain/push/push.service";
+import { DrizzleWatchlistRepo } from "@/domain/watchlist/watchlist.repo";
+import { WatchlistService } from "@/domain/watchlist/watchlist.service";
 import { UsersController } from "@/controllers/users.controller";
 import { AuthController } from "@/controllers/auth.controller";
 import { PortfolioController } from "@/controllers/portfolio.controller";
 import { MarketController } from "@/controllers/market.controller";
 import { PushController } from "@/controllers/push.controller";
+import { WatchlistController } from "@/controllers/watchlist.controller";
 
 export type App = {
   cfg: Config;
@@ -42,6 +45,8 @@ export function buildApp(): App {
   const portfolioService = new PortfolioService(logger, portfolioRepo, marketService);
   const pushRepo = new DrizzlePushRepo(db);
   const pushService = new PushService(logger, pushRepo, cfg);
+  const watchlistRepo = new DrizzleWatchlistRepo(db);
+  const watchlistService = new WatchlistService(logger, watchlistRepo);
 
   const controllers: SWController[] = [
     new UsersController(logger, identityService),
@@ -49,6 +54,7 @@ export function buildApp(): App {
     new PortfolioController(logger, authService, identityService, portfolioService),
     new MarketController(logger, authService, identityService, marketService),
     new PushController(logger, cfg, authService, identityService, pushService),
+    new WatchlistController(logger, authService, identityService, watchlistService),
   ];
 
   return {
