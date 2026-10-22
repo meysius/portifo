@@ -36,7 +36,7 @@ Use only `ds-*` tokens on new work. Each pair below has been checked for contras
 - **Gain and loss.** `ds-positive`/`ds-negative` colour the figure; `ds-positive-bg`/`ds-negative-bg` sit under a return percentage only (the return pill). `ds-negative` is also the form error colour.
 - **Transaction kinds.** Buy: `ds-accent` on `ds-accent-tint`. Sell: `ds-sell` on `ds-sell-bg`. Deposit: `ds-positive` on `ds-positive-bg`. Withdraw: `ds-withdraw` on `ds-withdraw-bg`. These appear only in the 32px kind icon, never as text colour.
 - **Breakdown.** Holdings take `ds-hold-1` … `ds-hold-5` by rank of value (largest first), never by asset type. Past the fifth they all take `ds-hold-other`. Cash is `ds-cash`. These colour marks only (bar segments, rings, dots), always next to a text label. The [expense-tracking POC](patterns/expense-tracking.md) reuses this palette with stable category identities across months; spending changes stay neutral, not gain/loss coloured.
-- **Chart indicators.** The 200-day average is `ds-indicator`; its ±5/10/15% bands are `ds-band-5`, `ds-band-10`, `ds-band-15`.
+- **Chart indicators.** The 200-day average and its ±5/10/15% bands are a diverging set. The average is a dashed `ds-text` line. Every band above it is `ds-band-above` (teal) and every band below it `ds-band-below` (orange). Thin lines can't carry shades of one hue, so each line is named at its end instead. They are not gain/loss green and red: sitting above the average is not a return.
 - **Dark mode** is the same token names with dark values. The app switches it with the `ion-palette-dark` class on the root element.
 
 ## Type

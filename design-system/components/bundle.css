@@ -506,13 +506,12 @@ button {
 .hd-indicators { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .hd-indicator { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--ds-line); border-radius: 6px; font-size: var(--ds-fs-10); font-weight: 500; color: var(--ds-secondary); }
 .hd-indicator[aria-pressed="true"] { color: var(--ds-text); }
-.hd-indicator-swatch { width: 12px; height: 2px; border-radius: 1px; background: var(--ds-muted); }
-.hd-indicator[aria-pressed="true"] .hd-indicator-swatch { background: var(--ds-indicator); }
-.hd-indicator-bands { display: grid; gap: 2px; width: 12px; }
-.hd-indicator-bands span { height: 2px; border-radius: 1px; background: var(--ds-muted); }
-.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(1) { background: var(--ds-band-15); }
-.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(2) { background: var(--ds-band-10); }
-.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(3) { background: var(--ds-band-5); }
+.hd-indicator-bands { display: grid; gap: 2px; width: 12px; color: var(--ds-muted); }
+.hd-indicator-bands span { height: 2px; border-radius: 1px; background: currentColor; }
+.hd-indicator-bands span:nth-child(2) { border-radius: 0; background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 6px); }
+.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(1) { color: var(--ds-band-above); }
+.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(2) { color: var(--ds-text); }
+.hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(3) { color: var(--ds-band-below); }
 
 /* ── empty state ───────────────────────────────────────────────────────── */
 .ds-empty { padding: 44px var(--ds-gutter); text-align: center; }

@@ -2668,6 +2668,70 @@ ion-toast {
   pointer-events: none;
 }
 
+/* With the bands on, the scrub readout lists every line the crosshair crosses,
+   top down as they cross it: a swatch in the line's colour, its name, its
+   value. The date heads the names and the currency code heads the values.
+   The price's row is the bold one. */
+.hd-chart-ladder {
+  position: absolute;
+  top: 0;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  column-gap: 6px;
+  padding: 4px 7px 5px;
+  border: 1px solid var(--ds-line);
+  border-radius: 5px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--ds-text);
+  background: var(--ds-bg);
+  pointer-events: none;
+}
+
+.hd-chart-ladder-when {
+  grid-column: 1 / 3;
+  color: var(--ds-secondary);
+}
+
+.hd-chart-ladder-ccy {
+  text-align: right;
+  color: var(--ds-secondary);
+}
+
+.hd-chart-rung {
+  display: contents;
+}
+
+/* Drawn in currentColor, set to the line's colour; dashed for the average, as
+   the chart draws it. */
+.hd-chart-rung-swatch {
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+.hd-chart-rung[data-kind="sma"] .hd-chart-rung-swatch {
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 6px);
+}
+
+.hd-chart-rung-label {
+  color: var(--ds-secondary);
+}
+
+.hd-chart-rung-value {
+  text-align: right;
+}
+
+.hd-chart-rung[data-kind="price"] > * {
+  font-weight: 700;
+  color: var(--ds-text);
+}
+
 .hd-chart-empty {
   position: absolute;
   inset: 0 0 auto;
@@ -2710,9 +2774,10 @@ ion-toast {
   color: var(--ds-secondary);
 }
 
-/* Indicator toggles, under the volume strip. Each chip is its lines' legend:
-   a swatch of their colours, a name and, when on, a value at the scrubbed or
-   latest bar. Off, it reads in the secondary ink with a muted swatch. */
+/* The indicator toggle, under the volume strip. The chip is its lines'
+   legend: a swatch of their colours, a name and, when on, a value at the
+   scrubbed or latest bar. Off, it reads in the secondary ink with a muted
+   swatch. */
 .hd-indicators {
   display: flex;
   flex-wrap: wrap;
@@ -2743,40 +2808,36 @@ ion-toast {
   cursor: default;
 }
 
-.hd-indicator-swatch {
-  width: 12px;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--ds-muted);
-}
-
-.hd-indicator[aria-pressed="true"] .hd-indicator-swatch {
-  background: var(--ds-indicator);
-}
-
-/* The bands' upper half, outermost on top, as the chart stacks them. */
+/* A band above the average, the dashed average, a band below, as the chart
+   stacks them. */
 .hd-indicator-bands {
   display: grid;
   gap: 2px;
   width: 12px;
+  color: var(--ds-muted);
 }
 
 .hd-indicator-bands span {
   height: 2px;
   border-radius: 1px;
-  background: var(--ds-muted);
+  background: currentColor;
+}
+
+.hd-indicator-bands span:nth-child(2) {
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 6px);
 }
 
 .hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(1) {
-  background: var(--ds-band-15);
+  color: var(--ds-band-above);
 }
 
 .hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(2) {
-  background: var(--ds-band-10);
+  color: var(--ds-text);
 }
 
 .hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(3) {
-  background: var(--ds-band-5);
+  color: var(--ds-band-below);
 }
 
 .hd-indicator-value {
@@ -3616,6 +3677,19 @@ ion-modal.ds-sheet {
   font-family: var(--font-mono);
   font-size: var(--ds-fs-10);
   fill: var(--ds-text);
+  pointer-events: none;
+}
+
+/* A band's name, just past its line's right end in the column between the
+   plot and the price scale. The halo keeps it clear of the scale's hairlines. */
+.chart-band-label {
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-8);
+  fill: var(--ds-secondary);
+  stroke: var(--ds-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  paint-order: stroke;
   pointer-events: none;
 }
 

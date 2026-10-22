@@ -55,17 +55,16 @@
   --ds-sell-bg: #f4effa;
   --ds-withdraw: #946b2e;
   --ds-withdraw-bg: #fbf5e9;
-  /* Chart indicators over the accent price line: the 200-day average in the
-     breakdown's orange, and its ±5/10/15% bands in teal, gold and pink, the
-     breakdown's hues stepped down to 3:1 for 1px lines. Validated with the
-     dataviz checks in the order they stack (15, 10, 5, average): adjacent CVD
-     ΔE 14.1 light / 16.3 dark, normal vision 19.8 / 20.7, and each clear of
-     the price line's accent. Teal and pink nearly merge under deuteranopia,
-     but gold always runs between them. */
-  --ds-indicator: #d67523;
-  --ds-band-5: #008f94;
-  --ds-band-10: #ad8100;
-  --ds-band-15: #c9558f;
+  /* The bands 5, 10 and 15% either side of the 200-day average, which is
+     drawn in --ds-text between them. A diverging pair, one colour a side:
+     teal above the average, orange below it. Which band is which is labelled
+     on the chart, not left to shades of one hue, which thin lines can't
+     carry. Validated with the dataviz checks: CVD ΔE 15.3 light / 14.9 dark
+     between the two, each ≥ 3.9:1 on --ds-bg, and both clear of the price
+     line's accent. Neither is gain/loss green or red: sitting above the
+     average is not a return. */
+  --ds-band-above: #008f8f;
+  --ds-band-below: #bb6212;
 
   --ds-gutter: 23px;
 
@@ -110,7 +109,6 @@
   --ds-sell-bg: #2c253a;
   --ds-withdraw: #d7b371;
   --ds-withdraw-bg: #312b20;
-  --ds-band-5: #00a7ab;
-  --ds-band-10: #b88a00;
-  --ds-band-15: #c0558d;
+  --ds-band-above: #00a9a2;
+  --ds-band-below: #d27830;
 }

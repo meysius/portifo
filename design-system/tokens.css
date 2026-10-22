@@ -52,10 +52,8 @@
   --ds-sell-bg: #f4effa;
   --ds-withdraw: #946b2e;
   --ds-withdraw-bg: #fbf5e9;
-  --ds-indicator: #d67523;
-  --ds-band-5: #008f94;
-  --ds-band-10: #ad8100;
-  --ds-band-15: #c9558f;
+  --ds-band-above: #008f8f;
+  --ds-band-below: #bb6212;
   --ion-tab-bar-background: #ffffff;
   --ion-tab-bar-color: #8e949c;
   --ion-tab-bar-color-selected: #16181d;
@@ -88,9 +86,8 @@
   --ds-sell-bg: #2c253a;
   --ds-withdraw: #d7b371;
   --ds-withdraw-bg: #312b20;
-  --ds-band-5: #00a7ab;
-  --ds-band-10: #b88a00;
-  --ds-band-15: #c0558d;
+  --ds-band-above: #00a9a2;
+  --ds-band-below: #d27830;
   --ion-tab-bar-background: #1d2124;
   --ion-tab-bar-color: #656b70;
   --ion-tab-bar-color-selected: #ecefef;

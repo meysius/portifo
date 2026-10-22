@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { getHistory, getSma } from "../api/market";
 import type { HistoryPoint, HistoryRange } from "../api/market";
-import { AXIS_H, PLOT_BOTTOM, PLOT_H, plotY, timeAxis, valueAxis } from "../lib/chartAxis";
+import { AXIS_H, PLOT_BOTTOM, PLOT_H, PLOT_TOP, plotY, timeAxis, valueAxis } from "../lib/chartAxis";
 import { fmtCcy, fmtDay, fmtSignedPct, yahooQuoteUrl } from "../lib/fx";
 import TimeGrid from "./TimeGrid";
 import ValueGrid from "./ValueGrid";
@@ -14,12 +14,17 @@ import ValueGrid from "./ValueGrid";
 // scrub readout on demand. The full chart is one tap away at Yahoo (the
 // outward arrow), which already supplies our prices.
 //
-// Under the chart sit two indicator toggles: the 200-day moving average, and
-// that average inside bands 5, 10 and 15% either side of it. Both draw on 3M
-// and longer only (under a month of hourly bars the average is a near-flat
-// line that says little), and the scale stretches to hold what they draw.
-// Each chip doubles as its legend, reading the scrubbed or latest bar: the
-// average's price, and how far the price sits above or below it.
+// Under the chart sits one indicator toggle: the 200-day moving average inside
+// bands 5, 10 and 15% either side of it. It draws on 3M and longer only (under
+// a month of hourly bars the average is a near-flat line that says little),
+// and only the lines the price crosses in the range, so the scale stretches no
+// further than it must. The average is a dashed ink line; the bands above it
+// are teal and those below orange, their zones tinted deeper the farther out,
+// and each line is named at its right end. The chip doubles
+// as the legend, reading how far the price sits from the average at the
+// scrubbed or latest bar; when no line is crossed, a note beside it says
+// which lines the price stayed between. A scrub reads every drawn line beside
+// the crosshair, in the order they cross it, the price slotted in where it sits.
 
 const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
@@ -34,6 +39,8 @@ const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
 
 // Price and shares traded per bar.
 type Pt = { t: number; p: number; v: number };
+// One line's reading in the scrub readout.
+type Rung = { color: string; label: string; v: number; kind: "band" | "sma" | "price" };
 
 const VOLUME_GAP = 8;
 const VOLUME_H = 18;
@@ -41,15 +48,30 @@ const CHART_H = PLOT_H + AXIS_H + VOLUME_GAP + VOLUME_H;
 
 const SMA_WINDOW = 200;
 const SMA_RANGES = new Set<HistoryRange>(["3M", "6M", "1Y", "All"]);
-// Each band's distance from the average, inner first. A band is the zone
-// between its own line and the next one in, tinted in its line's colour.
-const BANDS = [
-  { k: 0.05, color: "var(--ds-band-5)" },
-  { k: 0.1, color: "var(--ds-band-10)" },
-  { k: 0.15, color: "var(--ds-band-15)" },
+// The average and the lines either side of it, top down, each as its distance
+// from the average. The zone between two neighbouring lines is tinted in the
+// outer one's colour. A band is named by that distance, a percentage, so its
+// name reads in mono.
+const LEVELS = [
+  { f: 0.15, color: "var(--ds-band-above)", tint: 0.13, label: "+15%" },
+  { f: 0.1, color: "var(--ds-band-above)", tint: 0.09, label: "+10%" },
+  { f: 0.05, color: "var(--ds-band-above)", tint: 0.05, label: "+5%" },
+  { f: 0, color: "var(--ds-text)", tint: 0, label: "SMA" },
+  { f: -0.05, color: "var(--ds-band-below)", tint: 0.05, label: "−5%" },
+  { f: -0.1, color: "var(--ds-band-below)", tint: 0.09, label: "−10%" },
+  { f: -0.15, color: "var(--ds-band-below)", tint: 0.13, label: "−15%" },
 ];
+const SMA_DASH = "4 3";
+// Each drawn line is named just past its right end, in a column of its own
+// between the plot and the price scale, so no name ever covers the price.
+// Where lines run closer than a name is tall, the names are spaced apart
+// about their lines. JetBrains Mono at --ds-fs-8 (8px × 1.2) advances 0.6em.
+const NAME_CHAR_W = 5.76;
+const NAME_INSET = 6;
+const NAME_GAP = 11;
+// The scrub readout's distance from the crosshair, when it lists the bands.
+const LADDER_GAP = 10;
 // Kept per device, like the appearance setting.
-const SMA_KEY = "portifo.chart.sma200";
 const BANDS_KEY = "portifo.chart.smaBands";
 
 function readPref(key: string) {
@@ -67,6 +89,34 @@ function writePref(key: string, on: boolean) {
   } catch {
     // Still applies until the page reloads.
   }
+}
+
+// When the price crosses none of the lines, where it stayed instead: between
+// the nearest line above its high and the nearest below its low.
+function stayedNote(devLo: number, devHi: number) {
+  const name = (l: (typeof LEVELS)[number]) => (l.f ? l.label : "the SMA");
+  const above = LEVELS.findLast(({ f }) => f > devHi);
+  const below = LEVELS.find(({ f }) => f < devLo);
+  if (above && below) return `Stayed between ${name(above)} and ${name(below)}`;
+  return above ? `Stayed below ${name(above)}` : below ? `Stayed above ${name(below)}` : null;
+}
+
+// Heights for labels that want the given ones (top down), at least `gap`
+// apart and within min…max: each run that would overlap is spaced out about
+// its own centre.
+function spread(want: number[], gap: number, min: number, max: number) {
+  const place = (n: number, sum: number) => Math.min(Math.max(sum / n - ((n - 1) * gap) / 2, min), max - (n - 1) * gap);
+  const groups: { n: number; sum: number; top: number }[] = [];
+  for (const y of want) {
+    let g = { n: 1, sum: y, top: place(1, y) };
+    // Merge back while the run above reaches into this one.
+    while (groups.length && groups[groups.length - 1].top + groups[groups.length - 1].n * gap > g.top) {
+      const prev = groups.pop()!;
+      g = { n: prev.n + g.n, sum: prev.sum + g.sum, top: place(prev.n + g.n, prev.sum + g.sum) };
+    }
+    groups.push(g);
+  }
+  return groups.flatMap((g) => Array.from({ length: g.n }, (_, k) => g.top + k * gap));
 }
 
 // Runs of consecutive bars that have an average: a bar without a full
@@ -121,7 +171,6 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   const [failed, setFailed] = useState(false);
   const [scrub, setScrub] = useState<number | null>(null);
   const [width, setWidth] = useState(0);
-  const [smaOn, setSmaOn] = useState(() => readPref(SMA_KEY));
   const [bandsOn, setBandsOn] = useState(() => readPref(BANDS_KEY));
   // Tagged with its symbol+range, so a range switch never pairs the new bars
   // with the old range's average.
@@ -161,11 +210,9 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   }, [symbol, range, reloadKey]);
 
   const smaFits = SMA_RANGES.has(range);
-  // The bands are drawn around the average, so either toggle draws its line.
-  const smaShown = (smaOn || bandsOn) && smaFits;
   const bandsShown = bandsOn && smaFits;
   useEffect(() => {
-    if (!smaShown) return;
+    if (!bandsShown) return;
     const key = `${symbol}|${range}`;
     let live = true;
     const cached = smaCache.get(key);
@@ -181,56 +228,79 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     return () => {
       live = false;
     };
-  }, [symbol, range, smaShown, reloadKey]);
+  }, [symbol, range, bandsShown, reloadKey]);
 
-  const toggle = (key: string, on: boolean, set: (on: boolean) => void) => {
-    writePref(key, !on);
-    set(!on);
+  const toggleBands = () => {
+    writePref(BANDS_KEY, !bandsOn);
+    setBandsOn(!bandsOn);
   };
 
   const s = pts ?? [];
   const ready = s.length > 1 && width > 0;
-  const smaByTime = smaShown && sma?.key === `${symbol}|${range}` ? sma.byTime : null;
+  const smaByTime = bandsShown && sma?.key === `${symbol}|${range}` ? sma.byTime : null;
   const avg = smaByTime ? s.map((p) => smaByTime.get(p.t)) : [];
+  // The lines the price crosses: those between its farthest below the average
+  // and its farthest above. It moves continuously, so it crosses each of them.
+  const devs = s.flatMap((p, i) => (avg[i] == null ? [] : [p.p / avg[i] - 1]));
+  const devLo = Math.min(...devs);
+  const devHi = Math.max(...devs);
+  const levels = LEVELS.filter(({ f }) => f >= devLo && f <= devHi);
+  const stayed = devs.length && !levels.length ? stayedNote(devLo, devHi) : null;
 
   const last = s.length - 1;
   let path = "";
-  let smaPath = "";
-  let smaYs: (number | null)[] = [];
-  let bandPaths: { color: string; lines: string; zone: string }[] = [];
+  let lines: { f: number; color: string; d: string }[] = [];
+  let zones: { f: number; color: string; tint: number; d: string }[] = [];
+  let labels: { label: string; x: number; y: number }[] = [];
   let volume = "";
   let xs: number[] = [];
   let ys: number[] = [];
   let scale = valueAxis(0, 0);
   let plotW = width;
+  let lo = 0;
+  let hi = 0;
   if (ready) {
     const avgs = avg.filter((v): v is number => v != null);
-    const reach = bandsShown ? BANDS[BANDS.length - 1].k : 0;
-    const vals = [...s.map((p) => p.p), ...avgs.map((v) => v * (1 - reach)), ...avgs.map((v) => v * (1 + reach))];
-    const lo = Math.min(...vals);
-    const hi = Math.max(...vals);
+    const vals = [...s.map((p) => p.p), ...levels.flatMap(({ f }) => avgs.map((v) => v * (1 + f)))];
+    lo = Math.min(...vals);
+    hi = Math.max(...vals);
     scale = valueAxis(lo, hi);
-    plotW = width - scale.width;
+    const namesW = levels.length ? Math.max(...levels.map((l) => l.label.length)) * NAME_CHAR_W + 2 * NAME_INSET : 0;
+    plotW = width - scale.width - namesW;
     xs = s.map((_, i) => (i * plotW) / last);
     ys = s.map((p) => plotY(p.p, lo, hi));
     path = xs.map((x, i) => `${i ? "L" : "M"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
-    smaYs = avg.map((v) => (v == null ? null : plotY(v, lo, hi)));
-    // The average scaled by f, as points along one run.
+    // The line f from the average, as points along one run.
     const trace = (run: number[], f: number) =>
-      run.map((i) => `${xs[i].toFixed(1)},${plotY((avg[i] as number) * f, lo, hi).toFixed(1)}`);
-    const line = (f: number) => runs(avg).map((run) => `M${trace(run, f).join("L")}`);
-    const zone = (inner: number, outer: number) =>
-      runs(avg).map((run) => `M${[...trace(run, outer), ...trace(run, inner).reverse()].join("L")}Z`);
-    smaPath = line(1).join(" ");
-    if (bandsShown) {
-      bandPaths = BANDS.map(({ k, color }, b) => {
-        const inner = b ? BANDS[b - 1].k : 0;
-        return {
-          color,
-          lines: [...line(1 + k), ...line(1 - k)].join(" "),
-          zone: [...zone(1 + inner, 1 + k), ...zone(1 - inner, 1 - k)].join(" "),
-        };
-      });
+      run.map((i) => `${xs[i].toFixed(1)},${plotY((avg[i] as number) * (1 + f), lo, hi).toFixed(1)}`);
+    lines = levels.map(({ f, color }) => ({
+      f,
+      color,
+      d: runs(avg)
+        .map((run) => `M${trace(run, f).join("L")}`)
+        .join(" "),
+    }));
+    zones = levels.slice(1).map((inner, i) => {
+      // Neighbours never straddle the average, which lies between them.
+      const outer = Math.abs(levels[i].f) > Math.abs(inner.f) ? levels[i] : inner;
+      return {
+        f: outer.f,
+        color: outer.color,
+        tint: outer.tint,
+        d: runs(avg)
+          .map((run) => `M${[...trace(run, levels[i].f), ...trace(run, inner.f).reverse()].join("L")}Z`)
+          .join(" "),
+      };
+    });
+    const end = avg.findLastIndex((v) => v != null);
+    if (end >= 0) {
+      const at = spread(
+        levels.map(({ f }) => plotY((avg[end] as number) * (1 + f), lo, hi)),
+        NAME_GAP,
+        PLOT_TOP + NAME_GAP / 2,
+        PLOT_BOTTOM - NAME_GAP / 2,
+      );
+      labels = levels.map(({ label }, i) => ({ label, x: plotW + NAME_INSET, y: at[i] }));
     }
     volume = volumePath(xs, s);
   }
@@ -244,10 +314,24 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   };
   const release = () => setScrub(null);
 
-  // The legends read the scrubbed bar, else the latest one with an average.
+  // The chip reads the scrubbed bar, else the latest one with an average.
   const smaAt = scrub ?? avg.findLastIndex((v) => v != null);
   const smaValue = smaAt >= 0 ? avg[smaAt] : undefined;
   const gap = smaValue != null ? (s[smaAt].p / smaValue - 1) * 100 : undefined;
+
+  // A scrub reads every drawn line on the crosshair, top down as they cross
+  // it, and the price wherever it sits among them.
+  const scrubAvg = ready && scrub != null && lines.length ? avg[scrub] : undefined;
+  const lineRungs: Rung[] =
+    scrubAvg == null
+      ? []
+      : levels.map(({ f, color, label }) => ({ color, label, v: scrubAvg * (1 + f), kind: f ? "band" : "sma" }));
+  const rungs: Rung[] =
+    scrubAvg == null || scrub == null
+      ? []
+      : [...lineRungs, { color: "var(--ds-accent)", label: "Price", v: s[scrub].p, kind: "price" as const }].sort(
+          (a, b) => b.v - a.v,
+        );
 
   return (
     <>
@@ -285,12 +369,36 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
       <div ref={wrapRef} className="hd-chart" style={{ height: CHART_H }}>
         {/* Slides with the cursor but never leaves the plot: at the left edge it
             hangs right of the cursor, at the right edge left of it. */}
-        {ready && scrub != null && (
+        {ready && scrub != null && !rungs.length && (
           <div
             className="hd-chart-tip"
             style={{ left: xs[scrub], transform: `translateX(-${(xs[scrub] / plotW) * 100}%)` }}
           >
             {fmtCcy(s[scrub].p, ccy)} · {ccy} · {tipLabel(s[scrub].t, range)}
+          </div>
+        )}
+        {/* Hangs beside the crosshair, on the side with more room, so the
+            crossings themselves stay in view. */}
+        {ready && scrub != null && rungs.length > 0 && (
+          <div
+            className="hd-chart-ladder"
+            style={
+              xs[scrub] < plotW / 2
+                ? { left: xs[scrub] + LADDER_GAP }
+                : { left: xs[scrub] - LADDER_GAP, transform: "translateX(-100%)" }
+            }
+          >
+            <span className="hd-chart-ladder-when">{tipLabel(s[scrub].t, range)}</span>
+            <span className="hd-chart-ladder-ccy">{ccy}</span>
+            {rungs.map((r) => (
+              <div key={r.label} className="hd-chart-rung" data-kind={r.kind}>
+                <span className="hd-chart-rung-swatch" style={{ color: r.color }} />
+                <span className={r.kind === "band" ? "hd-chart-rung-label money" : "hd-chart-rung-label"}>
+                  {r.label}
+                </span>
+                <span className="hd-chart-rung-value money">{fmtCcy(r.v, ccy)}</span>
+              </div>
+            ))}
           </div>
         )}
         {!ready && failed && (
@@ -304,7 +412,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             height={CHART_H}
             role="img"
             aria-label={`${symbol} share price, ${RANGE_WORD[range]}${
-              bandPaths.length ? ", with its 200-day average and bands" : smaPath ? ", with its 200-day average" : ""
+              lines.length ? ", with the bands about its 200-day average that it crosses" : ""
             }`}
             onPointerDown={pick}
             onPointerMove={pick}
@@ -324,26 +432,27 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             {ready && (
               <>
                 {/* The bands' tints replace the price's fill, rather than mix with it. */}
-                {bandPaths.length ? (
-                  bandPaths.map((b) => (
-                    <g key={b.color}>
-                      <path d={b.zone} fill={b.color} fillOpacity={0.08} />
-                      <path d={b.lines} fill="none" stroke={b.color} strokeWidth={1} strokeLinejoin="round" />
-                    </g>
-                  ))
+                {zones.length ? (
+                  zones.map((z) => <path key={z.f} d={z.d} fill={z.color} fillOpacity={z.tint} />)
                 ) : (
                   <path d={`${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`} fill={`url(#${gradId})`} />
                 )}
-                {smaPath && (
+                {lines.map((l) => (
                   <path
-                    d={smaPath}
+                    key={l.f}
+                    d={l.d}
                     fill="none"
-                    stroke="var(--ds-indicator)"
-                    strokeWidth={1.5}
-                    strokeLinecap="round"
+                    stroke={l.color}
+                    strokeWidth={l.f ? 1 : 1.5}
+                    strokeDasharray={l.f ? undefined : SMA_DASH}
                     strokeLinejoin="round"
                   />
-                )}
+                ))}
+                {labels.map((l) => (
+                  <text key={l.label} className="chart-band-label" x={l.x} y={l.y} dy="0.35em">
+                    {l.label}
+                  </text>
+                ))}
                 <path
                   d={path}
                   fill="none"
@@ -363,9 +472,9 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
                       stroke="var(--ds-muted)"
                       strokeDasharray="2 3"
                     />
-                    {smaYs[scrub] != null && (
-                      <circle cx={xs[scrub]} cy={smaYs[scrub]} r={2.5} fill="var(--ds-indicator)" />
-                    )}
+                    {lineRungs.map((r) => (
+                      <circle key={r.label} cx={xs[scrub]} cy={plotY(r.v, lo, hi)} r={2.5} fill={r.color} />
+                    ))}
                     <circle
                       cx={xs[scrub]}
                       cy={ys[scrub]}
@@ -386,24 +495,11 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
         <button
           type="button"
           className="hd-indicator"
-          aria-pressed={smaOn}
-          disabled={!smaFits}
-          onClick={() => toggle(SMA_KEY, smaOn, setSmaOn)}
-        >
-          <span className="hd-indicator-swatch" aria-hidden="true" />
-          200-day SMA
-          {smaOn && smaShown && smaValue != null && (
-            <span className="hd-indicator-value">{fmtCcy(smaValue, ccy)}</span>
-          )}
-        </button>
-        <button
-          type="button"
-          className="hd-indicator"
           aria-pressed={bandsOn}
           disabled={!smaFits}
-          onClick={() => toggle(BANDS_KEY, bandsOn, setBandsOn)}
+          onClick={toggleBands}
         >
-          {/* The upper half of the bands, outermost on top, as the chart stacks them. */}
+          {/* A band above the average, the average, a band below, as the chart stacks them. */}
           <span className="hd-indicator-bands" aria-hidden="true">
             <span />
             <span />
@@ -413,6 +509,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
           {bandsShown && gap != null && <span className="hd-indicator-value">{fmtSignedPct(gap)}</span>}
         </button>
         {!smaFits && <span className="hd-indicator-note">3M and longer</span>}
+        {stayed && <span className="hd-indicator-note">{stayed}</span>}
       </div>
     </>
   );
