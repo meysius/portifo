@@ -5495,6 +5495,21 @@ ion-modal.ac-create-modal {
   font-size: var(--ds-fs-9);
 }
 
+/* Outside regular hours: the session, its price, the move from the close. */
+.wl-extended {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px 5px;
+  margin-top: 6px;
+  font-size: var(--ds-fs-9);
+  color: var(--ds-secondary);
+}
+
+.wl-extended .money:not(.positive, .negative) {
+  color: var(--ds-text);
+}
+
 .wl-no-quote {
   flex-shrink: 0;
   font-size: var(--ds-fs-9);

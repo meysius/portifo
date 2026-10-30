@@ -3,7 +3,7 @@ import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useHistory } from "react-router-dom";
-import { searchSymbols } from "../api/market";
+import { EXTENDED_LABEL, searchSymbols } from "../api/market";
 import type { Quote, SymbolResult } from "../api/market";
 import StickyTitleBar from "../components/StickyTitleBar";
 import { usePortfolioData } from "../context/PortfolioDataContext";
@@ -15,8 +15,9 @@ import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 // The Watchlist tab: symbols you follow, owned or not. The search field sits
 // under the heading; while it holds a query, its results take the list's
 // place and tapping one adds it (or, once added, takes it off again). A row on
-// the list shows the latest price and today's move, and pushes the symbol's
-// own page, with its chart.
+// the list shows the latest price and today's move, plus the pre-market or
+// after-hours price outside regular hours, and pushes the symbol's own page,
+// with its chart.
 //
 // The list belongs to the signed-in user, not the active portfolio, and every
 // price stays in the symbol's own currency, with its code beside it.
@@ -57,11 +58,14 @@ const ICONS = {
 };
 
 // Coloured by the percentage as shown: a move that rounds to 0.0% is no move.
-const tone = (q: Quote) => {
-  const pct = Math.round(q.changePercent * 10) / 10;
+const tone = (changePercent: number) => {
+  const pct = Math.round(changePercent * 10) / 10;
   return pct > 0 ? "positive" : pct < 0 ? "negative" : "";
 };
 const today = (q: Quote) => `${fmtSignedCcy(q.change, q.currency)} · ${fmtSignedPct(q.changePercent)}`;
+const outsideHours = (q: Quote) =>
+  q.extended &&
+  `${EXTENDED_LABEL[q.extended.session]} ${fmtCcy(q.extended.price, q.currency)}, ${fmtSignedPct(q.extended.changePercent)}`;
 
 function WatchlistPage() {
   const history = useHistory();
@@ -168,7 +172,13 @@ function WatchlistPage() {
                 key={symbol}
                 type="button"
                 className="wl-row"
-                aria-label={[symbol, name, q && `${q.currency} ${fmtCcy(q.price, q.currency)}`, q && `${today(q)} today`]
+                aria-label={[
+                  symbol,
+                  name,
+                  q && `${q.currency} ${fmtCcy(q.price, q.currency)}`,
+                  q && `${today(q)} today`,
+                  q && outsideHours(q),
+                ]
                   .filter(Boolean)
                   .join(", ")}
                 onClick={() => openSymbol(symbol)}
@@ -183,7 +193,16 @@ function WatchlistPage() {
                       <span className="wl-ccy">{q.currency}</span>
                       <span className="money">{fmtCcy(q.price, q.currency)}</span>
                     </span>
-                    <span className={`wl-move money ${tone(q)}`}>{today(q)}</span>
+                    <span className={`wl-move money ${tone(q.changePercent)}`}>{today(q)}</span>
+                    {q.extended && (
+                      <span className="wl-extended">
+                        {EXTENDED_LABEL[q.extended.session]}
+                        <span className="money">{fmtCcy(q.extended.price, q.currency)}</span>
+                        <span className={`money ${tone(q.extended.changePercent)}`}>
+                          {fmtSignedPct(q.extended.changePercent)}
+                        </span>
+                      </span>
+                    )}
                   </span>
                 ) : (
                   !loading.market && <span className="wl-no-quote">No price</span>

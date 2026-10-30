@@ -18,6 +18,24 @@ export type Quote = {
   marketState?: string;
   // When `price` was struck, ISO 8601.
   marketTime?: string;
+  // The latest trade outside the regular session, when one followed it.
+  // `price` stays the regular session's, so positions never value on this.
+  extended?: ExtendedHours;
+};
+
+export type ExtendedHours = {
+  session: "pre" | "post";
+  price: number;
+  // Against the quote's `price`: the move since the regular session closed.
+  change: number;
+  changePercent: number;
+  // When `price` was struck, ISO 8601.
+  time: string;
+};
+
+export const EXTENDED_LABEL: Record<ExtendedHours["session"], string> = {
+  pre: "Pre-market",
+  post: "After hours",
 };
 
 // The envelope returned by GET /market/fx — named distinctly from lib/fx.ts's

@@ -13,6 +13,7 @@ import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { RouteComponentProps } from "react-router-dom";
+import { EXTENDED_LABEL } from "../api/market";
 import HoldingChart from "../components/HoldingChart";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
@@ -23,9 +24,10 @@ import { fmtCcy, fmtEtDay, fmtEtStamp, fmtEtTime, fmtSignedCcy, fmtSignedPct } f
 // A watched symbol, pushed from the Watchlist: the holding page's anatomy and
 // classes (.hd-*) without the ownership. Read top to bottom:
 //   0. The symbol — its name and exchange, and when the price was set.
-//   1. The price — the hero figure, with today's move under it. (A holding
-//      ends its title line with the price instead, because its hero is the
-//      position's value; there is no position here.)
+//   1. The price — the hero figure, with today's move under it, and the
+//      pre-market or after-hours move and price outside regular hours. (A
+//      holding ends its title line with the price instead, because its hero
+//      is the position's value; there is no position here.)
 //   2. The market — the same price-history chart a holding shows.
 //   3. The latest session — open, previous close, the day's range, volume.
 // The Back bar's one quiet button takes the symbol off the watchlist, or puts
@@ -103,6 +105,7 @@ function WatchlistSymbolPage({ match }: RouteComponentProps<{ symbol: string }>)
   const quoteLoading = !quote && loading.market;
 
   const price = quote ? fmtCcy(quote.price, quote.currency) : "";
+  const extended = quote?.extended;
 
   return (
     <IonPage className="hd-page wl-symbol-page">
@@ -164,6 +167,19 @@ function WatchlistSymbolPage({ match }: RouteComponentProps<{ symbol: string }>)
                 <span className={`money ${tone(quote.changePercent)}`}>{fmtSignedCcy(quote.change, quote.currency)}</span>
                 <span className={`money hd-pill ${tone(quote.changePercent)}`}>{fmtSignedPct(quote.changePercent)}</span>
                 <span className="hd-return-label">Today</span>
+                {extended && (
+                  <>
+                    <span className={`money ${tone(extended.changePercent)}`}>
+                      {fmtSignedCcy(extended.change, quote.currency)}
+                    </span>
+                    <span className={`money hd-pill ${tone(extended.changePercent)}`}>
+                      {fmtSignedPct(extended.changePercent)}
+                    </span>
+                    <span className="hd-return-label">
+                      {EXTENDED_LABEL[extended.session]} · <span className="money">{fmtCcy(extended.price, quote.currency)}</span>
+                    </span>
+                  </>
+                )}
               </div>
             </section>
 
@@ -193,6 +209,12 @@ function WatchlistSymbolPage({ match }: RouteComponentProps<{ symbol: string }>)
                 <>
                   <br />
                   Quote as of {fmtEtStamp(quoteTime)}
+                </>
+              )}
+              {extended && (
+                <>
+                  <br />
+                  {EXTENDED_LABEL[extended.session]} as of {fmtEtStamp(new Date(extended.time))}
                 </>
               )}
             </div>

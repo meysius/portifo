@@ -359,6 +359,8 @@ button {
 .wl-ccy { font-size: var(--ds-fs-9); font-weight: 500; color: var(--ds-muted); }
 .wl-price .money { font-size: var(--ds-fs-12); font-weight: 500; }
 .wl-move { margin-top: 6px; font-size: var(--ds-fs-9); }
+.wl-extended { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 2px 5px; margin-top: 6px; font-size: var(--ds-fs-9); color: var(--ds-secondary); }
+.wl-extended .money:not(.positive, .negative) { color: var(--ds-text); }
 .wl-no-quote { flex-shrink: 0; font-size: var(--ds-fs-9); color: var(--ds-muted); }
 .wl-toggle { display: grid; place-items: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px; color: var(--ds-accent); background: var(--ds-accent-tint); }
 .wl-toggle.on { background: none; }

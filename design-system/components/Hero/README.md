@@ -9,7 +9,7 @@ Once per screen, directly under the page heading, when the screen is about one a
 - A label naming the figure, with its currency when it isn't obvious: "Total portfolio value", "Position value · USD", "Total account value", "Realized gain · USD", "Share price · CAD".
 - The figure, formatted with the display currency.
 - Optionally the return: a signed amount, its percentage in a `ReturnPill`, and what it measures ("Today", "Unrealized return", "Return on sold shares"). On a watched symbol, "Today" is the move per share.
-- Optionally a second return in the same form. A holding shows two: "Today", then "Unrealized return".
+- Optionally a second return in the same form. A holding shows two: "Today", then "Unrealized return". A watched symbol shows a second one outside regular hours: the move from the close, labelled with the session and its price ("After hours · $220.47", "Pre-market · $208.10").
 - Optionally a badge in the label ("Closed"), a loading spinner ("Loading prices"), or a currency chip that opens the display-currency sheet.
 
 ## Rules

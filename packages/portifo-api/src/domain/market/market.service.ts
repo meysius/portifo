@@ -19,6 +19,19 @@ export type Quote = {
   marketState?: string;
   // When `price` was struck, ISO 8601.
   marketTime?: string;
+  // The latest trade outside the regular session, when one followed it.
+  // `price` stays the regular session's, so positions never value on this.
+  extended?: ExtendedHours;
+};
+
+export type ExtendedHours = {
+  session: "pre" | "post";
+  price: number;
+  // Against the quote's `price`: the move since the regular session closed.
+  change: number;
+  changePercent: number;
+  // When `price` was struck, ISO 8601.
+  time: string;
 };
 
 // Yahoo returns epoch seconds without validation and a Date with it.
@@ -26,6 +39,23 @@ function toIso(t: unknown): string | undefined {
   if (t == null) return undefined;
   const d = typeof t === "number" ? new Date(t * 1000) : new Date(t as string | Date);
   return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
+// Goes by the timestamps, so an earlier session's fields can't pass for the
+// latest price. Many symbols carry neither: Toronto, London, crypto, FX, indices.
+function extendedHours(q: any): ExtendedHours | undefined {
+  if (q.marketState === "REGULAR") return undefined;
+  const close = toIso(q.regularMarketTime) ?? "";
+  return (["pre", "post"] as const)
+    .map((session) => ({
+      session,
+      price: q[`${session}MarketPrice`],
+      change: q[`${session}MarketChange`] ?? 0,
+      changePercent: q[`${session}MarketChangePercent`] ?? 0,
+      time: toIso(q[`${session}MarketTime`]),
+    }))
+    .filter((s): s is ExtendedHours => s.price > 0 && s.time != null && s.time > close)
+    .sort((a, b) => b.time.localeCompare(a.time))[0];
 }
 
 // Volume is shares traded in the bar; the portfolio series has none.
@@ -110,6 +140,7 @@ export class MarketService {
         previousClose: q.regularMarketPreviousClose,
         marketState: q.marketState,
         marketTime: toIso(q.regularMarketTime),
+        extended: extendedHours(q),
       }));
   }
 
