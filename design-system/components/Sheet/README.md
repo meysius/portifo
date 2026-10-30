@@ -4,7 +4,7 @@ A bottom sheet that slides up over the screen for a quick choice, a short form, 
 
 ## When to use
 - Choosing one option (filters, display currency): see `OptionList` and `OptionGrid`.
-- A form of one to three fields that doesn't deserve its own screen (Rename account, Set cash balance).
+- A form of one to three fields that doesn't deserve its own screen (Rename account, Set cash balance, a price alert).
 - Reading one record without leaving the list (a transaction).
 Use a full-screen task instead when the job needs several steps or more than a few fields (new account, adding a transaction).
 

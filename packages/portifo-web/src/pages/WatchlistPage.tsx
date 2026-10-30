@@ -6,6 +6,7 @@ import { useHistory } from "react-router-dom";
 import { EXTENDED_LABEL, searchSymbols } from "../api/market";
 import type { Quote, SymbolResult } from "../api/market";
 import StickyTitleBar from "../components/StickyTitleBar";
+import { useAlerts } from "../context/AlertsContext";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { useWatchlist } from "../context/WatchlistContext";
@@ -17,7 +18,7 @@ import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 // place and tapping one adds it (or, once added, takes it off again). A row on
 // the list shows the latest price and today's move, plus the pre-market or
 // after-hours price outside regular hours, and pushes the symbol's own page,
-// with its chart.
+// with its chart and price alerts. A bell marks a symbol with an alert on.
 //
 // The list belongs to the signed-in user, not the active portfolio, and every
 // price stays in the symbol's own currency, with its code beside it.
@@ -49,6 +50,13 @@ const ICONS = {
   ),
   plus: icon(<path d="M12 5v14M5 12h14" />),
   check: icon(<path d="m5 12.5 4.5 4.5L19 7.5" />),
+  bell: icon(
+    <>
+      <path d="M18 9a6 6 0 1 0-12 0c0 5.5-2.5 7.5-2.5 7.5h17S18 14.5 18 9Z" />
+      <path d="M10.3 20a2 2 0 0 0 3.4 0" />
+    </>,
+    12,
+  ),
   eye: icon(
     <>
       <path d="M2.5 12C4.5 8 8 5.5 12 5.5s7.5 2.5 9.5 6.5c-2 4-5.5 6.5-9.5 6.5S4.5 16 2.5 12Z" />
@@ -72,6 +80,7 @@ function WatchlistPage() {
   const { tabBase } = useTabBase();
   const { quotes, loading, refreshMarket } = usePortfolioData();
   const { symbols, loadFailed, names, reload, add, remove } = useWatchlist();
+  const { alerts, reload: reloadAlerts } = useAlerts();
   const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
 
   // A newly listed symbol needs its quote; the ones already cached are
@@ -89,11 +98,12 @@ function WatchlistPage() {
   useIonViewWillEnter(() => {
     const list = symbolsRef.current;
     if (list?.length) refreshMarket(list);
-  }, [refreshMarket]);
+    reloadAlerts();
+  }, [refreshMarket, reloadAlerts]);
 
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     try {
-      const list = await reload();
+      const [list] = await Promise.all([reload(), reloadAlerts()]);
       if (list?.length) await refreshMarket(list);
     } finally {
       e.detail.complete();
@@ -138,6 +148,7 @@ function WatchlistPage() {
   };
 
   const watching = new Set(symbols ?? []);
+  const alerted = new Set(alerts?.filter((a) => !a.triggeredAt).map((a) => a.symbol));
   const toggle = (r: SymbolResult) => (watching.has(r.symbol) ? remove(r.symbol) : add(r.symbol, r.name));
   const openSymbol = (symbol: string) => history.push(`${tabBase}/symbol/${encodeURIComponent(symbol)}`);
 
@@ -178,13 +189,17 @@ function WatchlistPage() {
                   q && `${q.currency} ${fmtCcy(q.price, q.currency)}`,
                   q && `${today(q)} today`,
                   q && outsideHours(q),
+                  alerted.has(symbol) && "price alert on",
                 ]
                   .filter(Boolean)
                   .join(", ")}
                 onClick={() => openSymbol(symbol)}
               >
                 <span className="wl-identity">
-                  <span className="wl-symbol">{symbol}</span>
+                  <span className="wl-symbol">
+                    {symbol}
+                    {alerted.has(symbol) && <span className="wl-alert-mark">{ICONS.bell}</span>}
+                  </span>
                   {name && <span className="wl-meta">{name}</span>}
                 </span>
                 {q ? (

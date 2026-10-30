@@ -12,6 +12,7 @@ The options (three- or four-letter codes), the current one, and a notice above a
 - Four equal columns, 6px gap.
 - Each tile: 12px × 5px padding, radius 7px, `--ds-fs-11`, `ds-secondary` on `ds-subtle`.
 - The current tile is `ds-accent` on `ds-accent-tint`, and `aria-pressed="true"`.
+- The same tile is used in two columns inside a form, where tapping only selects and the form's `Button` applies it (`PriceAlerts`' direction).
 - Notices explain the effect: "Totals and investments are converted to this currency across the app. Cash balances stay in their original currency." and "Converted at today’s exchange rates."
 
 Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.ds-sheet-options`, `.ds-sheet-option`).

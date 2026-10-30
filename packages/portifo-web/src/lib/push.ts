@@ -19,6 +19,22 @@ function urlBase64ToUint8Array(base64Url: string): Uint8Array<ArrayBuffer> {
   return bytes;
 }
 
+export type PushStatus = "on" | "off" | "blocked" | "unsupported";
+
+// Whether a push could reach this device. Permission alone doesn't say: the
+// subscription can lapse, or the server can have pruned it, so a live one is
+// sent up again and a missing one reads as off (subscribing needs a tap).
+export async function checkPushStatus(): Promise<PushStatus> {
+  if (!isPushSupported()) return "unsupported";
+  if (Notification.permission === "denied") return "blocked";
+  if (Notification.permission === "default") return "off";
+  const registration = await navigator.serviceWorker.getRegistration();
+  const subscription = await registration?.pushManager.getSubscription();
+  if (!subscription) return "off";
+  await subscribePush(subscription).catch(() => {});
+  return "on";
+}
+
 // Requests OS notification permission, subscribes this device to web push,
 // and registers the subscription with the backend. Must run from a user
 // gesture (button tap) — iOS Safari silently ignores requestPermission()

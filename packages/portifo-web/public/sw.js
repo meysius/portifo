@@ -1,3 +1,7 @@
+// A new version takes over at once: a home-screen app may never fully close,
+// and would otherwise stay on the old handlers.
+self.addEventListener("install", () => self.skipWaiting());
+
 self.addEventListener("push", (event) => {
   let data = { title: "Portifo", body: "" };
   try {
@@ -22,8 +26,10 @@ self.addEventListener("notificationclick", (event) => {
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
       const existing = clients.find((client) => "focus" in client);
-      if (existing) return existing.focus();
-      return self.clients.openWindow(url);
+      if (!existing) return self.clients.openWindow(url);
+      // The app routes itself; navigating the window would reload it.
+      if (url !== "/") existing.postMessage({ type: "open-url", url });
+      return existing.focus();
     }),
   );
 });

@@ -13,12 +13,15 @@ import { DrizzlePushRepo } from "@/domain/push/push.repo";
 import { PushService } from "@/domain/push/push.service";
 import { DrizzleWatchlistRepo } from "@/domain/watchlist/watchlist.repo";
 import { WatchlistService } from "@/domain/watchlist/watchlist.service";
+import { DrizzleAlertRepo } from "@/domain/alert/alert.repo";
+import { AlertService } from "@/domain/alert/alert.service";
 import { UsersController } from "@/controllers/users.controller";
 import { AuthController } from "@/controllers/auth.controller";
 import { PortfolioController } from "@/controllers/portfolio.controller";
 import { MarketController } from "@/controllers/market.controller";
 import { PushController } from "@/controllers/push.controller";
 import { WatchlistController } from "@/controllers/watchlist.controller";
+import { AlertController } from "@/controllers/alert.controller";
 
 export type App = {
   cfg: Config;
@@ -26,6 +29,7 @@ export type App = {
   db: DrizzleDb;
   asyncStorage: AsyncLocalStorage<AsyncContext>;
   controllers: SWController[];
+  alertService: AlertService;
   shutdown: () => Promise<void>;
 };
 
@@ -47,6 +51,8 @@ export function buildApp(): App {
   const pushService = new PushService(logger, pushRepo, cfg);
   const watchlistRepo = new DrizzleWatchlistRepo(db);
   const watchlistService = new WatchlistService(logger, watchlistRepo);
+  const alertRepo = new DrizzleAlertRepo(db);
+  const alertService = new AlertService(logger, alertRepo, marketService, pushService);
 
   const controllers: SWController[] = [
     new UsersController(logger, identityService),
@@ -55,6 +61,7 @@ export function buildApp(): App {
     new MarketController(logger, authService, identityService, marketService),
     new PushController(logger, cfg, authService, identityService, pushService),
     new WatchlistController(logger, authService, identityService, watchlistService),
+    new AlertController(logger, authService, identityService, alertService),
   ];
 
   return {
@@ -63,7 +70,9 @@ export function buildApp(): App {
     db,
     asyncStorage,
     controllers,
+    alertService,
     shutdown: async () => {
+      alertService.stopMonitor();
       // Close DB connections, etc.
     },
   };

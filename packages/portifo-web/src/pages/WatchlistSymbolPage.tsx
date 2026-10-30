@@ -8,6 +8,7 @@ import {
   IonRefresherContent,
   IonTitle,
   IonToolbar,
+  useIonViewWillEnter,
 } from "@ionic/react";
 import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useState } from "react";
@@ -15,6 +16,8 @@ import type { ReactNode } from "react";
 import type { RouteComponentProps } from "react-router-dom";
 import { EXTENDED_LABEL } from "../api/market";
 import HoldingChart from "../components/HoldingChart";
+import PriceAlerts from "../components/PriceAlerts";
+import { useAlerts } from "../context/AlertsContext";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { useWatchlist } from "../context/WatchlistContext";
@@ -29,7 +32,8 @@ import { fmtCcy, fmtEtDay, fmtEtStamp, fmtEtTime, fmtSignedCcy, fmtSignedPct } f
 //      holding ends its title line with the price instead, because its hero
 //      is the position's value; there is no position here.)
 //   2. The market — the same price-history chart a holding shows.
-//   3. The latest session — open, previous close, the day's range, volume.
+//   3. Price alerts — the rules that notify you when it crosses a price.
+//   4. The latest session — open, previous close, the day's range, volume.
 // The Back bar's one quiet button takes the symbol off the watchlist, or puts
 // it back, without leaving the page.
 //
@@ -75,6 +79,7 @@ function WatchlistSymbolPage({ match }: RouteComponentProps<{ symbol: string }>)
   const { tabBase, tabLabel } = useTabBase();
   const { quotes, loading, refreshMarket } = usePortfolioData();
   const { symbols, names, add, remove } = useWatchlist();
+  const { reload: reloadAlerts } = useAlerts();
   const quote = quotes[symbol];
   // Counts pulls to refresh, so the chart refetches its range on each.
   const [pulls, setPulls] = useState(0);
@@ -84,10 +89,15 @@ function WatchlistSymbolPage({ match }: RouteComponentProps<{ symbol: string }>)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbol]);
 
+  // A rule can have fired since this page was last on screen.
+  useIonViewWillEnter(() => {
+    reloadAlerts();
+  }, [reloadAlerts]);
+
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     setPulls((n) => n + 1);
     try {
-      await refreshMarket([symbol]);
+      await Promise.all([refreshMarket([symbol]), reloadAlerts()]);
     } finally {
       e.detail.complete();
     }
@@ -186,6 +196,8 @@ function WatchlistSymbolPage({ match }: RouteComponentProps<{ symbol: string }>)
             <section className="hd-market" aria-label="Share price history">
               <HoldingChart symbol={symbol} ccy={quote.currency} reloadKey={pulls} />
             </section>
+
+            <PriceAlerts symbol={symbol} quote={quote} watching={watching} />
 
             <section className="hd-section">
               <div className="hd-section-heading">

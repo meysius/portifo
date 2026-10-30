@@ -12,11 +12,13 @@ On the Watchlist tab, one per watched symbol, in the order they were added (a ne
 - Today's move: the signed change per share and its percentage, "+$5.50 · +2.5%".
 - Outside regular hours, when the symbol has traded since the close: the session, the price and its percentage from the close, "After hours $220.47 −0.7%". Most US listings have one; other exchanges, crypto and FX don't, and their rows stay two lines.
 - In a search result, whether the symbol is already on the list.
+- Whether the symbol has an active price alert (see `PriceAlerts`).
 
 ## Rules
 - A caption above the list names the two columns: "Symbol / company" and "Price / today", in `row-meta` `ds-muted`.
 - Portfolio's holding-row metrics: 15px block padding, 11px gap, no glyph on the left. The symbol is the row's identity.
 - Symbol `--ds-fs-12` 600; company `--ds-fs-9` `ds-secondary`, 5px below. A long company name wraps; nothing on the row clips.
+- A symbol with an active price alert ends its symbol line with a 12px bell in `ds-muted`, 5px from the symbol, and "price alert on" in the row's `aria-label`. A rule that has already fired doesn't count.
 - Price mono `--ds-fs-12` 500 in `ds-text`. The currency code sits before it, 5px apart on the same baseline, in `--ds-fs-9` 500 `ds-muted`, on every row: "$" alone is US, Canadian or Australian dollars.
 - Today's move mono `--ds-fs-9`, 6px below the price, in gain/loss colour by the percentage as shown: a move that rounds to 0.0% stays `ds-text`. No pill on the row; the pill belongs to the symbol page's hero.
 - The pre-market or after-hours line sits 6px below today's move, in `--ds-fs-9`: "Pre-market" or "After hours" in `ds-secondary`, the price mono `ds-text`, the percentage mono in gain/loss colour by the same rule, 5px apart. The currency code isn't repeated; it is two lines up on the same row. It wraps rather than clips. The main price and today's move stay the regular session's, so the row's top two lines never change meaning.

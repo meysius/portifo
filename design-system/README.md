@@ -143,7 +143,7 @@ Every screen is one of four kinds; the next section, Screen anatomy, lists each 
 
 ## What uses this system
 
-On `ds-*` tokens: Portfolio, Holding detail, Cash (all the cash, by currency and by account), Transactions (list, filter and detail sheets), Accounts (list, account page, new account, rename, cash balance, display currency), Watchlist (the list with its search, and a watched symbol's page).
+On `ds-*` tokens: Portfolio, Holding detail, Cash (all the cash, by currency and by account), Transactions (list, filter and detail sheets), Accounts (list, account page, new account, rename, cash balance, display currency), Watchlist (the list with its search, a watched symbol's page, and its price alerts).
 
 Still on the first system's tokens (`theme/variables.css`: `--surface`, `--fg-1…3`, `--signal`): the tab bar, Settings, Manage portfolio, Login, Onboarding, the add-transaction wizard, Transaction detail, a holding's transaction list, and the older pickers (PickerSheet, DateSheet, ActionSheetModal, including the portfolio switcher). Build new screens with `ds-*` only. When you move one of these over, rebuild it from the components here rather than re-tinting it.
 

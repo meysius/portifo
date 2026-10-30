@@ -47,6 +47,7 @@ if (app.cfg.NODE_ENV === "production") {
 
 const server = expressApp.listen(app.cfg.PORT, () => {
   app.logger.info(`Service started on port ${app.cfg.PORT}.`);
+  app.alertService.startMonitor();
 });
 
 const shutdown = async () => {

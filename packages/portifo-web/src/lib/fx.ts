@@ -48,6 +48,28 @@ export function fmtCcy(n: number, currency: string): string {
   }
 }
 
+// To the last decimal that means something: an FX rate or a penny stock isn't
+// a two-decimal price, and an alert's target should read back as it was typed.
+export function fmtExactCcy(n: number, currency: string): string {
+  try {
+    return n.toLocaleString("en-US", {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: n < 1 ? 8 : 4,
+    });
+  } catch {
+    return `${n} ${currency}`;
+  }
+}
+
+// A traded price, which can run to more decimals than anyone quotes: cents,
+// unless it's small enough for the cents to be the whole story.
+export function fmtTradedCcy(n: number, currency: string): string {
+  return fmtExactCcy(n >= 10 ? Math.round(n * 100) / 100 : n, currency);
+}
+
 // When the live fx rates were fetched: a time today, a date before that.
 export function fmtFxAsOf(iso: string): string {
   const d = new Date(iso);

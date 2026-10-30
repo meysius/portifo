@@ -15,6 +15,7 @@ import CashDetailPage from "./pages/CashDetailPage";
 import AddTransactionPage from "./pages/AddTransactionPage";
 import AddTransactionWizardPage from "./pages/AddTransactionWizardPage";
 import TransactionDetailPage from "./pages/TransactionDetailPage";
+import { AlertsProvider } from "./context/AlertsContext";
 import { TabBaseProvider } from "./context/TabBaseContext";
 import { WatchlistProvider } from "./context/WatchlistContext";
 import { useOutletAnimated } from "./lib/swipeBack";
@@ -181,45 +182,48 @@ function Tabs() {
   // toggles once the transition actually completes) stays in sync with
   // what's visually on screen instead of the URL.
   //
-  // The watchlist sits above the tabs: switching tabs remounts a tab's stack,
-  // and the list shouldn't reload (and flash empty) every time it does.
+  // The watchlist and its alerts sit above the tabs: switching tabs remounts a
+  // tab's stack, and the list shouldn't reload (and flash empty) every time it
+  // does.
   return (
     <WatchlistProvider>
-      <IonTabs>
-        <IonRouterOutlet animated={animated}>
-          <Route path="/tabs/portfolio" render={() => <PortfolioStack />} />
-          <Route path="/tabs/transactions" render={() => <TransactionsStack />} />
-          <Route path="/tabs/accounts" render={() => <AccountsStack />} />
-          <Route path="/tabs/watchlist" render={() => <WatchlistStack />} />
-          <Route path="/tabs/settings" render={() => <SettingsStack />} />
-          <Route exact path="/tabs">
-            <Redirect to="/tabs/portfolio" />
-          </Route>
-        </IonRouterOutlet>
+      <AlertsProvider>
+        <IonTabs>
+          <IonRouterOutlet animated={animated}>
+            <Route path="/tabs/portfolio" render={() => <PortfolioStack />} />
+            <Route path="/tabs/transactions" render={() => <TransactionsStack />} />
+            <Route path="/tabs/accounts" render={() => <AccountsStack />} />
+            <Route path="/tabs/watchlist" render={() => <WatchlistStack />} />
+            <Route path="/tabs/settings" render={() => <SettingsStack />} />
+            <Route exact path="/tabs">
+              <Redirect to="/tabs/portfolio" />
+            </Route>
+          </IonRouterOutlet>
 
-        <IonTabBar slot="bottom">
-          <IonTabButton tab="portfolio" href="/tabs/portfolio">
-            <span className="tab-icon">{ICONS.portfolio}</span>
-            <IonLabel>Portfolio</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="transactions" href="/tabs/transactions">
-            <span className="tab-icon">{ICONS.transactions}</span>
-            <IonLabel>Transactions</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="accounts" href="/tabs/accounts">
-            <span className="tab-icon">{ICONS.accounts}</span>
-            <IonLabel>Accounts</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="watchlist" href="/tabs/watchlist">
-            <span className="tab-icon">{ICONS.watchlist}</span>
-            <IonLabel>Watchlist</IonLabel>
-          </IonTabButton>
-          <IonTabButton tab="settings" href="/tabs/settings">
-            <span className="tab-icon">{ICONS.settings}</span>
-            <IonLabel>Settings</IonLabel>
-          </IonTabButton>
-        </IonTabBar>
-      </IonTabs>
+          <IonTabBar slot="bottom">
+            <IonTabButton tab="portfolio" href="/tabs/portfolio">
+              <span className="tab-icon">{ICONS.portfolio}</span>
+              <IonLabel>Portfolio</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="transactions" href="/tabs/transactions">
+              <span className="tab-icon">{ICONS.transactions}</span>
+              <IonLabel>Transactions</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="accounts" href="/tabs/accounts">
+              <span className="tab-icon">{ICONS.accounts}</span>
+              <IonLabel>Accounts</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="watchlist" href="/tabs/watchlist">
+              <span className="tab-icon">{ICONS.watchlist}</span>
+              <IonLabel>Watchlist</IonLabel>
+            </IonTabButton>
+            <IonTabButton tab="settings" href="/tabs/settings">
+              <span className="tab-icon">{ICONS.settings}</span>
+              <IonLabel>Settings</IonLabel>
+            </IonTabButton>
+          </IonTabBar>
+        </IonTabs>
+      </AlertsProvider>
     </WatchlistProvider>
   );
 }

@@ -10,7 +10,7 @@ import { UsersSelect } from "@/domain/identity/identity.schema";
 // share classes (BRK-B), exchanges (SHOP.TO), indices (^GSPC) and pairs (EURUSD=X).
 const SYMBOL_RE = /^[A-Z0-9.\-=^]{1,20}$/;
 
-function parseSymbol(raw: unknown): string | null {
+export function parseSymbol(raw: unknown): string | null {
   const symbol = typeof raw === "string" ? raw.trim().toUpperCase() : "";
   return SYMBOL_RE.test(symbol) ? symbol : null;
 }

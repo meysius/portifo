@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
         "/market": { target: apiTarget, changeOrigin: true },
         "/push": { target: apiTarget, changeOrigin: true },
         "/watchlist": { target: apiTarget, changeOrigin: true },
+        "/alerts": { target: apiTarget, changeOrigin: true },
       },
     },
   };

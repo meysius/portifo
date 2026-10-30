@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Config } from '@/setup/config';
+import * as alertSchema from "@/domain/alert/alert.schema";
 import * as identitySchema from "@/domain/identity/identity.schema";
 import * as portfolioSchema from "@/domain/portfolio/portfolio.schema";
 import * as pushSchema from "@/domain/push/push.schema";
@@ -11,6 +12,7 @@ export const schema = {
   ...portfolioSchema,
   ...pushSchema,
   ...watchlistSchema,
+  ...alertSchema,
 };
 
 export type Schema = typeof schema;

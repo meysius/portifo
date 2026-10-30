@@ -49,6 +49,8 @@ export class PushService {
               keys: { p256dh: sub.p256dh, auth: sub.auth },
             },
             JSON.stringify(payload),
+            // A price alert is time-sensitive, and Apple may hold back a normal one.
+            { urgency: "high" },
           );
           sent += 1;
         } catch (err) {

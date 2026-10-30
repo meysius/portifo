@@ -43,6 +43,13 @@
       "when": 1792634540369,
       "tag": "0005_common_puma",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793376973572,
+      "tag": "0006_wooden_red_hulk",
+      "breakpoints": true
     }
   ]
 }
