@@ -114,6 +114,9 @@ function historyWindow(range: HistoryRange): { period1: Date; interval: "5m" | "
   }
 }
 
+// A background job waits on quotes, and a hung one would hold its slot forever.
+const QUOTE_TIMEOUT_MS = 15_000;
+
 export class MarketService {
   private readonly client = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
 
@@ -121,7 +124,11 @@ export class MarketService {
 
   async getQuotes(symbols: string[]): Promise<Quote[]> {
     if (symbols.length === 0) return [];
-    const results = await this.client.quote(symbols, {}, { validateResult: false });
+    const results = await this.client.quote(
+      symbols,
+      {},
+      { validateResult: false, fetchOptions: { signal: AbortSignal.timeout(QUOTE_TIMEOUT_MS) } },
+    );
     const list: any[] = Array.isArray(results) ? results : [results];
     return list
       .filter((q) => q && q.symbol)

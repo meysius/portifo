@@ -34,7 +34,7 @@ Per-package, or scope with pnpm's `--filter`/`-C`:
 pnpm --filter portifo-api dev              # tsx watch src/index.ts
 pnpm --filter portifo-api db:create        # createdb from DATABASE_URL
 pnpm --filter portifo-api db:generate:migrations  # drizzle-kit generate
-pnpm --filter portifo-api db:migrate       # drizzle-kit migrate
+pnpm --filter portifo-api db:migrate       # drizzle-kit migrate, then BullMQ's own schema
 pnpm --filter portifo-api db:studio        # drizzle-kit studio
 
 pnpm --filter portifo-web dev              # vite

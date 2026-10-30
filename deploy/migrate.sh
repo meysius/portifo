@@ -5,3 +5,4 @@ set -a
 source "$2/shared/.env"
 set +a
 ./node_modules/.bin/drizzle-kit migrate
+node dist/scripts/jobs-migrate.js

@@ -51,7 +51,7 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-portifo}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-portifo}
-    command: ["./node_modules/.bin/drizzle-kit", "migrate"]
+    command: ["sh", "-c", "./node_modules/.bin/drizzle-kit migrate && node dist/scripts/jobs-migrate.js"]
 
 volumes:
   portifo_db_data:

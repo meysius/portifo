@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
+import { SWLogger } from "simple-wire";
 import { Config } from '@/setup/config';
 import * as alertSchema from "@/domain/alert/alert.schema";
 import * as identitySchema from "@/domain/identity/identity.schema";
@@ -19,7 +20,10 @@ export type Schema = typeof schema;
 
 export type DrizzleDb = NodePgDatabase<Schema>;
 
-export function createDbClient(config: Config): DrizzleDb {
+export function createDbClient(config: Config, logger: SWLogger): DrizzleDb {
   const client = new Pool({ connectionString: config.DATABASE_URL });
+  // Without a listener, an idle connection dropping (a Postgres restart, say)
+  // takes the whole process down. The pool discards it and opens another.
+  client.on("error", (err) => logger.error(`Database connection lost: ${err.message}`));
   return drizzle<Schema>({ client });
 }

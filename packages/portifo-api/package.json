@@ -11,7 +11,7 @@
     "db:create": "tsx src/scripts/db-create.ts",
     "db:drop": "tsx src/scripts/db-drop.ts",
     "db:generate:migrations": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
+    "db:migrate": "drizzle-kit migrate && tsx src/scripts/jobs-migrate.ts",
     "db:studio": "drizzle-kit studio",
     "seed": "tsx src/scripts/seed.ts"
   },
@@ -32,6 +32,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "bullmq": "6.5.2",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.7",

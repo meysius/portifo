@@ -11,7 +11,12 @@ export interface AlertRepo {
   update(userId: string, id: string, changes: AlertChanges): Promise<PriceAlertsSelect | null>;
   remove(userId: string, id: string): Promise<boolean>;
   listRunningSymbols(): Promise<string[]>;
-  fireCrossed(symbol: string, price: number, at: Date): Promise<PriceAlertsSelect[]>;
+  fireCrossed(
+    symbol: string,
+    price: number,
+    at: Date,
+    onFired: (alerts: PriceAlertsSelect[]) => Promise<void>,
+  ): Promise<void>;
   armApproaching(symbol: string, price: number): Promise<void>;
 }
 
@@ -81,12 +86,23 @@ export class DrizzleAlertRepo implements AlertRepo {
 
   // Decided and recorded in one statement, so a rule can't fire twice, and an
   // edit landing mid-check (which disarms it) can't be fired on its old price.
-  async fireCrossed(symbol: string, price: number, at: Date): Promise<PriceAlertsSelect[]> {
-    return this.db
-      .update(priceAlerts)
-      .set({ triggeredAt: at, triggeredPrice: String(price) })
-      .where(and(this.running(), eq(priceAlerts.symbol, symbol), eq(priceAlerts.armed, true), reached(price)))
-      .returning();
+  // It commits only once `onFired` is done: if that throws, or the process dies
+  // first, the rules stay armed and the next check fires them again, so a rule
+  // can't end up fired with its notification lost.
+  async fireCrossed(
+    symbol: string,
+    price: number,
+    at: Date,
+    onFired: (alerts: PriceAlertsSelect[]) => Promise<void>,
+  ): Promise<void> {
+    await this.db.transaction(async (tx) => {
+      const fired = await tx
+        .update(priceAlerts)
+        .set({ triggeredAt: at, triggeredPrice: String(price) })
+        .where(and(this.running(), eq(priceAlerts.symbol, symbol), eq(priceAlerts.armed, true), reached(price)))
+        .returning();
+      if (fired.length > 0) await onFired(fired);
+    });
   }
 
   async armApproaching(symbol: string, price: number): Promise<void> {

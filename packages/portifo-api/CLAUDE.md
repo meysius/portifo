@@ -17,10 +17,13 @@ src/
 │   ├── app.ts                   # buildApp() function — DI wiring
 │   ├── config.ts                # Zod-validated environment config
 │   ├── db.ts                    # Drizzle DB client factory + schema aggregator
+│   ├── jobs.ts                  # BullMQ queue and worker, on Postgres
 │   └── async-context.ts        # Per-request context (requestId, etc.)
 ├── controllers/
 │   ├── welcome.controller.ts   # GET / — serves the HTML welcome page
 │   └── users.controller.ts     # HTTP route handlers
+├── jobs/
+│   └── alert.job.ts            # Background job handlers, the queue's controllers
 └── domain/
     └── identity/               # Example domain slice
         ├── identity.schema.ts  # Drizzle table definition + Zod types
@@ -119,6 +122,28 @@ export class UsersController implements SWController {
 ```
 
 Routes are automatically registered on Express at startup — no manual `app.get(...)` calls needed.
+
+### Background Jobs
+
+Work that runs outside a request goes through BullMQ on its PostgreSQL backend. There is no Redis: jobs live in the `bullmq` schema of the app's own database. `db:migrate` and `deploy/migrate.sh` create and upgrade that schema (`src/scripts/jobs-migrate.ts`), and the server refuses to start without it. The worker runs inside the API process.
+
+A job is the queue's counterpart to a controller: it lives in `src/jobs/`, implements `BackgroundJob`, and hands off to a domain service. List it in `jobs` in `buildApp()`.
+
+```typescript
+export class CheckAlertsJob implements BackgroundJob {
+  readonly name = "check-alerts";
+  readonly everyMs = 60_000; // omit for a job that runs when enqueued
+
+  constructor(private readonly alertService: AlertService) {}
+
+  run = () => this.alertService.checkAlerts();
+}
+```
+
+- A scheduled job runs once per tick, and the next tick is its retry. An enqueued job is retried with exponential backoff, about two and a half minutes in all. A job that used up its tries stays in `bullmq.job` with `state = 'failed'`.
+- Services enqueue through the `JobQueue` interface, so the domain layer never imports BullMQ.
+- `run` can execute more than once for the same job (a retry, or recovery after a crash) and scheduled ticks can overlap, so it must be safe to repeat.
+- BullMQ has no job timeout, and a hung job holds one of the worker's slots. Give anything `run` waits on its own timeout.
 
 ### Domain Slices
 

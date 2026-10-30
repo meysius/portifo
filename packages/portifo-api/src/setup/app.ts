@@ -3,6 +3,7 @@ import { PinoLogger, createAsyncContextGetter, SWController } from "simple-wire"
 import { Config, ConfigSchema } from "@/setup/config";
 import { AsyncContext } from "@/setup/async-context";
 import { createDbClient, DrizzleDb } from "@/setup/db";
+import { BackgroundJob, BullJobQueue } from "@/setup/jobs";
 import { DrizzleIdentityRepo } from "@/domain/identity/identity.repo";
 import { IdentityService } from "@/domain/identity/identity.service";
 import { AuthService } from "@/domain/auth/auth.service";
@@ -22,6 +23,8 @@ import { MarketController } from "@/controllers/market.controller";
 import { PushController } from "@/controllers/push.controller";
 import { WatchlistController } from "@/controllers/watchlist.controller";
 import { AlertController } from "@/controllers/alert.controller";
+import { CheckAlertsJob } from "@/jobs/alert.job";
+import { SendPushJob } from "@/jobs/push.job";
 
 export type App = {
   cfg: Config;
@@ -29,7 +32,8 @@ export type App = {
   db: DrizzleDb;
   asyncStorage: AsyncLocalStorage<AsyncContext>;
   controllers: SWController[];
-  alertService: AlertService;
+  jobQueue: BullJobQueue;
+  jobs: BackgroundJob[];
   shutdown: () => Promise<void>;
 };
 
@@ -39,7 +43,8 @@ export function buildApp(): App {
   const getAsyncContext = createAsyncContextGetter(asyncStorage);
 
   const logger = new PinoLogger(cfg, getAsyncContext);
-  const db = createDbClient(cfg);
+  const db = createDbClient(cfg, logger);
+  const jobQueue = new BullJobQueue(logger, cfg);
 
   const identityRepo = new DrizzleIdentityRepo(db);
   const identityService = new IdentityService(logger, identityRepo);
@@ -48,7 +53,7 @@ export function buildApp(): App {
   const marketService = new MarketService(logger);
   const portfolioService = new PortfolioService(logger, portfolioRepo, marketService);
   const pushRepo = new DrizzlePushRepo(db);
-  const pushService = new PushService(logger, pushRepo, cfg);
+  const pushService = new PushService(logger, pushRepo, jobQueue, cfg);
   const watchlistRepo = new DrizzleWatchlistRepo(db);
   const watchlistService = new WatchlistService(logger, watchlistRepo);
   const alertRepo = new DrizzleAlertRepo(db);
@@ -64,15 +69,18 @@ export function buildApp(): App {
     new AlertController(logger, authService, identityService, alertService),
   ];
 
+  const jobs: BackgroundJob[] = [new CheckAlertsJob(alertService), new SendPushJob(pushService)];
+
   return {
     cfg,
     logger,
     db,
     asyncStorage,
     controllers,
-    alertService,
+    jobQueue,
+    jobs,
     shutdown: async () => {
-      alertService.stopMonitor();
+      await jobQueue.stop();
       // Close DB connections, etc.
     },
   };

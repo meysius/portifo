@@ -4,10 +4,6 @@ import { PushService } from "@/domain/push/push.service";
 import { AlertRepo } from "./alert.repo";
 import { AlertDirection, PriceAlertsSelect } from "./alert.schema";
 
-// One Yahoo request per check, however many rules there are: quotes are
-// fetched in a single batch.
-const CHECK_INTERVAL_MS = 60_000;
-
 export type AlertInput = { direction: AlertDirection; price: number };
 
 // To the last decimal that means something: an FX rate or a penny stock isn't
@@ -33,8 +29,6 @@ const fmtTraded = (n: number, currency: string) => fmtPrice(n >= 10 ? Math.round
 const SESSION_LABEL = { pre: "Pre-market", post: "After hours" } as const;
 
 export class AlertService {
-  private timer: NodeJS.Timeout | null = null;
-
   constructor(
     private readonly logger: SWLogger,
     private readonly alertRepo: AlertRepo,
@@ -58,18 +52,8 @@ export class AlertService {
     return this.alertRepo.remove(userId, id);
   }
 
-  startMonitor(): void {
-    this.timer = setInterval(() => {
-      // A slow check overlapping the next one is harmless: firing is atomic.
-      this.checkAlerts().catch(() => this.logger.error("AlertService.checkAlerts failed"));
-    }, CHECK_INTERVAL_MS);
-  }
-
-  stopMonitor(): void {
-    if (this.timer) clearInterval(this.timer);
-    this.timer = null;
-  }
-
+  // One Yahoo request however many rules there are: quotes come in one batch.
+  // Safe to overlap with itself, because firing is atomic.
   async checkAlerts(): Promise<void> {
     const symbols = await this.alertRepo.listRunningSymbols();
     if (symbols.length === 0) return;
@@ -82,26 +66,21 @@ export class AlertService {
       const price = quote.extended?.price ?? quote.price;
       if (!(price > 0)) continue;
 
-      const fired = await this.alertRepo.fireCrossed(quote.symbol, price, new Date());
+      await this.alertRepo.fireCrossed(quote.symbol, price, new Date(), async (fired) => {
+        await Promise.all(fired.map((alert) => this.notify(alert, quote, price)));
+      });
       await this.alertRepo.armApproaching(quote.symbol, price);
-      await Promise.all(fired.map((alert) => this.notify(alert, quote, price)));
     }
   }
 
-  // Recorded as fired whether or not this reaches a device: the rule's row
-  // still says when it went off, and a late retry could arrive after the price
-  // has moved back.
+  // Only queues the push. Delivery is a job of its own, retried per device.
   private async notify(alert: PriceAlertsSelect, quote: Quote, price: number): Promise<void> {
     const session = quote.extended ? ` · ${SESSION_LABEL[quote.extended.session]}` : "";
-    try {
-      const { sent } = await this.pushService.sendToUser(alert.userId, {
-        title: `${alert.symbol} crossed ${alert.direction} ${fmtPrice(Number(alert.price), quote.currency)}`,
-        body: `Now ${fmtTraded(price, quote.currency)} ${quote.currency}${session}`,
-        url: `/tabs/watchlist/symbol/${encodeURIComponent(alert.symbol)}`,
-      });
-      if (sent === 0) this.logger.info(`Alert ${alert.id} fired but reached no device`);
-    } catch (err) {
-      this.logger.error("AlertService.notify failed");
-    }
+    const devices = await this.pushService.enqueueToUser(alert.userId, {
+      title: `${alert.symbol} crossed ${alert.direction} ${fmtPrice(Number(alert.price), quote.currency)}`,
+      body: `Now ${fmtTraded(price, quote.currency)} ${quote.currency}${session}`,
+      url: `/tabs/watchlist/symbol/${encodeURIComponent(alert.symbol)}`,
+    });
+    if (devices === 0) this.logger.info(`Alert ${alert.id} fired with no device subscribed`);
   }
 }

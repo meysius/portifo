@@ -47,7 +47,12 @@ if (app.cfg.NODE_ENV === "production") {
 
 const server = expressApp.listen(app.cfg.PORT, () => {
   app.logger.info(`Service started on port ${app.cfg.PORT}.`);
-  app.alertService.startMonitor();
+  // Fatal, not just logged: without its queue the server looks healthy while
+  // no alert can ever fire. The process manager brings it back up.
+  app.jobQueue.start(app.jobs).catch((err) => {
+    app.logger.error(`Job queue failed to start: ${err.message}`);
+    process.exit(1);
+  });
 });
 
 const shutdown = async () => {

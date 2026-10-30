@@ -79,7 +79,7 @@ async function main() {
   const cfg = ConfigSchema.parse(process.env);
   const asyncStorage = new AsyncLocalStorage<AsyncContext>();
   const logger = new PinoLogger(cfg, createAsyncContextGetter(asyncStorage));
-  const db = createDbClient(cfg);
+  const db = createDbClient(cfg, console);
 
   const identityRepo = new DrizzleIdentityRepo(db);
   const identityService = new IdentityService(logger, identityRepo);
