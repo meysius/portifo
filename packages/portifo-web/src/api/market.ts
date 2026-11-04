@@ -86,7 +86,8 @@ export async function getHistory(symbol: string, range: HistoryRange): Promise<H
   return res.json();
 }
 
-// The `window`-day simple moving average of daily closes, for 3M and longer.
+// The `window`-day simple moving average of daily closes, read off at each of
+// the range's bars. An intraday bar takes its session's average.
 export async function getSma(symbol: string, range: HistoryRange, window: number): Promise<IndicatorPoint[]> {
   const res = await apiFetch(
     `/market/sma?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&window=${window}`,

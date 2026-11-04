@@ -202,7 +202,10 @@ export class MarketService {
 
   // The `window`-day simple moving average of daily closes, read off at each
   // of the range's bars: a daily bar takes its own day's average, a weekly bar
-  // that of its last session. The daily series starts early enough (7 calendar
+  // that of its last session, and an hourly or 5- or 15-minute bar that of its
+  // session, so the line holds still through a session and steps between
+  // them. A session's average counts its own close; today's counts the latest
+  // price. The daily series starts early enough (7 calendar
   // days to 5 sessions, plus slack for holidays) that the range's first bar
   // already has a full window behind it; a bar without one gets no point, so
   // a young listing's line starts late.

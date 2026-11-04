@@ -10,10 +10,6 @@ function isHistoryRange(value: unknown): value is HistoryRange {
   return HISTORY_RANGES.includes(value as HistoryRange);
 }
 
-// Long ranges only: drawn under a month of hourly bars, a 200-day average is
-// a near-flat line that says little.
-const INDICATOR_RANGES: readonly HistoryRange[] = ["3M", "6M", "1Y", "2Y", "5Y", "All"];
-
 function parseSymbols(raw: unknown): string[] {
   return String(raw ?? "")
     .split(",")
@@ -109,7 +105,7 @@ export class MarketController implements SWController {
     const range = req.query.range;
     const window = Number(req.query.window ?? 200);
     const validWindow = Number.isInteger(window) && window >= 2 && window <= 250;
-    if (!symbol || !isHistoryRange(range) || !INDICATOR_RANGES.includes(range) || !validWindow) {
+    if (!symbol || !isHistoryRange(range) || !validWindow) {
       res.status(400).json({ error: "Invalid indicator query" });
       return;
     }
