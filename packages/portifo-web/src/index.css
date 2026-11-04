@@ -2786,6 +2786,14 @@ ion-toast {
   margin: -8px 0 20px;
 }
 
+/* A chip and its notes, which wrap together. */
+.hd-indicator-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
 .hd-indicator {
   display: inline-flex;
   align-items: center;
@@ -2838,6 +2846,20 @@ ion-toast {
 
 .hd-indicator[aria-pressed="true"] .hd-indicator-bands span:nth-child(3) {
   color: var(--ds-band-below);
+}
+
+/* One upright line, as the chart marks each earnings report. */
+.hd-indicator-earnings {
+  width: 2px;
+  height: 10px;
+  margin: 0 5px;
+  border-radius: 1px;
+  background: currentColor;
+  color: var(--ds-muted);
+}
+
+.hd-indicator[aria-pressed="true"] .hd-indicator-earnings {
+  color: var(--ds-secondary);
 }
 
 .hd-indicator-value {

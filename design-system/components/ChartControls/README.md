@@ -1,14 +1,16 @@
 # ChartControls
 
-The range picker above a price chart and the indicator toggle under it.
+The range picker above a price chart and the indicator toggles under it.
 
 ## When to use
 With a holding's price chart (and the portfolio's value chart, which shares the range picker). Ranges: 1D, 1W, 1M, 3M, 6M, 1Y, All.
 
 ## What you provide
 - The ranges and the selected one.
-- The indicator toggle ("SMA bands": the 200-day average and the lines 5, 10 and 15% either side of it), whether it is on, and when on, how far the price sits from the average at the scrubbed or latest bar ("+4.6%").
-- A note when the toggle doesn't apply to the range ("3M and longer"), or when it is on but the price crosses no line, not even the average ("Stayed between the SMA and −5%").
+- The indicator toggles, and whether each is on:
+  - "SMA bands": the 200-day average and the lines 5, 10 and 15% either side of it. When on, it shows how far the price sits from the average at the scrubbed or latest bar ("+4.6%").
+  - "Earnings": a vertical line at each earnings report in the range.
+- A note when a toggle doesn't apply to the range ("3M and longer", "1W to 1Y"). SMA bands also gets one when it is on but the price crosses no line, not even the average ("Stayed between the SMA and −5%"). Earnings gets one when it is on but draws no line: "No earnings reports" for a fund, crypto or currency, or "None in the past month" when no report falls in the range.
 
 ## Rules
 - Ranges sit above the plot, as in Apple Stocks, 4px apart. Each at least 38 × 30px, radius 6px, `--ds-fs-11` 500 in `ds-text`. The chosen range is 700 on a `ds-line` pill, so the accent stays on the price line.
@@ -18,7 +20,10 @@ With a holding's price chart (and the portfolio's value chart, which shares the 
 - The average is a 1.5px dashed (4 3) `ds-text` line. Each band is a 1px line, `ds-band-above` over the average and `ds-band-below` under it, one colour a side. The zone between two neighbouring lines that are both drawn is tinted in the outer line's colour, deeper the farther out: 5%, 9% and 13% for the ±5, ±10 and ±15% zones. The tints replace the price's fill. When no zone is drawn, the price keeps its fill.
 - Each drawn line is named (`+15%` … `SMA` … `−15%`) just past its right end, in mono `--ds-fs-8` `ds-secondary`. The names get a column of their own between the plot and the price scale, 6px in from the plot's edge, so a name never covers the price. Where lines run closer than 11px, their names are spaced 11px apart about the lines' own centre.
 - With the bands on, scrubbing replaces the one-line tip with a readout of every drawn line the crosshair crosses, listed top down in the order they cross it, with the price slotted in where it sits. Each row is a 10px swatch in the line's colour (dashed for the average), its name (`+15%` … `−15%` in mono, then `SMA`, `Price`), and its value in mono. The date heads the names and the currency code heads the values. The price's row is 700 in `ds-text`; the other names are `ds-secondary`. It uses the tip's box (`--ds-fs-9`, 1px `ds-line` border, radius 5px, `ds-bg`) and hangs 10px to whichever side of the crosshair has more room, so the crossings stay visible. Each crossing gets a 2.5px dot in its line's colour.
-- A disabled chip (range too short) drops to 45% opacity. Notes sit beside the chip in `ds-muted` and wrap under it when there isn't room.
+- Earnings: each report is a 1px solid `ds-secondary` line from the plot's top to its baseline, under the bands and the price, so it marks when without competing with what. It is darker than the `ds-line` time guides and solid where the scrub crosshair is dashed. Its chip's swatch is one upright 2 × 10px bar, `ds-muted` off and `ds-secondary` on. No label on the line: the chip is its legend.
+- A report's line sits midway between the last bar before the report and the first bar after it, so it parts the closes struck before the news from those after. Companies report before the open or after the close, so the line falls in the overnight gap: on 1W and 1M, between one session's last bar and the next session's first.
+- Earnings draws on 1W to 1Y only. 1D shows one session, which a report never falls inside. All would put 40 lines 8px apart, a barcode the price can't be read through.
+- A disabled chip (range too short or too long) drops to 45% opacity. A chip's notes sit beside it in `ds-muted`; each chip and its notes wrap together, so a note never strays to the other chip.
 - The plot itself: a vertical swipe scrolls the page, a horizontal one scrubs.
 
-Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.hd-chart-controls`, `.hd-range`, `.hd-indicator*`; the scrub readout is `.hd-chart-ladder`, not previewed) and `src/components/HoldingChart.tsx`.
+Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.hd-chart-controls`, `.hd-range`, `.hd-indicator*`; the scrub readout is `.hd-chart-ladder`, and the chart's lines are not previewed) and `src/components/HoldingChart.tsx`.

@@ -65,6 +65,9 @@ export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y"
 // A moving average read off at one of a range's bars.
 export type IndicatorPoint = { date: string; value: number };
 
+// When a company published a quarter's results, to the minute, ISO 8601.
+export type EarningsReport = { date: string };
+
 export type SymbolResult = {
   symbol: string;
   name?: string;
@@ -116,6 +119,16 @@ function historyWindow(range: HistoryRange): { period1: Date; interval: "5m" | "
 
 // A background job waits on quotes, and a hung one would hold its slot forever.
 const QUOTE_TIMEOUT_MS = 15_000;
+
+// Yahoo's earnings calendar, the S&P feed behind its earnings pages, which
+// yahoo-finance2 doesn't wrap. It holds each report's time back to the early
+// 2000s, plus the next one scheduled. Yahoo's older "earnings" feed on the
+// same endpoint stopped in May 2025, and quoteSummary keeps only the last
+// four or five quarters.
+const EARNINGS_URL = "https://query1.finance.yahoo.com/v1/finance/visualization";
+// About 25 years of quarters, well past the longest range.
+const EARNINGS_LIMIT = 100;
+const EARNINGS_REPEAT_MS = 3 * 86_400_000;
 
 export class MarketService {
   private readonly client = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
@@ -217,6 +230,55 @@ export class MarketService {
       if (n >= window) points.push({ date: bar.date, value: sum / window });
     });
     return points;
+  }
+
+  // The times `symbol`'s company reported earnings, oldest first. Funds,
+  // crypto and currencies report none. A scheduled report stays out until its
+  // time has passed.
+  async getEarnings(symbol: string): Promise<EarningsReport[]> {
+    const body = JSON.stringify({
+      size: EARNINGS_LIMIT,
+      query: { operator: "eq", operands: ["ticker", symbol] },
+      sortField: "startdatetime",
+      sortType: "DESC",
+      entityIdType: "sp_earnings",
+      includeFields: ["startdatetime"],
+    });
+    // The library's own fetch, for the cookie and crumb Yahoo demands. It
+    // only sends GETs, so this one request becomes the POST the endpoint
+    // takes. The crumb's own requests run through here too and pass untouched.
+    const post = (input: RequestInfo | URL, init?: RequestInit) =>
+      String(input).startsWith(EARNINGS_URL)
+        ? fetch(input, {
+            ...init,
+            method: "POST",
+            body,
+            headers: { ...(init?.headers as Record<string, string>), "content-type": "application/json" },
+          })
+        : fetch(input, init);
+    // `_fetch` is the library's internal request helper: (url, query, module
+    // options, response type, needs a crumb).
+    const result = await (this.client as any)._fetch(
+      EARNINGS_URL,
+      { lang: "en-US", region: "US" },
+      { fetch: post },
+      "json",
+      true,
+    );
+    const doc = result?.finance?.result?.[0]?.documents?.[0];
+    const at = (doc?.columns ?? []).findIndex((c: { id?: string }) => c.id === "startdatetime");
+    if (at < 0) return [];
+    const now = Date.now();
+    const times = (doc.rows as unknown[][])
+      .map((row) => Date.parse(String(row[at])))
+      .filter((t) => t <= now)
+      .sort((a, b) => a - b);
+    // The feed sometimes lists one report twice, hours apart (Berkshire's
+    // Aug 8, 2026 at 12:00 and 20:00). Reports come a quarter apart, so any
+    // within a few days of the one before are that one again: keep the first.
+    return times
+      .filter((t, i) => i === 0 || t - times[i - 1] > EARNINGS_REPEAT_MS)
+      .map((t) => ({ date: new Date(t).toISOString() }));
   }
 
   // Historical counterpart to getFxRates — same "<base><target>=X" symbol, just

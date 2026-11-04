@@ -55,6 +55,9 @@ export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y"
 // getHistory's); bars without a full window behind them have no point.
 export type IndicatorPoint = { date: string; value: number };
 
+// When a company published a quarter's results, to the minute, ISO 8601.
+export type EarningsReport = { date: string };
+
 export type SymbolResult = {
   symbol: string;
   name?: string;
@@ -89,6 +92,14 @@ export async function getSma(symbol: string, range: HistoryRange, window: number
     `/market/sma?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&window=${window}`,
   );
   if (!res.ok) throw new Error("Failed to fetch moving average");
+  return res.json();
+}
+
+// Every earnings report the company has published, oldest first (about 25
+// years). Funds, crypto and currencies have none.
+export async function getEarnings(symbol: string): Promise<EarningsReport[]> {
+  const res = await apiFetch(`/market/earnings?symbol=${encodeURIComponent(symbol)}`);
+  if (!res.ok) throw new Error("Failed to fetch earnings");
   return res.json();
 }
 

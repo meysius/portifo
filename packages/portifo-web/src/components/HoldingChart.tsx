@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { getHistory, getSma } from "../api/market";
+import { getEarnings, getHistory, getSma } from "../api/market";
 import type { HistoryPoint, HistoryRange } from "../api/market";
 import { AXIS_H, PLOT_BOTTOM, PLOT_H, PLOT_TOP, plotY, timeAxis, valueAxis } from "../lib/chartAxis";
 import { fmtCcy, fmtDay, fmtSignedPct, yahooQuoteUrl } from "../lib/fx";
@@ -26,6 +26,10 @@ import ValueGrid from "./ValueGrid";
 // scrubbed or latest bar; when the price crosses no line, not even the
 // average, a note beside it says which lines it stayed between. A scrub reads every drawn line beside
 // the crosshair, in the order they cross it, the price slotted in where it sits.
+//
+// A second toggle, Earnings, draws a vertical line at each report in the
+// range, so the trend before a report can be read against the trend after.
+// It draws on 1W to 1Y only.
 
 const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
@@ -74,6 +78,12 @@ const NAME_GAP = 11;
 const LADDER_GAP = 10;
 // Kept per device, like the appearance setting.
 const BANDS_KEY = "portifo.chart.smaBands";
+const EARNINGS_KEY = "portifo.chart.earnings";
+
+// Not on 1D: companies report outside trading hours, so a report never falls
+// inside the session the chart shows. Not on All: ten years of quarters is 40
+// lines 8px apart, a barcode the price can't be read through.
+const EARNINGS_RANGES = new Set<HistoryRange>(["1W", "1M", "3M", "6M", "1Y"]);
 
 function readPref(key: string) {
   try {
@@ -120,6 +130,23 @@ function spread(want: number[], gap: number, min: number, max: number) {
   return groups.flatMap((g) => Array.from({ length: g.n }, (_, k) => g.top + k * gap));
 }
 
+// Where each report's line goes: just before the first bar that starts after
+// it, the first that could react to it, so the line parts the closes struck
+// before the news from those struck after. Companies report before the open
+// or after the close, so the line falls in the overnight gap between two
+// daily or hourly bars. (A bar a week long would react to a report made
+// within it, but no range that draws earnings has one.) A report with no bar
+// on one side of it in the range gets no line. Returns each line's bar index,
+// once.
+function reportBars(stamps: number[], reports: number[]) {
+  const at = new Set<number>();
+  for (const r of reports) {
+    const i = stamps.findIndex((t) => t > r);
+    if (i > 0) at.add(i);
+  }
+  return [...at];
+}
+
 // Runs of consecutive bars that have an average: a bar without a full
 // window behind it breaks the lines.
 function runs(avg: (number | undefined)[]) {
@@ -164,6 +191,8 @@ function volumePath(xs: number[], s: Pt[]) {
 const cache = new Map<string, Pt[]>();
 // The average by bar time, keyed the same way.
 const smaCache = new Map<string, Map<number, number>>();
+// Report times per symbol, for every range.
+const earningsCache = new Map<string, number[]>();
 
 // `reloadKey` changes on the page's pull to refresh: the range is fetched again.
 export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: string; ccy: string; reloadKey?: number }) {
@@ -176,6 +205,9 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   // Tagged with its symbol+range, so a range switch never pairs the new bars
   // with the old range's average.
   const [sma, setSma] = useState<{ key: string; byTime: Map<number, number> } | null>(null);
+  const [earningsOn, setEarningsOn] = useState(() => readPref(EARNINGS_KEY));
+  // Tagged with its symbol, like the average.
+  const [earnings, setEarnings] = useState<{ symbol: string; times: number[] } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const gradId = useId();
 
@@ -231,9 +263,34 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     };
   }, [symbol, range, bandsShown, reloadKey]);
 
+  const earningsFits = EARNINGS_RANGES.has(range);
+  const earningsShown = earningsOn && earningsFits;
+  useEffect(() => {
+    if (!earningsShown) return;
+    let live = true;
+    const cached = earningsCache.get(symbol);
+    if (cached) setEarnings({ symbol, times: cached });
+    getEarnings(symbol)
+      .then((list) => {
+        const times = list.map((r) => new Date(r.date).getTime());
+        earningsCache.set(symbol, times);
+        if (live) setEarnings({ symbol, times });
+      })
+      // Without them the chip stays on and the chart draws no lines.
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [symbol, earningsShown, reloadKey]);
+
   const toggleBands = () => {
     writePref(BANDS_KEY, !bandsOn);
     setBandsOn(!bandsOn);
+  };
+
+  const toggleEarnings = () => {
+    writePref(EARNINGS_KEY, !earningsOn);
+    setEarningsOn(!earningsOn);
   };
 
   const s = pts ?? [];
@@ -249,12 +306,15 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   const crosses = ({ f }: { f: number }) => f >= devLo && f <= devHi;
   const levels = devs.length ? LEVELS.filter((l) => !l.f || crosses(l)) : [];
   const stayed = devs.length && !LEVELS.some(crosses) ? stayedNote(devLo, devHi) : null;
+  const reports = earningsShown && earnings?.symbol === symbol ? earnings.times : null;
+  const stamps = s.map((p) => p.t);
 
   const last = s.length - 1;
   let path = "";
   let lines: { f: number; color: string; d: string }[] = [];
   let zones: { f: number; color: string; tint: number; d: string }[] = [];
   let labels: { label: string; x: number; y: number }[] = [];
+  let reportXs: number[] = [];
   let volume = "";
   let xs: number[] = [];
   let ys: number[] = [];
@@ -309,10 +369,21 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
       );
       labels = levels.map(({ label }, i) => ({ label, x: plotW + NAME_INSET, y: at[i] }));
     }
+    if (reports) {
+      // Midway between the two bars, on a whole pixel so the hairline stays crisp.
+      reportXs = reportBars(stamps, reports).map((i) => Math.round((xs[i - 1] + xs[i]) / 2) + 0.5);
+    }
     volume = volumePath(xs, s);
   }
-  const stamps = s.map((p) => p.t);
   const times = ready ? timeAxis(stamps, xs, range, width) : [];
+  // Beside the Earnings chip: why it can't draw on this range, or why, on, it draws nothing.
+  const earningsNote = !earningsFits
+    ? "1W to 1Y"
+    : reports && !reports.length
+      ? "No earnings reports"
+      : reports && ready && !reportXs.length
+        ? `None in the ${RANGE_WORD[range]}`
+        : null;
 
   const pick = (e: ReactPointerEvent) => {
     if (!ready || !wrapRef.current) return;
@@ -420,6 +491,10 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             role="img"
             aria-label={`${symbol} share price, ${RANGE_WORD[range]}${
               lines.length ? ", with its 200-day average and the bands about it that it crosses" : ""
+            }${
+              reportXs.length
+                ? `, marking ${reportXs.length} earnings ${reportXs.length === 1 ? "report" : "reports"}`
+                : ""
             }`}
             onPointerDown={pick}
             onPointerMove={pick}
@@ -443,6 +518,15 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
                   zones.map((z) => <path key={z.f} d={z.d} fill={z.color} fillOpacity={z.tint} />)
                 ) : (
                   <path d={`${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`} fill={`url(#${gradId})`} />
+                )}
+                {/* Under the bands and the price: they mark when, not what. */}
+                {reportXs.length > 0 && (
+                  <path
+                    d={reportXs.map((x) => `M${x} ${PLOT_TOP}V${PLOT_BOTTOM}`).join("")}
+                    fill="none"
+                    stroke="var(--ds-secondary)"
+                    strokeWidth={1}
+                  />
                 )}
                 {lines.map((l) => (
                   <path
@@ -499,24 +583,40 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
       </div>
 
       <div className="hd-indicators">
-        <button
-          type="button"
-          className="hd-indicator"
-          aria-pressed={bandsOn}
-          disabled={!smaFits}
-          onClick={toggleBands}
-        >
-          {/* A band above the average, the average, a band below, as the chart stacks them. */}
-          <span className="hd-indicator-bands" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </span>
-          SMA bands
-          {bandsShown && gap != null && <span className="hd-indicator-value">{fmtSignedPct(gap)}</span>}
-        </button>
-        {!smaFits && <span className="hd-indicator-note">3M and longer</span>}
-        {stayed && <span className="hd-indicator-note">{stayed}</span>}
+        <span className="hd-indicator-group">
+          <button
+            type="button"
+            className="hd-indicator"
+            aria-pressed={bandsOn}
+            disabled={!smaFits}
+            onClick={toggleBands}
+          >
+            {/* A band above the average, the average, a band below, as the chart stacks them. */}
+            <span className="hd-indicator-bands" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </span>
+            SMA bands
+            {bandsShown && gap != null && <span className="hd-indicator-value">{fmtSignedPct(gap)}</span>}
+          </button>
+          {!smaFits && <span className="hd-indicator-note">3M and longer</span>}
+          {stayed && <span className="hd-indicator-note">{stayed}</span>}
+        </span>
+        <span className="hd-indicator-group">
+          <button
+            type="button"
+            className="hd-indicator"
+            aria-pressed={earningsOn}
+            disabled={!earningsFits}
+            onClick={toggleEarnings}
+          >
+            {/* One upright line, as the chart marks each report. */}
+            <span className="hd-indicator-earnings" aria-hidden="true" />
+            Earnings
+          </button>
+          {earningsNote && <span className="hd-indicator-note">{earningsNote}</span>}
+        </span>
       </div>
     </>
   );
