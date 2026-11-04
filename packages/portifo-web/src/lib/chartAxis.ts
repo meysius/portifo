@@ -85,7 +85,7 @@ function unitStart(times: number[], i: number, range: HistoryRange): string | nu
   }
 }
 
-// Where each hour (1D), session (1W), week (1M), month (3M, 1Y) or year (All)
+// Where each hour (1D), session (1W), week (1M), month (3M, 6M, 1Y) or year (2Y, 5Y, All)
 // begins. When they crowd (a year's twelve months, a decade's years), every
 // second or third is kept, evenly. A unit that begins on the last point spans
 // nothing, so it gets no guide.

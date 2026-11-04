@@ -12,7 +12,7 @@ import ValueGrid from "./ValueGrid";
 // trading time only, a value scale at the right, a time scale beneath, the
 // latest value as a dot, and a readout on demand (drag, hover, or arrow keys).
 
-const GROWTH_RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "All"];
+const GROWTH_RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const CHART_H = PLOT_H + AXIS_H;
 
 // 1W and 1M are intraday bars, so their readout names the hour too.
@@ -25,7 +25,7 @@ function growthLabel(iso: string, range: HistoryRange) {
       : {
           month: "short",
           day: "numeric",
-          year: range === "1Y" || range === "All" ? "numeric" : undefined,
+          year: ["1Y", "2Y", "5Y", "All"].includes(range) ? "numeric" : undefined,
           hour: intraday ? "numeric" : undefined,
           minute: intraday ? "2-digit" : undefined,
         },

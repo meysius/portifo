@@ -2742,16 +2742,20 @@ ion-toast {
 }
 
 /* Above the plot, as in Apple Stocks. Every range reads in the primary ink;
-   the chosen one is bold on a neutral pill, so the line keeps the accent. */
+   the chosen one is bold on a neutral pill, so the line keeps the accent.
+   Nine ranges and the outward arrow share the row: each range is 34px wide
+   where the row has room and narrows evenly where it hasn't, to 31px on a
+   375pt phone. */
 .hd-chart-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   padding: 16px 0 12px;
 }
 
 .hd-range {
-  min-width: 38px;
+  flex: 0 1 34px;
+  min-width: 0;
   min-height: 30px;
   border-radius: 6px;
   font-size: var(--ds-fs-11);
@@ -3757,12 +3761,13 @@ ion-modal.ds-sheet {
 .po-chart-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   padding: 4px 0 12px;
 }
 
 .po-page .po-chart-range {
-  min-width: 38px;
+  flex: 0 1 34px;
+  min-width: 0;
   min-height: 30px;
   border-radius: 6px;
   font-size: var(--ds-fs-11);

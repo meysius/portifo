@@ -29,9 +29,9 @@ import ValueGrid from "./ValueGrid";
 //
 // A second toggle, Earnings, draws a vertical line at each report in the
 // range, so the trend before a report can be read against the trend after.
-// It draws on 1W to 1Y only.
+// It draws on 1W to 5Y only.
 
-const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "All"];
+const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
   "1D": "today",
   "1W": "past week",
@@ -39,6 +39,8 @@ const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
   "3M": "past 3 months",
   "6M": "past 6 months",
   "1Y": "past year",
+  "2Y": "past 2 years",
+  "5Y": "past 5 years",
   All: "all time",
 };
 
@@ -52,7 +54,7 @@ const VOLUME_H = 18;
 const CHART_H = PLOT_H + AXIS_H + VOLUME_GAP + VOLUME_H;
 
 const SMA_WINDOW = 200;
-const SMA_RANGES = new Set<HistoryRange>(["3M", "6M", "1Y", "All"]);
+const SMA_RANGES = new Set<HistoryRange>(["3M", "6M", "1Y", "2Y", "5Y", "All"]);
 // The average and the lines either side of it, top down, each as its distance
 // from the average. The zone between two neighbouring lines is tinted in the
 // outer one's colour. A band is named by that distance, a percentage, so its
@@ -83,7 +85,12 @@ const EARNINGS_KEY = "portifo.chart.earnings";
 // Not on 1D: companies report outside trading hours, so a report never falls
 // inside the session the chart shows. Not on All: ten years of quarters is 40
 // lines 8px apart, a barcode the price can't be read through.
-const EARNINGS_RANGES = new Set<HistoryRange>(["1W", "1M", "3M", "6M", "1Y"]);
+const EARNINGS_RANGES = new Set<HistoryRange>(["1W", "1M", "3M", "6M", "1Y", "2Y", "5Y"]);
+// The ranges the API draws in weekly bars (Monday to Friday, stamped at
+// Monday's midnight where the symbol trades).
+const WEEKLY_RANGES = new Set<HistoryRange>(["2Y", "5Y", "All"]);
+// From a weekly bar's stamp to its Friday close: 4 days and 16 hours.
+const WEEK_CLOSE_MS = (4 * 24 + 16) * 3_600_000;
 
 function readPref(key: string) {
   try {
@@ -130,19 +137,24 @@ function spread(want: number[], gap: number, min: number, max: number) {
   return groups.flatMap((g) => Array.from({ length: g.n }, (_, k) => g.top + k * gap));
 }
 
-// Where each report's line goes: just before the first bar that starts after
-// it, the first that could react to it, so the line parts the closes struck
-// before the news from those struck after. Companies report before the open
-// or after the close, so the line falls in the overnight gap between two
-// daily or hourly bars. (A bar a week long would react to a report made
-// within it, but no range that draws earnings has one.) A report with no bar
-// on one side of it in the range gets no line. Returns each line's bar index,
-// once.
-function reportBars(stamps: number[], reports: number[]) {
+// Where each report's line goes: just before the first bar whose close comes
+// after it, the first that could react to it, so the line parts the closes
+// struck before the news from those struck after. Companies report before the
+// open or after the close, so for daily or hourly bars that is the first bar
+// that starts after the report, and the line falls in the overnight gap. A
+// weekly bar closes on Friday, so it reacts to a report made during its week,
+// though not to one after Friday's close (Berkshire reports on Saturdays). A
+// report with no bar on one side of it in the range gets no line. Returns each
+// line's bar index, once.
+function reportBars(stamps: number[], reports: number[], weekly: boolean) {
   const at = new Set<number>();
   for (const r of reports) {
-    const i = stamps.findIndex((t) => t > r);
-    if (i > 0) at.add(i);
+    let i = stamps.findIndex((t) => t > r);
+    if (weekly) {
+      i = (i < 0 ? stamps.length : i) - 1;
+      if (i >= 0 && r >= stamps[i] + WEEK_CLOSE_MS) i++;
+    }
+    if (i > 0 && i < stamps.length) at.add(i);
   }
   return [...at];
 }
@@ -371,14 +383,14 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     }
     if (reports) {
       // Midway between the two bars, on a whole pixel so the hairline stays crisp.
-      reportXs = reportBars(stamps, reports).map((i) => Math.round((xs[i - 1] + xs[i]) / 2) + 0.5);
+      reportXs = reportBars(stamps, reports, WEEKLY_RANGES.has(range)).map((i) => Math.round((xs[i - 1] + xs[i]) / 2) + 0.5);
     }
     volume = volumePath(xs, s);
   }
   const times = ready ? timeAxis(stamps, xs, range, width) : [];
   // Beside the Earnings chip: why it can't draw on this range, or why, on, it draws nothing.
   const earningsNote = !earningsFits
-    ? "1W to 1Y"
+    ? "1W to 5Y"
     : reports && !reports.length
       ? "No earnings reports"
       : reports && ready && !reportXs.length

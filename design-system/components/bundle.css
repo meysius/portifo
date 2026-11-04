@@ -501,8 +501,8 @@ button {
 .tl-result-count { font-size: var(--ds-fs-9); color: var(--ds-muted); }
 
 /* ── chart controls ────────────────────────────────────────────────────── */
-.hd-chart-controls { display: flex; align-items: center; gap: 4px; padding: 16px 0 12px; }
-.hd-range { min-width: 38px; min-height: 30px; border-radius: 6px; font-size: var(--ds-fs-11); font-weight: 500; color: var(--ds-text); }
+.hd-chart-controls { display: flex; align-items: center; gap: 2px; padding: 16px 0 12px; }
+.hd-range { flex: 0 1 34px; min-width: 0; min-height: 30px; border-radius: 6px; font-size: var(--ds-fs-11); font-weight: 500; color: var(--ds-text); }
 .hd-range[aria-pressed="true"] { font-weight: 700; background: var(--ds-line); }
 .hd-chart-ext { display: flex; align-items: center; justify-content: center; margin-left: auto; padding: 7px; border-radius: 5px; color: var(--ds-secondary); }
 .hd-indicators { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

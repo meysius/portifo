@@ -3,17 +3,17 @@
 The range picker above a price chart and the indicator toggles under it.
 
 ## When to use
-With a holding's price chart (and the portfolio's value chart, which shares the range picker). Ranges: 1D, 1W, 1M, 3M, 6M, 1Y, All.
+With a holding's price chart (and the portfolio's value chart, which shares the range picker). Ranges: 1D, 1W, 1M, 3M, 6M, 1Y, 2Y, 5Y, All. The API draws 2Y, 5Y and All in weekly bars.
 
 ## What you provide
 - The ranges and the selected one.
 - The indicator toggles, and whether each is on:
   - "SMA bands": the 200-day average and the lines 5, 10 and 15% either side of it. When on, it shows how far the price sits from the average at the scrubbed or latest bar ("+4.6%").
   - "Earnings": a vertical line at each earnings report in the range.
-- A note when a toggle doesn't apply to the range ("3M and longer", "1W to 1Y"). SMA bands also gets one when it is on but the price crosses no line, not even the average ("Stayed between the SMA and −5%"). Earnings gets one when it is on but draws no line: "No earnings reports" for a fund, crypto or currency, or "None in the past month" when no report falls in the range.
+- A note when a toggle doesn't apply to the range ("3M and longer", "1W to 5Y"). SMA bands also gets one when it is on but the price crosses no line, not even the average ("Stayed between the SMA and −5%"). Earnings gets one when it is on but draws no line: "No earnings reports" for a fund, crypto or currency, or "None in the past month" when no report falls in the range.
 
 ## Rules
-- Ranges sit above the plot, as in Apple Stocks, 4px apart. Each at least 38 × 30px, radius 6px, `--ds-fs-11` 500 in `ds-text`. The chosen range is 700 on a `ds-line` pill, so the accent stays on the price line.
+- Ranges sit above the plot, as in Apple Stocks, packed to the left and 2px apart. Each is 34px wide where the row has room. Where it hasn't, every range narrows by the same amount: on a holding, the nine ranges and the outward arrow come to 33px a range at 393pt and 31px at 375pt. Each is 30px tall, radius 6px, `--ds-fs-11` 500 in `ds-text`. The chosen range is 700 on a `ds-line` pill, so the accent stays on the price line.
 - The indicator chip: at least 30px tall, padding 0 10px, radius 6px, a 1px `ds-line` border, `--ds-fs-10` 500. Off: `ds-secondary` with a muted swatch. On: `ds-text`, with the swatch's three bars in the lines' colours as the chart stacks them: `ds-band-above`, the dashed `ds-text` average, then `ds-band-below`.
 - The chip is its lines' legend: a 12px swatch, the name, then the value in mono.
 - The average is always drawn. Of the bands, only those the price crosses in the range are drawn, and the price scale stretches to hold the drawn lines and no further. Because the price moves continuously, the crossed bands are always one unbroken run from its low to its high. The average can stand apart from them, for example the SMA with +10% and +15% but no +5%.
@@ -21,8 +21,8 @@ With a holding's price chart (and the portfolio's value chart, which shares the 
 - Each drawn line is named (`+15%` … `SMA` … `−15%`) just past its right end, in mono `--ds-fs-8` `ds-secondary`. The names get a column of their own between the plot and the price scale, 6px in from the plot's edge, so a name never covers the price. Where lines run closer than 11px, their names are spaced 11px apart about the lines' own centre.
 - With the bands on, scrubbing replaces the one-line tip with a readout of every drawn line the crosshair crosses, listed top down in the order they cross it, with the price slotted in where it sits. Each row is a 10px swatch in the line's colour (dashed for the average), its name (`+15%` … `−15%` in mono, then `SMA`, `Price`), and its value in mono. The date heads the names and the currency code heads the values. The price's row is 700 in `ds-text`; the other names are `ds-secondary`. It uses the tip's box (`--ds-fs-9`, 1px `ds-line` border, radius 5px, `ds-bg`) and hangs 10px to whichever side of the crosshair has more room, so the crossings stay visible. Each crossing gets a 2.5px dot in its line's colour.
 - Earnings: each report is a 1px solid `ds-secondary` line from the plot's top to its baseline, under the bands and the price, so it marks when without competing with what. It is darker than the `ds-line` time guides and solid where the scrub crosshair is dashed. Its chip's swatch is one upright 2 × 10px bar, `ds-muted` off and `ds-secondary` on. No label on the line: the chip is its legend.
-- A report's line sits midway between the last bar before the report and the first bar after it, so it parts the closes struck before the news from those after. Companies report before the open or after the close, so the line falls in the overnight gap: on 1W and 1M, between one session's last bar and the next session's first.
-- Earnings draws on 1W to 1Y only. 1D shows one session, which a report never falls inside. All would put 40 lines 8px apart, a barcode the price can't be read through.
+- A report's line sits midway between the last bar before the report and the first bar after it, so it parts the closes struck before the news from those after. Companies report before the open or after the close, so the line falls in the overnight gap: on 1W and 1M, between one session's last bar and the next session's first. A weekly bar (2Y, 5Y) closes on Friday, so the line goes before the week the report fell in, or before the next week when the report came after Friday's close (Berkshire reports on Saturdays).
+- Earnings draws on 1W to 5Y only. 1D shows one session, which a report never falls inside. All would put 40 lines 8px apart, a barcode the price can't be read through. 5Y's twenty lines, 14px apart, are as close as they get.
 - A disabled chip (range too short or too long) drops to 45% opacity. A chip's notes sit beside it in `ds-muted`; each chip and its notes wrap together, so a note never strays to the other chip.
 - The plot itself: a vertical swipe scrolls the page, a horizontal one scrubs.
 
