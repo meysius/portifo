@@ -1,13 +1,13 @@
 # PriceAlerts
 
-A watched symbol's alert rules: a section on its page listing each one, and the sheet that adds, edits or deletes one.
+A watched symbol's alert rules: a section on its page listing each one, and the sheet that adds, edits or deletes one. A rule is in one of two modes: Once goes off when the price crosses a target, then stops; Live goes off at every level of a step it crosses ($2: …, $190, $192, $194, …) and keeps going.
 
 ## When to use
 On a watched symbol's page, between the chart and "Latest session". An alert fires when the price crosses a level the person chose, and arrives as a notification on their phone. Holdings have no alerts: the rules belong to the Watchlist.
 
 ## What you provide
-- For each rule, its direction ("Crosses below" or "Crosses above") and its price in the symbol's own currency, with that currency's code beside it ("USD", then "$190.00").
-- Its status: "Active"; "Went off Oct 30 at $199.40" once it has fired; "Paused" while the symbol is off the watchlist.
+- For each rule, its direction ("Crosses either way", "Crosses below" or "Crosses above"; a live rule prefixes "Live · " and lowercases it: "Live · crosses either way") and its figure in the symbol's own currency, with that currency's code beside it: the target for a Once rule ("USD", then "$190.00"), the step for a Live one ("Step · USD", then "$2.00").
+- Its status: "Active"; "Went off Oct 30 at $199.40" once a Once rule has fired; "Last went off 10:42 AM at $352.97" for a Live rule that has gone off (a time today, a date before); "Paused" while the symbol is off the watchlist.
 - With no rules yet, one sentence saying what an alert does: "Get a notification when NVDA crosses a price you choose."
 - When an alert can't reach this device, one sentence saying why: "Notifications are off on this device." with a "Turn on notifications" text action; "Notifications are blocked for Portifo. Allow them in your device’s settings to get these alerts."; or "To get these on your phone, add Portifo to your Home Screen and open it from there."
 
@@ -15,13 +15,16 @@ On a watched symbol's page, between the chart and "Latest session". An alert fir
 - A `Section` titled "Price alerts", with "Add alert" as a text action where the meta would go. There is no primary button: `Section` doesn't allow one.
 - A rule's row: 13px block padding, 11px gap, full-bleed like every row, one `ds-line` hairline between rows. Direction `--ds-fs-12` 500; status `--ds-fs-9` `ds-secondary`, 5px below; the price mono `--ds-fs-12` 500 with its code in `--ds-fs-9` `ds-muted`, as on a `WatchlistRow`. Active rules come first. No chevron. The whole row opens the sheet.
 - A rule's target shows every decimal it needs, 2 at least, up to 4 (8 under $1): "$1.0845", "$0.00012345", not the usual two. Rounding a target would misstate the rule. A traded price (the current one, or the one that set a rule off) keeps that precision only under $10, and shows cents above it: "$204.55", not "$204.547".
-- A rule fires once, then stays listed as the record of when it went off. It doesn't fire again by itself: a price sitting on a level would notify every few minutes.
+- A rule watches both ways unless the person picks one: "Either way" is the first tile and what a new rule starts as. It goes off on the first cross, whichever way that is.
+- A Once rule fires once, then stays listed as the record of when it went off. It doesn't fire again by itself: a price sitting on a level would notify every few minutes.
+- A Live rule's levels are the multiples of its step. It starts from the price when it's saved; each time the price reaches the next level either side, it goes off and that level becomes its new reference. So it never goes off twice in a row on the same level: a price hovering on $192 is quiet until it reaches $190 or $194. A jump past several levels between checks makes one notification, for the furthest. A Below or Above live rule still follows the price the other way without notifying, so a fall from a new high counts from there.
 - A rule watches the latest trade, after-hours and pre-market included, and the sheet quotes that same price: "NVDA is at $220.47 USD after hours."
-- "Crosses" means crossing. A rule set below a price that's already lower can't fire until the price has been above it. The sheet says so as soon as the price is typed: "NVDA is already below this price. You’ll be notified if it rises above it and falls back."
-- The sheet is a `Sheet` form titled "New NVDA alert" or "Edit NVDA alert": two direction tiles (`OptionGrid`'s tile, in two columns; they don't apply or close anything, the button does), the price `Field` labelled "Price per share · USD" with a decimal keypad, and a notice with the current price and what will happen.
-- Its one `Button` says what happens: "Create alert", "Save alert", or "Turn alert back on" for a rule that has fired. Saving always starts the rule over. Deleting is a text action under it, in `ds-accent` like any other: no red, no confirmation. A rule is quick to set again, and a toast confirms it.
-- The notification's title states the rule and its body the price: "NVDA crossed below $200.00", "Now $199.40 USD · After hours". Tapping it opens the symbol's page.
+- "Crosses" means crossing. A rule set below a price that's already lower can't fire until the price has been above it. The sheet says so as soon as the price is typed: "NVDA is already below this price. You’ll be notified if it rises above it and falls back." An "Either way" rule is never past its price, but one set at exactly the current price waits for the market to move off it: "NVDA is at this price now. You’ll be notified if it moves away and crosses back."
+- The sheet is a `Sheet` form titled "New NVDA alert" or "Edit NVDA alert": a "Mode" label (a `Field` label) over two tiles, "Once" and "Live"; a "Crosses" label over three direction tiles, "Either way", "Below" and "Above" (`OptionGrid`'s tile, in two and three columns; they don't apply or close anything, the button does); the amount `Field`, labelled "Price per share · USD" for Once and "Step · USD" for Live, with a decimal keypad; and a notice with the current price and what will happen. A new rule starts as Once, Either way. Each mode keeps its own amount, so switching doesn't turn a $190 target into a $190 step.
+- A Live rule's notice names the step and the next levels: "You’ll be notified at every $2.00 level it crosses, next at $348.00 or $350.00." ("falls through … next at $348.00" for Below, "rises through … next at $350.00" for Above).
+- Its one `Button` says what happens: "Create alert", "Save alert", or "Turn alert back on" for a Once rule that has fired. Saving always starts the rule over: a Live rule restarts from the current price. Deleting is a text action under it, in `ds-accent` like any other: no red, no confirmation. A rule is quick to set again, and a toast confirms it.
+- The notification's title states what happened and its body the price: "NVDA crossed below $200.00", "Now $199.40 USD · After hours". An "Either way" rule names the way it actually went; a Live rule names the level it crossed. Tapping it opens the symbol's page.
 - Taking a symbol off the watchlist pauses its rules rather than deleting them, because that ✓ is one tap with no confirmation. "Add alert" goes away and a note says "Paused while NVDA is off your watchlist."; putting the symbol back resumes them.
-- A symbol with an active rule gets a bell on its `WatchlistRow`.
+- A symbol with an active rule gets a bell on its `WatchlistRow`. A Live rule is always active.
 
 Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.wl-alert*`) and `src/components/PriceAlerts.tsx`.

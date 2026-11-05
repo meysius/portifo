@@ -2,21 +2,32 @@ import { apiFetch } from "./http";
 
 // Price alerts belong to the signed-in user, like the watchlist, so these
 // calls ignore X-Portfolio-Id. Oldest first.
-export type AlertDirection = "below" | "above";
+// "both" fires on a cross either way, and is what a new rule starts as.
+export type AlertDirection = "both" | "below" | "above";
+
+// "once" goes off when the price crosses a target, then stops. "live" goes
+// off each time it crosses another multiple of a step ($2: 190, 192, 194...).
+export type AlertMode = "once" | "live";
 
 export type AlertInput = {
+  mode: AlertMode;
   direction: AlertDirection;
-  // Per share, in the symbol's own currency.
+  // Per share, in the symbol's own currency: a "once" rule's target, a "live"
+  // rule's step.
   price: number;
 };
 
 export type PriceAlert = AlertInput & {
   id: string;
   symbol: string;
-  // When it went off and the price that set it off; null while it's still on.
+  // When it went off and the price that set it off: the end of a "once" rule,
+  // the latest time for a "live" one. Null until then.
   triggeredAt: string | null;
   triggeredPrice: number | null;
 };
+
+// Still watching: a "once" rule stops when it goes off.
+export const isOn = (a: PriceAlert) => a.mode === "live" || !a.triggeredAt;
 
 const jsonBody = (body: unknown): RequestInit => ({
   headers: { "Content-Type": "application/json" },

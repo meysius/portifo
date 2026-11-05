@@ -5712,11 +5712,17 @@ ion-modal.ac-create-modal {
   color: var(--ds-muted);
 }
 
-/* The sheet's direction choice: two tiles in the form, applied by its button. */
+/* The sheet's mode (two tiles) and direction (three): picked in the form,
+   applied by its button. */
+.wl-alert-modes,
 .wl-alert-sides {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
+}
+
+.wl-alert-sides {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .wl-alert-sheet .ds-field {

@@ -50,6 +50,20 @@
       "when": 1793376973572,
       "tag": "0006_wooden_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793889346033,
+      "tag": "0007_alert_both_directions",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793891014797,
+      "tag": "0008_live_alerts",
+      "breakpoints": true
     }
   ]
 }

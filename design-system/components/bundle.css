@@ -553,7 +553,8 @@ button {
 .wl-alert-rule { display: block; font-size: var(--ds-fs-12); font-weight: 500; }
 .wl-alert .money { font-size: var(--ds-fs-12); font-weight: 500; }
 .wl-alert-mark { display: inline-block; margin-left: 5px; vertical-align: -1px; color: var(--ds-muted); }
-.wl-alert-sides { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.wl-alert-modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.wl-alert-sides { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .wl-alert-field { font-family: var(--font-mono); }
 .wl-alert-fired { margin-top: 0; }
 .wl-alert-delete { display: block; width: 100%; min-height: 44px; margin-top: 4px; font-size: var(--ds-fs-11); color: var(--ds-accent); }

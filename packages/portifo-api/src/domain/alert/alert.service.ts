@@ -2,9 +2,9 @@ import { SWLogger } from "simple-wire";
 import { MarketService, Quote } from "@/domain/market/market.service";
 import { PushService } from "@/domain/push/push.service";
 import { AlertRepo } from "./alert.repo";
-import { AlertDirection, PriceAlertsSelect } from "./alert.schema";
+import { AlertDirection, AlertMode, PriceAlertsSelect, PriceSide } from "./alert.schema";
 
-export type AlertInput = { direction: AlertDirection; price: number };
+export type AlertInput = { mode: AlertMode; direction: AlertDirection; price: number };
 
 // To the last decimal that means something: an FX rate or a penny stock isn't
 // a two-decimal price, and a rule's target should read back as it was typed.
@@ -41,11 +41,21 @@ export class AlertService {
   }
 
   async create(userId: string, symbol: string, input: AlertInput): Promise<PriceAlertsSelect> {
-    return this.alertRepo.create({ userId, symbol, direction: input.direction, price: String(input.price) });
+    return this.alertRepo.create({
+      userId,
+      symbol,
+      mode: input.mode,
+      direction: input.direction,
+      price: String(input.price),
+    });
   }
 
   async update(userId: string, id: string, input: AlertInput): Promise<PriceAlertsSelect | null> {
-    return this.alertRepo.update(userId, id, { direction: input.direction, price: String(input.price) });
+    return this.alertRepo.update(userId, id, {
+      mode: input.mode,
+      direction: input.direction,
+      price: String(input.price),
+    });
   }
 
   async remove(userId: string, id: string): Promise<boolean> {
@@ -66,18 +76,34 @@ export class AlertService {
       const price = quote.extended?.price ?? quote.price;
       if (!(price > 0)) continue;
 
-      await this.alertRepo.fireCrossed(quote.symbol, price, new Date(), async (fired) => {
-        await Promise.all(fired.map((alert) => this.notify(alert, quote, price)));
+      const now = new Date();
+      await this.alertRepo.fireCrossed(quote.symbol, price, now, async (fired) => {
+        await Promise.all(
+          fired.map((alert) => {
+            // The way it went, which a "both" rule only knows once it has crossed.
+            const crossed = alert.armedFrom === "above" ? "below" : "above";
+            return this.notify(alert, quote, price, crossed, Number(alert.price));
+          }),
+        );
       });
-      await this.alertRepo.armApproaching(quote.symbol, price);
+      await this.alertRepo.fireLive(quote.symbol, price, now, async (fired) => {
+        await Promise.all(fired.map((f) => this.notify(f.alert, quote, price, f.crossed, f.level)));
+      });
+      await this.alertRepo.arm(quote.symbol, price);
     }
   }
 
   // Only queues the push. Delivery is a job of its own, retried per device.
-  private async notify(alert: PriceAlertsSelect, quote: Quote, price: number): Promise<void> {
+  private async notify(
+    alert: PriceAlertsSelect,
+    quote: Quote,
+    price: number,
+    crossed: PriceSide,
+    level: number,
+  ): Promise<void> {
     const session = quote.extended ? ` · ${SESSION_LABEL[quote.extended.session]}` : "";
     const devices = await this.pushService.enqueueToUser(alert.userId, {
-      title: `${alert.symbol} crossed ${alert.direction} ${fmtPrice(Number(alert.price), quote.currency)}`,
+      title: `${alert.symbol} crossed ${crossed} ${fmtPrice(level, quote.currency)}`,
       body: `Now ${fmtTraded(price, quote.currency)} ${quote.currency}${session}`,
       url: `/tabs/watchlist/symbol/${encodeURIComponent(alert.symbol)}`,
     });

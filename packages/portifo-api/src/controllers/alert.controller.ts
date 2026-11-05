@@ -13,17 +13,20 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // The column holds numeric(20, 8): twelve digits before the point.
 const MAX_PRICE = 1e12;
 
+// A rule goes off once, and watches both ways, unless it says otherwise.
 function parseAlertInput(body: unknown): AlertInput | null {
-  const { direction, price } = (body ?? {}) as Record<string, unknown>;
-  if (direction !== "below" && direction !== "above") return null;
+  const { mode = "once", direction = "both", price } = (body ?? {}) as Record<string, unknown>;
+  if (mode !== "once" && mode !== "live") return null;
+  if (direction !== "below" && direction !== "above" && direction !== "both") return null;
   if (typeof price !== "number" || !(price > 0) || price >= MAX_PRICE) return null;
-  return { direction, price };
+  return { mode, direction, price };
 }
 
 function toAlertDto(alert: PriceAlertsSelect) {
   return {
     id: alert.id,
     symbol: alert.symbol,
+    mode: alert.mode,
     direction: alert.direction,
     price: Number(alert.price),
     triggeredAt: alert.triggeredAt?.toISOString() ?? null,

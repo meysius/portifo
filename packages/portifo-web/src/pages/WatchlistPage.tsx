@@ -3,6 +3,7 @@ import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useHistory } from "react-router-dom";
+import { isOn } from "../api/alerts";
 import { EXTENDED_LABEL, searchSymbols } from "../api/market";
 import type { Quote, SymbolResult } from "../api/market";
 import StickyTitleBar from "../components/StickyTitleBar";
@@ -148,7 +149,7 @@ function WatchlistPage() {
   };
 
   const watching = new Set(symbols ?? []);
-  const alerted = new Set(alerts?.filter((a) => !a.triggeredAt).map((a) => a.symbol));
+  const alerted = new Set(alerts?.filter(isOn).map((a) => a.symbol));
   const toggle = (r: SymbolResult) => (watching.has(r.symbol) ? remove(r.symbol) : add(r.symbol, r.name));
   const openSymbol = (symbol: string) => history.push(`${tabBase}/symbol/${encodeURIComponent(symbol)}`);
 
