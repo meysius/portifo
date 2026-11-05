@@ -180,15 +180,16 @@ export class PortfolioService {
   // `accountId` narrows the whole reconstruction — ledger, balances and the
   // opening-balance reconciliation — to one account of the portfolio.
   //
-  // 1D runs through the day's pre-market and after-hours trading (see
-  // extendedGrid). The figures around the chart stay regular-session.
+  // `extended` asks a 1D for the day's pre-market and after-hours trading too
+  // (see extendedGrid). The figures around the chart stay regular-session.
   async getPortfolioValueHistory(
     portfolioId: string,
     range: HistoryRange,
     displayCurrency: string,
     accountId?: string,
+    extended = false,
   ): Promise<PortfolioValueHistory> {
-    const extendedDay = range === "1D";
+    const extendedDay = extended && range === "1D";
     const accounts = (await this.portfolioRepo.listAccountsByPortfolio(portfolioId)).filter(
       (account) => !accountId || account.id === accountId,
     );
@@ -243,7 +244,7 @@ export class PortfolioService {
     // routes into the fallbacks below and is reported as estimated.
     const safeHistory = async (symbol: string): Promise<HistoryPoint[]> => {
       try {
-        return await this.marketService.getHistory(symbol, range);
+        return await this.marketService.getHistory(symbol, range, extendedDay);
       } catch {
         return [];
       }
@@ -258,8 +259,7 @@ export class PortfolioService {
     // one, not simply the first ticker — that distinction is what stops an
     // unpriceable symbol at the head of the ledger from flattening every other
     // holding onto a synthetic grid. A cash-only portfolio has no series at
-    // all, and falls back to a synthetic daily one. 1D's grid is every
-    // holding's bars instead, extended hours and all (see extendedGrid).
+    // all, and falls back to a synthetic daily one.
     const gridSource = tickers.map((t) => priceHistoryByTicker.get(t) ?? []).find((series) => series.length > 0) ?? [];
     const sessionByTimestamp = new Map<string, Session>();
     const sourceGrid = extendedDay

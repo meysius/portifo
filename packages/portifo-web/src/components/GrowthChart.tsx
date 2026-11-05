@@ -16,6 +16,7 @@ import {
   valueColumnWidth,
 } from "../lib/chartAxis";
 import { fmtCcy } from "../lib/fx";
+import ExtendedHoursChip from "./ExtendedHoursChip";
 import SessionShade from "./SessionShade";
 import TimeGrid from "./TimeGrid";
 import ValueGrid from "./ValueGrid";
@@ -26,15 +27,16 @@ import ValueGrid from "./ValueGrid";
 // trading time only, a value scale at the right, a time scale beneath, the
 // latest value as a dot, and a readout on demand (drag, hover, or arrow keys).
 //
-// 1D runs through the day's pre-market and after-hours trading, drawn as on a
-// holding's chart (see HoldingChart). Those stretches value each holding at
-// its latest trade; the total above the chart stays the regular session's.
+// Under it, one toggle: Extended hours, which stretches 1D across the day's
+// pre-market and after-hours trading, drawn as on a holding's chart (see
+// HoldingChart). Those stretches value each holding at its latest trade; the
+// total above the chart stays the regular session's.
 
 const GROWTH_RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const CHART_H = PLOT_H + AXIS_H;
 
-// 1W and 1M are intraday bars, so their readout names the hour too. 1D's
-// names the session outside regular hours.
+// 1W and 1M are intraday bars, so their readout names the hour too. An
+// extended 1D's names the session outside regular hours.
 function growthLabel(point: HistoryPoint, range: HistoryRange) {
   const intraday = range === "1W" || range === "1M";
   const session = point.session ? ` · ${EXTENDED_LABEL[point.session]}` : "";
@@ -58,12 +60,17 @@ export default function GrowthChart({
   ccy,
   failed,
   onRange,
+  extendedOn,
+  onExtendedOn,
 }: {
   points: HistoryPoint[];
   range: HistoryRange;
   ccy: string;
   failed: boolean;
   onRange: (r: HistoryRange) => void;
+  // The Extended hours toggle; `points` already follow it.
+  extendedOn: boolean;
+  onExtendedOn: (on: boolean) => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
@@ -93,8 +100,8 @@ export default function GrowthChart({
   const xs = points.map((_, i) => (ready ? (i * plotW) / last : 0));
   const ys = values.map((v) => plotY(v, min, max));
   const path = ready ? linePath(xs, ys) : "";
-  // On a 1D with extended hours: where the regular session runs, the line
-  // through it alone, and the fill under it.
+  // With extended hours: where the regular session runs, the line through it
+  // alone, and the fill under it.
   const spans = ready
     ? sessionSpans(
         points.map((p) => p.session),
@@ -239,6 +246,15 @@ export default function GrowthChart({
             )}
           </svg>
         )}
+      </div>
+
+      <div className="hd-indicators po-indicators">
+        <ExtendedHoursChip
+          fits={range === "1D"}
+          on={extendedOn}
+          untraded={extendedOn && range === "1D" && n > 1 && !points.some((p) => p.session)}
+          onToggle={() => onExtendedOn(!extendedOn)}
+        />
       </div>
     </>
   );

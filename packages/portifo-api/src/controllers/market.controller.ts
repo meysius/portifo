@@ -10,6 +10,11 @@ function isHistoryRange(value: unknown): value is HistoryRange {
   return HISTORY_RANGES.includes(value as HistoryRange);
 }
 
+// `extended=1`: a 1D with the day's pre-market and after-hours bars too.
+function wantsExtended(raw: unknown): boolean {
+  return raw === "1";
+}
+
 function parseSymbols(raw: unknown): string[] {
   return String(raw ?? "")
     .split(",")
@@ -88,7 +93,7 @@ export class MarketController implements SWController {
     }
 
     try {
-      res.json(await this.marketService.getHistory(symbol, range));
+      res.json(await this.marketService.getHistory(symbol, range, wantsExtended(req.query.extended)));
     } catch (err) {
       this.logger.error("MarketController.getHistory failed");
       res.status(502).json({ error: "Failed to fetch history" });
@@ -111,7 +116,7 @@ export class MarketController implements SWController {
     }
 
     try {
-      res.json(await this.marketService.getSma(symbol, range, window));
+      res.json(await this.marketService.getSma(symbol, range, window, wantsExtended(req.query.extended)));
     } catch (err) {
       this.logger.error("MarketController.getSma failed");
       res.status(502).json({ error: "Failed to fetch indicator" });

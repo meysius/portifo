@@ -48,7 +48,7 @@ export type FxRatesResponse = {
 };
 
 // Volume is shares traded in the bar; the portfolio series has none. A bar
-// struck outside the regular session names it; only 1D has any.
+// struck outside the regular session names it; only an extended 1D has any.
 export type HistoryPoint = { date: string; close: number; volume?: number; session?: ExtendedHours["session"] };
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
 
@@ -81,19 +81,26 @@ export async function getFxRates(base: string, symbols: string[]): Promise<FxRat
   return res.json();
 }
 
-// 1D runs through the day's pre-market and after-hours trading.
-export async function getHistory(symbol: string, range: HistoryRange): Promise<HistoryPoint[]> {
-  const res = await apiFetch(`/market/history?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}`);
+// `extended`: a 1D with the day's pre-market and after-hours trading too.
+export async function getHistory(symbol: string, range: HistoryRange, extended = false): Promise<HistoryPoint[]> {
+  const res = await apiFetch(
+    `/market/history?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}${extended ? "&extended=1" : ""}`,
+  );
   if (!res.ok) throw new Error("Failed to fetch history");
   return res.json();
 }
 
 // The `window`-day simple moving average of daily closes, read off at each of
-// the range's bars. An intraday bar takes its session's average; a pre-market
-// bar, the one before.
-export async function getSma(symbol: string, range: HistoryRange, window: number): Promise<IndicatorPoint[]> {
+// the range's bars (getHistory's, extended or not). An intraday bar takes its
+// session's average; a pre-market bar, the one before.
+export async function getSma(
+  symbol: string,
+  range: HistoryRange,
+  window: number,
+  extended = false,
+): Promise<IndicatorPoint[]> {
   const res = await apiFetch(
-    `/market/sma?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&window=${window}`,
+    `/market/sma?symbol=${encodeURIComponent(symbol)}&range=${encodeURIComponent(range)}&window=${window}${extended ? "&extended=1" : ""}`,
   );
   if (!res.ok) throw new Error("Failed to fetch moving average");
   return res.json();
