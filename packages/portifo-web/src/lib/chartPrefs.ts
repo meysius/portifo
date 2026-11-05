@@ -1,11 +1,9 @@
 import { useSyncExternalStore } from "react";
 
 // The charts' toggles, kept per device like the appearance setting, and
-// shared live: a flip on a holding's chart already holds on the Portfolio
-// chart underneath it when you go back.
+// shared live: every chart on screen follows a flip at once.
 export const SMA_BANDS_KEY = "portifo.chart.smaBands";
 export const EARNINGS_KEY = "portifo.chart.earnings";
-export const EXTENDED_HOURS_KEY = "portifo.chart.extendedHours";
 
 const listeners = new Set<() => void>();
 // Where storage is refused (a private window), a flip still holds until the

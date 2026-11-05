@@ -214,15 +214,14 @@ export interface PortfolioHistoryDto {
 }
 
 // `accountId` scopes the series to one account; omitted, it is the portfolio.
-// `extended`: a 1D with the day's pre-market and after-hours trading too.
+// 1D runs through the day's pre-market and after-hours trading.
 export async function getPortfolioHistory(
   range: HistoryRange,
   currency: string,
-  { accountId, extended = false }: { accountId?: string; extended?: boolean } = {},
+  accountId?: string,
 ): Promise<PortfolioHistoryDto> {
   const query = new URLSearchParams({ range, currency });
   if (accountId) query.set("account", accountId);
-  if (extended) query.set("extended", "1");
   const res = await apiFetch(`/portfolio/history?${query}`);
   if (!res.ok) throw new Error("Failed to fetch portfolio history");
   return res.json();

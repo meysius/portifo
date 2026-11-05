@@ -15,9 +15,8 @@ import {
   valueAxis,
 } from "../lib/chartAxis";
 import type { Session, SessionSpans } from "../lib/chartAxis";
-import { EARNINGS_KEY, EXTENDED_HOURS_KEY, SMA_BANDS_KEY, useChartPref } from "../lib/chartPrefs";
+import { EARNINGS_KEY, SMA_BANDS_KEY, useChartPref } from "../lib/chartPrefs";
 import { fmtCcy, fmtDay, fmtSignedPct, yahooQuoteUrl } from "../lib/fx";
-import ExtendedHoursChip from "./ExtendedHoursChip";
 import SessionShade from "./SessionShade";
 import TimeGrid from "./TimeGrid";
 import ValueGrid from "./ValueGrid";
@@ -50,11 +49,10 @@ import ValueGrid from "./ValueGrid";
 // range, so the trend before a report can be read against the trend after.
 // It draws on 1W to 5Y only.
 //
-// A third, Extended hours, stretches 1D across the day's pre-market and
-// after-hours trading. Those stretches sit on a recessed ground with the
-// line faded through them, so the regular session still reads as the day;
-// a scrub names the session it lands in. The price above the chart stays the
-// regular session's.
+// 1D runs through the day's pre-market and after-hours trading. Those
+// stretches sit on a recessed ground with the line faded through them, so
+// the regular session still reads as the day; a scrub names the session it
+// lands in. The price above the chart stays the regular session's.
 
 const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
@@ -216,8 +214,8 @@ function volumePath(xs: number[], s: Pt[]) {
     .join("");
 }
 
-// Last-fetched series per symbol+range (and extended hours), so flipping back
-// to a range (or pushing the same holding again) redraws at once.
+// Last-fetched series per symbol+range, so flipping back to a range (or pushing
+// the same holding again) redraws at once.
 const cache = new Map<string, Pt[]>();
 // The average by bar time, keyed the same way.
 const smaCache = new Map<string, [number, number][]>();
@@ -236,10 +234,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   // with the old range's average.
   const [sma, setSma] = useState<{ key: string; points: [number, number][] } | null>(null);
   const [earningsOn, setEarningsOn] = useChartPref(EARNINGS_KEY);
-  const [extendedOn, setExtendedOn] = useChartPref(EXTENDED_HOURS_KEY);
-  const extendedFits = range === "1D";
-  const extended = extendedOn && extendedFits;
-  const key = `${symbol}|${range}${extended ? "|extended" : ""}`;
+  const key = `${symbol}|${range}`;
   // Tagged with its symbol, like the average.
   const [earnings, setEarnings] = useState<{ symbol: string; times: number[] } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -260,7 +255,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     setScrub(null);
     setFailed(false);
     setPts(cache.get(key) ?? null);
-    getHistory(symbol, range, extended)
+    getHistory(symbol, range)
       .then((h: HistoryPoint[]) => {
         const next = h
           .map((p) => ({ t: new Date(p.date).getTime(), p: p.close, v: p.volume ?? 0, x: p.session }))
@@ -274,14 +269,14 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     return () => {
       live = false;
     };
-  }, [symbol, range, extended, key, reloadKey]);
+  }, [symbol, range, key, reloadKey]);
 
   useEffect(() => {
     if (!bandsOn) return;
     let live = true;
     const cached = smaCache.get(key);
     if (cached) setSma({ key, points: cached });
-    getSma(symbol, range, SMA_WINDOW, extended)
+    getSma(symbol, range, SMA_WINDOW)
       .then((list) => {
         // Oldest first, as averageAt walks them.
         const points = list
@@ -295,7 +290,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     return () => {
       live = false;
     };
-  }, [symbol, range, extended, key, bandsOn, reloadKey]);
+  }, [symbol, range, key, bandsOn, reloadKey]);
 
   const earningsFits = EARNINGS_RANGES.has(range);
   const earningsShown = earningsOn && earningsFits;
@@ -336,8 +331,8 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
 
   const last = s.length - 1;
   let path = "";
-  // With extended hours: where the regular session runs, the line through it
-  // alone, and the ground under it.
+  // On a 1D with extended hours: where the regular session runs, the line
+  // through it alone, and the fill under it.
   let spans: SessionSpans | null = null;
   let regular = "";
   let fill = "";
@@ -692,12 +687,6 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
           </button>
           {earningsNote && <span className="hd-indicator-note">{earningsNote}</span>}
         </span>
-        <ExtendedHoursChip
-          fits={extendedFits}
-          on={extendedOn}
-          untraded={extended && !!pts && pts.length > 1 && !pts.some((p) => p.x)}
-          onToggle={() => setExtendedOn(!extendedOn)}
-        />
       </div>
     </>
   );

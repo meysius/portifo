@@ -60,7 +60,7 @@ function extendedHours(q: any): ExtendedHours | undefined {
 }
 
 // Volume is shares traded in the bar; the portfolio series has none. A bar
-// struck outside the regular session names it; only an extended 1D has any.
+// struck outside the regular session names it; only 1D has any.
 export type HistoryPoint = { date: string; close: number; volume?: number; session?: Session };
 export type Session = "pre" | "post";
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
@@ -246,13 +246,12 @@ export class MarketService {
     return rates;
   }
 
-  // Regular hours only, unless `extended` asks a 1D for the day's pre-market
-  // and after-hours trading too, each such bar named by its session. The
-  // figures around a chart (the price, today's move) stay regular-session
-  // either way.
-  async getHistory(symbol: string, range: HistoryRange, extended = false): Promise<HistoryPoint[]> {
+  // Regular hours only, except on 1D, which runs through the day's pre-market
+  // and after-hours trading, each such bar named by its session. The figures
+  // around a chart (the price, today's move) stay regular-session either way.
+  async getHistory(symbol: string, range: HistoryRange): Promise<HistoryPoint[]> {
     const { period1, interval } = historyWindow(range);
-    const includePrePost = extended && range === "1D";
+    const includePrePost = range === "1D";
     const result = await this.client.chart(symbol, { period1, period2: new Date(), interval, includePrePost });
     const points: HistoryPoint[] = result.quotes
       .filter((q) => q.close != null)
@@ -274,13 +273,13 @@ export class MarketService {
   // days to 5 sessions, plus slack for holidays) that the range's first bar
   // already has a full window behind it; a bar without one gets no point, so
   // a young listing's line starts late.
-  // With `extended` (1D only), the bars include the day's pre-market and
-  // after-hours: a pre-market bar takes the average up to the session before.
-  async getSma(symbol: string, range: HistoryRange, window: number, extended = false): Promise<IndicatorPoint[]> {
+  // On 1D the bars include the day's pre-market and after hours: a
+  // pre-market bar takes the average up to the session before.
+  async getSma(symbol: string, range: HistoryRange, window: number): Promise<IndicatorPoint[]> {
     const from = historyWindow(range).period1;
     from.setDate(from.getDate() - Math.ceil((window * 7) / 5) - 21);
     const [bars, daily] = await Promise.all([
-      this.getHistory(symbol, range, extended),
+      this.getHistory(symbol, range),
       this.client.chart(symbol, { period1: from, period2: new Date(), interval: "1d", includePrePost: false }),
     ]);
     const closes = daily.quotes

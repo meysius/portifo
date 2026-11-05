@@ -3,15 +3,14 @@
 The range picker above a price chart and the indicator toggles under it.
 
 ## When to use
-With a holding's price chart (and the portfolio's value chart, which shares the range picker and the Extended hours toggle). Ranges: 1D, 1W, 1M, 3M, 6M, 1Y, 2Y, 5Y, All. The API draws 2Y, 5Y and All in weekly bars.
+With a holding's price chart (and the portfolio's value chart, which shares the range picker). Ranges: 1D, 1W, 1M, 3M, 6M, 1Y, 2Y, 5Y, All. The API draws 2Y, 5Y and All in weekly bars. 1D always runs through the day's pre-market and after-hours trading; there is no toggle for it.
 
 ## What you provide
 - The ranges and the selected one.
 - The indicator toggles, and whether each is on:
   - "SMA bands": the 200-day average and the lines 5, 10 and 15% either side of it, on every range. When on, it shows how far the price sits from the average at the scrubbed or latest bar ("+4.6%").
   - "Earnings": a vertical line at each earnings report in the range.
-  - "Extended hours": 1D runs from the day's pre-market through its after-hours trading. It is the only toggle under the portfolio's chart.
-- A note when Earnings doesn't apply to the range ("1W to 5Y"), or Extended hours ("1D only"). SMA bands gets one when it is on but the price crosses no line, not even the average ("Stayed between the SMA and −5%"). Earnings gets one when it is on but draws no line: "No earnings reports" for a fund, crypto or currency, or "None in the past month" when no report falls in the range. Extended hours gets one when it is on but the day has no trade outside regular hours: "No extended-hours trades" (Toronto, London, crypto, indices, or a quiet listing).
+- A note when Earnings doesn't apply to the range ("1W to 5Y"). SMA bands gets one when it is on but the price crosses no line, not even the average ("Stayed between the SMA and −5%"). Earnings gets one when it is on but draws no line: "No earnings reports" for a fund, crypto or currency, or "None in the past month" when no report falls in the range.
 
 ## Rules
 - Ranges sit above the plot, as in Apple Stocks, packed to the left and 2px apart. Each is 34px wide where the row has room. Where it hasn't, every range narrows by the same amount: on a holding, the nine ranges and the outward arrow come to 33px a range at 393pt and 31px at 375pt. Each is 30px tall, radius 6px, `--ds-fs-11` 500 in `ds-text`. The chosen range is 700 on a `ds-line` pill, so the accent stays on the price line.
@@ -26,13 +25,12 @@ With a holding's price chart (and the portfolio's value chart, which shares the 
 - Earnings: each report is a 1px solid `ds-secondary` line from the plot's top to its baseline, under the bands and the price, so it marks when without competing with what. It is darker than the `ds-line` time guides and solid where the scrub crosshair is dashed. Its chip's swatch is one upright 2 × 10px bar, `ds-muted` off and `ds-secondary` on. No label on the line: the chip is its legend.
 - A report's line sits midway between the last bar before the report and the first bar after it, so it parts the closes struck before the news from those after. Companies report before the open or after the close, so the line falls in the overnight gap: on 1W and 1M, between one session's last bar and the next session's first. A weekly bar (2Y, 5Y) closes on Friday, so the line goes before the week the report fell in, or before the next week when the report came after Friday's close (Berkshire reports on Saturdays).
 - Earnings draws on 1W to 5Y only. 1D shows one session, which a report never falls inside. All would put 40 lines 8px apart, a barcode the price can't be read through. 5Y's twenty lines, 14px apart, are as close as they get.
-- Extended hours: the day is the latest trading day, from its pre-market's start (4 AM in New York) to its after-hours close (8 PM), as Yahoo marks them out, half-days included. In its first minutes there is one bar or none, so the day before stands until a second bar arrives. Before the open, that means today's pre-market alone. Bars sit at equal steps, as elsewhere, so the regular session takes under half the width.
+- 1D: the day is the latest trading day, from its pre-market's start (4 AM in New York) to its after-hours close (8 PM), as Yahoo marks them out, half-days included. Listings with no trading outside regular hours (Toronto, London, crypto, indices) show the regular session alone, unmarked. In its first minutes there is one bar or none, so the day before stands until a second bar arrives. Before the open, that means today's pre-market alone. Bars sit at equal steps, as elsewhere, so the regular session takes under half the width.
 - The stretches before the open and after the close sit on `ds-subtle`, from the plot's top to its baseline, each edge midway between the session's outermost bar and its neighbour. The price line runs through them in `ds-accent` at 40% opacity, with the regular session drawn over it at full strength. The fill lies under the regular session only. The latest-price dot stays full strength wherever it falls. With the bands on, their tints still span the whole day. A pre-market bar takes the average up to the session before, so the average steps once, at the open.
 - A scrub on an extended bar adds its session to the time: "5:10 PM · After hours", "8:55 AM · Pre-market". So does the portfolio's readout.
-- Its swatch is a 12px line, 5px solid then faded to 40%: `ds-muted` off, `ds-accent` (the price line's colour) on.
 - The figures around the chart stay the regular session's: a holding's price and Today, the portfolio's total and its 1D change. The chart can end past them, at the latest after-hours trade. On the portfolio's chart, each holding counts at its latest trade, and a listing that hasn't traded yet that day counts at its previous close.
-- The toggle is one setting for every chart on the device, kept like the others. Flip it on a holding and the Portfolio chart underneath already follows.
-- A disabled chip (Earnings on 1D or All, Extended hours past 1D) drops to 45% opacity. A chip's notes sit beside it in `ds-muted`; each chip and its notes wrap together, so a note never strays to the other chip.
+- The indicator toggles are one setting each for every chart on the device, kept like the appearance setting.
+- A disabled chip (Earnings on 1D or All) drops to 45% opacity. A chip's notes sit beside it in `ds-muted`; each chip and its notes wrap together, so a note never strays to the other chip.
 - The plot itself: a vertical swipe scrolls the page, a horizontal one scrubs.
 
 Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.hd-chart-controls`, `.hd-range`, `.hd-indicator*`; the scrub readout is `.hd-chart-ladder`, and the chart's lines are not previewed) and `src/components/HoldingChart.tsx`.

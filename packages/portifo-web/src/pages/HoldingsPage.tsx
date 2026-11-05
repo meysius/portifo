@@ -20,7 +20,6 @@ import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtDay, fmtShares, fmtSignedCcy, fmtSignedPct, parseDay } from "../lib/fx";
 import { useDisplayCurrency } from "../lib/displayCurrency";
-import { EXTENDED_HOURS_KEY, useChartPref } from "../lib/chartPrefs";
 import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 import { cashValue } from "../lib/positions";
 
@@ -54,8 +53,8 @@ type Growth = { points: HistoryPoint[]; netDeposits: number; estimated: string[]
 
 const NO_GROWTH: Growth = { points: [], netDeposits: 0, estimated: [] };
 
-// Last series per portfolio + range + currency (and extended hours), so
-// flipping back to a range redraws at once while the fresh one loads.
+// Last series per portfolio + range + currency, so flipping back to a
+// range redraws at once while the fresh one loads.
 const growthCache = new Map<string, Growth>();
 
 // The five breakdown hues, by rank; any holding past them takes the neutral.
@@ -178,8 +177,6 @@ function HoldingsPage() {
   const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
 
   const [range, setRange] = useState<HistoryRange>("1Y");
-  const [extendedOn, setExtendedOn] = useChartPref(EXTENDED_HOURS_KEY);
-  const extended = extendedOn && range === "1D";
   const [closedOpen, setClosedOpen] = useState(false);
   const [growthOpen, setGrowthOpen] = useState(false);
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
@@ -195,7 +192,7 @@ function HoldingsPage() {
   }, [symbolsKey]);
 
   // ── The series ───────────────────────────────────────────────────────────
-  const growthKey = `${activePortfolio?.id}|${range}|${ccy}${extended ? "|extended" : ""}`;
+  const growthKey = `${activePortfolio?.id}|${range}|${ccy}`;
   const [growth, setGrowth] = useState<Growth>(() => growthCache.get(growthKey) ?? NO_GROWTH);
   const [growthFailed, setGrowthFailed] = useState(false);
   const growthRequest = useRef(0);
@@ -203,7 +200,7 @@ function HoldingsPage() {
   const loadGrowth = useCallback(async () => {
     const id = ++growthRequest.current;
     try {
-      const h = await getPortfolioHistory(range, ccy, { extended });
+      const h = await getPortfolioHistory(range, ccy);
       const next = {
         points: h.points,
         netDeposits: h.netDeposits ?? 0,
@@ -217,7 +214,7 @@ function HoldingsPage() {
     } catch {
       if (growthRequest.current === id) setGrowthFailed(true);
     }
-  }, [range, ccy, extended, growthKey]);
+  }, [range, ccy, growthKey]);
 
   // The ledger is a dependency: a transaction added anywhere redraws the curve.
   useEffect(() => {
@@ -320,8 +317,8 @@ function HoldingsPage() {
 
   // ── Growth over the range ────────────────────────────────────────────────
   // Ends at today's total, the figure printed above it. A day starts at
-  // yesterday's close, so 1D agrees with Today. With extended hours on, the
-  // chart runs on past the close; this stays the regular session's.
+  // yesterday's close, so 1D agrees with Today. The 1D chart runs on past the
+  // close into after hours; this stays the regular session's.
   const pts = growth.points;
   const start = range === "1D" && hasDay && priced.length > 0 ? total - day : pts[0]?.close;
   const change = start != null && !quotesPending ? total - start : null;
@@ -408,15 +405,7 @@ function HoldingsPage() {
                   </button>
                 )}
               </div>
-              <GrowthChart
-                points={pts}
-                range={range}
-                ccy={ccy}
-                failed={growthFailed}
-                onRange={setRange}
-                extendedOn={extendedOn}
-                onExtendedOn={setExtendedOn}
-              />
+              <GrowthChart points={pts} range={range} ccy={ccy} failed={growthFailed} onRange={setRange} />
             </section>
 
             <section className="po-section po-allocation" aria-label="Portfolio allocation">
