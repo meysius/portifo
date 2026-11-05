@@ -176,7 +176,8 @@ function HoldingsPage() {
   const [ccy] = useDisplayCurrency();
   const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
 
-  const [range, setRange] = useState<HistoryRange>("1Y");
+  // Opens on today, as every chart does.
+  const [range, setRange] = useState<HistoryRange>("1D");
   const [closedOpen, setClosedOpen] = useState(false);
   const [growthOpen, setGrowthOpen] = useState(false);
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);

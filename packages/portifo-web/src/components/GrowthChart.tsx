@@ -8,10 +8,12 @@ import {
   PLOT_BOTTOM,
   PLOT_H,
   linePath,
+  liveLabel,
   plotY,
   sessionSpans,
   timeAxis,
   valueAxis,
+  valueColumnWidth,
 } from "../lib/chartAxis";
 import { fmtCcy } from "../lib/fx";
 import SessionShade from "./SessionShade";
@@ -85,7 +87,9 @@ export default function GrowthChart({
   const min = Math.min(...values);
   const max = Math.max(...values);
   const scale = valueAxis(min, max);
-  const plotW = width - scale.width;
+  // On 1D, the latest value, tagged on the scale.
+  const live = range === "1D" && n > 1 ? liveLabel(values[n - 1]) : null;
+  const plotW = width - valueColumnWidth(scale.width, live);
   const xs = points.map((_, i) => (ready ? (i * plotW) / last : 0));
   const ys = values.map((v) => plotY(v, min, max));
   const path = ready ? linePath(xs, ys) : "";
@@ -188,7 +192,12 @@ export default function GrowthChart({
               </linearGradient>
             </defs>
             <SessionShade spans={spans} />
-            <ValueGrid ticks={scale.ticks} width={width} plotW={plotW} />
+            <ValueGrid
+              ticks={scale.ticks}
+              width={width}
+              plotW={plotW}
+              live={ready && live ? { y: ys[last], label: live } : null}
+            />
             <TimeGrid ticks={times} />
             {ready && (
               <>

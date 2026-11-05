@@ -69,6 +69,32 @@ export function sessionSpans(sessions: (Session | undefined)[], xs: number[], pl
   return { open, close, shade };
 }
 
+// On 1D the latest price is tagged on the value scale, at the line's end: a
+// pill of the line's colour, so the price now reads at a glance wherever it
+// sits between the scale's four values. To a price's precision, without the
+// currency (the scale has none): whole above a thousand, cents above one,
+// four places below.
+export const LIVE_TAG_H = 18;
+export const LIVE_TAG_PAD = 5;
+const LIVE_TAG_GAP = 4; // from the plot's edge
+
+export function liveLabel(v: number) {
+  const digits = Math.abs(v) >= 1000 ? 0 : Math.abs(v) >= 1 ? 2 : 4;
+  return v
+    .toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })
+    .replace(/^-/, "−");
+}
+
+export function liveTagWidth(label: string) {
+  return label.length * CHAR_W + 2 * LIVE_TAG_PAD;
+}
+
+// The value column's width with the tag in it: wide enough for the scale's
+// labels and the tag both.
+export function valueColumnWidth(scaleWidth: number, live: string | null) {
+  return live ? Math.max(scaleWidth, liveTagWidth(live) + LIVE_TAG_GAP) : scaleWidth;
+}
+
 export function plotY(v: number, lo: number, hi: number) {
   return hi > lo ? PLOT_BOTTOM - ((v - lo) / (hi - lo)) * (PLOT_BOTTOM - PLOT_TOP) : (PLOT_TOP + PLOT_BOTTOM) / 2;
 }

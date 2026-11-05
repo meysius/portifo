@@ -9,10 +9,12 @@ import {
   PLOT_H,
   PLOT_TOP,
   linePath,
+  liveLabel,
   plotY,
   sessionSpans,
   timeAxis,
   valueAxis,
+  valueColumnWidth,
 } from "../lib/chartAxis";
 import type { Session, SessionSpans } from "../lib/chartAxis";
 import { EARNINGS_KEY, SMA_BANDS_KEY, useChartPref } from "../lib/chartPrefs";
@@ -224,8 +226,9 @@ const earningsCache = new Map<string, number[]>();
 
 // `reloadKey` changes on the page's pull to refresh: the range is fetched again.
 export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: string; ccy: string; reloadKey?: number }) {
-  const [range, setRange] = useState<HistoryRange>("1M");
-  const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1M`) ?? null);
+  // Every chart opens on today.
+  const [range, setRange] = useState<HistoryRange>("1D");
+  const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1D`) ?? null);
   const [failed, setFailed] = useState(false);
   const [scrub, setScrub] = useState<number | null>(null);
   const [width, setWidth] = useState(0);
@@ -344,6 +347,8 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   let xs: number[] = [];
   let ys: number[] = [];
   let scale = valueAxis(0, 0);
+  // On 1D, the latest price, tagged on the scale.
+  const live = range === "1D" && s.length > 1 ? liveLabel(s[s.length - 1].p) : null;
   let plotW = width;
   let lo = 0;
   let hi = 0;
@@ -360,7 +365,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     const smaName = smaEnd < lo ? "SMA ↓" : smaEnd > hi ? "SMA ↑" : "SMA";
     const name = (l: (typeof LEVELS)[number]) => (l.f ? l.label : smaName);
     const namesW = levels.length ? Math.max(...levels.map((l) => name(l).length)) * NAME_CHAR_W + 2 * NAME_INSET : 0;
-    plotW = width - scale.width - namesW;
+    plotW = width - valueColumnWidth(scale.width, live) - namesW;
     xs = s.map((_, i) => (i * plotW) / last);
     ys = s.map((p) => plotY(p.p, lo, hi));
     path = linePath(xs, ys);
@@ -558,7 +563,12 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
               </linearGradient>
             </defs>
             <SessionShade spans={spans} />
-            <ValueGrid ticks={scale.ticks} width={width} plotW={plotW} />
+            <ValueGrid
+              ticks={scale.ticks}
+              width={width}
+              plotW={plotW}
+              live={ready && live ? { y: ys[last], label: live } : null}
+            />
             <TimeGrid ticks={times} />
             {volume && <path d={volume} fill="none" stroke="var(--ds-muted)" strokeWidth={1.5} />}
             {ready && (

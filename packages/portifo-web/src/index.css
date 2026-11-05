@@ -3706,6 +3706,21 @@ ion-modal.ds-sheet {
   pointer-events: none;
 }
 
+/* On 1D, the latest price on the value scale: a pill of the price line's
+   colour, at the line's end. */
+.chart-live-tag rect {
+  fill: var(--ds-accent);
+}
+
+.chart-live-tag text {
+  font-family: var(--font-mono);
+  font-size: var(--ds-fs-10);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  fill: var(--ds-bg);
+  pointer-events: none;
+}
+
 /* A band's name, just past its line's right end in the column between the
    plot and the price scale. The halo keeps it clear of the scale's hairlines. */
 .chart-band-label {
