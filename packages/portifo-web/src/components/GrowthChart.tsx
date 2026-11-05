@@ -1,8 +1,21 @@
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import { EXTENDED_LABEL } from "../api/market";
 import type { HistoryPoint, HistoryRange } from "../api/market";
-import { AXIS_H, PLOT_BOTTOM, PLOT_H, plotY, timeAxis, valueAxis } from "../lib/chartAxis";
+import {
+  AXIS_H,
+  EXTENDED_OPACITY,
+  PLOT_BOTTOM,
+  PLOT_H,
+  linePath,
+  plotY,
+  sessionSpans,
+  timeAxis,
+  valueAxis,
+} from "../lib/chartAxis";
 import { fmtCcy } from "../lib/fx";
+import ExtendedHoursChip from "./ExtendedHoursChip";
+import SessionShade from "./SessionShade";
 import TimeGrid from "./TimeGrid";
 import ValueGrid from "./ValueGrid";
 
@@ -11,14 +24,21 @@ import ValueGrid from "./ValueGrid";
 // cobalt line over a wash, stretched from the range's low to its high over
 // trading time only, a value scale at the right, a time scale beneath, the
 // latest value as a dot, and a readout on demand (drag, hover, or arrow keys).
+//
+// Under it, one toggle: Extended hours, which stretches 1D across the day's
+// pre-market and after-hours trading, drawn as on a holding's chart (see
+// HoldingChart). Those stretches value each holding at its latest trade; the
+// total above the chart stays the regular session's.
 
 const GROWTH_RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const CHART_H = PLOT_H + AXIS_H;
 
-// 1W and 1M are intraday bars, so their readout names the hour too.
-function growthLabel(iso: string, range: HistoryRange) {
+// 1W and 1M are intraday bars, so their readout names the hour too. An
+// extended 1D's names the session outside regular hours.
+function growthLabel(point: HistoryPoint, range: HistoryRange) {
   const intraday = range === "1W" || range === "1M";
-  return new Date(iso).toLocaleString(
+  const session = point.session ? ` · ${EXTENDED_LABEL[point.session]}` : "";
+  return new Date(point.date).toLocaleString(
     "en-US",
     range === "1D"
       ? { hour: "numeric", minute: "2-digit" }
@@ -29,7 +49,7 @@ function growthLabel(iso: string, range: HistoryRange) {
           hour: intraday ? "numeric" : undefined,
           minute: intraday ? "2-digit" : undefined,
         },
-  );
+  ) + session;
 }
 
 export default function GrowthChart({
@@ -38,12 +58,17 @@ export default function GrowthChart({
   ccy,
   failed,
   onRange,
+  extendedOn,
+  onExtendedOn,
 }: {
   points: HistoryPoint[];
   range: HistoryRange;
   ccy: string;
   failed: boolean;
   onRange: (r: HistoryRange) => void;
+  // The Extended hours toggle; `points` already follow it.
+  extendedOn: boolean;
+  onExtendedOn: (on: boolean) => void;
 }) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
@@ -70,7 +95,22 @@ export default function GrowthChart({
   const plotW = width - scale.width;
   const xs = points.map((_, i) => (ready ? (i * plotW) / last : 0));
   const ys = values.map((v) => plotY(v, min, max));
-  const path = ready ? xs.map((x, i) => `${i ? "L" : "M"}${x.toFixed(2)},${ys[i].toFixed(2)}`).join(" ") : "";
+  const path = ready ? linePath(xs, ys) : "";
+  // With extended hours: where the regular session runs, the line through it
+  // alone, and the fill under it.
+  const spans = ready
+    ? sessionSpans(
+        points.map((p) => p.session),
+        xs,
+        plotW,
+      )
+    : null;
+  const regular = spans && spans.open >= 0 ? linePath(xs, ys, spans.open, spans.close) : "";
+  const fill = !spans
+    ? `${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`
+    : regular
+      ? `${regular} L${xs[spans.close].toFixed(1)},${PLOT_BOTTOM} L${xs[spans.open].toFixed(1)},${PLOT_BOTTOM} Z`
+      : "";
   const at = cursor != null && cursor < n ? cursor : null;
 
   // The readout hangs 60px left of the cursor, but never past either edge.
@@ -117,7 +157,7 @@ export default function GrowthChart({
         <div ref={tipRef} className="po-chart-tooltip" style={{ opacity: at != null ? 1 : 0 }}>
           {at != null && (
             <>
-              <span className="po-tip-date">{growthLabel(points[at].date, range)}</span>
+              <span className="po-tip-date">{growthLabel(points[at], range)}</span>
               <br />
               <span className="money">{fmtCcy(points[at].close, ccy)}</span>
             </>
@@ -137,7 +177,7 @@ export default function GrowthChart({
             role="img"
             aria-label={
               ready
-                ? `${range} portfolio value, ${fmtCcy(values[0], ccy)} to ${fmtCcy(values[last], ccy)}. Use left and right arrow keys to inspect.`
+                ? `${range} portfolio value${spans ? ", with pre-market and after-hours trading" : ""}, ${fmtCcy(values[0], ccy)} to ${fmtCcy(values[last], ccy)}. Use left and right arrow keys to inspect.`
                 : `${range} portfolio value`
             }
             onPointerDown={pick}
@@ -154,19 +194,31 @@ export default function GrowthChart({
                 <stop offset="100%" stopColor="var(--ds-accent)" stopOpacity=".02" />
               </linearGradient>
             </defs>
+            <SessionShade spans={spans} />
             <ValueGrid ticks={scale.ticks} width={width} plotW={plotW} />
             <TimeGrid ticks={times} />
             {ready && (
               <>
-                <path d={`${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`} fill={`url(#${gradId})`} />
+                {fill && <path d={fill} fill={`url(#${gradId})`} />}
                 <path
                   d={path}
                   fill="none"
                   stroke="var(--ds-accent)"
+                  strokeOpacity={spans ? EXTENDED_OPACITY : 1}
                   strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+                {regular && (
+                  <path
+                    d={regular}
+                    fill="none"
+                    stroke="var(--ds-accent)"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
                 <circle cx={xs[last]} cy={ys[last]} r={3} fill="var(--ds-accent)" />
                 {at != null && (
                   <g>
@@ -185,6 +237,15 @@ export default function GrowthChart({
             )}
           </svg>
         )}
+      </div>
+
+      <div className="hd-indicators po-indicators">
+        <ExtendedHoursChip
+          fits={range === "1D"}
+          on={extendedOn}
+          untraded={extendedOn && range === "1D" && n > 1 && !points.some((p) => p.session)}
+          onToggle={() => onExtendedOn(!extendedOn)}
+        />
       </div>
     </>
   );

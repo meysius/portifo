@@ -1,9 +1,24 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import { getEarnings, getHistory, getSma } from "../api/market";
+import { EXTENDED_LABEL, getEarnings, getHistory, getSma } from "../api/market";
 import type { HistoryPoint, HistoryRange } from "../api/market";
-import { AXIS_H, PLOT_BOTTOM, PLOT_H, PLOT_TOP, plotY, timeAxis, valueAxis } from "../lib/chartAxis";
+import {
+  AXIS_H,
+  EXTENDED_OPACITY,
+  PLOT_BOTTOM,
+  PLOT_H,
+  PLOT_TOP,
+  linePath,
+  plotY,
+  sessionSpans,
+  timeAxis,
+  valueAxis,
+} from "../lib/chartAxis";
+import type { Session, SessionSpans } from "../lib/chartAxis";
+import { EARNINGS_KEY, EXTENDED_HOURS_KEY, SMA_BANDS_KEY, useChartPref } from "../lib/chartPrefs";
 import { fmtCcy, fmtDay, fmtSignedPct, yahooQuoteUrl } from "../lib/fx";
+import ExtendedHoursChip from "./ExtendedHoursChip";
+import SessionShade from "./SessionShade";
 import TimeGrid from "./TimeGrid";
 import ValueGrid from "./ValueGrid";
 
@@ -34,6 +49,12 @@ import ValueGrid from "./ValueGrid";
 // A second toggle, Earnings, draws a vertical line at each report in the
 // range, so the trend before a report can be read against the trend after.
 // It draws on 1W to 5Y only.
+//
+// A third, Extended hours, stretches 1D across the day's pre-market and
+// after-hours trading. Those stretches sit on a recessed ground with the
+// line faded through them, so the regular session still reads as the day;
+// a scrub names the session it lands in. The price above the chart stays the
+// regular session's.
 
 const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
@@ -48,8 +69,8 @@ const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
   All: "all time",
 };
 
-// Price and shares traded per bar.
-type Pt = { t: number; p: number; v: number };
+// Price and shares traded per bar, and its session when it isn't the regular one.
+type Pt = { t: number; p: number; v: number; x?: Session };
 // One line's reading in the scrub readout.
 type Rung = { color: string; label: string; v: number; kind: "band" | "sma" | "price" };
 
@@ -81,9 +102,6 @@ const NAME_INSET = 6;
 const NAME_GAP = 11;
 // The scrub readout's distance from the crosshair, when it lists the bands.
 const LADDER_GAP = 10;
-// Kept per device, like the appearance setting.
-const BANDS_KEY = "portifo.chart.smaBands";
-const EARNINGS_KEY = "portifo.chart.earnings";
 
 // Not on 1D: companies report outside trading hours, so a report never falls
 // inside the session the chart shows. Not on All: ten years of quarters is 40
@@ -94,23 +112,6 @@ const EARNINGS_RANGES = new Set<HistoryRange>(["1W", "1M", "3M", "6M", "1Y", "2Y
 const WEEKLY_RANGES = new Set<HistoryRange>(["2Y", "5Y", "All"]);
 // From a weekly bar's stamp to its Friday close: 4 days and 16 hours.
 const WEEK_CLOSE_MS = (4 * 24 + 16) * 3_600_000;
-
-function readPref(key: string) {
-  try {
-    return localStorage.getItem(key) === "1";
-  } catch {
-    return false;
-  }
-}
-
-function writePref(key: string, on: boolean) {
-  try {
-    if (on) localStorage.setItem(key, "1");
-    else localStorage.removeItem(key);
-  } catch {
-    // Still applies until the page reloads.
-  }
-}
 
 // When the price crosses none of the lines, where it stayed instead: between
 // the nearest line above its high and the nearest below its low.
@@ -191,8 +192,8 @@ function runs(avg: (number | undefined)[]) {
 
 const fmtTime = (t: number) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
-function tipLabel(t: number, range: HistoryRange) {
-  if (range === "1D") return fmtTime(t);
+function tipLabel(t: number, range: HistoryRange, session?: Session) {
+  if (range === "1D") return session ? `${fmtTime(t)} · ${EXTENDED_LABEL[session]}` : fmtTime(t);
   if (range === "1W" || range === "1M") return `${fmtDay(new Date(t))}, ${fmtTime(t)}`;
   return fmtDay(new Date(t));
 }
@@ -215,8 +216,8 @@ function volumePath(xs: number[], s: Pt[]) {
     .join("");
 }
 
-// Last-fetched series per symbol+range, so flipping back to a range (or pushing
-// the same holding again) redraws at once.
+// Last-fetched series per symbol+range (and extended hours), so flipping back
+// to a range (or pushing the same holding again) redraws at once.
 const cache = new Map<string, Pt[]>();
 // The average by bar time, keyed the same way.
 const smaCache = new Map<string, [number, number][]>();
@@ -230,11 +231,15 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   const [failed, setFailed] = useState(false);
   const [scrub, setScrub] = useState<number | null>(null);
   const [width, setWidth] = useState(0);
-  const [bandsOn, setBandsOn] = useState(() => readPref(BANDS_KEY));
-  // Tagged with its symbol+range, so a range switch never pairs the new bars
+  const [bandsOn, setBandsOn] = useChartPref(SMA_BANDS_KEY);
+  // Tagged with its series' key, so a range switch never pairs the new bars
   // with the old range's average.
   const [sma, setSma] = useState<{ key: string; points: [number, number][] } | null>(null);
-  const [earningsOn, setEarningsOn] = useState(() => readPref(EARNINGS_KEY));
+  const [earningsOn, setEarningsOn] = useChartPref(EARNINGS_KEY);
+  const [extendedOn, setExtendedOn] = useChartPref(EXTENDED_HOURS_KEY);
+  const extendedFits = range === "1D";
+  const extended = extendedOn && extendedFits;
+  const key = `${symbol}|${range}${extended ? "|extended" : ""}`;
   // Tagged with its symbol, like the average.
   const [earnings, setEarnings] = useState<{ symbol: string; times: number[] } | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -251,15 +256,14 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   }, []);
 
   useEffect(() => {
-    const key = `${symbol}|${range}`;
     let live = true;
     setScrub(null);
     setFailed(false);
     setPts(cache.get(key) ?? null);
-    getHistory(symbol, range)
+    getHistory(symbol, range, extended)
       .then((h: HistoryPoint[]) => {
         const next = h
-          .map((p) => ({ t: new Date(p.date).getTime(), p: p.close, v: p.volume ?? 0 }))
+          .map((p) => ({ t: new Date(p.date).getTime(), p: p.close, v: p.volume ?? 0, x: p.session }))
           .filter((p) => p.p > 0);
         cache.set(key, next);
         if (live) setPts(next);
@@ -270,15 +274,14 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     return () => {
       live = false;
     };
-  }, [symbol, range, reloadKey]);
+  }, [symbol, range, extended, key, reloadKey]);
 
   useEffect(() => {
     if (!bandsOn) return;
-    const key = `${symbol}|${range}`;
     let live = true;
     const cached = smaCache.get(key);
     if (cached) setSma({ key, points: cached });
-    getSma(symbol, range, SMA_WINDOW)
+    getSma(symbol, range, SMA_WINDOW, extended)
       .then((list) => {
         // Oldest first, as averageAt walks them.
         const points = list
@@ -292,7 +295,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     return () => {
       live = false;
     };
-  }, [symbol, range, bandsOn, reloadKey]);
+  }, [symbol, range, extended, key, bandsOn, reloadKey]);
 
   const earningsFits = EARNINGS_RANGES.has(range);
   const earningsShown = earningsOn && earningsFits;
@@ -314,19 +317,9 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     };
   }, [symbol, earningsShown, reloadKey]);
 
-  const toggleBands = () => {
-    writePref(BANDS_KEY, !bandsOn);
-    setBandsOn(!bandsOn);
-  };
-
-  const toggleEarnings = () => {
-    writePref(EARNINGS_KEY, !earningsOn);
-    setEarningsOn(!earningsOn);
-  };
-
   const s = pts ?? [];
   const ready = s.length > 1 && width > 0;
-  const smaPoints = bandsOn && sma?.key === `${symbol}|${range}` ? sma.points : null;
+  const smaPoints = bandsOn && sma?.key === key ? sma.points : null;
   const avg = smaPoints ? averageAt(s.map((p) => p.t), smaPoints) : [];
   // The average always, as what the bands are measured from, and the bands
   // the price crosses: those between its farthest below the average and its
@@ -343,6 +336,11 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
 
   const last = s.length - 1;
   let path = "";
+  // With extended hours: where the regular session runs, the line through it
+  // alone, and the ground under it.
+  let spans: SessionSpans | null = null;
+  let regular = "";
+  let fill = "";
   let lines: { f: number; color: string; d: string }[] = [];
   let zones: { f: number; color: string; tint: number; d: string }[] = [];
   let labels: { label: string; x: number; y: number }[] = [];
@@ -370,7 +368,18 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     plotW = width - scale.width - namesW;
     xs = s.map((_, i) => (i * plotW) / last);
     ys = s.map((p) => plotY(p.p, lo, hi));
-    path = xs.map((x, i) => `${i ? "L" : "M"}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(" ");
+    path = linePath(xs, ys);
+    spans = sessionSpans(
+      s.map((p) => p.x),
+      xs,
+      plotW,
+    );
+    // The fill lies under the regular session only.
+    if (!spans) fill = `${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`;
+    else if (spans.open >= 0) {
+      regular = linePath(xs, ys, spans.open, spans.close);
+      fill = `${regular} L${xs[spans.close].toFixed(1)},${PLOT_BOTTOM} L${xs[spans.open].toFixed(1)},${PLOT_BOTTOM} Z`;
+    }
     // The line f from the average, as points along one run.
     const trace = (run: number[], f: number) =>
       run.map((i) => `${xs[i].toFixed(1)},${plotY((avg[i] as number) * (1 + f), lo, hi).toFixed(1)}`);
@@ -491,7 +500,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             className="hd-chart-tip"
             style={{ left: xs[scrub], transform: `translateX(-${(xs[scrub] / plotW) * 100}%)` }}
           >
-            {fmtCcy(s[scrub].p, ccy)} · {ccy} · {tipLabel(s[scrub].t, range)}
+            {fmtCcy(s[scrub].p, ccy)} · {ccy} · {tipLabel(s[scrub].t, range, s[scrub].x)}
           </div>
         )}
         {/* Hangs beside the crosshair, on the side with more room, so the
@@ -505,7 +514,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
                 : { left: xs[scrub] - LADDER_GAP, transform: "translateX(-100%)" }
             }
           >
-            <span className="hd-chart-ladder-when">{tipLabel(s[scrub].t, range)}</span>
+            <span className="hd-chart-ladder-when">{tipLabel(s[scrub].t, range, s[scrub].x)}</span>
             <span className="hd-chart-ladder-ccy">{ccy}</span>
             {rungs.map((r) => (
               <div key={r.label} className="hd-chart-rung" data-kind={r.kind}>
@@ -529,6 +538,8 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             height={CHART_H}
             role="img"
             aria-label={`${symbol} share price, ${RANGE_WORD[range]}${
+              spans ? ", with pre-market and after-hours trading" : ""
+            }${
               lines.length ? ", with its 200-day average and the bands about it that it crosses" : ""
             }${
               reportXs.length
@@ -551,6 +562,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
                 <stop offset="100%" stopColor="var(--ds-accent)" stopOpacity=".02" />
               </linearGradient>
             </defs>
+            <SessionShade spans={spans} />
             <ValueGrid ticks={scale.ticks} width={width} plotW={plotW} />
             <TimeGrid ticks={times} />
             {volume && <path d={volume} fill="none" stroke="var(--ds-muted)" strokeWidth={1.5} />}
@@ -564,7 +576,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
                     ))}
                   </g>
                 ) : (
-                  <path d={`${path} L${plotW},${PLOT_BOTTOM} L0,${PLOT_BOTTOM} Z`} fill={`url(#${gradId})`} />
+                  fill && <path d={fill} fill={`url(#${gradId})`} />
                 )}
                 {/* Under the bands and the price: they mark when, not what. */}
                 {reportXs.length > 0 && (
@@ -593,14 +605,27 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
                     {l.label}
                   </text>
                 ))}
+                {/* Faded where it runs through extended hours, the regular
+                    session drawn over it at full strength. */}
                 <path
                   d={path}
                   fill="none"
                   stroke="var(--ds-accent)"
+                  strokeOpacity={spans ? EXTENDED_OPACITY : 1}
                   strokeWidth={2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
+                {regular && (
+                  <path
+                    d={regular}
+                    fill="none"
+                    stroke="var(--ds-accent)"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                )}
                 <circle cx={xs[last]} cy={ys[last]} r={3} fill="var(--ds-accent)" />
                 {scrub != null && (
                   <g>
@@ -640,7 +665,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             type="button"
             className="hd-indicator"
             aria-pressed={bandsOn}
-            onClick={toggleBands}
+            onClick={() => setBandsOn(!bandsOn)}
           >
             {/* A band above the average, the average, a band below, as the chart stacks them. */}
             <span className="hd-indicator-bands" aria-hidden="true">
@@ -659,7 +684,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
             className="hd-indicator"
             aria-pressed={earningsOn}
             disabled={!earningsFits}
-            onClick={toggleEarnings}
+            onClick={() => setEarningsOn(!earningsOn)}
           >
             {/* One upright line, as the chart marks each report. */}
             <span className="hd-indicator-earnings" aria-hidden="true" />
@@ -667,6 +692,12 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
           </button>
           {earningsNote && <span className="hd-indicator-note">{earningsNote}</span>}
         </span>
+        <ExtendedHoursChip
+          fits={extendedFits}
+          on={extendedOn}
+          untraded={extended && !!pts && pts.length > 1 && !pts.some((p) => p.x)}
+          onToggle={() => setExtendedOn(!extendedOn)}
+        />
       </div>
     </>
   );

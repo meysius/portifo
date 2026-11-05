@@ -27,6 +27,11 @@ export const LABEL_INSET = 5; // a time label's gap from its guide
 
 export type ValueTick = { y: number; label: string };
 export type TimeTick = { x: number; label: string };
+// A bar struck outside the regular session, on a 1D with extended hours.
+export type Session = "pre" | "post";
+
+// How strongly the price line reads where it runs through extended hours.
+export const EXTENDED_OPACITY = 0.4;
 
 // Few enough digits to read at a glance, enough that neighbours differ:
 // 241 / 222 / 202, 63.1K / 62.8K, 0.0123.
@@ -37,6 +42,31 @@ function axisFormatter(hi: number, step: number) {
   const digits = Math.min(unit > 1 ? 2 : 4, Math.max(0, Math.ceil(-Math.log10(step / unit))));
   return (v: number) =>
     (v / unit).toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits }) + suffix;
+}
+
+// The line through points from…to (all of them by default), at their places.
+export function linePath(xs: number[], ys: number[], from = 0, to = xs.length - 1) {
+  let d = "";
+  for (let i = from; i <= to; i++) d += `${i > from ? "L" : "M"}${xs[i].toFixed(1)},${ys[i].toFixed(1)}`;
+  return d;
+}
+
+// Where a 1D's extended hours lie on the plot: the regular session's first
+// and last bar (-1 when it hasn't opened), and the stretches before its open
+// and after its close, each edge midway between the session's outermost bar
+// and its neighbour, on a whole pixel. Null when every bar is the regular
+// session's.
+export type SessionSpans = { open: number; close: number; shade: [number, number][] };
+
+export function sessionSpans(sessions: (Session | undefined)[], xs: number[], plotW: number): SessionSpans | null {
+  if (!sessions.some(Boolean)) return null;
+  const open = sessions.findIndex((s) => !s);
+  const close = sessions.findLastIndex((s) => !s);
+  if (open < 0) return { open, close, shade: [[0, plotW]] };
+  const shade: [number, number][] = [];
+  if (open > 0) shade.push([0, Math.round((xs[open - 1] + xs[open]) / 2)]);
+  if (close < xs.length - 1) shade.push([Math.round((xs[close] + xs[close + 1]) / 2), plotW]);
+  return { open, close, shade };
 }
 
 export function plotY(v: number, lo: number, hi: number) {

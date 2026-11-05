@@ -8,7 +8,7 @@ import {
   TransactionsInsert,
   TransactionsUpdate,
 } from "./portfolio.schema";
-import { MarketService, HistoryRange, HistoryPoint } from "@/domain/market/market.service";
+import { MarketService, HistoryRange, HistoryPoint, Session } from "@/domain/market/market.service";
 
 // The reconstructed value series, plus what could not be reconstructed from
 // real market data. A ticker with no price series used to be dropped from the
@@ -179,12 +179,17 @@ export class PortfolioService {
   //
   // `accountId` narrows the whole reconstruction — ledger, balances and the
   // opening-balance reconciliation — to one account of the portfolio.
+  //
+  // `extended` asks a 1D for the day's pre-market and after-hours trading too
+  // (see extendedGrid). The figures around the chart stay regular-session.
   async getPortfolioValueHistory(
     portfolioId: string,
     range: HistoryRange,
     displayCurrency: string,
     accountId?: string,
+    extended = false,
   ): Promise<PortfolioValueHistory> {
+    const extendedDay = extended && range === "1D";
     const accounts = (await this.portfolioRepo.listAccountsByPortfolio(portfolioId)).filter(
       (account) => !accountId || account.id === accountId,
     );
@@ -239,7 +244,7 @@ export class PortfolioService {
     // routes into the fallbacks below and is reported as estimated.
     const safeHistory = async (symbol: string): Promise<HistoryPoint[]> => {
       try {
-        return await this.marketService.getHistory(symbol, range);
+        return await this.marketService.getHistory(symbol, range, extendedDay);
       } catch {
         return [];
       }
@@ -256,15 +261,20 @@ export class PortfolioService {
     // holding onto a synthetic grid. A cash-only portfolio has no series at
     // all, and falls back to a synthetic daily one.
     const gridSource = tickers.map((t) => priceHistoryByTicker.get(t) ?? []).find((series) => series.length > 0) ?? [];
+    const sessionByTimestamp = new Map<string, Session>();
+    const sourceGrid = extendedDay
+      ? this.extendedGrid([...priceHistoryByTicker.values()], sessionByTimestamp)
+      : gridSource.map((p) => p.date);
     // Nothing is held before the first transaction, so the series starts there:
     // a price series reaching further back would draw years of zero.
-    const grid = (
-      gridSource.length > 0 ? gridSource.map((p) => p.date) : this.syntheticDateGrid(range, transactions[0].date)
-    ).filter((timestamp) => timestamp.slice(0, 10) >= transactions[0].date);
+    const grid = (sourceGrid.length > 0 ? sourceGrid : this.syntheticDateGrid(range, transactions[0].date)).filter(
+      (timestamp) => timestamp.slice(0, 10) >= transactions[0].date,
+    );
 
     const quotes = await this.marketService.getQuotes(tickers).catch(() => []);
     const nativeCurrencyByTicker = new Map(quotes.map((q) => [q.symbol, q.currency]));
     const livePriceByTicker = new Map(quotes.map((q) => [q.symbol, q.price]));
+    const previousCloseByTicker = new Map(quotes.map((q) => [q.symbol, q.previousClose]));
 
     // Balance-only currencies belong here too: a CAD balance with no CAD
     // transaction still needs a CAD rate, and without this it converted at 1.
@@ -345,6 +355,11 @@ export class PortfolioService {
       const idx = this.advanceCursor(series, timestamp, priceCursors.get(ticker) ?? -1);
       priceCursors.set(ticker, idx);
       if (idx < 0) {
+        // An extended day opens before most listings trade (Toronto's day
+        // starts at the open, a thin stock's at its first trade), and until
+        // then a holding is worth what it closed at the day before.
+        const previousClose = previousCloseByTicker.get(ticker);
+        if (extendedDay && previousClose != null && previousClose > 0) return previousClose;
         estimatedTickers.add(ticker);
         return series[0].close;
       }
@@ -404,7 +419,8 @@ export class PortfolioService {
         const nativeCurrency = nativeCurrencyByTicker.get(ticker) ?? displayCurrency;
         value += shares * price * fxRateAt(nativeCurrency, timestamp);
       }
-      points.push({ date: timestamp, close: value });
+      const session = sessionByTimestamp.get(timestamp);
+      points.push(session ? { date: timestamp, close: value, session } : { date: timestamp, close: value });
     }
 
     // Dated after the last point (a deposit today, before today's first bar):
@@ -422,6 +438,31 @@ export class PortfolioService {
       reconciledCash: [...openingCash].map(([currency, amount]) => ({ currency, amount })),
       netDeposits,
     };
+  }
+
+  // An extended 1D's timestamps: every bar any holding traded in, from the
+  // earliest pre-market to the latest after-hours, since one listing's
+  // extended hours (New York's) are another's closed ones (Toronto's). Each
+  // listing's series is already its own latest day, but those can differ (at
+  // 7am New York's pre-market has begun on a day Toronto hasn't), so only the
+  // last run of them counts: everything after the last overnight gap. A
+  // timestamp is the regular session's while any holding trades regular
+  // hours; otherwise it takes its session from the bars struck then, written
+  // into `sessions`.
+  private extendedGrid(seriesList: HistoryPoint[][], sessions: Map<string, Session>): string[] {
+    const regular = new Set<string>();
+    for (const series of seriesList) {
+      for (const p of series) {
+        if (!p.session) regular.add(p.date);
+        else if (!regular.has(p.date)) sessions.set(p.date, p.session);
+      }
+    }
+    for (const date of regular) sessions.delete(date);
+    const all = [...new Set(seriesList.flat().map((p) => p.date))].sort();
+    const ts = all.map((d) => new Date(d).getTime());
+    let start = ts.length - 1;
+    while (start > 0 && ts[start] - ts[start - 1] <= 2 * 3_600_000) start--;
+    return all.slice(Math.max(start, 0));
   }
 
   // `series` is sorted ascending by date; advances `from` to the last index

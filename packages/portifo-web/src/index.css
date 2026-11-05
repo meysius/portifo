@@ -2866,6 +2866,36 @@ ion-toast {
   color: var(--ds-secondary);
 }
 
+/* A line running on from the regular session, solid, into extended hours,
+   faded, as the chart draws it; the price line's accent when on. */
+.hd-indicator-extended {
+  display: flex;
+  align-items: center;
+  width: 12px;
+  height: 10px;
+  color: var(--ds-muted);
+}
+
+.hd-indicator-extended span {
+  height: 2px;
+  background: currentColor;
+}
+
+.hd-indicator-extended span:first-child {
+  width: 5px;
+  border-radius: 1px 0 0 1px;
+}
+
+.hd-indicator-extended span:last-child {
+  flex: 1;
+  border-radius: 0 1px 1px 0;
+  opacity: 0.4;
+}
+
+.hd-indicator[aria-pressed="true"] .hd-indicator-extended {
+  color: var(--ds-accent);
+}
+
 .hd-indicator-value {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -3745,6 +3775,12 @@ ion-modal.ds-sheet {
 
 .po-tip-date {
   color: var(--ds-secondary);
+}
+
+/* The Extended hours toggle under the time scale, laid out as Holding
+   Detail's indicator row (.hd-indicators). */
+.po-indicators {
+  margin: 6px 0 0;
 }
 
 .po-chart-empty {

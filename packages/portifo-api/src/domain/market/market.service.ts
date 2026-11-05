@@ -1,4 +1,5 @@
 import YahooFinance from "yahoo-finance2";
+import type { ChartMetaTradingPeriods } from "yahoo-finance2/modules/chart";
 import { SWLogger } from "simple-wire";
 
 export type Quote = {
@@ -58,8 +59,10 @@ function extendedHours(q: any): ExtendedHours | undefined {
     .sort((a, b) => b.time.localeCompare(a.time))[0];
 }
 
-// Volume is shares traded in the bar; the portfolio series has none.
-export type HistoryPoint = { date: string; close: number; volume?: number };
+// Volume is shares traded in the bar; the portfolio series has none. A bar
+// struck outside the regular session names it; only an extended 1D has any.
+export type HistoryPoint = { date: string; close: number; volume?: number; session?: Session };
+export type Session = "pre" | "post";
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
 
 // A moving average read off at one of a range's bars.
@@ -115,6 +118,68 @@ function historyWindow(range: HistoryRange): { period1: Date; interval: "5m" | "
       period1.setFullYear(period1.getFullYear() - 10);
       return { period1, interval: "1wk" };
   }
+}
+
+// Yahoo's trading periods arrive as epoch seconds or as Dates, whatever the
+// schema says.
+function toMs(t: unknown): number {
+  return typeof t === "number" ? t * 1000 : new Date(t as string | Date).getTime();
+}
+
+const SESSION_GAP_MS = 2 * 3_600_000;
+
+// The last session: everything after the last overnight gap. Bars are 5
+// minutes apart within a session, so any gap over 2h is a session boundary.
+function lastSession(points: HistoryPoint[]): HistoryPoint[] {
+  const ts = points.map((p) => new Date(p.date).getTime());
+  let start = ts.length - 1;
+  while (start > 0 && ts[start] - ts[start - 1] <= SESSION_GAP_MS) start--;
+  return points.slice(start);
+}
+
+// One trading day with its extended hours: from the pre-market's start, and
+// the regular session's open and close.
+type TradingDay = { start: number; open: number; close: number };
+
+// A listing's trading days, when Yahoo sends extended hours for it: only then
+// are its periods split into pre, regular and post (an object, where regular
+// hours alone come as a list of lists). US listings mostly have them; Toronto,
+// London, crypto, FX and indices don't.
+function extendedDays(periods: unknown): TradingDay[] {
+  if (!periods || Array.isArray(periods)) return [];
+  const { pre = [], regular = [] } = periods as ChartMetaTradingPeriods;
+  const preStarts = new Map(pre.flat().map((p) => [toMs(p.end), toMs(p.start)]));
+  return regular
+    .flat()
+    .map((r) => {
+      const open = toMs(r.start);
+      // Its pre-market ends at its open.
+      return { start: preStarts.get(open) ?? open, open, close: toMs(r.end) };
+    })
+    .filter((d) => d.close > d.open)
+    .sort((a, b) => a.start - b.start);
+}
+
+// The latest trading day from its pre-market to its after-hours, each bar
+// outside the regular session named for its side of it. In the first minutes
+// of a pre-market there is one bar or none, nothing to draw a line through, so
+// the day before stands until there are two.
+function lastExtendedDay(points: HistoryPoint[], days: TradingDay[]): HistoryPoint[] {
+  const ts = points.map((p) => new Date(p.date).getTime());
+  let d = days.findLastIndex((day) => day.start <= ts[ts.length - 1]);
+  if (d < 0) return lastSession(points);
+  let from = ts.findIndex((t) => t >= days[d].start);
+  let to = ts.length;
+  if (to - from < 2 && d > 0) {
+    to = from;
+    d--;
+    from = ts.findIndex((t) => t >= days[d].start);
+  }
+  const { open, close } = days[d];
+  return points.slice(from, to).map((p, i) => {
+    const t = ts[from + i];
+    return t < open ? { ...p, session: "pre" } : t >= close ? { ...p, session: "post" } : p;
+  });
 }
 
 // A background job waits on quotes, and a hung one would hold its slot forever.
@@ -181,23 +246,23 @@ export class MarketService {
     return rates;
   }
 
-  async getHistory(symbol: string, range: HistoryRange): Promise<HistoryPoint[]> {
+  // Regular hours only, unless `extended` asks a 1D for the day's pre-market
+  // and after-hours trading too, each such bar named by its session. The
+  // figures around a chart (the price, today's move) stay regular-session
+  // either way.
+  async getHistory(symbol: string, range: HistoryRange, extended = false): Promise<HistoryPoint[]> {
     const { period1, interval } = historyWindow(range);
-    // Regular hours only: the chart's reference lines (prev close, today's
-    // change) are regular-session figures, so extended-hours bars would end
-    // the line somewhere the readout does not.
-    const result = await this.client.chart(symbol, { period1, period2: new Date(), interval, includePrePost: false });
+    const includePrePost = extended && range === "1D";
+    const result = await this.client.chart(symbol, { period1, period2: new Date(), interval, includePrePost });
     const points: HistoryPoint[] = result.quotes
       .filter((q) => q.close != null)
       .map((q) => ({ date: q.date.toISOString(), close: q.close as number, volume: q.volume ?? 0 }));
     if (range !== "1D" || points.length === 0) return points;
-    // Keep the last session: everything after the last overnight gap. Bars are
-    // 5 minutes apart within a session (extended hours included, when Yahoo
-    // sends them), so any gap over 2h is a session boundary.
-    const ts = points.map((p) => new Date(p.date).getTime());
-    let start = ts.length - 1;
-    while (start > 0 && ts[start] - ts[start - 1] <= 2 * 3_600_000) start--;
-    return points.slice(start);
+    // The last session, not the last 24h (see historyWindow). A listing that
+    // trades outside regular hours has its days marked out by Yahoo; a thin
+    // pre-market can go quiet for two hours, so a gap can't be trusted there.
+    const days = includePrePost ? extendedDays(result.meta.tradingPeriods) : [];
+    return days.length ? lastExtendedDay(points, days) : lastSession(points);
   }
 
   // The `window`-day simple moving average of daily closes, read off at each
@@ -209,11 +274,13 @@ export class MarketService {
   // days to 5 sessions, plus slack for holidays) that the range's first bar
   // already has a full window behind it; a bar without one gets no point, so
   // a young listing's line starts late.
-  async getSma(symbol: string, range: HistoryRange, window: number): Promise<IndicatorPoint[]> {
+  // With `extended` (1D only), the bars include the day's pre-market and
+  // after-hours: a pre-market bar takes the average up to the session before.
+  async getSma(symbol: string, range: HistoryRange, window: number, extended = false): Promise<IndicatorPoint[]> {
     const from = historyWindow(range).period1;
     from.setDate(from.getDate() - Math.ceil((window * 7) / 5) - 21);
     const [bars, daily] = await Promise.all([
-      this.getHistory(symbol, range),
+      this.getHistory(symbol, range, extended),
       this.client.chart(symbol, { period1: from, period2: new Date(), interval: "1d", includePrePost: false }),
     ]);
     const closes = daily.quotes
