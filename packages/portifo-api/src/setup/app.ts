@@ -18,6 +18,7 @@ import { DrizzleWatchlistRepo } from "@/domain/watchlist/watchlist.repo";
 import { WatchlistService } from "@/domain/watchlist/watchlist.service";
 import { DrizzleAlertRepo } from "@/domain/alert/alert.repo";
 import { AlertService } from "@/domain/alert/alert.service";
+import { DeployService } from "@/domain/deploy/deploy.service";
 import { UsersController } from "@/controllers/users.controller";
 import { AuthController } from "@/controllers/auth.controller";
 import { PortfolioController } from "@/controllers/portfolio.controller";
@@ -25,6 +26,7 @@ import { MarketController } from "@/controllers/market.controller";
 import { PushController } from "@/controllers/push.controller";
 import { WatchlistController } from "@/controllers/watchlist.controller";
 import { AlertController } from "@/controllers/alert.controller";
+import { DeployHookController } from "@/controllers/deploy-hook.controller";
 import { CheckAlertsJob } from "@/jobs/alert.job";
 import { SendPushJob } from "@/jobs/push.job";
 
@@ -61,6 +63,7 @@ export function buildApp(): App {
   const watchlistService = new WatchlistService(logger, watchlistRepo);
   const alertRepo = new DrizzleAlertRepo(db);
   const alertService = new AlertService(logger, alertRepo, liveQuoteService, pushService);
+  const deployService = new DeployService(logger, cfg);
 
   const controllers: SWController[] = [
     new UsersController(logger, identityService),
@@ -70,6 +73,7 @@ export function buildApp(): App {
     new PushController(logger, cfg, authService, identityService, pushService),
     new WatchlistController(logger, authService, identityService, watchlistService),
     new AlertController(logger, authService, identityService, alertService),
+    new DeployHookController(logger, cfg, deployService),
   ];
 
   const jobs: BackgroundJob[] = [new CheckAlertsJob(alertService), new SendPushJob(pushService)];

@@ -1,0 +1,15 @@
+[Unit]
+Description=Deploy the latest Portifo release from GitHub
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/portifo-deploy
+TimeoutStartSec=15min
+StateDirectory=portifo-deploy
+StateDirectoryMode=0700
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/portifo

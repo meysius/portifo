@@ -14,6 +14,12 @@ export const ConfigSchema = z.object({
   VAPID_PUBLIC_KEY: z.string(),
   VAPID_PRIVATE_KEY: z.string(),
   VAPID_CONTACT_EMAIL: z.string(),
+
+  // GitHub's release webhook (deploy/README.md). Unset, POST /hooks/github
+  // answers 404, as in development.
+  GITHUB_WEBHOOK_SECRET: z.string().min(32).optional(),
+  // Watched by deploy/portifo-deploy.path on the server.
+  DEPLOY_REQUEST_FILE: z.string().default('/opt/portifo/shared/deploy-requested'),
 }) satisfies z.ZodType<SWConfig>;
 
 export type Config = z.infer<typeof ConfigSchema>;

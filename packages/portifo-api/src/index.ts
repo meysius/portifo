@@ -4,11 +4,19 @@ import express, { Router, Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { buildApp } from "@/setup/app";
 import { AsyncContext } from "@/setup/async-context";
+import type { RawBodyRequest } from "@/controllers/deploy-hook.controller";
 
 const app = buildApp();
 
 const expressApp = express();
-expressApp.use(express.json());
+expressApp.use(
+  express.json({
+    // Webhooks are signed over the body exactly as sent (deploy-hook.controller.ts).
+    verify: (req, _res, buf) => {
+      if (req.url?.startsWith("/hooks/")) (req as RawBodyRequest).rawBody = buf;
+    },
+  }),
+);
 expressApp.use(cookieParser());
 
 expressApp.use((req: Request, _res: Response, next: NextFunction) => {

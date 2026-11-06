@@ -1,0 +1,98 @@
+#!/bin/bash
+# Deploys the latest Portifo release from GitHub, if it isn't live already.
+#
+# Installed as /usr/local/sbin/portifo-deploy (root:root, 0755) and run only
+# by portifo-deploy.service: every 5 minutes, and right after GitHub's release
+# webhook reaches the API (see README.md). Install it by hand. Never install
+# it from a release: everything a release contains runs as the portifo user,
+# so a push to main can't change what runs as root.
+set -euo pipefail
+
+REPO=meysius/portifo
+APP_DIR=/opt/portifo
+HEALTH_URL=http://127.0.0.1:3000/
+KEEP=5
+FAILED_FILE=/var/lib/portifo-deploy/failed-commit   # StateDirectory, root only
+
+as_app() { runuser -u portifo -- "$@"; }
+
+switch_to() {
+  as_app ln -sfn "$1" "$APP_DIR/current.next"
+  as_app mv -T "$APP_DIR/current.next" "$APP_DIR/current"
+}
+
+healthy() {
+  local i
+  for i in $(seq 30); do
+    if curl -fsS -o /dev/null --max-time 2 "$HEALTH_URL"; then
+      # The job queue starts after the port opens and exits the process if it
+      # can't, so make sure the service is still up a few seconds later.
+      sleep 5
+      systemctl is-active --quiet portifo
+      return
+    fi
+    sleep 1
+  done
+  return 1
+}
+
+# Which release is latest? GitHub decides, not whoever woke us up.
+manifest=$(curl -fsSL --max-time 30 "https://github.com/$REPO/releases/latest/download/release.txt")
+commit=$(sed -n 's/^commit=//p' <<<"$manifest")
+sha256=$(sed -n 's/^sha256=//p' <<<"$manifest")
+if [[ ! $commit =~ ^[0-9a-f]{40}$ || ! $sha256 =~ ^[0-9a-f]{64}$ ]]; then
+  echo "release.txt is malformed" >&2
+  exit 1
+fi
+
+release="$APP_DIR/releases/$commit"
+previous=$(readlink -f "$APP_DIR/current" || true)
+if [[ $previous == "$release" ]]; then
+  echo "Up to date at ${commit:0:7}"
+  exit 0
+fi
+if [[ -f $FAILED_FILE && $(<"$FAILED_FILE") == "$commit" ]]; then
+  echo "Not retrying ${commit:0:7}: it failed to start last time. Push a fix." >&2
+  exit 1
+fi
+
+echo "Deploying ${commit:0:7} (live: ${previous##*/})"
+tarball="$APP_DIR/incoming.tar.gz"
+as_app curl -fsSL --max-time 600 -o "$tarball" \
+  "https://github.com/$REPO/releases/download/deploy-$commit/portifo.tar.gz"
+if ! sha256sum --quiet -c - <<<"$sha256  $tarball"; then
+  as_app rm -f "$tarball"
+  echo "portifo.tar.gz doesn't match release.txt" >&2
+  exit 1
+fi
+
+as_app rm -rf "$release"
+as_app mkdir -p "$release"
+as_app tar -xzf "$tarball" -C "$release"
+as_app rm -f "$tarball"
+
+# Migrations only go forward. A rollback below runs the previous code against
+# the new schema, so they have to stay compatible with the release before.
+as_app bash "$release/deploy/migrate.sh" "$release" "$APP_DIR"
+
+switch_to "$release"
+systemctl restart portifo
+if ! healthy; then
+  echo "${commit:0:7} didn't come up. Rolling back to ${previous##*/}" >&2
+  echo "$commit" >"$FAILED_FILE"
+  if [[ -d $previous ]]; then
+    switch_to "$previous"
+    systemctl restart portifo
+  fi
+  exit 1
+fi
+rm -f "$FAILED_FILE"
+echo "Live at ${commit:0:7}"
+
+# Keep the newest $KEEP releases (by date), never the two just used.
+for name in $(ls -1t "$APP_DIR/releases" | tail -n +$((KEEP + 1))); do
+  dir="$APP_DIR/releases/$name"
+  if [[ $name =~ ^[0-9a-f]{40}$ && $dir != "$release" && $dir != "$previous" ]]; then
+    as_app rm -rf -- "$dir"
+  fi
+done

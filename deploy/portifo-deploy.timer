@@ -1,0 +1,11 @@
+[Unit]
+Description=Check GitHub for a new Portifo release every 5 minutes
+
+# The webhook (portifo-deploy.path) deploys within seconds. This catches what
+# it misses: a lost delivery, or the API being down when the release lands.
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target

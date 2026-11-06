@@ -1,0 +1,12 @@
+[Unit]
+Description=Deploy when GitHub's release webhook reaches the API
+
+# The API writes this file after checking the webhook's signature
+# (DeployService.requestDeploy). It carries nothing: the deploy looks up the
+# latest release on GitHub itself.
+[Path]
+PathChanged=/opt/portifo/shared/deploy-requested
+Unit=portifo-deploy.service
+
+[Install]
+WantedBy=multi-user.target
