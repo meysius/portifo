@@ -20,6 +20,8 @@ function wantsExtended(raw: unknown): boolean {
 // included (SHOP.TO, EURUSD=X), never this long.
 const MAX_STREAM_SYMBOLS = 500;
 const MAX_SYMBOL_LENGTH = 24;
+// The watchlist's lines are a chart request each.
+const MAX_SPARK_SYMBOLS = 100;
 
 // A stream sends what moved at most this often: a busy listing trades several
 // times a second, and the app needs only its latest price.
@@ -49,6 +51,7 @@ export class MarketController implements SWController {
     router.get("/market/stream", this.streamQuotes);
     router.get("/market/fx", this.getFx);
     router.get("/market/history", this.getHistory);
+    router.get("/market/sparks", this.getSparks);
     router.get("/market/sma", this.getSma);
     router.get("/market/earnings", this.getEarnings);
     router.get("/market/search", this.searchSymbols);
@@ -160,6 +163,28 @@ export class MarketController implements SWController {
     } catch (err) {
       this.logger.error("MarketController.getHistory failed");
       res.status(502).json({ error: "Failed to fetch history" });
+    }
+  };
+
+  // The watchlist's lines, by symbol; `extended=1` adds the day's pre-market
+  // and after hours.
+  private getSparks = async (req: Request, res: Response): Promise<void> => {
+    if (!(await this.authenticate(req))) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+
+    const symbols = [...new Set(parseSymbols(req.query.symbols))];
+    if (symbols.length > MAX_SPARK_SYMBOLS || symbols.some((s) => s.length > MAX_SYMBOL_LENGTH)) {
+      res.status(400).json({ error: "Invalid symbols" });
+      return;
+    }
+
+    try {
+      res.json(await this.marketService.getSparks(symbols, wantsExtended(req.query.extended)));
+    } catch (err) {
+      this.logger.error("MarketController.getSparks failed");
+      res.status(502).json({ error: "Failed to fetch charts" });
     }
   };
 

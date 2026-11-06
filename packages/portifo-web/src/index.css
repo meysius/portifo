@@ -5449,10 +5449,10 @@ ion-modal.ac-create-modal {
 
 /* ---------- Watchlist ----------
    The symbols a person follows: a search field under the heading whose
-   results replace the list while it holds a query, and Portfolio's
-   holding-row metrics for each symbol. A row pushes the symbol's page, which
-   borrows the holding page's .hd-* classes. Scoped to .wl-page and
-   .wl-symbol-page; reads only --ds-* tokens. */
+   results replace the list while it holds a query, and a row per symbol on
+   Portfolio's holding-row metrics: identity, the day's line, the price. A row
+   pushes the symbol's page, which borrows the holding page's .hd-* classes.
+   Scoped to .wl-page and .wl-symbol-page; reads only --ds-* tokens. */
 
 /* ── heading and search ──────────────────────────────────────────────────── */
 /* The first thing on the page, so it clears the status bar itself. */
@@ -5492,14 +5492,6 @@ ion-modal.ac-create-modal {
 .wl-list {
   margin-top: 8px;
   padding: 0 var(--ds-gutter);
-}
-
-.wl-caption {
-  display: flex;
-  justify-content: space-between;
-  padding: 13px 0 2px;
-  font-size: var(--ds-fs-9);
-  color: var(--ds-muted);
 }
 
 /* Portfolio's holding rows: 15px block padding, 11px gap, a highlight that
@@ -5542,14 +5534,6 @@ ion-modal.ac-create-modal {
   color: var(--ds-secondary);
 }
 
-.wl-end {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  flex-shrink: 0;
-  max-width: 50%;
-}
-
 /* The code sits beside the price: "$" alone is US, Canadian or Australian. */
 .wl-price {
   display: flex;
@@ -5569,8 +5553,8 @@ ion-modal.ac-create-modal {
 }
 
 .wl-page .wl-move {
-  margin-top: 6px;
-  font-size: var(--ds-fs-9);
+  font-size: var(--ds-fs-10);
+  font-weight: 500;
 }
 
 /* Outside regular hours: the session, its price, the move from the close. */
@@ -5579,7 +5563,6 @@ ion-modal.ac-create-modal {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 2px 5px;
-  margin-top: 6px;
   font-size: var(--ds-fs-9);
   color: var(--ds-secondary);
 }
@@ -5592,6 +5575,87 @@ ion-modal.ac-create-modal {
   flex-shrink: 0;
   font-size: var(--ds-fs-9);
   color: var(--ds-muted);
+}
+
+/* The list as one grid: every row takes its columns from it (subgrid), so the
+   lines stand in one column down the list, whatever each price's width.
+     symbol           line    USD $181.60
+     company          line         −9.3%
+                  Overnight $185.92 +2.4%      (outside regular hours) */
+.wl-board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 64px auto;
+  column-gap: 14px;
+}
+
+.wl-page .wl-board .wl-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: baseline;
+  gap: 0 14px;
+}
+
+@supports not (grid-template-columns: subgrid) {
+  .wl-page .wl-board .wl-row {
+    grid-template-columns: minmax(0, 1fr) 64px auto;
+  }
+}
+
+.wl-board .wl-symbol {
+  grid-area: 1 / 1;
+}
+
+.wl-board .wl-meta {
+  grid-area: 2 / 1;
+}
+
+.wl-board .wl-spark {
+  grid-area: 1 / 2 / 3;
+  align-self: center;
+  width: 64px;
+  height: 30px;
+}
+
+.wl-board .wl-price {
+  grid-area: 1 / 3;
+  justify-self: end;
+}
+
+.wl-board .wl-move {
+  grid-area: 2 / 3;
+  justify-self: end;
+  margin-top: 5px;
+}
+
+.wl-board .wl-extended {
+  grid-area: 3 / 2 / 4 / 4;
+  margin-top: 7px;
+}
+
+.wl-board .wl-no-quote {
+  grid-area: 1 / 3 / 3;
+  align-self: center;
+  justify-self: end;
+}
+
+/* The day in ink over a dashed previous close; colour stays on the figures. */
+.wl-spark-base {
+  stroke: var(--ds-muted);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.wl-spark-line {
+  fill: none;
+  stroke: var(--ds-text);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wl-spark-dot {
+  fill: var(--ds-text);
 }
 
 /* A result's mark: a tinted + while it can be added, a bare check once it's

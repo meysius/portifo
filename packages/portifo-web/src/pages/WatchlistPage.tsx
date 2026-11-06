@@ -4,27 +4,38 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useHistory } from "react-router-dom";
 import { isOn } from "../api/alerts";
-import { EXTENDED_LABEL, searchSymbols } from "../api/market";
-import type { Quote, SymbolResult } from "../api/market";
+import { EXTENDED_LABEL, getSparks, searchSymbols } from "../api/market";
+import type { Quote, Spark, SymbolResult } from "../api/market";
 import StickyTitleBar from "../components/StickyTitleBar";
+import WatchSpark from "../components/WatchSpark";
 import { useAlerts } from "../context/AlertsContext";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { useWatchlist } from "../context/WatchlistContext";
+import { EXTENDED_HOURS_KEY, useChartPref } from "../lib/chartPrefs";
 import { fmtCcy, fmtSignedCcy, fmtSignedPct } from "../lib/fx";
 import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 
 // The Watchlist tab: symbols you follow, owned or not. The search field sits
 // under the heading; while it holds a query, its results take the list's
 // place and tapping one adds it (or, once added, takes it off again). A row on
-// the list shows the latest price and today's move, plus the pre-market or
-// after-hours price outside regular hours, and pushes the symbol's own page,
+// the list reads across: the symbol and company, the day's line (WatchSpark),
+// then the price and today's move, plus the pre-market, after-hours or
+// overnight price outside regular hours. The lines sit in one column, so the
+// list reads as a set of small charts. A row pushes the symbol's own page,
 // with its chart and price alerts. A bell marks a symbol with an alert on.
 //
 // The list belongs to the signed-in user, not the active portfolio, and every
 // price stays in the symbol's own currency, with its code beside it.
 
 const SEARCH_DEBOUNCE_MS = 250;
+// The lines are fetched again this often while any listed market trades.
+const SPARK_REFRESH_MS = 5 * 60_000;
+const TRADING_STATES = new Set(["REGULAR", "PRE", "POST"]);
+
+// The lines last fetched, with extended hours and without, so a remount
+// (switching tabs remounts the stack) draws them at once.
+const sparkCache = new Map<boolean, Record<string, Spark>>();
 
 const icon = (body: ReactNode, size = 20) => (
   <svg
@@ -83,6 +94,8 @@ function WatchlistPage() {
   const { symbols, loadFailed, names, reload, add, remove } = useWatchlist();
   const { alerts, reload: reloadAlerts } = useAlerts();
   const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
+  // The charts' Extended hours setting: the lines follow it too.
+  const [extendedOn] = useChartPref(EXTENDED_HOURS_KEY);
 
   // A newly listed symbol needs its quote; the ones already cached are
   // refreshed each time the page is entered (switching to the tab remounts
@@ -94,18 +107,56 @@ function WatchlistPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbolsKey]);
 
+  // Each day's line: fetched with the list, again on every visit and pull,
+  // and every five minutes while a listed market trades. Yahoo has no bars
+  // overnight, so then only the streamed trade moves a line.
+  const [sparks, setSparks] = useState<Record<string, Spark>>(() => sparkCache.get(extendedOn) ?? {});
+  const [sparkFetches, setSparkFetches] = useState(0);
+  useEffect(() => {
+    setSparks(sparkCache.get(extendedOn) ?? {});
+  }, [extendedOn]);
+  useEffect(() => {
+    if (!symbols?.length) return;
+    let live = true;
+    getSparks(symbols, extendedOn)
+      .then((next) => {
+        const merged = { ...sparkCache.get(extendedOn), ...next };
+        sparkCache.set(extendedOn, merged);
+        if (live) setSparks(merged);
+      })
+      // Without them the rows draw without lines.
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [symbolsKey, extendedOn, sparkFetches]);
+  const trading = (symbols ?? []).some((s) => TRADING_STATES.has(quotes[s]?.marketState ?? ""));
+  useEffect(() => {
+    if (!trading) return;
+    const id = setInterval(() => {
+      if (!document.hidden) setSparkFetches((n) => n + 1);
+    }, SPARK_REFRESH_MS);
+    return () => clearInterval(id);
+  }, [trading]);
+
   const symbolsRef = useRef(symbols);
   symbolsRef.current = symbols;
+  // The first entry is the mount, which has just fetched everything.
+  const entered = useRef(false);
   useIonViewWillEnter(() => {
     const list = symbolsRef.current;
     if (list?.length) refreshMarket(list);
     reloadAlerts();
+    if (entered.current) setSparkFetches((n) => n + 1);
+    entered.current = true;
   }, [refreshMarket, reloadAlerts]);
 
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     try {
       const [list] = await Promise.all([reload(), reloadAlerts()]);
       if (list?.length) await refreshMarket(list);
+      setSparkFetches((n) => n + 1);
     } finally {
       e.detail.complete();
     }
@@ -171,11 +222,7 @@ function WatchlistPage() {
       </section>
     ) : (
       <>
-        <div className="wl-list">
-          <div className="wl-caption">
-            <span>Symbol / company</span>
-            <span>Price / today</span>
-          </div>
+        <div className="wl-list wl-board">
           {symbols.map((symbol) => {
             const q = quotes[symbol];
             const name = q?.shortName ?? names[symbol];
@@ -196,20 +243,19 @@ function WatchlistPage() {
                   .join(", ")}
                 onClick={() => openSymbol(symbol)}
               >
-                <span className="wl-identity">
-                  <span className="wl-symbol">
-                    {symbol}
-                    {alerted.has(symbol) && <span className="wl-alert-mark">{ICONS.bell}</span>}
-                  </span>
-                  {name && <span className="wl-meta">{name}</span>}
+                <span className="wl-symbol">
+                  {symbol}
+                  {alerted.has(symbol) && <span className="wl-alert-mark">{ICONS.bell}</span>}
                 </span>
+                {name && <span className="wl-meta">{name}</span>}
+                <WatchSpark spark={sparks[symbol]} quote={q} extended={extendedOn} />
                 {q ? (
-                  <span className="wl-end">
+                  <>
                     <span className="wl-price">
                       <span className="wl-ccy">{q.currency}</span>
                       <span className="money">{fmtCcy(q.price, q.currency)}</span>
                     </span>
-                    <span className={`wl-move money ${tone(q.changePercent)}`}>{today(q)}</span>
+                    <span className={`wl-move money ${tone(q.changePercent)}`}>{fmtSignedPct(q.changePercent)}</span>
                     {q.extended && (
                       <span className="wl-extended">
                         {EXTENDED_LABEL[q.extended.session]}
@@ -219,7 +265,7 @@ function WatchlistPage() {
                         </span>
                       </span>
                     )}
-                  </span>
+                  </>
                 ) : (
                   !loading.market && <span className="wl-no-quote">No price</span>
                 )}
@@ -228,6 +274,8 @@ function WatchlistPage() {
           })}
         </div>
         <p className="wl-footer">
+          The dashed line is the previous close
+          <br />
           Prices in each symbol’s own currency
           <br />
           The same watchlist in every portfolio

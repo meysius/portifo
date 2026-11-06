@@ -18,6 +18,7 @@ import {
 } from "../lib/chartAxis";
 import type { Session, SessionSpans } from "../lib/chartAxis";
 import { EARNINGS_KEY, EXTENDED_HOURS_KEY, SMA_BANDS_KEY, useChartPref } from "../lib/chartPrefs";
+import { DAY_BAR_MS, barStart, latestTrade, withLatest } from "../lib/liveSeries";
 import { fmtCcy, fmtDay, fmtSignedPct, yahooQuoteUrl } from "../lib/fx";
 import ExtendedHoursChip from "./ExtendedHoursChip";
 import SessionShade from "./SessionShade";
@@ -59,7 +60,7 @@ import ValueGrid from "./ValueGrid";
 // regular session's.
 //
 // On 1D the line runs on to the latest trade as the quote streams in, and the
-// price tagged on the scale moves with it (see withLatest): the regular
+// price tagged on the scale moves with it (see lib/liveSeries): the regular
 // session's trades, and with Extended hours those outside it too, overnight
 // included.
 
@@ -78,33 +79,6 @@ const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
 
 // Price and shares traded per bar, and its session when it isn't the regular one.
 type Pt = { t: number; p: number; v: number; x?: Session };
-
-// 1D's bars are five minutes apart, each stamped with its start.
-const DAY_BAR_MS = 5 * 60_000;
-const barStart = (t: number) => t - (t % DAY_BAR_MS);
-
-// The quote's latest trade: its regular price, or with extended hours drawn,
-// the trade outside the session that followed it.
-function latestTrade(quote: Quote, extended: boolean): Pt | null {
-  const regular = quote.marketTime ? { t: Date.parse(quote.marketTime), p: quote.price, v: 0 } : null;
-  const ext = extended ? quote.extended : undefined;
-  if (ext && (!regular || Date.parse(ext.time) > regular.t)) {
-    return { t: Date.parse(ext.time), p: ext.price, v: 0, x: ext.session };
-  }
-  return regular;
-}
-
-// A 1D's bars with the latest trade at the end. Within the last bar's five
-// minutes (the close, a second after 4 PM, falls in the 4 PM bar) it moves
-// that bar; past them it is a bar of its own, until a refetch brings Yahoo's.
-// Yahoo's chart has no overnight bars, so overnight it is the one point past
-// the day's 8 PM close.
-function withLatest(s: Pt[], trade: Pt | null): Pt[] {
-  const end = s[s.length - 1];
-  if (!trade || !end || !(trade.t > end.t) || !(trade.p > 0)) return s;
-  if (trade.t - barStart(end.t) <= DAY_BAR_MS) return [...s.slice(0, -1), { ...end, t: trade.t, p: trade.p, x: trade.x }];
-  return [...s, trade];
-}
 
 // One line's reading in the scrub readout.
 type Rung = { color: string; label: string; v: number; kind: "band" | "sma" | "price" };
@@ -323,7 +297,8 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
   // On 1D, the latest trade the quote has streamed in. Once it runs past the
   // fetched bars, they're fetched again five minutes on, and every five
   // minutes while it stays ahead; not overnight, which Yahoo doesn't chart.
-  const trade = range === "1D" ? latestTrade(quote, extended) : null;
+  const latest = range === "1D" ? latestTrade(quote, extended) : null;
+  const trade: Pt | null = latest && { ...latest, v: 0 };
   const fetchedEnd = pts?.length ? pts[pts.length - 1].t : null;
   const behind =
     trade != null && trade.x !== "overnight" && fetchedEnd != null && trade.t - barStart(fetchedEnd) > DAY_BAR_MS;
