@@ -12,6 +12,9 @@ Portifo — a portfolio tracker mobile app (multi-currency investments + cash, u
 ## How to work
 Always check if a development server is running already on the expected ports (`:5173` for web, `:3000` for API). if not never try to start one in the background, always ask user to do this manually.
 
+## Production deploys
+Pushing to `main` publishes a GitHub release that the server pulls; GitHub's release webhook makes it pull right away (`deploy/README.md`). GitHub holds no credentials for the server. Don't add SSH or any other inbound deploy step back. `deploy/portifo-deploy` and the `portifo-deploy.*` units are installed on the server by hand, not by deploys, so after changing them, reinstall them there (commands in `deploy/README.md`).
+
 ## Design system
 `design-system/` is the design system (open `design-system/index.html` for the gallery). Before designing or building any screen, read `design-system/README.md` and `design-system/screen-anatomy.md`, and follow the rules in `design-system/components/<Name>/README.md` for every part you use. When a change alters a token or a component's rules, update `design-system/` in the same change.
 

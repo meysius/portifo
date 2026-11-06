@@ -14,7 +14,9 @@ HEALTH_URL=http://127.0.0.1:3000/
 KEEP=5
 FAILED_FILE=/var/lib/portifo-deploy/failed-commit   # StateDirectory, root only
 
-as_app() { runuser -u portifo -- "$@"; }
+# setpriv rather than runuser: same privilege drop, no PAM session lines in
+# the deploy log.
+as_app() { setpriv --reuid=portifo --regid=portifo --init-groups --reset-env -- "$@"; }
 
 switch_to() {
   as_app ln -sfn "$1" "$APP_DIR/current.next"
@@ -24,7 +26,7 @@ switch_to() {
 healthy() {
   local i
   for i in $(seq 30); do
-    if curl -fsS -o /dev/null --max-time 2 "$HEALTH_URL"; then
+    if curl -fs -o /dev/null --max-time 2 "$HEALTH_URL"; then
       # The job queue starts after the port opens and exits the process if it
       # can't, so make sure the service is still up a few seconds later.
       sleep 5
