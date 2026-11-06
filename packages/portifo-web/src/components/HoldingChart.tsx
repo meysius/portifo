@@ -1,7 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import { EXTENDED_LABEL, getEarnings, getHistory, getSma } from "../api/market";
-import type { HistoryPoint, HistoryRange } from "../api/market";
+import type { HistoryPoint, HistoryRange, Quote } from "../api/market";
 import {
   AXIS_H,
   EXTENDED_OPACITY,
@@ -27,7 +27,7 @@ import ValueGrid from "./ValueGrid";
 // Holding Detail's share-price history, drawn the Apple Stocks way (see
 // lib/chartAxis): the range picker above, one line stretched from the range's
 // low to its high over trading time only, a price scale at the right, a time
-// scale beneath, the volume traded under that, the latest close as a dot, a
+// scale beneath, the volume traded under that, the latest price as a dot, a
 // scrub readout on demand. The full chart is one tap away at Yahoo (the
 // outward arrow), which already supplies our prices.
 //
@@ -57,6 +57,11 @@ import ValueGrid from "./ValueGrid";
 // line faded through them, so the regular session still reads as the day;
 // a scrub names the session it lands in. The price above the chart stays the
 // regular session's.
+//
+// On 1D the line runs on to the latest trade as the quote streams in, and the
+// price tagged on the scale moves with it (see withLatest): the regular
+// session's trades, and with Extended hours those outside it too, overnight
+// included.
 
 const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
@@ -73,6 +78,34 @@ const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
 
 // Price and shares traded per bar, and its session when it isn't the regular one.
 type Pt = { t: number; p: number; v: number; x?: Session };
+
+// 1D's bars are five minutes apart, each stamped with its start.
+const DAY_BAR_MS = 5 * 60_000;
+const barStart = (t: number) => t - (t % DAY_BAR_MS);
+
+// The quote's latest trade: its regular price, or with extended hours drawn,
+// the trade outside the session that followed it.
+function latestTrade(quote: Quote, extended: boolean): Pt | null {
+  const regular = quote.marketTime ? { t: Date.parse(quote.marketTime), p: quote.price, v: 0 } : null;
+  const ext = extended ? quote.extended : undefined;
+  if (ext && (!regular || Date.parse(ext.time) > regular.t)) {
+    return { t: Date.parse(ext.time), p: ext.price, v: 0, x: ext.session };
+  }
+  return regular;
+}
+
+// A 1D's bars with the latest trade at the end. Within the last bar's five
+// minutes (the close, a second after 4 PM, falls in the 4 PM bar) it moves
+// that bar; past them it is a bar of its own, until a refetch brings Yahoo's.
+// Yahoo's chart has no overnight bars, so overnight it is the one point past
+// the day's 8 PM close.
+function withLatest(s: Pt[], trade: Pt | null): Pt[] {
+  const end = s[s.length - 1];
+  if (!trade || !end || !(trade.t > end.t) || !(trade.p > 0)) return s;
+  if (trade.t - barStart(end.t) <= DAY_BAR_MS) return [...s.slice(0, -1), { ...end, t: trade.t, p: trade.p, x: trade.x }];
+  return [...s, trade];
+}
+
 // One line's reading in the scrub readout.
 type Rung = { color: string; label: string; v: number; kind: "band" | "sma" | "price" };
 
@@ -226,13 +259,15 @@ const smaCache = new Map<string, [number, number][]>();
 // Report times per symbol, for every range.
 const earningsCache = new Map<string, number[]>();
 
-// `reloadKey` changes on the page's pull to refresh: the range is fetched again.
-export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: string; ccy: string; reloadKey?: number }) {
+// `quote` is the symbol's live one; 1D follows it. `reloadKey` changes on the
+// page's pull to refresh: the range is fetched again.
+export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: string; quote: Quote; reloadKey?: number }) {
+  const ccy = quote.currency;
   // Every chart opens on today.
   const [range, setRange] = useState<HistoryRange>("1D");
   const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1D`) ?? null);
   const [failed, setFailed] = useState(false);
-  const [scrub, setScrub] = useState<number | null>(null);
+  const [scrubbed, setScrub] = useState<number | null>(null);
   const [width, setWidth] = useState(0);
   const [bandsOn, setBandsOn] = useChartPref(SMA_BANDS_KEY);
   // Tagged with its series' key, so a range switch never pairs the new bars
@@ -258,11 +293,17 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     return () => ro.disconnect();
   }, []);
 
+  // Counts 1D's refetches on the clock, which keep the scrub and what's drawn.
+  const [refresh, setRefresh] = useState(0);
+
   useEffect(() => {
-    let live = true;
     setScrub(null);
     setFailed(false);
     setPts(cache.get(key) ?? null);
+  }, [key, reloadKey]);
+
+  useEffect(() => {
+    let live = true;
     getHistory(symbol, range, extended)
       .then((h: HistoryPoint[]) => {
         const next = h
@@ -277,7 +318,20 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     return () => {
       live = false;
     };
-  }, [symbol, range, extended, key, reloadKey]);
+  }, [symbol, range, extended, key, reloadKey, refresh]);
+
+  // On 1D, the latest trade the quote has streamed in. Once it runs past the
+  // fetched bars, they're fetched again five minutes on, and every five
+  // minutes while it stays ahead; not overnight, which Yahoo doesn't chart.
+  const trade = range === "1D" ? latestTrade(quote, extended) : null;
+  const fetchedEnd = pts?.length ? pts[pts.length - 1].t : null;
+  const behind =
+    trade != null && trade.x !== "overnight" && fetchedEnd != null && trade.t - barStart(fetchedEnd) > DAY_BAR_MS;
+  useEffect(() => {
+    if (!behind) return;
+    const id = setTimeout(() => setRefresh((n) => n + 1), DAY_BAR_MS);
+    return () => clearTimeout(id);
+  }, [behind, key, refresh]);
 
   useEffect(() => {
     if (!bandsOn) return;
@@ -320,7 +374,7 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
     };
   }, [symbol, earningsShown, reloadKey]);
 
-  const s = pts ?? [];
+  const s = withLatest(pts ?? [], trade);
   const ready = s.length > 1 && width > 0;
   const smaPoints = bandsOn && sma?.key === key ? sma.points : null;
   const avg = smaPoints ? averageAt(s.map((p) => p.t), smaPoints) : [];
@@ -338,6 +392,8 @@ export default function HoldingChart({ symbol, ccy, reloadKey }: { symbol: strin
   const stamps = s.map((p) => p.t);
 
   const last = s.length - 1;
+  // A refetch can bring fewer bars than were scrubbed across (a new day's).
+  const scrub = scrubbed != null && scrubbed <= last ? scrubbed : null;
   let path = "";
   // With extended hours: where the regular session runs, the line through it
   // alone, and the ground under it.

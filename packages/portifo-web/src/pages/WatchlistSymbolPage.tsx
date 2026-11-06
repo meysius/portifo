@@ -194,7 +194,7 @@ function WatchlistSymbolPage({ match }: RouteComponentProps<{ symbol: string }>)
             </section>
 
             <section className="hd-market" aria-label="Share price history">
-              <HoldingChart symbol={symbol} ccy={quote.currency} reloadKey={pulls} />
+              <HoldingChart symbol={symbol} quote={quote} reloadKey={pulls} />
             </section>
 
             <PriceAlerts symbol={symbol} quote={quote} watching={watching} />

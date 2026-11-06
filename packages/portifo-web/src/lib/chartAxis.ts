@@ -28,7 +28,8 @@ export const LABEL_INSET = 5; // a time label's gap from its guide
 export type ValueTick = { y: number; label: string };
 export type TimeTick = { x: number; label: string };
 // A bar struck outside the regular session, on a 1D with extended hours.
-export type Session = "pre" | "post";
+// Overnight is only ever the latest trade, streamed: Yahoo's chart has none.
+export type Session = "pre" | "post" | "overnight";
 
 // How strongly the price line reads where it runs through extended hours.
 export const EXTENDED_OPACITY = 0.4;

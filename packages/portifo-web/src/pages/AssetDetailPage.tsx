@@ -399,7 +399,7 @@ function AssetDetailPage({ match }: RouteComponentProps<{ symbol: string }>) {
   if (quote && price != null) {
     market = (
       <section className="hd-market" aria-label="Share price history">
-        <HoldingChart symbol={symbol} ccy={quote.currency} reloadKey={pulls} />
+        <HoldingChart symbol={symbol} quote={quote} reloadKey={pulls} />
       </section>
     );
   } else if (!agg.closed) {
