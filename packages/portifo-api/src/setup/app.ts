@@ -10,6 +10,8 @@ import { AuthService } from "@/domain/auth/auth.service";
 import { DrizzlePortfolioRepo } from "@/domain/portfolio/portfolio.repo";
 import { PortfolioService } from "@/domain/portfolio/portfolio.service";
 import { MarketService } from "@/domain/market/market.service";
+import { LiveQuoteService } from "@/domain/market/live-quote.service";
+import { YahooStreamer } from "@/domain/market/yahoo-streamer";
 import { DrizzlePushRepo } from "@/domain/push/push.repo";
 import { PushService } from "@/domain/push/push.service";
 import { DrizzleWatchlistRepo } from "@/domain/watchlist/watchlist.repo";
@@ -51,19 +53,20 @@ export function buildApp(): App {
   const authService = new AuthService(logger, cfg);
   const portfolioRepo = new DrizzlePortfolioRepo(db);
   const marketService = new MarketService(logger);
+  const liveQuoteService = new LiveQuoteService(logger, marketService, new YahooStreamer(logger));
   const portfolioService = new PortfolioService(logger, portfolioRepo, marketService);
   const pushRepo = new DrizzlePushRepo(db);
   const pushService = new PushService(logger, pushRepo, jobQueue, cfg);
   const watchlistRepo = new DrizzleWatchlistRepo(db);
   const watchlistService = new WatchlistService(logger, watchlistRepo);
   const alertRepo = new DrizzleAlertRepo(db);
-  const alertService = new AlertService(logger, alertRepo, marketService, pushService);
+  const alertService = new AlertService(logger, alertRepo, marketService, liveQuoteService, pushService);
 
   const controllers: SWController[] = [
     new UsersController(logger, identityService),
     new AuthController(logger, authService, identityService),
     new PortfolioController(logger, authService, identityService, portfolioService),
-    new MarketController(logger, authService, identityService, marketService),
+    new MarketController(logger, authService, identityService, marketService, liveQuoteService),
     new PushController(logger, cfg, authService, identityService, pushService),
     new WatchlistController(logger, authService, identityService, watchlistService),
     new AlertController(logger, authService, identityService, alertService),
@@ -80,6 +83,7 @@ export function buildApp(): App {
     jobQueue,
     jobs,
     shutdown: async () => {
+      liveQuoteService.stop();
       await jobQueue.stop();
       // Close DB connections, etc.
     },

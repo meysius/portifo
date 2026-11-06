@@ -31,7 +31,7 @@ import type {
   Transaction,
 } from "../api/portfolio";
 import { setActivePortfolioId as setApiActivePortfolioId } from "../api/http";
-import { getQuotes, getFxRates } from "../api/market";
+import { fxSymbol, getQuotes, getFxRates, quoteTime, streamQuotes } from "../api/market";
 import type { Quote } from "../api/market";
 import { DISPLAY_CURRENCIES, FX_FALLBACK } from "../lib/fx";
 import type { FxRates } from "../lib/fx";
@@ -160,28 +160,27 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Every currency a figure might be shown in or converted from, but the
+  // dollar: rates are kept as units of each per US dollar.
+  const fxCurrencies = useMemo(() => {
+    const currencySet = new Set<string>(DISPLAY_CURRENCIES);
+    for (const account of accounts) {
+      for (const balance of account.balances) currencySet.add(balance.currency);
+    }
+    currencySet.delete("USD");
+    return Array.from(currencySet).sort();
+  }, [accounts]);
+
   const refreshMarket = useCallback(
     async (symbols: string[]) => {
       setLoading((l) => ({ ...l, market: true }));
       try {
-        const currencySet = new Set<string>(DISPLAY_CURRENCIES);
-        for (const account of accounts) {
-          for (const balance of account.balances) currencySet.add(balance.currency);
-        }
-        currencySet.delete("USD");
-
         const [quoteList, fx] = await Promise.all([
           symbols.length ? getQuotes(symbols).catch(() => []) : Promise.resolve([]),
-          getFxRates("USD", Array.from(currencySet)).catch(() => null),
+          getFxRates("USD", fxCurrencies).catch(() => null),
         ]);
 
-        if (quoteList.length) {
-          setQuotes((prev) => {
-            const next = { ...prev };
-            for (const q of quoteList) next[q.symbol] = q;
-            return next;
-          });
-        }
+        if (quoteList.length) setQuotes((prev) => mergeQuotes(prev, quoteList));
         if (fx) {
           setFxRates(fx.rates);
           setFxAsOf(fx.asOf);
@@ -190,8 +189,34 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
         setLoading((l) => ({ ...l, market: false }));
       }
     },
-    [accounts],
+    [fxCurrencies],
   );
+
+  // Every quote the app holds, and the dollar's rate against each currency,
+  // kept live off the API's stream while the app is on screen. A symbol joins
+  // once something has fetched its quote; the stream reopens to take it in.
+  const quoteSymbolsKey = useMemo(() => Object.keys(quotes).sort().join(","), [quotes]);
+  const fxCurrenciesKey = fxCurrencies.join(",");
+  useEffect(() => {
+    const symbols = quoteSymbolsKey ? quoteSymbolsKey.split(",") : [];
+    const currencyBySymbol = new Map(
+      (fxCurrenciesKey ? fxCurrenciesKey.split(",") : []).map((c) => [fxSymbol("USD", c), c]),
+    );
+    if (symbols.length === 0 && currencyBySymbol.size === 0) return;
+    return streamQuotes([...symbols, ...currencyBySymbol.keys()], (list) => {
+      const held = list.filter((q) => !currencyBySymbol.has(q.symbol));
+      const rates = list.filter((q) => currencyBySymbol.has(q.symbol) && q.price > 0);
+      if (held.length) setQuotes((prev) => mergeQuotes(prev, held));
+      if (rates.length) {
+        setFxRates((prev) => {
+          const next = { ...prev };
+          for (const q of rates) next[currencyBySymbol.get(q.symbol)!] = q.price;
+          return next;
+        });
+        setFxAsOf(new Date().toISOString());
+      }
+    });
+  }, [quoteSymbolsKey, fxCurrenciesKey]);
 
   // Makes a portfolio the active one: every subsequent apiFetch carries it as
   // X-Portfolio-Id, and the choice survives reloads via localStorage.
@@ -418,6 +443,17 @@ export function PortfolioDataProvider({ children }: { children: ReactNode }) {
   };
 
   return <PortfolioDataContext.Provider value={value}>{children}</PortfolioDataContext.Provider>;
+}
+
+// Fetched and streamed quotes arrive out of order, so a quote only replaces
+// one that isn't newer than it.
+function mergeQuotes(prev: Record<string, Quote>, list: Quote[]): Record<string, Quote> {
+  const next = { ...prev };
+  for (const q of list) {
+    const held = prev[q.symbol];
+    if (!held || quoteTime(q) >= quoteTime(held)) next[q.symbol] = q;
+  }
+  return next;
 }
 
 export function usePortfolioData(): PortfolioDataContextValue {

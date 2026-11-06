@@ -7,6 +7,7 @@ A multi-currency portfolio tracker — investments and cash accounts in one plac
 - **`packages/portifo-web`** — Vite + React + [Ionic](https://ionicframework.com/) SPA, rendered in forced iOS mode for a native feel on any device
 - **`packages/portifo-api`** — Node/Express backend on [`simple-wire`](https://www.npmjs.com/package/simple-wire), Postgres via Drizzle ORM
 - Auth via Google OAuth; market data via [`yahoo-finance2`](https://www.npmjs.com/package/yahoo-finance2) (no API key required)
+- Live prices: the API holds one connection to Yahoo's streamer (`wss://streamer.finance.yahoo.com`), polls Yahoo's quotes every 30s alongside it for what the stream leaves quiet, and pushes each quote as it moves to the open app over server-sent events (`GET /market/stream`). The same feed checks price alerts within seconds of a trade. Behind a reverse proxy, `/market/stream` must not be buffered (nginx honours the `X-Accel-Buffering: no` it sends).
 
 In production the API serves the built web app as static files, so the two packages ship as a single deployable process.
 

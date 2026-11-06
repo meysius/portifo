@@ -59,6 +59,30 @@ function extendedHours(q: any): ExtendedHours | undefined {
     .sort((a, b) => b.time.localeCompare(a.time))[0];
 }
 
+function toQuote(q: any): Quote {
+  return {
+    symbol: q.symbol,
+    price: q.regularMarketPrice ?? 0,
+    currency: q.currency ?? "USD",
+    changePercent: q.regularMarketChangePercent ?? 0,
+    change: q.regularMarketChange ?? 0,
+    open: q.regularMarketOpen ?? 0,
+    dayHigh: q.regularMarketDayHigh ?? 0,
+    dayLow: q.regularMarketDayLow ?? 0,
+    volume: q.regularMarketVolume ?? 0,
+    shortName: q.shortName ?? q.longName,
+    exchange: q.fullExchangeName,
+    previousClose: q.regularMarketPreviousClose,
+    marketState: q.marketState,
+    marketTime: toIso(q.regularMarketTime),
+    extended: extendedHours(q),
+  };
+}
+
+// A quote and whether its listing trades pre-market and after hours: US
+// listings mostly do; Toronto, London, crypto, FX and indices don't.
+export type QuoteSnapshot = { quote: Quote; extendedHours: boolean };
+
 // Volume is shares traded in the bar; the portfolio series has none. A bar
 // struck outside the regular session names it; only an extended 1D has any.
 export type HistoryPoint = { date: string; close: number; volume?: number; session?: Session };
@@ -201,6 +225,19 @@ export class MarketService {
   constructor(private readonly logger: SWLogger) {}
 
   async getQuotes(symbols: string[]): Promise<Quote[]> {
+    return (await this.fetchQuotes(symbols)).map(toQuote);
+  }
+
+  // Quotes, each with whether its listing trades before and after the
+  // regular session, which the live feed needs to place a trade.
+  async getQuoteSnapshots(symbols: string[]): Promise<QuoteSnapshot[]> {
+    return (await this.fetchQuotes(symbols)).map((q) => ({
+      quote: toQuote(q),
+      extendedHours: q.hasPrePostMarketData === true,
+    }));
+  }
+
+  private async fetchQuotes(symbols: string[]): Promise<any[]> {
     if (symbols.length === 0) return [];
     const results = await this.client.quote(
       symbols,
@@ -208,25 +245,7 @@ export class MarketService {
       { validateResult: false, fetchOptions: { signal: AbortSignal.timeout(QUOTE_TIMEOUT_MS) } },
     );
     const list: any[] = Array.isArray(results) ? results : [results];
-    return list
-      .filter((q) => q && q.symbol)
-      .map((q) => ({
-        symbol: q.symbol,
-        price: q.regularMarketPrice ?? 0,
-        currency: q.currency ?? "USD",
-        changePercent: q.regularMarketChangePercent ?? 0,
-        change: q.regularMarketChange ?? 0,
-        open: q.regularMarketOpen ?? 0,
-        dayHigh: q.regularMarketDayHigh ?? 0,
-        dayLow: q.regularMarketDayLow ?? 0,
-        volume: q.regularMarketVolume ?? 0,
-        shortName: q.shortName ?? q.longName,
-        exchange: q.fullExchangeName,
-        previousClose: q.regularMarketPreviousClose,
-        marketState: q.marketState,
-        marketTime: toIso(q.regularMarketTime),
-        extended: extendedHours(q),
-      }));
+    return list.filter((q) => q && q.symbol);
   }
 
   // Rates are always expressed as "1 unit of `base` equals N units of the target

@@ -73,6 +73,70 @@ export async function getQuotes(symbols: string[]): Promise<Quote[]> {
   return res.json();
 }
 
+// When a quote's latest trade was struck, extended hours included: of two
+// quotes for a symbol, the later one stands.
+export function quoteTime(q: Quote): number {
+  const regular = q.marketTime ? Date.parse(q.marketTime) : 0;
+  const extended = q.extended ? Date.parse(q.extended.time) : 0;
+  return Math.max(regular, extended);
+}
+
+// Yahoo's ticker for a currency pair, "units of `to` per 1 `from`".
+export const fxSymbol = (from: string, to: string) => `${from}${to}=X`;
+
+// Live quotes for `symbols`, pushed by the API as they move (about once a
+// second at most): each one as soon as the stream opens, then on every trade.
+// Only while the app is on screen. iOS cuts a backgrounded app's connections,
+// so the stream closes when the page hides and reopens when it shows, which
+// also brings every quote up to date on return.
+//
+// Returns a function that stops it.
+export function streamQuotes(symbols: string[], onQuotes: (quotes: Quote[]) => void): () => void {
+  const url = `/market/stream?symbols=${encodeURIComponent(symbols.join(","))}`;
+  let source: EventSource | null = null;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let failures = 0;
+
+  const close = () => {
+    clearTimeout(timer);
+    source?.close();
+    source = null;
+  };
+
+  const open = () => {
+    close();
+    const es = new EventSource(url);
+    source = es;
+    es.addEventListener("quotes", (e) => {
+      failures = 0;
+      onQuotes(JSON.parse((e as MessageEvent<string>).data));
+    });
+    // EventSource reconnects a dropped stream by itself. It gives up only
+    // when the server turns it away (a 401, a 502, a restart mid-deploy),
+    // and then this tries again: 5s, 10s, 20s… up to a minute.
+    es.onerror = () => {
+      if (es.readyState !== EventSource.CLOSED || source !== es) return;
+      failures += 1;
+      timer = setTimeout(open, Math.min(60_000, 5_000 * 2 ** (failures - 1)));
+    };
+  };
+
+  const onVisibility = () => {
+    if (document.hidden) close();
+    else open();
+  };
+
+  document.addEventListener("visibilitychange", onVisibility);
+  // A beat's wait, so a screen that asks for several quotes in a row opens
+  // one stream for all of them rather than one each.
+  if (!document.hidden) timer = setTimeout(open, 300);
+
+  return () => {
+    document.removeEventListener("visibilitychange", onVisibility);
+    close();
+  };
+}
+
 export async function getFxRates(base: string, symbols: string[]): Promise<FxRatesResponse> {
   const res = await apiFetch(
     `/market/fx?base=${encodeURIComponent(base)}&symbols=${encodeURIComponent(symbols.join(","))}`,
