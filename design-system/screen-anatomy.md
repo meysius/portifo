@@ -26,7 +26,7 @@ A holding, an account, the cash, a watched symbol: anything opened from a row th
 
 A holding's page supports pull to refresh, as tab roots do: it refetches the share price, the ledger and the chart's range. A watched symbol's page does the same for its price, chart and alerts.
 
-A watched symbol's page is the holding page without the ownership: heading, then a hero of "Share price · USD" with today's move (and, outside regular hours, the pre-market or after-hours move and price as a second return), the same price chart, a `PriceAlerts` section, a "Latest session" `MetricGrid` (open, previous close, day low, day high, volume), and the footer note. The share price stays regular-session, and so does the chart unless Extended hours is on (1D only; see ChartControls). It has no Buy / Sell.
+A watched symbol's page is the holding page without the ownership: heading, then a hero of "Share price · USD" with today's move (and, outside regular hours, the pre-market or after-hours move and price as a second return), the same price chart, a `PriceAlerts` section, a "Latest session" `MetricGrid` (open, previous close, day low, day high, volume), and the footer note. The share price stays regular-session; the chart's 1D runs on through the pre-market and after hours (see ChartControls). It has no Buy / Sell.
 
 ## Full-screen task
 

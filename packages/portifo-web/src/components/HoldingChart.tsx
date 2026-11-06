@@ -18,10 +18,9 @@ import {
   valueColumnWidth,
 } from "../lib/chartAxis";
 import type { Session, SessionSpans } from "../lib/chartAxis";
-import { EARNINGS_KEY, EXTENDED_HOURS_KEY, SMA_BANDS_KEY, useChartPref } from "../lib/chartPrefs";
+import { EARNINGS_KEY, SMA_BANDS_KEY, useChartPref } from "../lib/chartPrefs";
 import { DAY_BAR_MS, barStart, latestTrade, withLatest } from "../lib/liveSeries";
 import { fmtCcy, fmtDay, fmtSignedPct, yahooQuoteUrl } from "../lib/fx";
-import ExtendedHoursChip from "./ExtendedHoursChip";
 import SessionShade from "./SessionShade";
 import TimeGrid from "./TimeGrid";
 import ValueGrid from "./ValueGrid";
@@ -54,20 +53,18 @@ import ValueGrid from "./ValueGrid";
 // range, so the trend before a report can be read against the trend after.
 // It draws on 1W to 5Y only.
 //
-// A third, Extended hours, stretches 1D across the day's pre-market and
-// after-hours trading. Those stretches sit on a recessed ground with the
+// 1D runs across the day's pre-market and after-hours trading, always (it was
+// a toggle until Nov 6). Those stretches sit on a recessed ground with the
 // line faded through them, so the regular session still reads as the day;
 // a scrub names the session it lands in. The price above the chart stays the
 // regular session's. 1D is the last trading day, not the last 24 hours, and
-// it turns over at the open: before it, the day before, then with Extended
-// hours today's pre-market after it, the new day named where it begins. A
-// market that never closes (crypto, currencies, futures) shows its last 24
-// hours.
+// it turns over at the open: before it, the day before, then today's
+// pre-market after it, the new day named where it begins. A market that
+// never closes (crypto, currencies, futures) shows its last 24 hours.
 //
 // On 1D the line runs on to the latest trade as the quote streams in, and the
-// price tagged on the scale moves with it (see lib/liveSeries): the regular
-// session's trades, and with Extended hours those outside it too, overnight
-// included.
+// price tagged on the scale moves with it (see lib/liveSeries): every trade,
+// those outside the regular session too, overnight included.
 
 const RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const RANGE_WORD: Partial<Record<HistoryRange, string>> = {
@@ -250,7 +247,7 @@ function volumePath(xs: number[], s: Pt[]) {
     .join("");
 }
 
-// Last-fetched series per symbol+range (and extended hours), so flipping back
+// Last-fetched series per symbol+range, so flipping back
 // to a range (or pushing the same holding again) redraws at once.
 const cache = new Map<string, Pt[]>();
 // The average by bar time, keyed the same way.
@@ -268,10 +265,9 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
   const [width, setWidth] = useState(0);
   const [bandsOn, setBandsOn] = useChartPref(SMA_BANDS_KEY);
   const [earningsOn, setEarningsOn] = useChartPref(EARNINGS_KEY);
-  const [extendedOn, setExtendedOn] = useChartPref(EXTENDED_HOURS_KEY);
-  const extendedFits = range === "1D";
-  const extended = extendedOn && extendedFits;
-  const key = `${symbol}|${range}${extended ? "|extended" : ""}`;
+  // 1D always runs across extended hours.
+  const extended = range === "1D";
+  const key = `${symbol}|${range}`;
   // What was fetched, each tagged with its series' key (the report times with
   // their symbol), so a range switch never pairs the new bars with the old
   // range's. Until a fetch lands, the last one kept for that key is drawn,
@@ -774,12 +770,6 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
           </button>
           {earningsNote && <span className="hd-indicator-note">{earningsNote}</span>}
         </span>
-        <ExtendedHoursChip
-          fits={extendedFits}
-          on={extendedOn}
-          untraded={extended && !!pts && pts.length > 1 && !pts.some((p) => p.x)}
-          onToggle={() => setExtendedOn(!extendedOn)}
-        />
       </div>
     </>
   );

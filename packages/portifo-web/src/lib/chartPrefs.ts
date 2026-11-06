@@ -4,13 +4,12 @@ import { useSyncExternalStore } from "react";
 // shared live: every chart on screen follows a flip at once.
 export const SMA_BANDS_KEY = "portifo.chart.smaBands";
 export const EARNINGS_KEY = "portifo.chart.earnings";
-// Under a new name. The toggle's first version (Nov 4, removed the same
-// evening) stored "portifo.chart.extendedHours", and nothing cleared it, so a
-// device that turned it on then would come back with it on. Every device
-// starts off instead, and the old entry goes.
-export const EXTENDED_HOURS_KEY = "portifo.chart.extendedHoursOn";
+// Extended hours was a toggle until Nov 6, kept under these names (the
+// second after its first version, Nov 4). 1D now always draws them, so the
+// old entries go.
 try {
   localStorage.removeItem("portifo.chart.extendedHours");
+  localStorage.removeItem("portifo.chart.extendedHoursOn");
 } catch {
   // No storage: nothing was kept.
 }
