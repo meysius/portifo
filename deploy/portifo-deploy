@@ -13,6 +13,7 @@ APP_DIR=/opt/portifo
 HEALTH_URL=http://127.0.0.1:3000/
 KEEP=5
 FAILED_FILE=/var/lib/portifo-deploy/failed-commit   # StateDirectory, root only
+REQUEST_FILE=$APP_DIR/shared/deploy-requested       # written by the API
 
 # setpriv rather than runuser: same privilege drop, no PAM session lines in
 # the deploy log.
@@ -39,16 +40,35 @@ healthy() {
 }
 
 # Which release is latest? GitHub decides, not whoever woke us up.
-manifest=$(curl -fsSL --max-time 30 "https://github.com/$REPO/releases/latest/download/release.txt")
-commit=$(sed -n 's/^commit=//p' <<<"$manifest")
-sha256=$(sed -n 's/^sha256=//p' <<<"$manifest")
-if [[ ! $commit =~ ^[0-9a-f]{40}$ || ! $sha256 =~ ^[0-9a-f]{64}$ ]]; then
-  echo "release.txt is malformed" >&2
-  exit 1
+read_latest() {
+  local manifest
+  manifest=$(curl -fsSL --max-time 30 "https://github.com/$REPO/releases/latest/download/release.txt")
+  commit=$(sed -n 's/^commit=//p' <<<"$manifest")
+  sha256=$(sed -n 's/^sha256=//p' <<<"$manifest")
+  if [[ ! $commit =~ ^[0-9a-f]{40}$ || ! $sha256 =~ ^[0-9a-f]{64}$ ]]; then
+    echo "release.txt is malformed" >&2
+    exit 1
+  fi
+}
+
+# GitHub sends the "published" webhook a few seconds before Latest points at
+# the new release. When the API has just passed on the commit from a signed
+# "published" webhook, keep checking for up to 2 minutes while Latest is
+# still the live commit. The hint only decides how long to wait. What gets
+# deployed is still whatever Latest says.
+previous=$(readlink -f "$APP_DIR/current" || true)
+awaited=""
+if [[ -n $(find "$REQUEST_FILE" -mmin -2 2>/dev/null) ]]; then
+  awaited=$(head -c 41 "$REQUEST_FILE" | grep -xE '[0-9a-f]{40}' || true)
 fi
+read_latest
+for _ in $(seq 24); do
+  [[ -z $awaited || $awaited == "${previous##*/}" || $commit != "${previous##*/}" ]] && break
+  sleep 5
+  read_latest
+done
 
 release="$APP_DIR/releases/$commit"
-previous=$(readlink -f "$APP_DIR/current" || true)
 if [[ $previous == "$release" ]]; then
   echo "Up to date at ${commit:0:7}"
   exit 0

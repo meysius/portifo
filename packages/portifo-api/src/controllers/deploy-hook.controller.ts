@@ -39,16 +39,22 @@ export class DeployHookController implements SWController {
       return;
     }
 
-    // Any release event (published, deleted, marked latest) may change which
-    // release is latest, so each one is worth a look.
+    // Only a release being published triggers a check. GitHub also sends
+    // "created" and "edited" a few seconds before it, and a check started by
+    // one of those could still be running when "published" arrives: systemd
+    // drops a trigger that lands mid-run. Other changes to which release is
+    // Latest (a deletion, an edit) wait for the 5-minute timer.
     const event = req.get("x-github-event");
-    if (event !== "release") {
-      res.status(200).json({ ignored: event });
+    const { action, release } = (req.body ?? {}) as { action?: string; release?: { tag_name?: string } };
+    if (event !== "release" || (action !== "published" && action !== "released")) {
+      res.status(200).json({ ignored: action ? `${event}.${action}` : event });
       return;
     }
 
+    const commit = /^deploy-([0-9a-f]{40})$/.exec(release?.tag_name ?? "")?.[1];
+
     try {
-      await this.deployService.requestDeploy();
+      await this.deployService.requestDeploy(commit);
       res.status(202).json({ requested: true });
     } catch (err) {
       this.logger.error(`Deploy request failed: ${(err as Error).message}`);

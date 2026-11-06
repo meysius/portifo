@@ -2,8 +2,9 @@
 Description=Deploy when GitHub's release webhook reaches the API
 
 # The API writes this file after checking the webhook's signature
-# (DeployService.requestDeploy). It carries nothing: the deploy looks up the
-# latest release on GitHub itself.
+# (DeployService.requestDeploy). It holds at most the commit GitHub just
+# published, which only tells the deploy how long to wait for Latest to catch
+# up. The deploy looks up the Latest release on GitHub itself.
 [Path]
 PathChanged=/opt/portifo/shared/deploy-requested
 Unit=portifo-deploy.service
