@@ -1,5 +1,5 @@
 import { SWLogger } from "simple-wire";
-import { MarketService, Quote, QuoteSnapshot } from "./market.service";
+import { ExtendedHours, MarketService, Quote, QuoteSnapshot } from "./market.service";
 import { Tick } from "./pricing-data";
 import { YahooStreamer } from "./yahoo-streamer";
 
@@ -65,6 +65,11 @@ export class LiveQuoteService {
         for (const symbol of watcher.symbols) this.release(symbol);
       },
     };
+  }
+
+  // The quote as it stands, if the symbol is watched and has been polled.
+  latest(symbol: string): Quote | null {
+    return this.entries.get(symbol)?.quote ?? null;
   }
 
   stop(): void {
@@ -189,6 +194,7 @@ export class LiveQuoteService {
     if (!entry || !held) return;
     const heldTime = time(held.marketTime);
     const session = sessionOf(tick, entry.extendedHours);
+    if (session == null) return;
 
     if (session === "regular") {
       if (tick.time < heldTime || (tick.time === heldTime && tick.price === held.price)) return;
@@ -225,7 +231,9 @@ export class LiveQuoteService {
     }
 
     if (tick.time <= heldTime || (held.extended && tick.time <= time(held.extended.time))) return;
-    const next: Quote = { ...held, marketState: session === "pre" ? "PRE" : "POST" };
+    // Yahoo has no market state for overnight; the quote keeps the one it has.
+    const marketState = session === "pre" ? "PRE" : session === "post" ? "POST" : held.marketState;
+    const next: Quote = { ...held, marketState };
     this.publish(entry, withExtended(next, { session, price: tick.price, time: new Date(tick.time).toISOString() }));
   }
 
@@ -274,17 +282,24 @@ function refreshEvery(entry: Entry): number {
 }
 
 // Which session a trade falls in, by the feed's own flag: 0 pre-market, 1
-// regular, 2 post-market, 3 extended. A listing that doesn't trade outside
-// the regular session gets only regular trades, whatever the flag says.
-function sessionOf(tick: Tick, extendedHours: boolean | null): "regular" | "pre" | "post" {
+// regular, 2 post-market, 3 extended, 4 overnight. A listing that doesn't
+// trade outside the regular session gets only regular trades, whatever the
+// flag says. A flag this doesn't know is dropped rather than guessed at: the
+// poll still brings the price.
+function sessionOf(tick: Tick, extendedHours: boolean | null): "regular" | ExtendedHours["session"] | null {
   if (extendedHours === false) return "regular";
   switch (tick.marketHours) {
-    case 1:
-      return "regular";
     case 0:
       return "pre";
-    default:
+    case 1:
+      return "regular";
+    case 2:
+    case 3:
       return "post";
+    case 4:
+      return "overnight";
+    default:
+      return null;
   }
 }
 
@@ -310,7 +325,7 @@ function moveFrom(base: number, price: number): Pick<Quote, "change" | "changePe
   return { change, changePercent: base > 0 ? (change / base) * 100 : 0 };
 }
 
-type ExtendedTrade = { session: "pre" | "post"; price: number; time: string };
+type ExtendedTrade = { session: ExtendedHours["session"]; price: number; time: string };
 
 function newer(a: ExtendedTrade | undefined, b: ExtendedTrade | undefined): ExtendedTrade | undefined {
   if (!a) return b;

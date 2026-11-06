@@ -1,5 +1,5 @@
 import { SWLogger } from "simple-wire";
-import { MarketService, Quote } from "@/domain/market/market.service";
+import { Quote } from "@/domain/market/market.service";
 import { LiveQuoteService, QuoteWatch } from "@/domain/market/live-quote.service";
 import { PushService } from "@/domain/push/push.service";
 import { AlertRepo } from "./alert.repo";
@@ -27,23 +27,31 @@ function fmtPrice(n: number, currency: string): string {
 // unless it's small enough for the cents to be the whole story.
 const fmtTraded = (n: number, currency: string) => fmtPrice(n >= 10 ? Math.round(n * 100) / 100 : n, currency);
 
-const SESSION_LABEL = { pre: "Pre-market", post: "After hours" } as const;
+const SESSION_LABEL = { pre: "Pre-market", post: "After hours", overnight: "Overnight" } as const;
 
 // The least time between two checks of one symbol's rules on its streamed
 // price. A busy listing trades several times a second, and each check is a
 // few queries.
 const LIVE_CHECK_EVERY_MS = 3_000;
 
+// How long a symbol's rules wait once it's on the live feed. The feed's
+// first quote is Yahoo's polled one, whose after-hours price stops at 8pm
+// ET; overnight, the stream's first trade follows a few seconds later and
+// can sit the other side of a rule's level. Judging the first would set a
+// rule off one way and the second back the other, on every restart.
+const SETTLE_MS = 30_000;
+
 type LiveCheck = { quote: Quote; timer: NodeJS.Timeout | null; lastRun: number };
 
 export class AlertService {
   private live: QuoteWatch | null = null;
   private readonly liveChecks = new Map<string, LiveCheck>();
+  // When each running rule's symbol went on the live feed.
+  private readonly watchedSince = new Map<string, number>();
 
   constructor(
     private readonly logger: SWLogger,
     private readonly alertRepo: AlertRepo,
-    private readonly marketService: MarketService,
     private readonly liveQuotes: LiveQuoteService,
     private readonly pushService: PushService,
   ) {}
@@ -74,20 +82,34 @@ export class AlertService {
     return this.alertRepo.remove(userId, id);
   }
 
-  // One Yahoo request however many rules there are: quotes come in one batch.
-  // Safe to overlap with itself, because firing is atomic.
-  //
-  // It also keeps the running rules' symbols on the live feed, so a crossing
-  // is caught within seconds of the trade. This check stays as the backstop
-  // for when the feed is quiet or down.
+  // Keeps the running rules' symbols on the live feed, whose every move is
+  // checked within seconds (onLiveQuote), then checks each one's quote as it
+  // stands, as a backstop for a live check that failed. Both judge the same
+  // quote: when this read Yahoo's quote endpoint, its after-hours close and
+  // the feed's overnight price sat on either side of a live rule's level, and
+  // each check undid the other every minute. A symbol the feed hasn't polled
+  // yet is checked by onLiveQuote once it has, and a new one only after
+  // SETTLE_MS. Safe to overlap with itself, because firing is atomic.
   async checkAlerts(): Promise<void> {
     const symbols = await this.alertRepo.listRunningSymbols();
+    const now = Date.now();
+    for (const symbol of this.watchedSince.keys()) {
+      if (!symbols.includes(symbol)) this.watchedSince.delete(symbol);
+    }
+    for (const symbol of symbols) {
+      if (!this.watchedSince.has(symbol)) this.watchedSince.set(symbol, now);
+    }
     if (this.live) this.live.set(symbols);
     else this.live = this.liveQuotes.watch(symbols, this.onLiveQuote);
-    if (symbols.length === 0) return;
 
-    const quotes = await this.marketService.getQuotes(symbols);
-    for (const quote of quotes) await this.checkQuote(quote);
+    for (const symbol of symbols) {
+      const quote = this.liveQuotes.latest(symbol);
+      if (quote && this.settlesIn(symbol) === 0) await this.checkQuote(quote);
+    }
+  }
+
+  private settlesIn(symbol: string): number {
+    return Math.max(0, (this.watchedSince.get(symbol) ?? 0) + SETTLE_MS - Date.now());
   }
 
   private async checkQuote(quote: Quote): Promise<void> {
@@ -120,7 +142,7 @@ export class AlertService {
     check.quote = quote;
     this.liveChecks.set(quote.symbol, check);
     if (check.timer) return;
-    const wait = Math.max(0, check.lastRun + LIVE_CHECK_EVERY_MS - Date.now());
+    const wait = Math.max(check.lastRun + LIVE_CHECK_EVERY_MS - Date.now(), this.settlesIn(quote.symbol), 0);
     check.timer = setTimeout(() => {
       check.timer = null;
       check.lastRun = Date.now();

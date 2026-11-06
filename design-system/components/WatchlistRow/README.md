@@ -10,7 +10,7 @@ On the Watchlist tab, one per watched symbol, in the order they were added (a ne
 - The company: the quote's short name, or the search result's name until a quote arrives. In a search result, the name and the exchange, joined with a middle dot ("NVIDIA Corporation · NASDAQ").
 - The price in the symbol's own currency, with that currency's code beside it ("USD", then "$221.97"). Never converted to the display currency.
 - Today's move: the signed change per share and its percentage, "+$5.50 · +2.5%".
-- Outside regular hours, when the symbol has traded since the close: the session, the price and its percentage from the close, "After hours $220.47 −0.7%". Most US listings have one; other exchanges, crypto and FX don't, and their rows stay two lines.
+- Outside regular hours, when the symbol has traded since the close: the session, the price and its percentage from the close, "After hours $220.47 −0.7%". The session is "Pre-market" (4am–9:30am ET), "After hours" (4pm–8pm) or "Overnight" (8pm–4am, which only the live stream reports). Most US listings have one; other exchanges, crypto and FX don't, and their rows stay two lines.
 - In a search result, whether the symbol is already on the list.
 - Whether the symbol has an active price alert (see `PriceAlerts`).
 
@@ -21,7 +21,7 @@ On the Watchlist tab, one per watched symbol, in the order they were added (a ne
 - A symbol with an active price alert ends its symbol line with a 12px bell in `ds-muted`, 5px from the symbol, and "price alert on" in the row's `aria-label`. A rule that has already fired doesn't count.
 - Price mono `--ds-fs-12` 500 in `ds-text`. The currency code sits before it, 5px apart on the same baseline, in `--ds-fs-9` 500 `ds-muted`, on every row: "$" alone is US, Canadian or Australian dollars.
 - Today's move mono `--ds-fs-9`, 6px below the price, in gain/loss colour by the percentage as shown: a move that rounds to 0.0% stays `ds-text`. No pill on the row; the pill belongs to the symbol page's hero.
-- The pre-market or after-hours line sits 6px below today's move, in `--ds-fs-9`: "Pre-market" or "After hours" in `ds-secondary`, the price mono `ds-text`, the percentage mono in gain/loss colour by the same rule, 5px apart. The currency code isn't repeated; it is two lines up on the same row. It wraps rather than clips. The main price and today's move stay the regular session's, so the row's top two lines never change meaning.
+- The pre-market or after-hours line sits 6px below today's move, in `--ds-fs-9`: "Pre-market", "After hours" or "Overnight" in `ds-secondary`, the price mono `ds-text`, the percentage mono in gain/loss colour by the same rule, 5px apart. The currency code isn't repeated; it is two lines up on the same row. It wraps rather than clips. The main price and today's move stay the regular session's, so the row's top two lines never change meaning.
 - Without a quote, the end column says "No price" in `--ds-fs-9` `ds-muted` (nothing while quotes are still loading).
 - The add mark is a 32px square with a 9px radius: a + in `ds-accent` on `ds-accent-tint` while the symbol can be added, a bare ✓ in `ds-accent` once it is on the list. The whole row is the button, with `aria-pressed` and an `aria-label` that says what a tap does ("Add NVDA, NVIDIA Corporation, to watchlist").
 - Rows bleed 10px into the gutter on both sides so the press highlight (`ds-subtle`) is wider than the text. One `ds-line` hairline under each row; none under the last. No chevron.

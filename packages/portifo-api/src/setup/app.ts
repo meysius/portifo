@@ -60,7 +60,7 @@ export function buildApp(): App {
   const watchlistRepo = new DrizzleWatchlistRepo(db);
   const watchlistService = new WatchlistService(logger, watchlistRepo);
   const alertRepo = new DrizzleAlertRepo(db);
-  const alertService = new AlertService(logger, alertRepo, marketService, liveQuoteService, pushService);
+  const alertService = new AlertService(logger, alertRepo, liveQuoteService, pushService);
 
   const controllers: SWController[] = [
     new UsersController(logger, identityService),

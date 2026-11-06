@@ -23,8 +23,10 @@ export type Quote = {
   extended?: ExtendedHours;
 };
 
+// Overnight is the US listings' 8pm–4am ET session, which only the live
+// stream reports.
 export type ExtendedHours = {
-  session: "pre" | "post";
+  session: "pre" | "post" | "overnight";
   price: number;
   // Against the quote's `price`: the move since the regular session closed.
   change: number;
@@ -36,6 +38,7 @@ export type ExtendedHours = {
 export const EXTENDED_LABEL: Record<ExtendedHours["session"], string> = {
   pre: "Pre-market",
   post: "After hours",
+  overnight: "Overnight",
 };
 
 // The envelope returned by GET /market/fx — named distinctly from lib/fx.ts's
@@ -49,7 +52,7 @@ export type FxRatesResponse = {
 
 // Volume is shares traded in the bar; the portfolio series has none. A bar
 // struck outside the regular session names it; only an extended 1D has any.
-export type HistoryPoint = { date: string; close: number; volume?: number; session?: ExtendedHours["session"] };
+export type HistoryPoint = { date: string; close: number; volume?: number; session?: "pre" | "post" };
 export type HistoryRange = "1D" | "1W" | "1M" | "3M" | "6M" | "1Y" | "2Y" | "5Y" | "All";
 
 // A moving average read off at one of a range's bars (same dates as

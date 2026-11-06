@@ -25,8 +25,10 @@ export type Quote = {
   extended?: ExtendedHours;
 };
 
+// Overnight is the US listings' 8pm–4am ET session, which only the live
+// feed reports; Yahoo's quotes stop at the after-hours close.
 export type ExtendedHours = {
-  session: "pre" | "post";
+  session: "pre" | "post" | "overnight";
   price: number;
   // Against the quote's `price`: the move since the regular session closed.
   change: number;
@@ -49,7 +51,7 @@ function extendedHours(q: any): ExtendedHours | undefined {
   const close = toIso(q.regularMarketTime) ?? "";
   return (["pre", "post"] as const)
     .map((session) => ({
-      session,
+      session: session as ExtendedHours["session"],
       price: q[`${session}MarketPrice`],
       change: q[`${session}MarketChange`] ?? 0,
       changePercent: q[`${session}MarketChangePercent`] ?? 0,

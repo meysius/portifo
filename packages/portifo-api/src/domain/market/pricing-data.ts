@@ -7,7 +7,8 @@ export type Tick = {
   // When the trade was struck, epoch ms.
   time: number;
   // Yahoo's session flag: 0 pre-market, 1 regular, 2 post-market, 3
-  // extended. proto3 leaves a 0 off the wire, so a missing flag reads as 0.
+  // extended, 4 overnight (seen on NVDA after 8pm ET). proto3 leaves a 0 off
+  // the wire, so a missing flag reads as 0.
   marketHours: number;
 };
 
