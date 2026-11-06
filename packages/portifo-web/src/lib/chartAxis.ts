@@ -115,6 +115,17 @@ export function valueAxis(lo: number, hi: number): { ticks: ValueTick[]; width: 
 
 const HOUR = 3_600_000;
 
+// Whether a series runs over more than one date: a 1D before the open (the
+// day before, then today's pre-market), or a market's last 24 hours.
+export function spansDates(times: number[]): boolean {
+  return times.length > 1 && new Date(times[0]).toDateString() !== new Date(times[times.length - 1]).toDateString();
+}
+
+// A 1D that runs over two dates names the second where it begins ("Fri").
+function newDate(times: number[], i: number, range: HistoryRange): boolean {
+  return range === "1D" && i > 0 && new Date(times[i]).toDateString() !== new Date(times[i - 1]).toDateString();
+}
+
 // The label for point i if a new unit begins there, else null. A 1W series is
 // cut into sessions by its overnight gaps rather than by calendar date, so a
 // session that crosses local midnight still reads as one day.
@@ -126,6 +137,7 @@ function unitStart(times: number[], i: number, range: HistoryRange): string | nu
     return null; // a range rarely opens on a week, month or year
   }
   const prev = new Date(times[i - 1]);
+  if (newDate(times, i, range)) return d.toLocaleDateString("en-US", { weekday: "short" });
   switch (range) {
     case "1D":
       return d.getHours() !== prev.getHours() ? String(d.getHours() % 12 || 12) : null;
@@ -145,15 +157,20 @@ function unitStart(times: number[], i: number, range: HistoryRange): string | nu
 // Where each hour (1D), session (1W), week (1M), month (3M, 6M, 1Y) or year (2Y, 5Y, All)
 // begins. When they crowd (a year's twelve months, a decade's years), every
 // second or third is kept, evenly. A unit that begins on the last point spans
-// nothing, so it gets no guide.
+// nothing, so it gets no guide. A 1D's new date is always kept, the hours
+// beside it giving way.
 export function timeAxis(times: number[], xs: number[], range: HistoryRange, width: number): TimeTick[] {
   const ticks: TimeTick[] = [];
+  const dates: TimeTick[] = [];
   for (let i = 0; i < times.length - 1; i++) {
     const label = unitStart(times, i, range);
-    if (label) ticks.push({ x: xs[i], label });
+    if (label) (newDate(times, i, range) ? dates : ticks).push({ x: xs[i], label });
   }
-  const room = Math.max(0, ...ticks.map((t) => t.label.length)) * CHAR_W + 2 * LABEL_INSET;
+  const room = Math.max(0, ...[...ticks, ...dates].map((t) => t.label.length)) * CHAR_W + 2 * LABEL_INSET;
   let every = 1;
   while (ticks.some((t, j) => j >= every && j % every === 0 && t.x - ticks[j - every].x < room)) every++;
-  return ticks.filter((t, j) => j % every === 0 && t.x + LABEL_INSET + t.label.length * CHAR_W <= width);
+  const kept = ticks.filter((t, j) => j % every === 0 && !dates.some((d) => Math.abs(d.x - t.x) < room));
+  return [...kept, ...dates]
+    .filter((t) => t.x + LABEL_INSET + t.label.length * CHAR_W <= width)
+    .sort((a, b) => a.x - b.x);
 }

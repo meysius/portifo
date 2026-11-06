@@ -12,6 +12,7 @@ import {
   liveLabel,
   plotY,
   sessionSpans,
+  spansDates,
   timeAxis,
   valueAxis,
   valueColumnWidth,
@@ -57,7 +58,11 @@ import ValueGrid from "./ValueGrid";
 // after-hours trading. Those stretches sit on a recessed ground with the
 // line faded through them, so the regular session still reads as the day;
 // a scrub names the session it lands in. The price above the chart stays the
-// regular session's.
+// regular session's. 1D is the last trading day, not the last 24 hours, and
+// it turns over at the open: before it, the day before, then with Extended
+// hours today's pre-market after it, the new day named where it begins. A
+// market that never closes (crypto, currencies, futures) shows its last 24
+// hours.
 //
 // On 1D the line runs on to the latest trade as the quote streams in, and the
 // price tagged on the scale moves with it (see lib/liveSeries): the regular
@@ -217,8 +222,12 @@ function runs(avg: (number | undefined)[]) {
 
 const fmtTime = (t: number) => new Date(t).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 
-function tipLabel(t: number, range: HistoryRange, session?: Session) {
-  if (range === "1D") return session ? `${fmtTime(t)} · ${EXTENDED_LABEL[session]}` : fmtTime(t);
+// `dated`: a 1D that runs over two dates, whose times need their day.
+function tipLabel(t: number, range: HistoryRange, session?: Session, dated = false) {
+  if (range === "1D") {
+    const time = dated ? `${new Date(t).toLocaleDateString("en-US", { weekday: "short" })} ${fmtTime(t)}` : fmtTime(t);
+    return session ? `${time} · ${EXTENDED_LABEL[session]}` : time;
+  }
   if (range === "1W" || range === "1M") return `${fmtDay(new Date(t))}, ${fmtTime(t)}`;
   return fmtDay(new Date(t));
 }
@@ -388,6 +397,7 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
       : (earningsCache.get(symbol) ?? null)
     : null;
   const stamps = s.map((p) => p.t);
+  const dated = range === "1D" && spansDates(stamps);
 
   const last = s.length - 1;
   // A refetch can bring fewer bars than were scrubbed across (a new day's).
@@ -563,7 +573,7 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
             className="hd-chart-tip"
             style={{ left: xs[scrub], transform: `translateX(-${(xs[scrub] / plotW) * 100}%)` }}
           >
-            {fmtCcy(s[scrub].p, ccy)} · {ccy} · {tipLabel(s[scrub].t, range, s[scrub].x)}
+            {fmtCcy(s[scrub].p, ccy)} · {ccy} · {tipLabel(s[scrub].t, range, s[scrub].x, dated)}
           </div>
         )}
         {/* Hangs beside the crosshair, on the side with more room, so the
@@ -577,7 +587,7 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
                 : { left: xs[scrub] - LADDER_GAP, transform: "translateX(-100%)" }
             }
           >
-            <span className="hd-chart-ladder-when">{tipLabel(s[scrub].t, range, s[scrub].x)}</span>
+            <span className="hd-chart-ladder-when">{tipLabel(s[scrub].t, range, s[scrub].x, dated)}</span>
             <span className="hd-chart-ladder-ccy">{ccy}</span>
             {rungs.map((r) => (
               <div key={r.label} className="hd-chart-rung" data-kind={r.kind}>

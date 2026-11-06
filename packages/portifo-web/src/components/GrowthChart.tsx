@@ -11,6 +11,7 @@ import {
   liveLabel,
   plotY,
   sessionSpans,
+  spansDates,
   timeAxis,
   valueAxis,
   valueColumnWidth,
@@ -29,21 +30,23 @@ import ValueGrid from "./ValueGrid";
 //
 // Under it, one toggle: Extended hours, which stretches 1D across the day's
 // pre-market and after-hours trading, drawn as on a holding's chart (see
-// HoldingChart). Those stretches value each holding at its latest trade; the
-// total above the chart stays the regular session's.
+// HoldingChart), the day before included until the open. Those stretches
+// value each holding at its latest trade; the total above the chart stays the
+// regular session's.
 
 const GROWTH_RANGES: HistoryRange[] = ["1D", "1W", "1M", "3M", "6M", "1Y", "2Y", "5Y", "All"];
 const CHART_H = PLOT_H + AXIS_H;
 
 // 1W and 1M are intraday bars, so their readout names the hour too. An
-// extended 1D's names the session outside regular hours.
-function growthLabel(point: HistoryPoint, range: HistoryRange) {
+// extended 1D's names the session outside regular hours, and one that runs
+// over two dates (the day before, until the open) names the day.
+function growthLabel(point: HistoryPoint, range: HistoryRange, dated: boolean) {
   const intraday = range === "1W" || range === "1M";
   const session = point.session ? ` · ${EXTENDED_LABEL[point.session]}` : "";
   return new Date(point.date).toLocaleString(
     "en-US",
     range === "1D"
-      ? { hour: "numeric", minute: "2-digit" }
+      ? { weekday: dated ? "short" : undefined, hour: "numeric", minute: "2-digit" }
       : {
           month: "short",
           day: "numeric",
@@ -161,7 +164,7 @@ export default function GrowthChart({
         <div ref={tipRef} className="po-chart-tooltip" style={{ opacity: at != null ? 1 : 0 }}>
           {at != null && (
             <>
-              <span className="po-tip-date">{growthLabel(points[at], range)}</span>
+              <span className="po-tip-date">{growthLabel(points[at], range, range === "1D" && spansDates(stamps))}</span>
               <br />
               <span className="money">{fmtCcy(points[at].close, ccy)}</span>
             </>

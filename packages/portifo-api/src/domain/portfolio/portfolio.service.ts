@@ -443,12 +443,15 @@ export class PortfolioService {
   // An extended 1D's timestamps: every bar any holding traded in, from the
   // earliest pre-market to the latest after-hours, since one listing's
   // extended hours (New York's) are another's closed ones (Toronto's). Each
-  // listing's series is already its own latest day, but those can differ (at
-  // 7am New York's pre-market has begun on a day Toronto hasn't), so only the
-  // last run of them counts: everything after the last overnight gap. A
-  // timestamp is the regular session's while any holding trades regular
-  // hours; otherwise it takes its session from the bars struck then, written
-  // into `sessions`.
+  // listing's series is already its own latest day (see
+  // MarketService.getHistory), which before New York's open runs from the day
+  // before through today's pre-market, across the night between them. The
+  // days can differ: on a Canadian holiday Toronto's is last week's. So the
+  // grid starts where the current listings' days start, those whose series
+  // end with the latest, and a listing whose day ended hours before them
+  // counts only from there. A timestamp is the regular session's while any
+  // holding trades regular hours; otherwise it takes its session from the
+  // bars struck then, written into `sessions`.
   private extendedGrid(seriesList: HistoryPoint[][], sessions: Map<string, Session>): string[] {
     const regular = new Set<string>();
     for (const series of seriesList) {
@@ -458,11 +461,12 @@ export class PortfolioService {
       }
     }
     for (const date of regular) sessions.delete(date);
-    const all = [...new Set(seriesList.flat().map((p) => p.date))].sort();
-    const ts = all.map((d) => new Date(d).getTime());
-    let start = ts.length - 1;
-    while (start > 0 && ts[start] - ts[start - 1] <= 2 * 3_600_000) start--;
-    return all.slice(Math.max(start, 0));
+    const ms = (date: string) => new Date(date).getTime();
+    const priced = seriesList.filter((series) => series.length > 0);
+    const endOf = (series: HistoryPoint[]) => ms(series[series.length - 1].date);
+    const latest = Math.max(...priced.map(endOf));
+    const start = Math.min(...priced.filter((series) => latest - endOf(series) <= 2 * 3_600_000).map((series) => ms(series[0].date)));
+    return [...new Set(priced.flat().map((p) => p.date))].filter((date) => ms(date) >= start).sort();
   }
 
   // `series` is sorted ascending by date; advances `from` to the last index

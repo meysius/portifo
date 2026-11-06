@@ -113,8 +113,9 @@ function historyWindow(range: HistoryRange): { period1: Date; interval: "5m" | "
   const period1 = new Date();
   switch (range) {
     case "1D":
-      // The last SESSION, not the last 24h — on a weekend or holiday the last
-      // 24h is empty. Five days covers any closure; getHistory makes the cut.
+      // The last trading day, not the last 24h: on a weekend or holiday the
+      // last 24h is empty. Five days covers any closure, and before the open
+      // the day before too; getHistory makes the cut.
       period1.setDate(period1.getDate() - 5);
       return { period1, interval: "5m" };
     case "1W":
@@ -153,6 +154,7 @@ function toMs(t: unknown): number {
 }
 
 const SESSION_GAP_MS = 2 * 3_600_000;
+const DAY_MS = 86_400_000;
 
 // How long a daily or weekly bar spans.
 const BAR_MS: Partial<Record<string, number>> = { "1d": 86_400_000, "1wk": 7 * 86_400_000 };
@@ -176,11 +178,24 @@ function foldLiveRow(points: HistoryPoint[], interval: string): HistoryPoint[] {
 
 // The last session: everything after the last overnight gap. Bars are 5
 // minutes apart within a session, so any gap over 2h is a session boundary.
+// It is the latest one until the next session opens, so before the open a
+// 1D is the day before, as Apple Stocks draws it.
 function lastSession(points: HistoryPoint[]): HistoryPoint[] {
   const ts = points.map((p) => new Date(p.date).getTime());
   let start = ts.length - 1;
   while (start > 0 && ts[start] - ts[start - 1] <= SESSION_GAP_MS) start--;
   return points.slice(start);
+}
+
+// A market that never pauses for a night (crypto, currencies through the
+// week, futures, whose daily halt is an hour) has no trading day to keep:
+// its last session is the whole fetch, five days. Its 1D is the last 24
+// hours instead. A session that began less than a day ago (a currency's
+// Sunday-evening open) stands as it is.
+function last24Hours(points: HistoryPoint[]): HistoryPoint[] {
+  if (points.length === 0) return points;
+  const end = new Date(points[points.length - 1].date).getTime();
+  return points.filter((p) => new Date(p.date).getTime() >= end - DAY_MS);
 }
 
 // One trading day with its extended hours: from the pre-market's start, and
@@ -207,23 +222,21 @@ function extendedDays(periods: unknown): TradingDay[] {
 }
 
 // The latest trading day from its pre-market to its after-hours, each bar
-// outside the regular session named for its side of it. In the first minutes
-// of a pre-market there is one bar or none, nothing to draw a line through, so
-// the day before stands until there are two.
+// outside the regular session named for its side of it. It turns over at the
+// regular open, not at 4 AM: until then the day before runs ahead of today's
+// pre-market, whole. A morning's look shows yesterday's move, as Apple Stocks
+// does, with the trading since after it, rather than a few thin hours of
+// pre-market stretched across the chart (or, in its first minutes, one bar).
 function lastExtendedDay(points: HistoryPoint[], days: TradingDay[]): HistoryPoint[] {
   const ts = points.map((p) => new Date(p.date).getTime());
-  let d = days.findLastIndex((day) => day.start <= ts[ts.length - 1]);
+  const last = ts[ts.length - 1];
+  let d = days.findLastIndex((day) => day.start <= last);
   if (d < 0) return lastSession(points);
-  let from = ts.findIndex((t) => t >= days[d].start);
-  let to = ts.length;
-  if (to - from < 2 && d > 0) {
-    to = from;
-    d--;
-    from = ts.findIndex((t) => t >= days[d].start);
-  }
-  const { open, close } = days[d];
-  return points.slice(from, to).map((p, i) => {
+  if (last < days[d].open && d > 0) d--;
+  const from = ts.findIndex((t) => t >= days[d].start);
+  return points.slice(from).map((p, i) => {
     const t = ts[from + i];
+    const { open, close } = days.findLast((day) => day.start <= t) ?? days[d];
     return t < open ? { ...p, session: "pre" } : t >= close ? { ...p, session: "post" } : p;
   });
 }
@@ -302,11 +315,12 @@ export class MarketService {
       interval,
     );
     if (range !== "1D" || points.length === 0) return points;
-    // The last session, not the last 24h (see historyWindow). A listing that
-    // trades outside regular hours has its days marked out by Yahoo; a thin
-    // pre-market can go quiet for two hours, so a gap can't be trusted there.
+    // The last trading day, not the last 24h (see historyWindow). A listing
+    // that trades outside regular hours has its days marked out by Yahoo; a
+    // thin pre-market can go quiet for two hours, so a gap can't be trusted
+    // there. A market that never closes has no day: the last 24 hours.
     const days = includePrePost ? extendedDays(result.meta.tradingPeriods) : [];
-    return days.length ? lastExtendedDay(points, days) : lastSession(points);
+    return days.length ? lastExtendedDay(points, days) : last24Hours(lastSession(points));
   }
 
   // The `window`-day simple moving average of daily closes, read off at each
