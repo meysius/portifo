@@ -5489,11 +5489,12 @@ ion-modal.ac-create-modal {
 }
 
 /* ── the list, and search results ────────────────────────────────────────── */
-/* On the Transactions ledger's metrics: a count over a 4px band, then rows of
-   at least 60px, 10px padding and gap, a highlight that bleeds 10px into the
-   gutter. Two lines a row, whatever the hour.
-     NVDA                         $181.60  −9.3%
-     NVIDIA Corporation   USD · Overnight $185.92 +2.4%  */
+/* A count over a 4px band, then rows of at least 60px with 10px padding and
+   gap, and a rounded highlight that bleeds 10px into the gutter. No rule
+   between rows. At the right, one line: the price (its session's glyph
+   before it outside regular hours), a bar of the move, the move.
+     NVDA                  ☾ 185.08  ──┼▬▬▬   +1.92%
+     NVIDIA Corporation                                  */
 .wl-list-heading {
   display: flex;
   justify-content: flex-end;
@@ -5525,13 +5526,9 @@ ion-modal.ac-create-modal {
   min-height: 60px;
   margin-inline: -10px;
   padding: 10px;
-  border-bottom: 1px solid var(--ds-line);
+  border-radius: 10px;
   text-align: left;
   color: var(--ds-text);
-}
-
-.wl-page .wl-row:last-child {
-  border-bottom: 0;
 }
 
 .wl-identity {
@@ -5560,49 +5557,77 @@ ion-modal.ac-create-modal {
   color: var(--ds-secondary);
 }
 
+/* The price, the bar and the move, on one line. The bar and the move hold
+   fixed widths, so prices, bars and moves each line up down the list. */
 .wl-end {
+  display: flex;
   flex-shrink: 0;
-  max-width: 65%;
-  text-align: right;
+  align-items: center;
+  gap: 10px;
 }
 
-/* The price, then today's move beside it, on one baseline. */
-.wl-quote {
+.wl-price {
   display: flex;
-  justify-content: flex-end;
-  align-items: baseline;
-  gap: 7px;
+  align-items: center;
+  gap: 4px;
   line-height: 1.4;
 }
 
-.wl-page .wl-quote .money {
-  font-size: var(--ds-fs-11);
-  font-weight: 500;
+.wl-page .wl-price .money {
+  font-size: var(--ds-fs-12);
 }
 
-.wl-page .wl-quote .wl-move {
-  font-size: var(--ds-fs-10);
+.wl-session {
+  display: grid;
+  color: var(--ds-secondary);
 }
 
-/* Fine print under the price: its currency, and outside regular hours the
-   session, its price and the move from the close. */
-.wl-fine {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 0 4px;
-  margin-top: 3px;
-  font-size: var(--ds-fs-9);
-  line-height: 1.6;
+.wl-ccy {
+  font-size: var(--ds-fs-8);
   color: var(--ds-muted);
 }
 
-.wl-fine .dot {
-  margin-right: 1px;
+/* The move from a tick at the centre of a track: right in gain colour, left
+   in loss colour, the list's biggest filling its half. */
+.wl-bar {
+  position: relative;
+  flex-shrink: 0;
+  width: 52px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--ds-line);
 }
 
-.wl-fine .money:not(.positive, .negative) {
-  color: var(--ds-secondary);
+.wl-bar::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  left: 25.5px;
+  width: 1px;
+  height: 14px;
+  background: var(--ds-muted);
+}
+
+.wl-bar-fill {
+  position: absolute;
+  top: 0;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.wl-bar-fill.positive {
+  background: var(--ds-positive);
+}
+
+.wl-bar-fill.negative {
+  background: var(--ds-negative);
+}
+
+.wl-page .wl-end .wl-move {
+  min-width: 7ch;
+  font-size: var(--ds-fs-11);
+  font-weight: 500;
+  text-align: right;
 }
 
 .wl-no-quote {

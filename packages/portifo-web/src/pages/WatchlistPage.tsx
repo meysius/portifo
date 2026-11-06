@@ -5,29 +5,37 @@ import type { ReactNode } from "react";
 import { useHistory } from "react-router-dom";
 import { isOn } from "../api/alerts";
 import { EXTENDED_LABEL, searchSymbols } from "../api/market";
-import type { Quote, SymbolResult } from "../api/market";
+import type { ExtendedHours, Quote, SymbolResult } from "../api/market";
 import StickyTitleBar from "../components/StickyTitleBar";
 import { useAlerts } from "../context/AlertsContext";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { useWatchlist } from "../context/WatchlistContext";
-import { fmtCcy, fmtSignedCcy, fmtSignedPct } from "../lib/fx";
+import { fmtCcy, fmtSignedCcy } from "../lib/fx";
 import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 
-// The Watchlist tab: symbols you follow, owned or not, as compact as the
-// Transactions ledger and on its row metrics. The search field sits under the
-// heading; while it holds a query, its results take the list's place and
-// tapping one adds it (or, once added, takes it off again). A row on the list
-// is two lines whatever the hour: the symbol over its company, and the price
-// with today's move over a line of fine print, the currency and, outside
-// regular hours, the pre-market, after-hours or overnight price. A row pushes
-// the symbol's own page, with its chart and price alerts. A bell marks a
-// symbol with an alert on.
+// The Watchlist tab: symbols you follow, owned or not. The search field sits
+// under the heading; while it holds a query, its results take the list's
+// place and tapping one adds it (or, once added, takes it off again). A row
+// on the list is the symbol over its company, then at the right its latest
+// price, a bar of its move and the move itself. Outside regular hours, once
+// the symbol has traded since the close, the price is that trade's, marked by
+// its session's glyph (a sun before the open, a moon after the close, a moon
+// and a star overnight), and the move is the one since the close. A row
+// pushes the symbol's own page, with its chart and price alerts. A bell marks
+// a symbol with an alert on.
+//
+// The bars share one scale, the list's biggest move filling its half, so the
+// rows compare at a glance; under 1% they never fill.
 //
 // The list belongs to the signed-in user, not the active portfolio, and every
-// price stays in the symbol's own currency, with its code under it.
+// price stays in the symbol's own currency; one that isn't US dollars says so.
 
 const SEARCH_DEBOUNCE_MS = 250;
+// Half the bar's width stands for the list's biggest move, or 1%, whichever is more.
+const BAR_FLOOR_PCT = 1;
+const BAR_HALF = 26;
+const BAR_MIN = 6; // a move that shows is at least a dot
 
 const icon = (body: ReactNode, size = 20) => (
   <svg
@@ -69,15 +77,67 @@ const ICONS = {
   ),
 };
 
-// Coloured by the percentage as shown: a move that rounds to 0.0% is no move.
-const tone = (changePercent: number) => {
-  const pct = Math.round(changePercent * 10) / 10;
-  return pct > 0 ? "positive" : pct < 0 ? "negative" : "";
+// The session a row's price was struck in, when it isn't the regular one.
+const SESSION_ICONS: Record<ExtendedHours["session"], ReactNode> = {
+  pre: icon(
+    <>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4" />
+    </>,
+    14,
+  ),
+  post: icon(<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />, 14),
+  overnight: icon(
+    <>
+      <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />
+      <path d="M17 3v4M15 5h4" />
+    </>,
+    14,
+  ),
 };
-const today = (q: Quote) => `${fmtSignedCcy(q.change, q.currency)} · ${fmtSignedPct(q.changePercent)}`;
-const outsideHours = (q: Quote) =>
-  q.extended &&
-  `${EXTENDED_LABEL[q.extended.session]} ${fmtCcy(q.extended.price, q.currency)}, ${fmtSignedPct(q.extended.changePercent)}`;
+
+// The row's price and move: the latest trade outside regular hours and its
+// move since the close, else the regular price and today's move.
+const latest = (q: Quote) =>
+  q.extended
+    ? { price: q.extended.price, pct: q.extended.changePercent, session: q.extended.session }
+    : { price: q.price, pct: q.changePercent, session: undefined };
+
+// To two places, as a watchlist reads small moves, with a true minus.
+const fmtMove = (pct: number) => {
+  const s = Math.abs(pct).toFixed(2);
+  return s === "0.00" ? "0.00%" : `${pct < 0 ? "−" : "+"}${s}%`;
+};
+// Coloured by the percentage as shown: a move that rounds to 0.00% is no move.
+const tone = (pct: number) => {
+  const shown = Math.round(pct * 100) / 100;
+  return shown > 0 ? "positive" : shown < 0 ? "negative" : "";
+};
+const fmtPrice = (n: number) =>
+  n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: Math.abs(n) < 1 ? 4 : 2,
+  });
+const describe = (q: Quote) => {
+  const { price, pct, session } = latest(q);
+  const at = `${fmtCcy(price, q.currency)} ${q.currency}`;
+  return session
+    ? `${EXTENDED_LABEL[session]} ${at}, ${fmtMove(pct)} since the close`
+    : `${at}, ${fmtSignedCcy(q.change, q.currency)} · ${fmtMove(pct)} today`;
+};
+
+// A track with a tick at its centre; the move grows from the tick, right for
+// a gain and left for a loss.
+function MoveBar({ pct, scale }: { pct: number; scale: number }) {
+  const t = tone(pct);
+  if (!t) return <span className="wl-bar" aria-hidden="true" />;
+  const w = Math.max(BAR_MIN, Math.min(1, Math.abs(pct) / scale) * BAR_HALF);
+  return (
+    <span className="wl-bar" aria-hidden="true">
+      <span className={`wl-bar-fill ${t}`} style={pct > 0 ? { left: BAR_HALF, width: w } : { right: BAR_HALF, width: w }} />
+    </span>
+  );
+}
 
 function WatchlistPage() {
   const history = useHistory();
@@ -155,6 +215,10 @@ function WatchlistPage() {
   const alerted = new Set(alerts?.filter(isOn).map((a) => a.symbol));
   const toggle = (r: SymbolResult) => (watching.has(r.symbol) ? remove(r.symbol) : add(r.symbol, r.name));
   const openSymbol = (symbol: string) => history.push(`${tabBase}/symbol/${encodeURIComponent(symbol)}`);
+  const barScale = Math.max(
+    BAR_FLOOR_PCT,
+    ...(symbols ?? []).map((s) => (quotes[s] ? Math.abs(latest(quotes[s]).pct) : 0)),
+  );
 
   const listView =
     symbols === null ? (
@@ -183,19 +247,13 @@ function WatchlistPage() {
           {symbols.map((symbol) => {
             const q = quotes[symbol];
             const name = q?.shortName ?? names[symbol];
+            const at = q && latest(q);
             return (
               <button
                 key={symbol}
                 type="button"
                 className="wl-row"
-                aria-label={[
-                  symbol,
-                  name,
-                  q && `${q.currency} ${fmtCcy(q.price, q.currency)}`,
-                  q && `${today(q)} today`,
-                  q && outsideHours(q),
-                  alerted.has(symbol) && "price alert on",
-                ]
+                aria-label={[symbol, name, q && describe(q), alerted.has(symbol) && "price alert on"]
                   .filter(Boolean)
                   .join(", ")}
                 onClick={() => openSymbol(symbol)}
@@ -207,25 +265,15 @@ function WatchlistPage() {
                   </span>
                   {name && <span className="wl-meta">{name}</span>}
                 </span>
-                {q ? (
+                {q && at ? (
                   <span className="wl-end">
-                    <span className="wl-quote">
-                      <span className="money">{fmtCcy(q.price, q.currency)}</span>
-                      <span className={`wl-move money ${tone(q.changePercent)}`}>{fmtSignedPct(q.changePercent)}</span>
+                    <span className="wl-price">
+                      {at.session && <span className="wl-session">{SESSION_ICONS[at.session]}</span>}
+                      <span className="money">{fmtPrice(at.price)}</span>
+                      {q.currency !== "USD" && <span className="wl-ccy">{q.currency}</span>}
                     </span>
-                    <span className="wl-fine">
-                      {q.currency}
-                      {q.extended && (
-                        <>
-                          <span className="dot">·</span>
-                          {EXTENDED_LABEL[q.extended.session]}
-                          <span className="money">{fmtCcy(q.extended.price, q.currency)}</span>
-                          <span className={`money ${tone(q.extended.changePercent)}`}>
-                            {fmtSignedPct(q.extended.changePercent)}
-                          </span>
-                        </>
-                      )}
-                    </span>
+                    <MoveBar pct={at.pct} scale={barScale} />
+                    <span className={`wl-move money ${tone(at.pct)}`}>{fmtMove(at.pct)}</span>
                   </span>
                 ) : (
                   !loading.market && <span className="wl-no-quote">No price</span>
