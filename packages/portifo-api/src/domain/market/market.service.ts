@@ -1,7 +1,6 @@
 import YahooFinance from "yahoo-finance2";
 import type { ChartMetaTradingPeriods } from "yahoo-finance2/modules/chart";
 import { SWLogger } from "simple-wire";
-import { buildSpark, Spark } from "./spark";
 
 export type Quote = {
   symbol: string;
@@ -209,11 +208,6 @@ function lastExtendedDay(points: HistoryPoint[], days: TradingDay[]): HistoryPoi
   });
 }
 
-// The watchlist's lines: how long one is held, and how many charts are asked
-// for at once.
-const SPARK_TTL_MS = 60_000;
-const SPARK_CONCURRENCY = 4;
-
 // A background job waits on quotes, and a hung one would hold its slot forever.
 const QUOTE_TIMEOUT_MS = 15_000;
 
@@ -229,8 +223,6 @@ const EARNINGS_REPEAT_MS = 3 * 86_400_000;
 
 export class MarketService {
   private readonly client = new YahooFinance({ suppressNotices: ["yahooSurvey"] });
-  // Each symbol's line by when it was fetched, keyed with its extended hours.
-  private readonly sparkCache = new Map<string, { at: number; spark: Spark | null }>();
 
   constructor(private readonly logger: SWLogger) {}
 
@@ -292,42 +284,6 @@ export class MarketService {
     // pre-market can go quiet for two hours, so a gap can't be trusted there.
     const days = includePrePost ? extendedDays(result.meta.tradingPeriods) : [];
     return days.length ? lastExtendedDay(points, days) : lastSession(points);
-  }
-
-  // The watchlist's lines: each symbol's latest trading day (see Spark), with
-  // its pre-market and after-hours when `extended`. A symbol whose chart
-  // can't be had is left out; the row draws without a line. Each is held a
-  // minute, so the list's every visit doesn't ask Yahoo again.
-  async getSparks(symbols: string[], extended: boolean): Promise<Record<string, Spark>> {
-    const now = Date.now();
-    for (const [key, hit] of this.sparkCache) if (now - hit.at >= SPARK_TTL_MS) this.sparkCache.delete(key);
-    const out: Record<string, Spark> = {};
-    const queue = [...new Set(symbols)];
-    const work = async () => {
-      for (let symbol = queue.shift(); symbol; symbol = queue.shift()) {
-        try {
-          const spark = await this.getSpark(symbol, extended);
-          if (spark) out[symbol] = spark;
-        } catch {
-          this.logger.info(`MarketService.getSparks: no chart for ${symbol}`);
-        }
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(SPARK_CONCURRENCY, queue.length) }, work));
-    return out;
-  }
-
-  private async getSpark(symbol: string, extended: boolean): Promise<Spark | null> {
-    const key = `${symbol}|${extended ? "extended" : "regular"}`;
-    const hit = this.sparkCache.get(key);
-    if (hit && Date.now() - hit.at < SPARK_TTL_MS) return hit.spark;
-    // Five days, as 1D's history: enough to reach the last session over a
-    // long weekend.
-    const period1 = new Date(Date.now() - 5 * 86_400_000);
-    const result = await this.client.chart(symbol, { period1, period2: new Date(), interval: "5m", includePrePost: extended });
-    const spark = buildSpark(result, extended);
-    this.sparkCache.set(key, { at: Date.now(), spark });
-    return spark;
   }
 
   // The `window`-day simple moving average of daily closes, read off at each

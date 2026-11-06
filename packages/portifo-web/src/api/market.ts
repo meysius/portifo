@@ -148,32 +148,6 @@ export async function getFxRates(base: string, symbols: string[]): Promise<FxRat
   return res.json();
 }
 
-// A watchlist row's line: one trading day of 5-minute closes on that day's
-// own clock. All times epoch ms. `start`–`end` is the span the line is drawn
-// across (the regular session, or with extended hours the pre-market's start
-// to the after-hours' end) and `open`–`close` the regular session within it.
-// A market that never closes (crypto, FX) gets the 24 hours to its latest
-// bar, and `rolling`.
-export type Spark = {
-  start: number;
-  end: number;
-  open: number;
-  close: number;
-  // [time, close], oldest first.
-  points: [number, number][];
-  rolling?: true;
-};
-
-// The lines for `symbols`, by symbol; one Yahoo has no chart for is missing.
-export async function getSparks(symbols: string[], extended: boolean): Promise<Record<string, Spark>> {
-  if (symbols.length === 0) return {};
-  const res = await apiFetch(
-    `/market/sparks?symbols=${encodeURIComponent(symbols.join(","))}${extended ? "&extended=1" : ""}`,
-  );
-  if (!res.ok) throw new Error("Failed to fetch charts");
-  return res.json();
-}
-
 // `extended`: a 1D with the day's pre-market and after-hours trading too.
 export async function getHistory(symbol: string, range: HistoryRange, extended = false): Promise<HistoryPoint[]> {
   const res = await apiFetch(

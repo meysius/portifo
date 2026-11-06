@@ -5489,20 +5489,42 @@ ion-modal.ac-create-modal {
 }
 
 /* ── the list, and search results ────────────────────────────────────────── */
-.wl-list {
-  margin-top: 8px;
-  padding: 0 var(--ds-gutter);
+/* On the Transactions ledger's metrics: a count over a 4px band, then rows of
+   at least 60px, 10px padding and gap, a highlight that bleeds 10px into the
+   gutter. Two lines a row, whatever the hour.
+     NVDA                         $181.60  −9.3%
+     NVIDIA Corporation   USD · Overnight $185.92 +2.4%  */
+.wl-list-heading {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+  padding: 10px var(--ds-gutter);
+  border-bottom: 4px solid var(--ds-subtle);
 }
 
-/* Portfolio's holding rows: 15px block padding, 11px gap, a highlight that
-   bleeds 10px into the gutter. */
+.wl-count {
+  font-size: var(--ds-fs-9);
+  color: var(--ds-muted);
+}
+
+.wl-list {
+  padding: 4px var(--ds-gutter) 0;
+}
+
+/* Search results follow the field directly. */
+.wl-search + .wl-list {
+  margin-top: 8px;
+  padding-top: 0;
+}
+
 .wl-page .wl-row {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 10px;
   width: calc(100% + 20px);
+  min-height: 60px;
   margin-inline: -10px;
-  padding: 15px 10px;
+  padding: 10px;
   border-bottom: 1px solid var(--ds-line);
   text-align: left;
   color: var(--ds-text);
@@ -5523,139 +5545,70 @@ ion-modal.ac-create-modal {
   overflow-wrap: anywhere;
   font-size: var(--ds-fs-12);
   font-weight: 600;
+  line-height: 1.4;
 }
 
+/* The company is the row's one line allowed to clip: a row stays two lines. */
 .wl-meta {
   display: block;
-  margin-top: 5px;
-  overflow-wrap: anywhere;
+  margin-top: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--ds-fs-9);
-  line-height: 1.4;
+  line-height: 1.6;
   color: var(--ds-secondary);
 }
 
-/* The code sits beside the price: "$" alone is US, Canadian or Australian. */
-.wl-price {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
+.wl-end {
+  flex-shrink: 0;
+  max-width: 65%;
+  text-align: right;
 }
 
-.wl-ccy {
-  font-size: var(--ds-fs-9);
+/* The price, then today's move beside it, on one baseline. */
+.wl-quote {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: 7px;
+  line-height: 1.4;
+}
+
+.wl-page .wl-quote .money {
+  font-size: var(--ds-fs-11);
   font-weight: 500;
+}
+
+.wl-page .wl-quote .wl-move {
+  font-size: var(--ds-fs-10);
+}
+
+/* Fine print under the price: its currency, and outside regular hours the
+   session, its price and the move from the close. */
+.wl-fine {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  margin-top: 3px;
+  font-size: var(--ds-fs-9);
+  line-height: 1.6;
   color: var(--ds-muted);
 }
 
-.wl-page .wl-price .money {
-  font-size: var(--ds-fs-12);
-  font-weight: 500;
+.wl-fine .dot {
+  margin-right: 1px;
 }
 
-.wl-page .wl-move {
-  font-size: var(--ds-fs-10);
-  font-weight: 500;
-}
-
-/* Outside regular hours: the session, its price, the move from the close. */
-.wl-extended {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 2px 5px;
-  font-size: var(--ds-fs-9);
+.wl-fine .money:not(.positive, .negative) {
   color: var(--ds-secondary);
-}
-
-.wl-extended .money:not(.positive, .negative) {
-  color: var(--ds-text);
 }
 
 .wl-no-quote {
   flex-shrink: 0;
   font-size: var(--ds-fs-9);
   color: var(--ds-muted);
-}
-
-/* The list as one grid: every row takes its columns from it (subgrid), so the
-   lines stand in one column down the list, whatever each price's width.
-     symbol           line    USD $181.60
-     company          line         −9.3%
-                  Overnight $185.92 +2.4%      (outside regular hours) */
-.wl-board {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 64px auto;
-  column-gap: 14px;
-}
-
-.wl-page .wl-board .wl-row {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: subgrid;
-  align-items: baseline;
-  gap: 0 14px;
-}
-
-@supports not (grid-template-columns: subgrid) {
-  .wl-page .wl-board .wl-row {
-    grid-template-columns: minmax(0, 1fr) 64px auto;
-  }
-}
-
-.wl-board .wl-symbol {
-  grid-area: 1 / 1;
-}
-
-.wl-board .wl-meta {
-  grid-area: 2 / 1;
-}
-
-.wl-board .wl-spark {
-  grid-area: 1 / 2 / 3;
-  align-self: center;
-  width: 64px;
-  height: 30px;
-}
-
-.wl-board .wl-price {
-  grid-area: 1 / 3;
-  justify-self: end;
-}
-
-.wl-board .wl-move {
-  grid-area: 2 / 3;
-  justify-self: end;
-  margin-top: 5px;
-}
-
-.wl-board .wl-extended {
-  grid-area: 3 / 2 / 4 / 4;
-  margin-top: 7px;
-}
-
-.wl-board .wl-no-quote {
-  grid-area: 1 / 3 / 3;
-  align-self: center;
-  justify-self: end;
-}
-
-/* The day in ink over a dashed previous close; colour stays on the figures. */
-.wl-spark-base {
-  stroke: var(--ds-muted);
-  stroke-width: 1;
-  stroke-dasharray: 2 2;
-}
-
-.wl-spark-line {
-  fill: none;
-  stroke: var(--ds-text);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.wl-spark-dot {
-  fill: var(--ds-text);
 }
 
 /* A result's mark: a tinted + while it can be added, a bare check once it's

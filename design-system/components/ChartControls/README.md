@@ -32,7 +32,7 @@ With a holding's price chart (and the portfolio's value chart, which shares the 
 - A scrub on an extended bar adds its session to the time: "5:10 PM · After hours", "8:55 AM · Pre-market", "9:34 PM · Overnight". So does the portfolio's readout.
 - Its swatch is a 12px line, 5px solid then faded to 40%: `ds-muted` off, `ds-accent` (the price line's colour) on.
 - The figures around the chart stay the regular session's: a holding's price and Today, the portfolio's total and its 1D change. The chart can end past them, at the latest trade outside regular hours, overnight included. On the portfolio's chart, each holding counts at its latest trade, and a listing that hasn't traded yet that day counts at its previous close.
-- The toggle is one setting for every chart on the device, kept like the others. Flip it on a holding and the Portfolio chart underneath already follows, and so do the Watchlist's lines (see WatchlistRow).
+- The toggle is one setting for every chart on the device, kept like the others. Flip it on a holding and the Portfolio chart underneath already follows.
 - A disabled chip (Earnings on 1D or All, Extended hours past 1D) drops to 45% opacity. A chip's notes sit beside it in `ds-muted`; each chip and its notes wrap together, so a note never strays to the other chip.
 - The plot itself: a vertical swipe scrolls the page, a horizontal one scrubs.
 
