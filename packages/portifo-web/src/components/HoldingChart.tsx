@@ -41,9 +41,9 @@ import ValueGrid from "./ValueGrid";
 // Where it runs outside, it is cut off at the plot's edge, and when it ends
 // outside, its name points to it there ("SMA ↓"). Without that, a price 18%
 // above its average flattens a day's move into a line along the top. The
-// average is a dashed ink line; the bands above it
-// are teal and those below orange, their zones tinted deeper the farther out,
-// and each line is named at its right end. The chip doubles
+// average is a dashed ink line; the bands above it are teal and those below
+// orange. Every zone the price passes through is tinted, deeper the farther
+// out, and each line is named at its right end. The chip doubles
 // as the legend, reading how far the price sits from the average at the
 // scrubbed or latest bar; when the price crosses no line, not even the
 // average, a note beside it says which lines it stayed between. A scrub reads every drawn line beside
@@ -90,8 +90,8 @@ const CHART_H = PLOT_H + AXIS_H + VOLUME_GAP + VOLUME_H;
 const SMA_WINDOW = 200;
 // The average and the lines either side of it, top down, each as its distance
 // from the average. The zone between two neighbouring lines is tinted in the
-// outer one's colour. A band is named by that distance, a percentage, so its
-// name reads in mono.
+// outer one's colour, when the price passes through it. A band is named by
+// that distance, a percentage, so its name reads in mono.
 const LEVELS = [
   { f: 0.15, color: "var(--ds-band-above)", tint: 0.13, label: "+15%" },
   { f: 0.1, color: "var(--ds-band-above)", tint: 0.09, label: "+10%" },
@@ -186,6 +186,22 @@ function averageAt(stamps: number[], points: [number, number][]) {
   });
 }
 
+// A request tried again, 2s and then 6s on, while its answer is still
+// wanted: one refused by Yahoo would otherwise leave a toggle on and drawing
+// nothing until the range changes.
+const RETRY_MS = [2_000, 6_000];
+async function retrying<T>(load: () => Promise<T>, wanted: () => boolean): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await load();
+    } catch (err) {
+      if (i >= RETRY_MS.length || !wanted()) throw err;
+      await new Promise((r) => setTimeout(r, RETRY_MS[i]));
+      if (!wanted()) throw err;
+    }
+  }
+}
+
 // Runs of consecutive bars that have an average: a bar without a full
 // window behind it breaks the lines.
 function runs(avg: (number | undefined)[]) {
@@ -239,21 +255,26 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
   const ccy = quote.currency;
   // Every chart opens on today.
   const [range, setRange] = useState<HistoryRange>("1D");
-  const [pts, setPts] = useState<Pt[] | null>(() => cache.get(`${symbol}|1D`) ?? null);
-  const [failed, setFailed] = useState(false);
   const [scrubbed, setScrub] = useState<number | null>(null);
   const [width, setWidth] = useState(0);
   const [bandsOn, setBandsOn] = useChartPref(SMA_BANDS_KEY);
-  // Tagged with its series' key, so a range switch never pairs the new bars
-  // with the old range's average.
-  const [sma, setSma] = useState<{ key: string; points: [number, number][] } | null>(null);
   const [earningsOn, setEarningsOn] = useChartPref(EARNINGS_KEY);
   const [extendedOn, setExtendedOn] = useChartPref(EXTENDED_HOURS_KEY);
   const extendedFits = range === "1D";
   const extended = extendedOn && extendedFits;
   const key = `${symbol}|${range}${extended ? "|extended" : ""}`;
-  // Tagged with its symbol, like the average.
+  // What was fetched, each tagged with its series' key (the report times with
+  // their symbol), so a range switch never pairs the new bars with the old
+  // range's. Until a fetch lands, the last one kept for that key is drawn,
+  // read as the chart renders: read later, a switch back to a range drew a
+  // frame without its bands, the price's fill flashing in their place.
+  const [fetched, setFetched] = useState<{ key: string; pts: Pt[] } | null>(null);
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  const [sma, setSma] = useState<{ key: string; points: [number, number][] } | null>(null);
+  const [smaFailedKey, setSmaFailedKey] = useState<string | null>(null);
   const [earnings, setEarnings] = useState<{ symbol: string; times: number[] } | null>(null);
+  const pts = fetched?.key === key ? fetched.pts : (cache.get(key) ?? null);
+  const failed = failedKey === key && !pts;
   const wrapRef = useRef<HTMLDivElement>(null);
   const gradId = useId();
   const clipId = useId();
@@ -272,22 +293,20 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
 
   useEffect(() => {
     setScrub(null);
-    setFailed(false);
-    setPts(cache.get(key) ?? null);
   }, [key, reloadKey]);
 
   useEffect(() => {
     let live = true;
-    getHistory(symbol, range, extended)
+    retrying(() => getHistory(symbol, range, extended), () => live)
       .then((h: HistoryPoint[]) => {
         const next = h
           .map((p) => ({ t: new Date(p.date).getTime(), p: p.close, v: p.volume ?? 0, x: p.session }))
           .filter((p) => p.p > 0);
         cache.set(key, next);
-        if (live) setPts(next);
+        if (live) setFetched({ key, pts: next });
       })
       .catch(() => {
-        if (live && !cache.has(key)) setFailed(true);
+        if (live) setFailedKey(key);
       });
     return () => {
       live = false;
@@ -308,12 +327,11 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
     return () => clearTimeout(id);
   }, [behind, key, refresh]);
 
+  // Fetched again with 1D's bars, too: today's average counts the latest price.
   useEffect(() => {
     if (!bandsOn) return;
     let live = true;
-    const cached = smaCache.get(key);
-    if (cached) setSma({ key, points: cached });
-    getSma(symbol, range, SMA_WINDOW, extended)
+    retrying(() => getSma(symbol, range, SMA_WINDOW, extended), () => live)
       .then((list) => {
         // Oldest first, as averageAt walks them.
         const points = list
@@ -322,21 +340,21 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
         smaCache.set(key, points);
         if (live) setSma({ key, points });
       })
-      // Without it the chip stays on and the price line draws alone.
-      .catch(() => {});
+      // The chip says so, and the price line draws alone.
+      .catch(() => {
+        if (live) setSmaFailedKey(key);
+      });
     return () => {
       live = false;
     };
-  }, [symbol, range, extended, key, bandsOn, reloadKey]);
+  }, [symbol, range, extended, key, bandsOn, reloadKey, refresh]);
 
   const earningsFits = EARNINGS_RANGES.has(range);
   const earningsShown = earningsOn && earningsFits;
   useEffect(() => {
     if (!earningsShown) return;
     let live = true;
-    const cached = earningsCache.get(symbol);
-    if (cached) setEarnings({ symbol, times: cached });
-    getEarnings(symbol)
+    retrying(() => getEarnings(symbol), () => live)
       .then((list) => {
         const times = list.map((r) => new Date(r.date).getTime());
         earningsCache.set(symbol, times);
@@ -351,7 +369,8 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
 
   const s = withLatest(pts ?? [], trade);
   const ready = s.length > 1 && width > 0;
-  const smaPoints = bandsOn && sma?.key === key ? sma.points : null;
+  const smaPoints = bandsOn ? (sma?.key === key ? sma.points : (smaCache.get(key) ?? null)) : null;
+  const smaFailed = bandsOn && !smaPoints && smaFailedKey === key;
   const avg = smaPoints ? averageAt(s.map((p) => p.t), smaPoints) : [];
   // The average always, as what the bands are measured from, and the bands
   // the price crosses: those between its farthest below the average and its
@@ -363,7 +382,11 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
   const crosses = ({ f }: { f: number }) => f >= devLo && f <= devHi;
   const levels = devs.length ? LEVELS.filter((l) => !l.f || crosses(l)) : [];
   const stayed = devs.length && !LEVELS.some(crosses) ? stayedNote(devLo, devHi) : null;
-  const reports = earningsShown && earnings?.symbol === symbol ? earnings.times : null;
+  const reports = earningsShown
+    ? earnings?.symbol === symbol
+      ? earnings.times
+      : (earningsCache.get(symbol) ?? null)
+    : null;
   const stamps = s.map((p) => p.t);
 
   const last = s.length - 1;
@@ -426,11 +449,15 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
         .map((run) => `M${trace(run, f).join("L")}`)
         .join(" "),
     }));
-    // A zone is tinted only between neighbouring lines that are both drawn:
-    // the average can stand apart from the bands the price reached.
-    zones = levels.slice(1).flatMap((inner, i) => {
-      const upper = levels[i];
-      if (LEVELS.indexOf(inner) - LEVELS.indexOf(upper) !== 1) return [];
+    // Every zone the price passes through is tinted, between its own two
+    // lines, whether or not they're drawn: a price that crosses only +15%
+    // still shows the 10–15% zone under it, and one that crosses nothing
+    // sits on its zone's tint. Past the scale, a zone is cut off at the
+    // plot's edge. Beyond ±15% is no zone. (Tinting only between two drawn
+    // neighbours left most short ranges with no tint at all.)
+    zones = LEVELS.slice(1).flatMap((inner, i) => {
+      const upper = LEVELS[i];
+      if (!(devHi > inner.f && devLo < upper.f)) return [];
       // Neighbours never straddle the average, which lies between them.
       const outer = Math.abs(upper.f) > Math.abs(inner.f) ? upper : inner;
       return {
@@ -717,7 +744,11 @@ export default function HoldingChart({ symbol, quote, reloadKey }: { symbol: str
             SMA bands
             {bandsOn && gap != null && <span className="hd-indicator-value">{fmtSignedPct(gap)}</span>}
           </button>
-          {stayed && <span className="hd-indicator-note">{stayed}</span>}
+          {smaFailed ? (
+            <span className="hd-indicator-note">Average unavailable</span>
+          ) : (
+            stayed && <span className="hd-indicator-note">{stayed}</span>
+          )}
         </span>
         <span className="hd-indicator-group">
           <button

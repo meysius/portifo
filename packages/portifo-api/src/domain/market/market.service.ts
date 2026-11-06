@@ -154,6 +154,26 @@ function toMs(t: unknown): number {
 
 const SESSION_GAP_MS = 2 * 3_600_000;
 
+// How long a daily or weekly bar spans.
+const BAR_MS: Partial<Record<string, number>> = { "1d": 86_400_000, "1wk": 7 * 86_400_000 };
+
+// While a listing trades (crypto always), Yahoo follows the latest daily or
+// weekly bar with a second row for it, stamped with the latest trade. The
+// two are one bar: drawn apart, the chart ended on a flat step, and a
+// crypto week's own bar can still hold an older close (BTC's read
+// Tuesday's on a Thursday night). Folded into the bar it repeats, with its
+// close and the larger volume.
+function foldLiveRow(points: HistoryPoint[], interval: string): HistoryPoint[] {
+  const span = BAR_MS[interval];
+  if (!span || points.length < 2) return points;
+  const [bar, row] = points.slice(-2);
+  if (new Date(row.date).getTime() - new Date(bar.date).getTime() >= span) return points;
+  return [
+    ...points.slice(0, -2),
+    { ...bar, close: row.close, volume: Math.max(bar.volume ?? 0, row.volume ?? 0) },
+  ];
+}
+
 // The last session: everything after the last overnight gap. Bars are 5
 // minutes apart within a session, so any gap over 2h is a session boundary.
 function lastSession(points: HistoryPoint[]): HistoryPoint[] {
@@ -275,9 +295,12 @@ export class MarketService {
     const { period1, interval } = historyWindow(range);
     const includePrePost = extended && range === "1D";
     const result = await this.client.chart(symbol, { period1, period2: new Date(), interval, includePrePost });
-    const points: HistoryPoint[] = result.quotes
-      .filter((q) => q.close != null)
-      .map((q) => ({ date: q.date.toISOString(), close: q.close as number, volume: q.volume ?? 0 }));
+    const points: HistoryPoint[] = foldLiveRow(
+      result.quotes
+        .filter((q) => q.close != null)
+        .map((q) => ({ date: q.date.toISOString(), close: q.close as number, volume: q.volume ?? 0 })),
+      interval,
+    );
     if (range !== "1D" || points.length === 0) return points;
     // The last session, not the last 24h (see historyWindow). A listing that
     // trades outside regular hours has its days marked out by Yahoo; a thin
@@ -304,9 +327,11 @@ export class MarketService {
       this.getHistory(symbol, range, extended),
       this.client.chart(symbol, { period1: from, period2: new Date(), interval: "1d", includePrePost: false }),
     ]);
-    const closes = daily.quotes
-      .filter((q) => q.close != null)
-      .map((q) => ({ t: q.date.getTime(), close: q.close as number }));
+    // Today once, not twice (see foldLiveRow).
+    const closes = foldLiveRow(
+      daily.quotes.filter((q) => q.close != null).map((q) => ({ date: q.date.toISOString(), close: q.close as number })),
+      "1d",
+    ).map((q) => ({ t: new Date(q.date).getTime(), close: q.close }));
     const points: IndicatorPoint[] = [];
     let sum = 0;
     let n = 0; // sessions folded into the sum so far
