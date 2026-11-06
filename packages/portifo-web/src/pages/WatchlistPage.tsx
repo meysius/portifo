@@ -1,7 +1,19 @@
-import { IonContent, IonPage, IonRefresher, IonRefresherContent, useIonViewWillEnter } from "@ionic/react";
+import {
+  IonContent,
+  IonItem,
+  IonItemOption,
+  IonItemOptions,
+  IonItemSliding,
+  IonList,
+  IonPage,
+  IonRefresher,
+  IonRefresherContent,
+  useIonViewWillEnter,
+} from "@ionic/react";
 import type { RefresherEventDetail } from "@ionic/react";
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
+import { flushSync } from "react-dom";
 import { useHistory } from "react-router-dom";
 import { isOn } from "../api/alerts";
 import { EXTENDED_LABEL, searchSymbols } from "../api/market";
@@ -14,16 +26,20 @@ import { useWatchlist } from "../context/WatchlistContext";
 import { fmtCcy, fmtSignedCcy } from "../lib/fx";
 import { useHeadingScrolledAway } from "../lib/useHeadingScrolledAway";
 
-// The Watchlist tab: symbols you follow, owned or not. The search field sits
-// under the heading; while it holds a query, its results take the list's
-// place and tapping one adds it (or, once added, takes it off again). A row
-// on the list is the symbol over its company, then at the right its latest
-// price, a bar of its move and the move itself. Outside regular hours, once
-// the symbol has traded since the close, the price is that trade's, marked by
-// its session's glyph (a sun before the open, a moon after the close, a moon
-// and a star overnight), and the move is the one since the close. A row
-// pushes the symbol's own page, with its chart and price alerts. A bell marks
-// a symbol with an alert on.
+// The Watchlist tab: symbols you follow, owned or not. Symbols are added as
+// transactions are: the heading's + opens a search field under it, and its
+// results take the list's place while it holds a query. Tapping a result adds
+// it (or, once added, takes it off again); Cancel closes the search. A row is
+// taken off the list by swiping it left to a Remove action, or all the way
+// across.
+//
+// A row is the symbol over its company, then at the right its latest price,
+// a bar of its move and the move itself. Outside regular hours, once the
+// symbol has traded since the close, the price is that trade's, marked by its
+// session's glyph (a sun before the open, a moon after the close, a moon and
+// a star overnight), and the move is the one since the close. A row pushes
+// the symbol's own page, with its chart and price alerts. A bell marks a
+// symbol with an alert on.
 //
 // The bars share one scale, the list's biggest move filling its half, so the
 // rows compare at a glance; under 1% they never fill.
@@ -100,7 +116,11 @@ const SESSION_ICONS: Record<ExtendedHours["session"], ReactNode> = {
 // move since the close, else the regular price and today's move.
 const latest = (q: Quote) =>
   q.extended
-    ? { price: q.extended.price, pct: q.extended.changePercent, session: q.extended.session }
+    ? {
+        price: q.extended.price,
+        pct: q.extended.changePercent,
+        session: q.extended.session,
+      }
     : { price: q.price, pct: q.changePercent, session: undefined };
 
 // To two places, as a watchlist reads small moves, with a true minus.
@@ -134,7 +154,10 @@ function MoveBar({ pct, scale }: { pct: number; scale: number }) {
   const w = Math.max(BAR_MIN, Math.min(1, Math.abs(pct) / scale) * BAR_HALF);
   return (
     <span className="wl-bar" aria-hidden="true">
-      <span className={`wl-bar-fill ${t}`} style={pct > 0 ? { left: BAR_HALF, width: w } : { right: BAR_HALF, width: w }} />
+      <span
+        className={`wl-bar-fill ${t}`}
+        style={pct > 0 ? { left: BAR_HALF, width: w } : { right: BAR_HALF, width: w }}
+      />
     </span>
   );
 }
@@ -159,7 +182,10 @@ function WatchlistPage() {
 
   const symbolsRef = useRef(symbols);
   symbolsRef.current = symbols;
+  const listRef = useRef<HTMLIonListElement>(null);
   useIonViewWillEnter(() => {
+    // A row left swiped open closes behind a pushed page.
+    listRef.current?.closeSlidingItems();
     const list = symbolsRef.current;
     if (list?.length) refreshMarket(list);
     reloadAlerts();
@@ -205,9 +231,18 @@ function WatchlistPage() {
     return () => clearTimeout(timer);
   }, [query]);
 
-  const searchMode = query.trim() !== "";
+  // The search field shows only while adding. It opens focused, inside the
+  // tap, which is the only time iOS raises the keyboard for it.
+  const [adding, setAdding] = useState(false);
+  const openSearch = () => {
+    listRef.current?.closeSlidingItems();
+    flushSync(() => setAdding(true));
+    inputRef.current?.focus();
+  };
+  const searchMode = adding && query.trim() !== "";
   const cancelSearch = () => {
     setQuery("");
+    setAdding(false);
     inputRef.current?.blur();
   };
 
@@ -215,6 +250,22 @@ function WatchlistPage() {
   const alerted = new Set(alerts?.filter(isOn).map((a) => a.symbol));
   const toggle = (r: SymbolResult) => (watching.has(r.symbol) ? remove(r.symbol) : add(r.symbol, r.name));
   const openSymbol = (symbol: string) => history.push(`${tabBase}/symbol/${encodeURIComponent(symbol)}`);
+  // As on iOS, a row left open closes at the next tap in the list, which does
+  // nothing else (Ionic's own rows close only when another starts to slide),
+  // or as soon as the page scrolls.
+  // A mouse drag ends in a click (a finger's doesn't): that one is the
+  // slide's own, and leaves the row open.
+  const draggedAt = useRef(0);
+  const closeOpenRow = (e: ReactMouseEvent) => {
+    if (Date.now() - draggedAt.current < 300) return;
+    const open = listRef.current?.querySelector(
+      "ion-item-sliding.item-sliding-active-options-end:not(.item-sliding-closing)",
+    );
+    if (!open || (e.target as Element).closest("ion-item-option")) return;
+    e.stopPropagation();
+    e.preventDefault();
+    listRef.current?.closeSlidingItems();
+  };
   const barScale = Math.max(
     BAR_FLOOR_PCT,
     ...(symbols ?? []).map((s) => (quotes[s] ? Math.abs(latest(quotes[s]).pct) : 0)),
@@ -228,11 +279,11 @@ function WatchlistPage() {
         <div className="wl-empty-symbol">{ICONS.eye}</div>
         <h2>Keep an eye on the market.</h2>
         <p>
-          Search for a ticker or company above.
+          Add a ticker or company to follow.
           <br />
           Its price and today’s move will show up here.
         </p>
-        <button type="button" className="ds-action" onClick={() => inputRef.current?.focus()}>
+        <button type="button" className="ds-action" onClick={openSearch}>
           Find a symbol
         </button>
       </section>
@@ -243,44 +294,61 @@ function WatchlistPage() {
             {symbols.length} {symbols.length === 1 ? "symbol" : "symbols"}
           </span>
         </div>
-        <div className="wl-list">
-          {symbols.map((symbol) => {
-            const q = quotes[symbol];
-            const name = q?.shortName ?? names[symbol];
-            const at = q && latest(q);
-            return (
-              <button
-                key={symbol}
-                type="button"
-                className="wl-row"
-                aria-label={[symbol, name, q && describe(q), alerted.has(symbol) && "price alert on"]
-                  .filter(Boolean)
-                  .join(", ")}
-                onClick={() => openSymbol(symbol)}
-              >
-                <span className="wl-identity">
-                  <span className="wl-symbol">
-                    {symbol}
-                    {alerted.has(symbol) && <span className="wl-alert-mark">{ICONS.bell}</span>}
-                  </span>
-                  {name && <span className="wl-meta">{name}</span>}
-                </span>
-                {q && at ? (
-                  <span className="wl-end">
-                    <span className="wl-price">
-                      {at.session && <span className="wl-session">{SESSION_ICONS[at.session]}</span>}
-                      <span className="money">{fmtPrice(at.price)}</span>
-                      {q.currency !== "USD" && <span className="wl-ccy">{q.currency}</span>}
-                    </span>
-                    <MoveBar pct={at.pct} scale={barScale} />
-                    <span className={`wl-move money ${tone(at.pct)}`}>{fmtMove(at.pct)}</span>
-                  </span>
-                ) : (
-                  !loading.market && <span className="wl-no-quote">No price</span>
-                )}
-              </button>
-            );
-          })}
+        {/* A plain element catches the tap: Ionic's wrapper takes onClickCapture for a custom event. */}
+        <div onClickCapture={closeOpenRow}>
+          <IonList ref={listRef} className="wl-list wl-slides" lines="none">
+            {symbols.map((symbol) => {
+              const q = quotes[symbol];
+              const name = q?.shortName ?? names[symbol];
+              const at = q && latest(q);
+              return (
+                <IonItemSliding key={symbol} className="wl-slide" onIonDrag={() => (draggedAt.current = Date.now())}>
+                  <IonItem className="wl-item" lines="none">
+                    <button
+                      type="button"
+                      className="wl-row"
+                      aria-label={[symbol, name, q && describe(q), alerted.has(symbol) && "price alert on"]
+                        .filter(Boolean)
+                        .join(", ")}
+                      onClick={() => openSymbol(symbol)}
+                    >
+                      <span className="wl-identity">
+                        <span className="wl-symbol">
+                          {symbol}
+                          {alerted.has(symbol) && <span className="wl-alert-mark">{ICONS.bell}</span>}
+                        </span>
+                        {name && <span className="wl-meta">{name}</span>}
+                      </span>
+                      {q && at ? (
+                        <span className="wl-end">
+                          <span className="wl-price">
+                            {at.session && <span className="wl-session">{SESSION_ICONS[at.session]}</span>}
+                            <span className="money">{fmtPrice(at.price)}</span>
+                            {q.currency !== "USD" && <span className="wl-ccy">{q.currency}</span>}
+                          </span>
+                          <MoveBar pct={at.pct} scale={barScale} />
+                          <span className={`wl-move money ${tone(at.pct)}`}>{fmtMove(at.pct)}</span>
+                        </span>
+                      ) : (
+                        !loading.market && <span className="wl-no-quote">No price</span>
+                      )}
+                    </button>
+                  </IonItem>
+                  {/* Swiped all the way across, the row goes at once. */}
+                  <IonItemOptions side="end" onIonSwipe={() => remove(symbol)}>
+                    <IonItemOption
+                      className="wl-remove"
+                      expandable
+                      aria-label={`Remove ${symbol} from watchlist`}
+                      onClick={() => remove(symbol)}
+                    >
+                      Remove
+                    </IonItemOption>
+                  </IonItemOptions>
+                </IonItemSliding>
+              );
+            })}
+          </IonList>
         </div>
         <p className="wl-footer">
           Prices in each symbol’s own currency.
@@ -336,38 +404,43 @@ function WatchlistPage() {
   return (
     <IonPage className="tab-root-page ds-screen wl-page">
       <StickyTitleBar title="Watchlist" shown={away} />
-      <IonContent scrollEvents onIonScroll={onIonScroll}>
+      <IonContent scrollEvents onIonScroll={onIonScroll} onIonScrollStart={() => listRef.current?.closeSlidingItems()}>
         <IonRefresher slot="fixed" onIonRefresh={handleRefresh}>
           <IonRefresherContent />
         </IonRefresher>
 
         <div className="wl-heading" ref={headingRef}>
           <h1>Watchlist</h1>
-        </div>
-
-        <div className="wl-search">
-          <div className="tl-search-field">
-            {ICONS.search}
-            <input
-              ref={inputRef}
-              type="search"
-              enterKeyHint="search"
-              aria-label="Search symbols"
-              placeholder="Search a ticker or company"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          {searchMode && (
-            <button type="button" className="wl-cancel" onClick={cancelSearch}>
-              Cancel
+          {!adding && (
+            <button type="button" className="wl-icon-button" aria-label="Add symbol" onClick={openSearch}>
+              {ICONS.plus}
             </button>
           )}
         </div>
+
+        {adding && (
+          <div className="wl-search">
+            <div className="tl-search-field">
+              {ICONS.search}
+              <input
+                ref={inputRef}
+                type="search"
+                enterKeyHint="search"
+                aria-label="Search symbols"
+                placeholder="Search a ticker or company"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+            <button type="button" className="wl-cancel" onClick={cancelSearch}>
+              Cancel
+            </button>
+          </div>
+        )}
 
         {searchMode ? searchView : listView}
       </IonContent>

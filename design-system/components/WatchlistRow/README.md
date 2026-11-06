@@ -3,7 +3,7 @@
 One symbol on the Watchlist: the symbol over its company on the left, and on the right one line of its latest price, a bar of its move and the move itself, as a Stocks watchlist reads. Outside regular hours, once the symbol has traded since the close, the price is that trade's, marked with its session's glyph. In a search result, the same row carries an add mark instead of the price.
 
 ## When to use
-On the Watchlist tab, one per watched symbol, in the order they were added (a new one joins the bottom). Tapping it pushes the symbol's page. While the search field holds a query, the results are WatchlistRows with the add mark; tapping one adds the symbol, and tapping it again takes it off.
+On the Watchlist tab, one per watched symbol, in the order they were added (a new one joins the bottom). Tapping it pushes the symbol's page. Symbols are added as transactions are: the heading's 32px `IconButton` (+, "Add symbol") opens a search field under the heading, focused, with Cancel beside it, and the + steps aside until Cancel closes the search. While the field holds a query, the results are WatchlistRows with the add mark; tapping one adds the symbol, and tapping it again takes it off. With the field empty the list stays in view under it.
 
 ## What you provide
 - The symbol, exactly as the market prices it, exchange suffix included ("SHOP.TO").
@@ -25,6 +25,7 @@ On the Watchlist tab, one per watched symbol, in the order they were added (a ne
 - The move is mono `--ds-fs-11` 500, two places with its sign ("+1.92%", "−0.37%"), right-aligned in 7 characters, in gain/loss colour by the percentage as shown: one that rounds to 0.00% stays `ds-text`. Two places, not the app's usual one, because a watchlist is read for small moves. No pill on the row; the pill belongs to the symbol page's hero.
 - Without a quote, the end column says "No price" in `--ds-fs-9` `ds-muted` (nothing while quotes are still loading).
 - The add mark is a 32px square with a 9px radius: a + in `ds-accent` on `ds-accent-tint` while the symbol can be added, a bare ✓ in `ds-accent` once it is on the list. The whole row is the button, with `aria-pressed` and an `aria-label` that says what a tap does ("Add NVDA, NVIDIA Corporation, to watchlist").
+- A row slides left to a Remove action (swipe it part way and tap Remove, or all the way across to remove it at once), as an iOS list does. Remove is 84px wide, `--ds-fs-11` 600 in `ds-bg` on `ds-negative`, full height, and meets the screen's edge: the list runs edge to edge and each row takes the gutter back. An open row closes at the next tap in the list, which does nothing else, when the page scrolls, and when the page is left. Taking a symbol off pauses its price alerts (see `PriceAlerts`). The symbol page's ✓ takes it off too, for anyone who doesn't swipe.
 - Rows bleed 10px into the gutter on both sides so the press highlight (`ds-subtle`, radius 10px) is wider than the text. No rule between rows. No chevron.
 - Under the list, the ledger's footer, centred `row-meta` `ds-muted`: "Prices in each symbol’s own currency." and "The same watchlist in every portfolio." (the list belongs to the person, not a portfolio).
 

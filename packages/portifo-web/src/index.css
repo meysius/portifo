@@ -4307,7 +4307,8 @@ ion-modal.ds-sheet {
   line-height: 1.2;
 }
 
-.tl-page .tl-icon-button {
+.tl-page .tl-icon-button,
+.wl-page .wl-icon-button {
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -5456,7 +5457,12 @@ ion-modal.ac-create-modal {
 
 /* ── heading and search ──────────────────────────────────────────────────── */
 /* The first thing on the page, so it clears the status bar itself. */
+/* The title, and the add action at the right, as on Transactions. */
 .wl-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: calc(16px + var(--ion-safe-area-top, 0px)) var(--ds-gutter) 0;
 }
 
@@ -5516,6 +5522,44 @@ ion-modal.ac-create-modal {
 .wl-search + .wl-list {
   margin-top: 8px;
   padding-top: 0;
+}
+
+/* The list's rows slide left to a Remove action. ion-list and ion-item carry
+   only the gesture: no padding, rule or ground of Ionic's own. The list runs
+   edge to edge, so the action meets the screen's edge, and each row takes the
+   gutter back, less the 10px its highlight bleeds into it. */
+.wl-page ion-list.wl-slides {
+  margin: 0;
+  padding: 4px 0 0;
+  background: transparent;
+}
+
+.wl-page ion-item.wl-item {
+  --background: var(--ds-bg);
+  --background-hover: transparent;
+  --background-focused: transparent;
+  --background-activated: transparent;
+  --padding-start: 0;
+  --padding-end: 0;
+  --inner-padding-start: 0;
+  --inner-padding-end: 0;
+  --border-width: 0;
+  --inner-border-width: 0;
+  --min-height: 0;
+}
+
+.wl-page .wl-slides .wl-row {
+  width: calc(100% - 2 * (var(--ds-gutter) - 10px));
+  margin-inline: calc(var(--ds-gutter) - 10px);
+}
+
+.wl-page ion-item-option.wl-remove {
+  --background: var(--ds-negative);
+  --color: var(--ds-bg);
+  min-width: 84px;
+  font-family: var(--font-body);
+  font-size: var(--ds-fs-11);
+  font-weight: 600;
 }
 
 .wl-page .wl-row {

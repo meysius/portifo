@@ -6,7 +6,7 @@ Every Portifo screen is one of four kinds. Build a new screen by picking its kin
 
 Portfolio, Transactions, Accounts, Watchlist, Settings. The tab bar is visible.
 
-1. **Page heading** (`PageHeading`). The title in `page-title`, 16px below the status bar (`calc(16px + safe-area-top)`), on the gutter. At most one trailing control: a 32px `IconButton` for the screen's add action (Transactions, Accounts), or the title itself as a switcher with a muted `chevron-down` (Portfolio's name switches portfolios). Watchlist has none: its search field, directly under the heading, is how symbols are added. No back link, no bar, no hairline at rest.
+1. **Page heading** (`PageHeading`). The title in `page-title`, 16px below the status bar (`calc(16px + safe-area-top)`), on the gutter. At most one trailing control: a 32px `IconButton` for the screen's add action (Transactions, Accounts, Watchlist, where it opens the symbol search under the heading), or the title itself as a switcher with a muted `chevron-down` (Portfolio's name switches portfolios). No back link, no bar, no hairline at rest.
 2. **Sticky bar** (`StickyBar`). Absent at rest. Once the heading has scrolled under the top edge, a 50px `ds-bg` bar fades in with the same title centred in `bar-title` over a `ds-line` hairline. It has no buttons.
 3. **Hero** (`Hero`), when the screen has a headline figure: label, figure, return.
 4. **Sections** (`Section`), each starting with the 6px `ds-subtle` band and an h2 in `section-title` with optional `meta` on the right.
