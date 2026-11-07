@@ -15,10 +15,14 @@ services:
       retries: 10
 
   app:
-    image: ${IMAGE:-ghcr.io/meysius/portifo:latest}
+    image: portifo:local
+    # Always built from this checkout. Nothing publishes a current image.
+    pull_policy: build
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?set GOOGLE_CLIENT_ID in .env}
     restart: unless-stopped
     depends_on:
       db:
@@ -41,10 +45,14 @@ services:
   # (not dev) dependency of portifo-api specifically so it survives into the
   # production image and this doesn't need a separate build/target.
   migrate:
-    image: ${IMAGE:-ghcr.io/meysius/portifo:latest}
+    image: portifo:local
+    # Always built from this checkout. Nothing publishes a current image.
+    pull_policy: build
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?set GOOGLE_CLIENT_ID in .env}
     profiles: ["tools"]
     depends_on:
       db:

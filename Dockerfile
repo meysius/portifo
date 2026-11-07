@@ -10,6 +10,10 @@ COPY packages/portifo-web/package.json packages/portifo-web/package.json
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+# Vite bakes the Google client ID into the web bundle. .env files are kept out
+# of the build context, so it has to come in as a build arg.
+ARG VITE_GOOGLE_CLIENT_ID
+RUN test -n "$VITE_GOOGLE_CLIENT_ID" || { echo "Build with --build-arg VITE_GOOGLE_CLIENT_ID=<your Google OAuth client ID>" >&2; exit 1; }
 RUN pnpm build
 # `build` (this stage) still has devDependencies like drizzle-kit and tsx —
 # used directly as the `migrate`/`seed` one-off target in docker-compose.yml.
