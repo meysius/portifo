@@ -1,21 +1,18 @@
 import {
   IonContent,
-  IonModal,
   IonPage,
   IonRefresher,
   IonRefresherContent,
 } from "@ionic/react";
 import type { RefresherEventDetail } from "@ionic/react";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { useHistory } from "react-router-dom";
 import ActionSheetModal from "../components/ActionSheetModal";
 import AddPortfolioModal from "../components/AddPortfolioModal";
-import GrowthChart from "../components/GrowthChart";
 import StickyTitleBar from "../components/StickyTitleBar";
 import { ActionPlusIcon, CheckIcon } from "../components/ds";
-import { getPortfolioHistory } from "../api/portfolio";
-import type { HistoryPoint, HistoryRange, Quote } from "../api/market";
+import type { Quote } from "../api/market";
 import { usePortfolioData } from "../context/PortfolioDataContext";
 import { useTabBase } from "../context/TabBaseContext";
 import { convert, fmtCcy, fmtDay, fmtShares, fmtSignedCcy, fmtSignedPct, parseDay } from "../lib/fx";
@@ -27,11 +24,8 @@ import { cashValue } from "../lib/positions";
 // second design system (theme/ds.css). Read top to bottom:
 //   1. The whole — cash and investments as one quiet headline, today's move
 //      underneath without colouring the balance itself.
-//   2. The journey — the value over time; its change opens a sheet separating
-//      money added from investment gain.
-//   3. The parts — stocks vs cash, the holdings ledger (each row's share of
-//      the whole as a ring, then shares, value, total return), and last,
-//      today's movers.
+//   2. The parts — how the whole splits by symbol and cash, the holdings
+//      ledger (shares, value, total return), and last, today's movers.
 //
 // Always the whole portfolio, every account together. Figures are in the
 // display currency; a holding's share is always of the whole, cash included.
@@ -49,14 +43,6 @@ type Row = {
 
 type Closed = { symbol: string; realized: number; realizedPct: number; lastSale: string | null };
 
-type Growth = { points: HistoryPoint[]; netDeposits: number; estimated: string[] };
-
-const NO_GROWTH: Growth = { points: [], netDeposits: 0, estimated: [] };
-
-// Last series per portfolio + range + currency, so
-// flipping back to a range redraws at once while the fresh one loads.
-const growthCache = new Map<string, Growth>();
-
 // The five breakdown hues, by rank; any holding past them takes the neutral.
 const HOLD_COLORS = [1, 2, 3, 4, 5].map((i) => `var(--ds-hold-${i})`);
 const HOLD_OTHER = "var(--ds-hold-other)";
@@ -66,7 +52,7 @@ const weight = (value: number, total: number) => (total > 0 ? (value / total) * 
 const percent = (n: number) => `${n < 0 ? "−" : ""}${Math.abs(n).toFixed(1)}%`;
 const sharesLabel = (n: number) => `${fmtShares(n)} ${n === 1 ? "share" : "shares"}`;
 
-const icon =(body: ReactNode, size = 20) => (
+const icon = (body: ReactNode, size = 20) => (
   <svg
     width={size}
     height={size}
@@ -81,7 +67,6 @@ const icon =(body: ReactNode, size = 20) => (
     {body}
   </svg>
 );
-const CLOSE = icon(<path d="m6 6 12 12M18 6 6 18" />, 14);
 const PORTFOLIO = icon(
   <>
     <rect x="3" y="7" width="18" height="14" rx="3" />
@@ -112,15 +97,6 @@ function HeroValue({ text }: { text: string }) {
   );
 }
 
-function Pair({ label, value, className = "" }: { label: string; value: string; className?: string }) {
-  return (
-    <div className="po-detail-pair">
-      <span>{label}</span>
-      <span className={`money ${className}`}>{value}</span>
-    </div>
-  );
-}
-
 function HoldingsPage() {
   const history = useHistory();
   const { tabBase } = useTabBase();
@@ -128,7 +104,6 @@ function HoldingsPage() {
     portfolios,
     activePortfolio,
     switchPortfolio,
-    accounts,
     transactions,
     tickerAggregates,
     cashByCurrency,
@@ -143,12 +118,7 @@ function HoldingsPage() {
   const [ccy] = useDisplayCurrency();
   const { headingRef, away, onIonScroll } = useHeadingScrolledAway<HTMLDivElement>();
 
-  // Opens on today, as every chart does.
-  const [range, setRange] = useState<HistoryRange>("1D");
-  // 1D always runs across extended hours.
-  const extended = range === "1D";
   const [closedOpen, setClosedOpen] = useState(false);
-  const [growthOpen, setGrowthOpen] = useState(false);
   const [portfolioSheetOpen, setPortfolioSheetOpen] = useState(false);
   const [addPortfolioOpen, setAddPortfolioOpen] = useState(false);
 
@@ -161,45 +131,12 @@ function HoldingsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [symbolsKey]);
 
-  // ── The series ───────────────────────────────────────────────────────────
-  const growthKey = `${activePortfolio?.id}|${range}|${ccy}`;
-  const [growth, setGrowth] = useState<Growth>(() => growthCache.get(growthKey) ?? NO_GROWTH);
-  const [growthFailed, setGrowthFailed] = useState(false);
-  const growthRequest = useRef(0);
-
-  const loadGrowth = useCallback(async () => {
-    const id = ++growthRequest.current;
-    try {
-      const h = await getPortfolioHistory(range, ccy, { extended });
-      const next = {
-        points: h.points,
-        netDeposits: h.netDeposits ?? 0,
-        estimated: [...h.estimatedTickers, ...h.estimatedCurrencies],
-      };
-      growthCache.set(growthKey, next);
-      if (growthRequest.current === id) {
-        setGrowth(next);
-        setGrowthFailed(next.points.length < 2);
-      }
-    } catch {
-      if (growthRequest.current === id) setGrowthFailed(true);
-    }
-  }, [range, ccy, extended, growthKey]);
-
-  // The ledger is a dependency: a transaction added anywhere redraws the curve.
-  useEffect(() => {
-    setGrowth(growthCache.get(growthKey) ?? NO_GROWTH);
-    setGrowthFailed(false);
-    if (hasActivity) loadGrowth();
-  }, [loadGrowth, growthKey, hasActivity, transactions, accounts]);
-
   const handleRefresh = async (e: CustomEvent<RefresherEventDetail>) => {
     try {
       await Promise.all([
         refreshTransactions({ silent: true }),
         refreshAccounts({ silent: true }),
         refreshMarket(openSymbols),
-        loadGrowth(),
       ]);
     } finally {
       e.detail.complete();
@@ -283,16 +220,6 @@ function HoldingsPage() {
   const hasDay = rows.length === 0 || priced.length > 0;
   const day = priced.reduce((s, r) => s + (r.day ?? 0), 0);
   const dayPct = total - day > 1e-9 ? (day / (total - day)) * 100 : 0;
-  const unrealized = priced.reduce((s, r) => s + (r.gain ?? 0), 0);
-
-  // ── Growth over the range ────────────────────────────────────────────────
-  // Ends at today's total, the figure printed above it. A day starts at
-  // yesterday's close, so 1D agrees with Today. The 1D chart runs on past the
-  // close, through extended hours; this stays the regular session's.
-  const pts = growth.points;
-  const start = range === "1D" && hasDay && priced.length > 0 ? total - day : pts[0]?.close;
-  const change = start != null && !quotesPending ? total - start : null;
-  const investmentGain = change != null ? change - growth.netDeposits : null;
 
   // ── Today's movers: up to five of the strongest daily moves ──────────────
   const gainers = priced.filter((r) => (r.day ?? 0) > 0);
@@ -321,7 +248,6 @@ function HoldingsPage() {
   const openHolding = (symbol: string) => history.push(`${tabBase}/asset/${encodeURIComponent(symbol)}`);
   const addTransaction = () => history.push(`${tabBase}/add-transaction`);
   const isEmpty = !hasActivity && !loading.accounts;
-  const firstDay = pts[0]?.date;
 
   return (
     <IonPage className="tab-root-page ds-screen po-page">
@@ -367,29 +293,6 @@ function HoldingsPage() {
                 <span className={`money po-return-percent ${tone(day)}`}>{fmtSignedPct(dayPct)}</span>
                 <span className="po-return-label">Today</span>
               </div>
-            </section>
-
-            <section className="po-growth" aria-label="Portfolio value history">
-              <div className="po-growth-heading">
-                <h2>Portfolio growth</h2>
-                {change != null && (
-                  <button
-                    type="button"
-                    className={`po-period-change money ${tone(change)}`}
-                    aria-label="Explain portfolio value change"
-                    onClick={() => setGrowthOpen(true)}
-                  >
-                    {fmtSignedCcy(change, ccy)} <span className="po-info">ⓘ</span>
-                  </button>
-                )}
-              </div>
-              <GrowthChart
-                points={pts}
-                range={range}
-                ccy={ccy}
-                failed={growthFailed}
-                onRange={setRange}
-              />
             </section>
 
             <section className="po-section po-allocation" aria-label="Portfolio allocation">
@@ -609,45 +512,6 @@ function HoldingsPage() {
             </section>
           </>
         )}
-
-        <IonModal
-          isOpen={growthOpen}
-          onDidDismiss={() => setGrowthOpen(false)}
-          initialBreakpoint={1}
-          breakpoints={[0, 1]}
-          handle={false}
-          className="auto-sheet ds-sheet ds-screen"
-          aria-labelledby="po-growth-title"
-        >
-          <div className="ds-sheet-body">
-            <div className="ds-sheet-grabber" aria-hidden="true" />
-            <div className="ds-sheet-header">
-              <h2 id="po-growth-title">Behind the growth</h2>
-              <button type="button" className="ds-close-sheet" aria-label="Close dialog" onClick={() => setGrowthOpen(false)}>
-                {CLOSE}
-              </button>
-            </div>
-            <p className="ds-sheet-notice">
-              {range === "All" && firstDay ? `Since ${fmtDay(new Date(firstDay))}` : `${range} period`} · All accounts
-              <br />
-              Value growth includes money added to your portfolio. It isn’t an investment return percentage.
-            </p>
-            {start != null && change != null && investmentGain != null && (
-              <>
-                <Pair label="Starting value" value={fmtCcy(start, ccy)} />
-                <Pair label="Net deposits" value={fmtSignedCcy(growth.netDeposits, ccy)} />
-                <Pair label="Investment gain / loss" value={fmtSignedCcy(investmentGain, ccy)} className={tone(investmentGain)} />
-                <Pair label="Ending value" value={fmtCcy(total, ccy)} />
-                <Pair label="Total value change" value={fmtSignedCcy(change, ccy)} className={tone(change)} />
-              </>
-            )}
-            <p className="ds-sheet-notice">
-              Current unrealized gain on your stock holdings:{" "}
-              <span className={`money ${tone(unrealized)}`}>{fmtSignedCcy(unrealized, ccy)}</span>.
-              {growth.estimated.length > 0 && ` History for ${growth.estimated.join(", ")} is estimated.`}
-            </p>
-          </div>
-        </IonModal>
 
         <ActionSheetModal
           isOpen={portfolioSheetOpen}

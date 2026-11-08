@@ -1,6 +1,6 @@
 import type { HistoryRange } from "../api/market";
 
-// Shared geometry for the line charts (GrowthChart, HoldingChart), modelled on
+// Shared geometry for HoldingChart and its scales, modelled on
 // Apple Stocks: a tall plot fitted to the series' own low and high, so the low
 // touches the baseline and the high reaches the top, split into four equal
 // bands whose top edges are labelled in a column at the right. The labels keep

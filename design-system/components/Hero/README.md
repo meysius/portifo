@@ -25,6 +25,6 @@ Once per screen, directly under the page heading, when the screen is about one a
 - When the value can't be computed, replace the figure with a sentence in Inter 550 at the same size ("Getting the latest quote…", "Value unavailable") and a `body-help` line saying what is known.
 
 ## Drift
-Hero padding differs per screen: Portfolio 18px top, Holding 27px / 21px, Account 24px / 23px.
+Hero padding differs per screen: Portfolio 18px / 18px, Holding 27px / 21px, Account 24px / 23px.
 
 Static rendition, hand-written from `packages/portifo-web/src/index.css` (`.po-hero*`, `.hd-hero*` including `.hd-hero-returns`, `.hd-pill`, `.hd-badge`, `.ac-hero*`, `.ac-currency-chip`).

@@ -126,7 +126,7 @@ Every screen is one of four kinds; the next section, Screen anatomy, lists each 
 ## Motion
 
 - Fades only, 0.18s ease: the sticky bar and a Back bar title fade in when the heading scrolls under them.
-- Content settles in on first paint with `ds-arrive` (from opacity 0 and 5px down): the Transactions and Accounts headings at 0.35s, Portfolio's hero, chart and breakdown at 0.4s.
+- Content settles in on first paint with `ds-arrive` (from opacity 0 and 5px down): the Transactions and Accounts headings at 0.35s, Portfolio's hero and breakdown at 0.4s.
 - Sheets use the platform's slide-up; the backdrop is black at 40%.
 - Respect `prefers-reduced-motion`: drop the transitions and the arrival animation.
 

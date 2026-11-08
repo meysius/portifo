@@ -1,5 +1,4 @@
 import { apiFetch } from "./http";
-import type { HistoryPoint, HistoryRange } from "./market";
 
 export interface PortfolioDto {
   id: string;
@@ -194,38 +193,6 @@ export async function removeMember(memberId: string): Promise<void> {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? "Failed to remove member");
   }
-}
-
-// `estimated*` name what the server could not price from real market data for
-// this range — a ticker with no price series, or a currency with no fx series.
-// They used to be dropped from the total silently, which drew a curve below the
-// portfolio total on the same screen; they are now estimated and named so the
-// chart can say so.
-export interface PortfolioHistoryDto {
-  points: HistoryPoint[];
-  estimatedTickers: string[];
-  estimatedCurrencies: string[];
-  // Cash held in the stored balances that no transaction accounts for, which
-  // the server now carries into the replay as an opening balance instead of
-  // drawing a curve permanently below the hero.
-  reconciledCash: { currency: string; amount: number }[];
-  // Deposits less withdrawals after the first point, in `currency`.
-  netDeposits: number;
-}
-
-// `accountId` scopes the series to one account; omitted, it is the portfolio.
-// `extended`: a 1D with the day's pre-market and after-hours trading too.
-export async function getPortfolioHistory(
-  range: HistoryRange,
-  currency: string,
-  { accountId, extended = false }: { accountId?: string; extended?: boolean } = {},
-): Promise<PortfolioHistoryDto> {
-  const query = new URLSearchParams({ range, currency });
-  if (accountId) query.set("account", accountId);
-  if (extended) query.set("extended", "1");
-  const res = await apiFetch(`/portfolio/history?${query}`);
-  if (!res.ok) throw new Error("Failed to fetch portfolio history");
-  return res.json();
 }
 
 export async function listTransactions(): Promise<Transaction[]> {
