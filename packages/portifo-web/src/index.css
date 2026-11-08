@@ -3831,51 +3831,35 @@ ion-modal.ds-sheet {
 }
 
 /* ── breakdown ───────────────────────────────────────────────────────────── */
+/* One block per position and one for the cash. A sliver of a position keeps
+   2px, so it still shows. */
 .po-allocation-bar {
   display: flex;
+  gap: 2px;
   height: 14px;
-  margin-bottom: 17px;
+  margin-bottom: 14px;
   overflow: hidden;
   border-radius: 5px;
 }
 
 .po-allocation-segment {
   height: 100%;
-  min-width: 0;
-  box-shadow: inset -2px 0 var(--ds-bg);
+  min-width: 2px;
 }
 
-.po-allocation-segment:last-child {
-  box-shadow: none;
-}
-
+/* Down one column and then the next, in the bar's order. */
 .po-allocation-legend {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 28px;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(var(--legend-rows), auto);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px 28px;
 }
 
 .po-allocation-stat {
-  position: relative;
-}
-
-.po-allocation-stat + .po-allocation-stat::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -14px;
-  width: 1px;
-  background: var(--ds-line);
-}
-
-.po-legend-label {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 7px;
-  font-size: var(--ds-fs-10);
-  color: var(--ds-secondary);
 }
 
 .po-legend-dot {
@@ -3883,21 +3867,23 @@ ion-modal.ds-sheet {
   width: 7px;
   height: 7px;
   border-radius: 2px;
-  background: var(--ds-accent);
+}
+
+.po-legend-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ds-fs-11);
+  color: var(--ds-secondary);
 }
 
 .po-page .po-legend-percent {
-  display: block;
-  margin-bottom: 5px;
-  font-size: var(--ds-fs-23);
-  font-weight: 500;
-  line-height: 1.2;
-  color: var(--ds-text);
-}
-
-.po-legend-value {
+  flex-shrink: 0;
   font-size: var(--ds-fs-11);
-  color: var(--ds-secondary);
+  font-weight: 500;
+  color: var(--ds-text);
 }
 
 .po-allocation-note {
@@ -4064,41 +4050,6 @@ ion-modal.ds-sheet {
 .po-holding-symbol {
   font-size: var(--ds-fs-12);
   font-weight: 600;
-}
-
-/* A row's share of the whole portfolio, cash included: filled clockwise from
-   twelve o'clock around the exact percentage. Sized with the type, as in the
-   study. */
-.po-weight-ring {
-  position: relative;
-  display: grid;
-  flex-shrink: 0;
-  place-items: center;
-  width: calc(44px * var(--ds-font-scale));
-  height: calc(44px * var(--ds-font-scale));
-}
-
-.po-weight-ring svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.po-weight-ring-track {
-  stroke: var(--ds-line);
-}
-
-.po-weight-ring-progress {
-  stroke: var(--weight-color);
-}
-
-.po-page .po-weight-ring-label {
-  font-size: var(--ds-fs-10);
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: -0.4px;
-  color: var(--ds-secondary);
 }
 
 .po-holding-meta {

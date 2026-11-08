@@ -327,15 +327,15 @@ button {
 .po-closed-row { padding-block: 12px; }
 .po-closed-count { margin-left: 6px; font-weight: 400; color: var(--ds-muted); }
 .po-closed-realized { display: block; font-size: var(--ds-fs-11); font-weight: 500; }
-.po-weight-ring { position: relative; display: grid; flex-shrink: 0; place-items: center; width: calc(44px * var(--ds-font-scale)); height: calc(44px * var(--ds-font-scale)); }
-.po-weight-ring svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.po-weight-ring-track { stroke: var(--ds-line); }
-.po-weight-ring-progress { stroke: var(--weight-color); }
-.po-weight-ring-label { font-size: var(--ds-fs-10); font-weight: 500; line-height: 1; letter-spacing: -0.4px; color: var(--ds-secondary); }
-.w1 { --weight-color: var(--ds-hold-1); }
-.w2 { --weight-color: var(--ds-hold-2); }
-.w3 { --weight-color: var(--ds-hold-3); }
-.wcash { --weight-color: var(--ds-cash); }
+
+/* breakdown */
+.po-allocation-bar { display: flex; gap: 2px; height: 14px; margin-bottom: 14px; overflow: hidden; border-radius: 5px; }
+.po-allocation-segment { height: 100%; min-width: 2px; }
+.po-allocation-legend { display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--legend-rows), auto); grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px 28px; }
+.po-allocation-stat { display: flex; align-items: center; gap: 7px; }
+.po-legend-dot { flex-shrink: 0; width: 7px; height: 7px; border-radius: 2px; }
+.po-legend-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--ds-fs-11); color: var(--ds-secondary); }
+.po-legend-percent { flex-shrink: 0; font-size: var(--ds-fs-11); font-weight: 500; color: var(--ds-text); }
 
 /* watchlist row: on the ledger's metrics; two lines whatever the hour */
 .wl-list-heading { display: flex; justify-content: flex-end; padding: 10px var(--ds-gutter); border-bottom: 4px solid var(--ds-subtle); }

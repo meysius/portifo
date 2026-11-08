@@ -66,40 +66,7 @@ const weight = (value: number, total: number) => (total > 0 ? (value / total) * 
 const percent = (n: number) => `${n < 0 ? "−" : ""}${Math.abs(n).toFixed(1)}%`;
 const sharesLabel = (n: number) => `${fmtShares(n)} ${n === 1 ? "share" : "shares"}`;
 
-// The ring's circumference in its 44-unit box (r = 19).
-const RING_C = 2 * Math.PI * 19;
-
-// A ledger row's share of the whole portfolio, cash included: a ring filled
-// clockwise from twelve o'clock around the exact percentage.
-function WeightRing({ share, color }: { share: number; color: string }) {
-  const arc = (Math.max(0, Math.min(100, share)) / 100) * RING_C;
-  return (
-    <span
-      className="po-weight-ring"
-      style={{ "--weight-color": color } as CSSProperties}
-      title={`${percent(share)} of portfolio`}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 44 44" fill="none">
-        <circle className="po-weight-ring-track" cx="22" cy="22" r="19" strokeWidth="2.5" />
-        {arc > 0 && (
-          <circle
-            className="po-weight-ring-progress"
-            cx="22"
-            cy="22"
-            r="19"
-            strokeWidth="2.5"
-            strokeDasharray={`${arc} ${RING_C}`}
-            transform="rotate(-90 22 22)"
-          />
-        )}
-      </svg>
-      <span className="po-weight-ring-label money">{percent(share)}</span>
-    </span>
-  );
-}
-
-const icon = (body: ReactNode, size = 20) => (
+const icon =(body: ReactNode, size = 20) => (
   <svg
     width={size}
     height={size}
@@ -338,6 +305,14 @@ function HoldingsPage() {
     .sort((a, b) => pctOf(b) - pctOf(a) || a.symbol.localeCompare(b.symbol));
   const maxMove = Math.max(...movers.map((r) => Math.abs(pctOf(r))), 0);
 
+  // Cash stays the last block whatever its size: its slate is too close to the
+  // first and fifth holding hues for colour-blind readers to tell apart, so
+  // its place in the bar has to identify it.
+  const breakdown = [
+    ...rows.map((r) => ({ label: r.symbol, value: r.value, color: r.color })),
+    { label: "Cash", value: cash, color: "var(--ds-cash)" },
+  ];
+
   const ledger = [
     ...rows.map((r) => ({ kind: "stock" as const, value: r.value, row: r })),
     { kind: "cash" as const, value: cash },
@@ -422,44 +397,34 @@ function HoldingsPage() {
                 <h2>Breakdown</h2>
                 <span className="meta">All accounts</span>
               </div>
-              {(() => {
-                const parts = [
-                  { label: "Stocks", value: stocks, color: "var(--ds-accent)" },
-                  { label: "Cash", value: cash, color: "var(--ds-cash)" },
-                ];
-                return (
-                  <>
-                    <div
-                      className="po-allocation-bar"
-                      role="img"
-                      aria-label={parts.map((p) => `${p.label} ${percent(weight(p.value, total))}`).join(", ")}
-                    >
-                      {parts
-                        .filter((p) => p.value > 0)
-                        .map((p) => (
-                          <span
-                            key={p.label}
-                            className="po-allocation-segment"
-                            style={{ flex: p.value, background: p.color }}
-                            title={`${p.label} · ${percent(weight(p.value, total))}`}
-                          />
-                        ))}
-                    </div>
-                    <div className="po-allocation-legend">
-                      {parts.map((p) => (
-                        <div className="po-allocation-stat" key={p.label}>
-                          <div className="po-legend-label">
-                            <span className="po-legend-dot" style={{ background: p.color }} />
-                            {p.label}
-                          </div>
-                          <span className="po-legend-percent money">{percent(weight(p.value, total))}</span>
-                          <div className="po-legend-value money">{fmtCcy(p.value, ccy)}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                );
-              })()}
+              <div
+                className="po-allocation-bar"
+                role="img"
+                aria-label={breakdown.map((p) => `${p.label} ${percent(weight(p.value, total))}`).join(", ")}
+              >
+                {breakdown
+                  .filter((p) => p.value > 0)
+                  .map((p) => (
+                    <span
+                      key={p.label}
+                      className="po-allocation-segment"
+                      style={{ flex: p.value, background: p.color }}
+                      title={`${p.label} · ${percent(weight(p.value, total))}`}
+                    />
+                  ))}
+              </div>
+              <div
+                className="po-allocation-legend"
+                style={{ "--legend-rows": Math.ceil(breakdown.length / 2) } as CSSProperties}
+              >
+                {breakdown.map((p) => (
+                  <div className="po-allocation-stat" key={p.label}>
+                    <span className="po-legend-dot" style={{ background: p.color }} />
+                    <span className="po-legend-label">{p.label}</span>
+                    <span className="po-legend-percent money">{percent(weight(p.value, total))}</span>
+                  </div>
+                ))}
+              </div>
               {rows.length === 0 && (
                 <p className="po-allocation-note">No stock holdings. Your portfolio is held in cash.</p>
               )}
@@ -487,7 +452,6 @@ function HoldingsPage() {
                         onClick={() => history.push(`${tabBase}/cash`)}
                       >
                         <span className="po-holding-summary">
-                          <WeightRing share={weight(cash, total)} color="var(--ds-cash)" />
                           <span className="po-holding-identity">
                             <span className="po-holding-symbol">Cash</span>
                             <span className="po-holding-meta">Uninvested</span>
@@ -510,7 +474,6 @@ function HoldingsPage() {
                       onClick={() => openHolding(r.symbol)}
                     >
                       <span className="po-holding-summary">
-                        <WeightRing share={weight(r.value, total)} color={r.color} />
                         <span className="po-holding-identity">
                           <span className="po-holding-symbol">{r.symbol}</span>
                           <span className="po-holding-meta">{sharesLabel(r.shares)}</span>
@@ -534,9 +497,8 @@ function HoldingsPage() {
                 })}
               </div>
 
-              {/* Every share sold: no share of the portfolio, so no ring. One
-                  row under the ledger totals their realized return; the sales
-                  open beneath it on its own text edge. */}
+              {/* Every share sold. One row under the ledger totals their
+                  realized return; the sales open beneath it. */}
               {closed.length > 0 && (
                 <>
                   <button
